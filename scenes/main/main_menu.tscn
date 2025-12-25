@@ -1,0 +1,91 @@
+[gd_scene load_steps=2 format=3 uid="uid://b5qx2vqe1yf6h"]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu_controller.gd" id="1_menu"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0941176, 0.0941176, 0.14902, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 72
+text = "VEILBREAKERS"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "The Veil is Cracking..."
+horizontal_alignment = 1
+modulate = Color(0.8, 0.8, 0.9, 0.8)
+
+[node name="Spacer" type="Control" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="ButtonContainer" type="VBoxContainer" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="NewGameButton" type="Button" parent="CenterContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(300, 50)
+layout_mode = 2
+text = "New Game"
+
+[node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(300, 50)
+layout_mode = 2
+text = "Continue"
+
+[node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(300, 50)
+layout_mode = 2
+text = "Settings"
+
+[node name="QuitButton" type="Button" parent="CenterContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(300, 50)
+layout_mode = 2
+text = "Quit"
+
+[node name="VersionLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -30.0
+offset_right = 200.0
+grow_vertical = 0
+text = "v0.1.0 - Development Build"
+modulate = Color(1, 1, 1, 0.5)
+
+[connection signal="pressed" from="CenterContainer/VBoxContainer/ButtonContainer/NewGameButton" to="." method="_on_new_game_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/ButtonContainer/ContinueButton" to="." method="_on_continue_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/ButtonContainer/SettingsButton" to="." method="_on_settings_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/ButtonContainer/QuitButton" to="." method="_on_quit_pressed"]

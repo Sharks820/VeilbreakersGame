@@ -1,0 +1,41 @@
+[gd_scene load_steps=2 format=3 uid="uid://game_main"]
+
+[ext_resource type="Script" path="res://scripts/main/game.gd" id="1_game"]
+
+[node name="Game" type="Node"]
+script = ExtResource("1_game")
+
+[node name="WorldContainer" type="Node2D" parent="."]
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="TransitionLayer" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="TransitionRect" type="ColorRect" parent="TransitionLayer"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="DebugLayer" type="CanvasLayer" parent="."]
+visible = false
+layer = 99
+
+[node name="DebugInfo" type="Label" parent="DebugLayer"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 300.0
+offset_bottom = 100.0
+text = "Debug Mode"
+
+[node name="FPSLabel" type="Label" parent="DebugLayer"]
+offset_left = 10.0
+offset_top = 30.0
+offset_right = 150.0
+offset_bottom = 50.0
+text = "FPS: 60"

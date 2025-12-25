@@ -1,0 +1,70 @@
+[gd_scene load_steps=2 format=3 uid="uid://vera_overlay"]
+
+[ext_resource type="Script" path="res://scripts/ui/vera_overlay_controller.gd" id="1_vera"]
+
+[node name="VERAOverlay" type="CanvasLayer"]
+layer = 50
+script = ExtResource("1_vera")
+
+[node name="Container" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 280.0
+offset_bottom = 130.0
+
+[node name="Background" type="Panel" parent="Container"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Portrait" type="TextureRect" parent="Container"]
+layout_mode = 1
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 70.0
+offset_bottom = 70.0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="StateLabel" type="Label" parent="Container"]
+layout_mode = 1
+offset_left = 80.0
+offset_top = 10.0
+offset_right = 270.0
+offset_bottom = 30.0
+theme_override_font_sizes/font_size = 16
+text = "FAIRY"
+
+[node name="CorruptionBar" type="ProgressBar" parent="Container"]
+layout_mode = 1
+offset_left = 80.0
+offset_top = 35.0
+offset_right = 270.0
+offset_bottom = 55.0
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="CorruptionLabel" type="Label" parent="Container"]
+layout_mode = 1
+offset_left = 80.0
+offset_top = 60.0
+offset_right = 270.0
+offset_bottom = 80.0
+theme_override_font_sizes/font_size = 12
+text = "Corruption: 0%"
+
+[node name="AbilityContainer" type="HBoxContainer" parent="Container"]
+layout_mode = 1
+offset_left = 10.0
+offset_top = 90.0
+offset_right = 270.0
+offset_bottom = 120.0
+theme_override_constants/separation = 5
+
+[node name="GlitchOverlay" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(1, 0, 0, 0)

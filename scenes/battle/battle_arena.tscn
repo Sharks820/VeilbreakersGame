@@ -1,0 +1,93 @@
+[gd_scene load_steps=5 format=3 uid="uid://battle_arena"]
+
+[ext_resource type="Script" path="res://scripts/battle/battle_arena.gd" id="1_arena"]
+[ext_resource type="Script" path="res://scripts/battle/battle_manager.gd" id="1_manager"]
+[ext_resource type="Script" path="res://scripts/battle/turn_manager.gd" id="2_turn"]
+[ext_resource type="Script" path="res://scripts/battle/damage_calculator.gd" id="3_damage"]
+
+[node name="BattleArena" type="Node2D"]
+script = ExtResource("1_arena")
+
+[node name="Background" type="CanvasLayer" parent="."]
+layer = -10
+
+[node name="BackgroundSprite" type="Sprite2D" parent="Background"]
+position = Vector2(640, 360)
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="Background"]
+
+[node name="ParallaxLayer" type="ParallaxLayer" parent="Background/ParallaxBackground"]
+motion_scale = Vector2(0.5, 0.5)
+
+[node name="BattleField" type="Node2D" parent="."]
+
+[node name="PlayerPositions" type="Node2D" parent="BattleField"]
+position = Vector2(200, 400)
+
+[node name="Position1" type="Marker2D" parent="BattleField/PlayerPositions"]
+position = Vector2(0, 0)
+
+[node name="Position2" type="Marker2D" parent="BattleField/PlayerPositions"]
+position = Vector2(0, 80)
+
+[node name="Position3" type="Marker2D" parent="BattleField/PlayerPositions"]
+position = Vector2(0, 160)
+
+[node name="Position4" type="Marker2D" parent="BattleField/PlayerPositions"]
+position = Vector2(0, 240)
+
+[node name="EnemyPositions" type="Node2D" parent="BattleField"]
+position = Vector2(1080, 400)
+
+[node name="Position1" type="Marker2D" parent="BattleField/EnemyPositions"]
+position = Vector2(0, 0)
+
+[node name="Position2" type="Marker2D" parent="BattleField/EnemyPositions"]
+position = Vector2(0, 80)
+
+[node name="Position3" type="Marker2D" parent="BattleField/EnemyPositions"]
+position = Vector2(0, 160)
+
+[node name="Position4" type="Marker2D" parent="BattleField/EnemyPositions"]
+position = Vector2(0, 240)
+
+[node name="CharacterContainer" type="Node2D" parent="BattleField"]
+
+[node name="Players" type="Node2D" parent="BattleField/CharacterContainer"]
+
+[node name="Enemies" type="Node2D" parent="BattleField/CharacterContainer"]
+
+[node name="EffectsLayer" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="VFXContainer" type="Node2D" parent="EffectsLayer"]
+
+[node name="DamageNumbers" type="Node2D" parent="EffectsLayer"]
+
+[node name="Systems" type="Node" parent="."]
+
+[node name="BattleManager" type="Node" parent="Systems"]
+script = ExtResource("1_manager")
+
+[node name="TurnManager" type="Node" parent="Systems"]
+script = ExtResource("2_turn")
+
+[node name="DamageCalculator" type="Node" parent="Systems"]
+script = ExtResource("3_damage")
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="AudioPlayers" type="Node" parent="."]
+
+[node name="BattleMusicPlayer" type="AudioStreamPlayer" parent="AudioPlayers"]
+bus = &"Music"
+
+[node name="SFXPlayer" type="AudioStreamPlayer" parent="AudioPlayers"]
+bus = &"SFX"
+
+[node name="VoicePlayer" type="AudioStreamPlayer" parent="AudioPlayers"]
+bus = &"Voice"

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="veilGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d1b4e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a2e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9a8c98;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c9ada7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" fill="url(#veilGrad)"/>
+  <circle cx="64" cy="64" r="45" fill="none" stroke="url(#glowGrad)" stroke-width="3" opacity="0.6"/>
+  <circle cx="64" cy="64" r="35" fill="#4a4e69" stroke="#9a8c98" stroke-width="2"/>
+  <path d="M64 29 L74 54 L64 44 L54 54 Z" fill="#c9ada7"/>
+  <path d="M64 99 L54 74 L64 84 L74 74 Z" fill="#c9ada7" opacity="0.7"/>
+  <circle cx="64" cy="64" r="8" fill="#f2e9e4"/>
+  <circle cx="64" cy="64" r="4" fill="#9a8c98"/>
+  <text x="64" y="118" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#f2e9e4" text-anchor="middle">VB</text>
+</svg>
