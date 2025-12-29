@@ -188,7 +188,7 @@ alignment = 1
 theme_override_constants/separation = -160
 
 [node name="NewGameButton" type="TextureButton" parent="ButtonContainer"]
-custom_minimum_size = Vector2(440, 200)
+custom_minimum_size = Vector2(480, 220)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
@@ -198,7 +198,7 @@ ignore_texture_size = true
 stretch_mode = 5
 
 [node name="ContinueButton" type="TextureButton" parent="ButtonContainer"]
-custom_minimum_size = Vector2(440, 200)
+custom_minimum_size = Vector2(480, 220)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
@@ -209,7 +209,7 @@ ignore_texture_size = true
 stretch_mode = 5
 
 [node name="SettingsButton" type="TextureButton" parent="ButtonContainer"]
-custom_minimum_size = Vector2(440, 200)
+custom_minimum_size = Vector2(480, 220)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
@@ -219,7 +219,7 @@ ignore_texture_size = true
 stretch_mode = 5
 
 [node name="QuitButton" type="TextureButton" parent="ButtonContainer"]
-custom_minimum_size = Vector2(440, 200)
+custom_minimum_size = Vector2(480, 220)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
