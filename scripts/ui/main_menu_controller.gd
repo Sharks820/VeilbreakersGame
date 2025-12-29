@@ -257,13 +257,13 @@ func _on_button_hover(button: TextureButton) -> void:
 		tween.tween_property(button, "modulate:a", 0.55, 0.2)
 		return
 
-	# AAA hover - STRONG scale up with overshoot, lift, intense glow, tilt
+	# AAA hover - scale up with lift and subtle glow
 	var base_y = button_base_positions.get(button, button.position.y)
 	var tween = create_tween().set_parallel(true)
-	tween.tween_property(button, "scale", Vector2(1.18, 1.18), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	tween.tween_property(button, "position:y", base_y - 20, 0.18).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	tween.tween_property(button, "modulate", Color(1.6, 1.25, 1.15, 1.0), 0.15)
-	tween.tween_property(button, "rotation_degrees", randf_range(-2.0, 2.0), 0.12)
+	tween.tween_property(button, "scale", Vector2(1.12, 1.12), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(button, "position:y", base_y - 12, 0.18).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(button, "modulate", Color(1.2, 1.1, 1.05, 1.0), 0.15)
+	tween.tween_property(button, "rotation_degrees", randf_range(-1.0, 1.0), 0.12)
 
 func _on_button_unhover(button: TextureButton) -> void:
 	var base_y = button_base_positions.get(button, button.position.y + 20)
