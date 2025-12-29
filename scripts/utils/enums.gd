@@ -128,29 +128,53 @@ enum StatusEffect {
 	SPEED_UP,
 	SPEED_DOWN,
 	CORRUPTED,
-	PURIFYING
+	PURIFYING,
+	SORROW,        # DREAD brand debuff - increased damage taken
+	UNTARGETABLE   # Cannot be targeted (underground, intangible, etc.)
 }
 
 # =============================================================================
 # PROGRESSION
 # =============================================================================
 
+## The 6 Brands - Monster element/type system (NEW SYSTEM)
 enum Brand {
-	NONE,
-	BULWARK,   # Tank / Earth
-	FANG,      # Physical DPS
-	EMBER,     # Fire / AoE
-	FROST,     # Ice / Control
-	VOID,      # Dark / Debuff
-	RADIANT    # Light / Healer
+	NONE = -1,
+	SAVAGE = 0,    # Raw power, physical damage, direct attacks
+	IRON = 1,      # Defense, endurance, protection
+	VENOM = 2,     # DOT, debuffs, weakening
+	SURGE = 3,     # Speed, energy, chain attacks
+	DREAD = 4,     # Fear, mental, damage amplification
+	LEECH = 5,     # Life drain, healing, sustain
+	# Legacy brands (backwards compatibility)
+	BULWARK = 6,   # Tank / Earth (legacy)
+	FANG = 7,      # Physical DPS (legacy)
+	EMBER = 8,     # Fire / AoE (legacy)
+	FROST = 9,     # Ice / Control (legacy)
+	VOID = 10,     # Dark / Debuff (legacy)
+	RADIANT = 11   # Light / Healer (legacy)
 }
 
+## The 4 Paths - Player skill trees (0-100% affinity each) (NEW SYSTEM)
 enum Path {
-	SHADE = -2,      # -100 to -51
-	TWILIGHT = -1,   # -50 to -26
-	NEUTRAL = 0,     # -25 to +25
-	LIGHT = 1,       # +26 to +50
-	SERAPH = 2       # +51 to +100
+	NONE = -1,
+	IRONBOUND = 0,    # Protection, order, sacrifice, duty (Tank/Defense)
+	FANGBORN = 1,     # Strength, dominance, survival (Attack/DPS)
+	VOIDTOUCHED = 2,  # Knowledge, truth, patience, secrets (Utility/Special)
+	UNCHAINED = 3,    # Freedom, chaos, adaptability (Hybrid/Disruptor)
+	# Legacy path alignment system (backwards compatibility)
+	SHADE = 4,        # -100 to -51 (legacy)
+	TWILIGHT = 5,     # -50 to -26 (legacy)
+	NEUTRAL = 6,      # -25 to +25 (legacy)
+	LIGHT = 7,        # +26 to +50 (legacy)
+	SERAPH = 8        # +51 to +100 (legacy)
+}
+
+## Skill Tree unlock states
+enum SkillTreeState {
+	LOCKED,      # Below 30% - cannot access
+	UNLOCKED,    # 30%+ - can allocate points
+	DARK         # Was unlocked, now below 30% - points stuck
 }
 
 # =============================================================================
@@ -229,6 +253,22 @@ enum MonsterTier {
 	UNCOMMON,    # Tier 2: Levels 15-30
 	RARE,        # Tier 3: Levels 30-50
 	BOSS         # Boss monsters
+}
+
+## Monster evolution stages (The Bargain system)
+enum EvolutionStage {
+	CORRUPTED,   # Wild/enemy state - hostile
+	AWAKENED,    # Just captured - basic loyalty
+	ASCENDED,    # High loyalty - evolved form
+	PURIFIED     # Max loyalty - true form unlocked
+}
+
+## Monster combat roles
+enum MonsterRole {
+	STRIKER,     # High damage dealer
+	DEFENDER,    # Tank/protector
+	SUPPORT,     # Healer/buffer
+	DISRUPTOR    # Debuffer/controller
 }
 
 # =============================================================================

@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "fortress_stance"
+display_name = "Fortress Stance"
+description = "Grant all allies increased defense for 3 turns. The wall protects everyone."
+icon_path = "res://assets/ui/skills/fortress_stance.png"
+
+skill_type = 2
+element = 0
+damage_type = 0
+target_type = 2
+brand_requirement = -1
+
+mp_cost = 12
+hp_cost = 0
+cooldown_turns = 4
+
+base_power = 0
+scaling_stat = 5
+scaling_ratio = 0.0
+hit_count = 0
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 14, "chance": 1.0, "duration": 3}]
+stat_modifiers = [{"stat": 5, "amount": 40, "duration": 3}]
+special_effects = []
+
+animation_id = "fortress_stance"
+sound_effect = "sfx_party_buff"
+particle_effect = "shield_party"
+screen_shake = false
+
+level_requirement = 20
+path_requirement = 0.0
+prerequisite_skills = ["cover_ally"]

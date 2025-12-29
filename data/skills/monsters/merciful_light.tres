@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "merciful_light"
+display_name = "Merciful Light"
+description = "Bathes all allies in merciful radiance, healing the entire party."
+icon_path = "res://assets/ui/skills/monsters/merciful_light.png"
+
+skill_type = 1
+element = 10
+damage_type = 3
+target_type = 5
+brand_requirement = 0
+
+mp_cost = 20
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 22
+scaling_stat = 6
+scaling_ratio = 0.7
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = []
+
+animation_id = "party_heal"
+sound_effect = "sfx_mercy"
+particle_effect = "light_shower"
+screen_shake = false
+
+level_requirement = 5
+path_requirement = 0.0
+prerequisite_skills = []

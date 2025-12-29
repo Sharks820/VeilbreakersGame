@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "razor_swarm"
+display_name = "Razor Swarm"
+description = "A flurry of slashing bites that strike multiple times."
+icon_path = "res://assets/ui/skills/monsters/razor_swarm.png"
+
+skill_type = 0
+element = 1
+damage_type = 0
+target_type = 3
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 6
+scaling_stat = 4
+scaling_ratio = 0.8
+hit_count = 4
+accuracy_modifier = -0.05
+crit_modifier = 0.1
+
+status_effects = [{"effect": 9, "chance": 0.2, "duration": 2}]
+stat_modifiers = []
+special_effects = []
+
+animation_id = "swarm"
+sound_effect = "sfx_swarm"
+particle_effect = "slash_flurry"
+screen_shake = false
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []

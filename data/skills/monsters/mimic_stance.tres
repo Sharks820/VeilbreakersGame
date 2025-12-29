@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "mimic_stance"
+display_name = "Mimic Stance"
+description = "Copies the defensive capabilities of an observed target."
+icon_path = "res://assets/ui/skills/monsters/mimic_stance.png"
+
+skill_type = 2
+element = 0
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 4
+
+base_power = 0
+scaling_stat = 5
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["copy_target_defenses"]
+
+animation_id = "mimic"
+sound_effect = "sfx_transform"
+particle_effect = "mirror_effect"
+screen_shake = false
+
+level_requirement = 20
+path_requirement = 0.0
+prerequisite_skills = []

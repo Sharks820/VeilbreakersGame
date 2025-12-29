@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/hero_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+hero_id = "rend"
+display_name = "Rend"
+title = "The Beast Hunter"
+description = "Born to a nomadic tribe that hunts corruption at the frontier. Every scar is a lesson learned, every trophy a victory remembered."
+backstory = "Rend earned their name at age 14 by single-handedly killing a Ravener that slaughtered half their hunting party. The Compact recruited them after they tracked and eliminated a pack of corrupted beasts terrorizing trade routes. Doesn't talk much - prefers to let actions speak. Fights with primal fury but tactical precision. Believes the only good corruption is dead corruption."
+
+primary_brand = 0
+primary_path = 1
+role = "DPS"
+
+sprite_path = "res://assets/characters/heroes/rend.png"
+portrait_path = "res://assets/characters/heroes/rend_portrait.png"
+battle_sprite_path = "res://assets/characters/heroes/rend_battle.png"
+color_palette = Color(0.55, 0.16, 0.16, 1)
+
+base_hp = 42
+base_mp = 8
+base_attack = 18
+base_defense = 8
+base_magic = 4
+base_resistance = 6
+base_speed = 14
+base_luck = 8
+
+hp_growth = 0.7
+mp_growth = 0.3
+attack_growth = 0.8
+defense_growth = 0.4
+magic_growth = 0.2
+resistance_growth = 0.3
+speed_growth = 0.6
+luck_growth = 0.4
+
+innate_skills = ["attack_basic", "defend", "rending_strike"]
+learnable_skills = {5: "bloodletting", 10: "predator_leap", 15: "execute", 20: "frenzy", 25: "apex_fury"}
+ultimate_skill = "avatar_of_the_hunt"
+
+combat_description = "Bleed-focused attacks, high crit rate, execute abilities on low HP targets. Aggressive front-line berserker."
+preferred_targets = "weakest"

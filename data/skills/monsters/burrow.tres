@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "burrow"
+display_name = "Burrow"
+description = "Digs underground, becoming untargetable until next attack."
+icon_path = "res://assets/ui/skills/monsters/burrow.png"
+
+skill_type = 2
+element = 5
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 0
+scaling_stat = 8
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["underground", "next_attack_bonus"]
+
+animation_id = "burrow"
+sound_effect = "sfx_dig"
+particle_effect = "dirt_spray"
+screen_shake = false
+
+level_requirement = 10
+path_requirement = 0.0
+prerequisite_skills = []

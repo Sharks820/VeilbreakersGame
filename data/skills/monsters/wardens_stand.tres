@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "wardens_stand"
+display_name = "Warden's Stand"
+description = "Taunts all enemies while boosting defense for 3 turns."
+icon_path = "res://assets/ui/skills/monsters/wardens_stand.png"
+
+skill_type = 2
+element = 0
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 12
+hp_cost = 0
+cooldown_turns = 4
+
+base_power = 0
+scaling_stat = 5
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = [{"stat": 5, "amount": 0.4, "duration": 3}]
+special_effects = ["taunt_all"]
+
+animation_id = "warden_stance"
+sound_effect = "sfx_roar"
+particle_effect = "guardian_aura"
+screen_shake = true
+
+level_requirement = 24
+path_requirement = 0.0
+prerequisite_skills = []

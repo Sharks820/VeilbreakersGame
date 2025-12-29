@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "apex_strike"
+display_name = "Apex Strike"
+description = "Ultimate: Massive single-target attack that ignores defense. Once per battle."
+icon_path = "res://assets/ui/skills/monsters/apex_strike.png"
+
+skill_type = 0
+element = 1
+damage_type = 0
+target_type = 3
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 60
+scaling_stat = 4
+scaling_ratio = 1.5
+hit_count = 1
+accuracy_modifier = 0.1
+crit_modifier = 0.3
+
+status_effects = [{"effect": 9, "chance": 1.0, "duration": 4}]
+stat_modifiers = []
+special_effects = ["ignore_defense", "once_per_battle", "ascension_skill"]
+
+animation_id = "apex_strike"
+sound_effect = "sfx_apex"
+particle_effect = "apex_impact"
+screen_shake = true
+
+level_requirement = 30
+path_requirement = 0.0
+prerequisite_skills = []

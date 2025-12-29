@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "ravener"
+display_name = "Ravener"
+description = "Quadrupedal nightmare built from consumed predators. Wolf haunches, bear claws, big cat fangs - overlapping, excessive. Six eyes from different hunters. ALWAYS hungry."
+tier = 0
+brand = 0
+rarity = 2
+
+category = 1
+role = 0
+evolution_names = ["Ravener", "Bloodfang", "Apex"]
+evolution_sprites = ["res://assets/characters/monsters/ravener_corrupted.png", "res://assets/characters/monsters/ravener_awakened.png", "res://assets/characters/monsters/ravener_ascended.png"]
+
+sprite_path = "res://assets/sprites/monsters/ravener.png"
+portrait_path = "res://assets/characters/monsters/ravener_portrait.png"
+color_palette = Color(0.6, 0.1, 0.1, 1)
+
+primary_element = 1
+secondary_element = 9
+weaknesses = [8, 10]
+resistances = [1, 9]
+
+base_hp = 38
+base_mp = 0
+base_attack = 22
+base_defense = 5
+base_magic = 2
+base_resistance = 4
+base_speed = 14
+base_luck = 8
+
+hp_growth = 1.2
+mp_growth = 1.0
+attack_growth = 1.3
+defense_growth = 1.08
+magic_growth = 1.02
+resistance_growth = 1.05
+speed_growth = 1.15
+
+innate_skills = ["rend", "bloodscent"]
+learnable_skills = {8: "prey_on_weak", 15: "feeding_frenzy", 22: "pack_tactics", 30: "apex_strike"}
+
+ai_pattern = "aggressive"
+skill_weights = {"rend": 50, "bloodscent": 0, "prey_on_weak": 35, "feeding_frenzy": 15}
+
+base_corruption = 60.0
+corruption_resistance = 10.0
+
+base_experience = 25
+base_currency = 12
+drop_table = [{"item_id": "predator_fang", "chance": 0.5, "quantity": 1}, {"item_id": "ravener_claw", "chance": 0.35, "quantity": 1}, {"item_id": "apex_core", "chance": 0.03, "quantity": 1}]
+
+habitat = "Hunting grounds near apex predators"
+behavior_notes = "Targets weakest enemy, never retreats. Every predator consumed added another layer of hunting instinct."
+purification_hint = "The many predators settle into one. Becomes hunter with PURPOSE. Fiercely protective of trainer."

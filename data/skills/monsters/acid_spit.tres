@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "acid_spit"
+display_name = "Acid Spit"
+description = "Launches a glob of corrosive acid at the target."
+icon_path = "res://assets/ui/skills/monsters/acid_spit.png"
+
+skill_type = 0
+element = 7
+damage_type = 1
+target_type = 3
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 14
+scaling_stat = 6
+scaling_ratio = 1.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 2, "chance": 0.35, "duration": 3}]
+stat_modifiers = []
+special_effects = []
+
+animation_id = "acid_spit"
+sound_effect = "sfx_spit"
+particle_effect = "acid_splash"
+screen_shake = false
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []

@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/hero_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+hero_id = "marrow"
+display_name = "Marrow"
+title = "The Life Drainer"
+description = "Discovered they could take life to survive their wasting disease. Now uses that dark gift to heal others, acutely aware of the darkness within."
+backstory = "Marrow was dying from age 8. By 12, they'd accepted death. Then they touched a dying bird and felt its remaining life flow into them. The disease stopped. But so did the bird. Years of learning to control it followed - to take only what's freely given, to give back what they've stored. The Compact found them healing plague victims in a quarantined village, taking a little from many to give much to the sick. Speaks softly, moves gently."
+
+primary_brand = 5
+primary_path = 2
+role = "Healer"
+
+sprite_path = "res://assets/characters/heroes/marrow.png"
+portrait_path = "res://assets/characters/heroes/marrow_portrait.png"
+battle_sprite_path = "res://assets/characters/heroes/marrow_battle.png"
+color_palette = Color(0.36, 0.24, 0.55, 1)
+
+base_hp = 38
+base_mp = 35
+base_attack = 6
+base_defense = 8
+base_magic = 16
+base_resistance = 12
+base_speed = 8
+base_luck = 10
+
+hp_growth = 0.5
+mp_growth = 0.8
+attack_growth = 0.25
+defense_growth = 0.4
+magic_growth = 0.8
+resistance_growth = 0.6
+speed_growth = 0.4
+luck_growth = 0.5
+
+innate_skills = ["attack_basic", "defend", "life_tap"]
+learnable_skills = {5: "siphon_heal", 10: "essence_transfer", 15: "pain_split", 20: "life_link", 25: "mass_drain"}
+ultimate_skill = "vessel_of_souls"
+
+combat_description = "Drain healing - damage enemies to heal allies. Life transfer abilities, self-sacrifice heals, debuff enemies to strengthen party."
+preferred_targets = "any"

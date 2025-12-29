@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "harvest"
+display_name = "Harvest"
+description = "Gains defense when any creature dies nearby. Passive trigger."
+icon_path = "res://assets/ui/skills/monsters/harvest.png"
+
+skill_type = 6
+element = 0
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 0
+scaling_stat = 5
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = [{"stat": 5, "amount": 0.1, "duration": 99}]
+special_effects = ["trigger_on_any_death", "stacking"]
+
+animation_id = "harvest"
+sound_effect = "sfx_collect"
+particle_effect = "bone_absorb"
+screen_shake = false
+
+level_requirement = 5
+path_requirement = 0.0
+prerequisite_skills = []

@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "multiply"
+display_name = "Multiply"
+description = "Splits off pieces of itself, spawning Mawling servants."
+icon_path = "res://assets/ui/skills/monsters/multiply.png"
+
+skill_type = 5
+element = 9
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 10
+cooldown_turns = 4
+
+base_power = 0
+scaling_stat = 0
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["summon_mawling"]
+
+animation_id = "split"
+sound_effect = "sfx_flesh_tear"
+particle_effect = "spawn_effect"
+screen_shake = false
+
+level_requirement = 20
+path_requirement = 0.0
+prerequisite_skills = []

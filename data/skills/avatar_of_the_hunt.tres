@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "avatar_of_the_hunt"
+display_name = "Avatar of the Hunt"
+description = "ULTIMATE: Transform into the apex predator. All attacks cause bleed, gain life steal, and execute threshold raised to 30% for 4 turns."
+icon_path = "res://assets/ui/skills/avatar_of_the_hunt.png"
+
+skill_type = 2
+element = 0
+damage_type = 0
+target_type = 0
+brand_requirement = -1
+
+mp_cost = 30
+hp_cost = 0
+cooldown_turns = 8
+
+base_power = 0
+scaling_stat = 4
+scaling_ratio = 0.0
+hit_count = 0
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 12, "chance": 1.0, "duration": 4}]
+stat_modifiers = [{"stat": 4, "amount": 80, "duration": 4}, {"stat": 8, "amount": 50, "duration": 4}]
+special_effects = ["all_attacks_bleed", "life_steal_30", "execute_threshold_30"]
+
+animation_id = "avatar_of_the_hunt"
+sound_effect = "sfx_ultimate"
+particle_effect = "ultimate_predator"
+screen_shake = true
+
+level_requirement = 30
+path_requirement = 0.0
+prerequisite_skills = ["apex_fury"]

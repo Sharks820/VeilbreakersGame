@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "drown_in_despair"
+display_name = "Drown in Despair"
+description = "Engulfs the target in overwhelming sorrow, dealing massive damage."
+icon_path = "res://assets/ui/skills/monsters/drown_in_despair.png"
+
+skill_type = 0
+element = 4
+damage_type = 1
+target_type = 3
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 5
+
+base_power = 40
+scaling_stat = 6
+scaling_ratio = 1.4
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.1
+
+status_effects = [{"effect": 22, "chance": 1.0, "duration": 4}]
+stat_modifiers = []
+special_effects = ["bonus_vs_sorrow"]
+
+animation_id = "drown"
+sound_effect = "sfx_drown"
+particle_effect = "water_engulf"
+screen_shake = true
+
+level_requirement = 25
+path_requirement = 0.0
+prerequisite_skills = []

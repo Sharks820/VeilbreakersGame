@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "reflected_pain"
+display_name = "Reflected Pain"
+description = "Shares suffering with attackers, reflecting a portion of damage."
+icon_path = "res://assets/ui/skills/monsters/reflected_pain.png"
+
+skill_type = 2
+element = 0
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 4
+
+base_power = 0
+scaling_stat = 7
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["reflect_damage_30"]
+
+animation_id = "reflect"
+sound_effect = "sfx_mirror"
+particle_effect = "pain_mirror"
+screen_shake = false
+
+level_requirement = 18
+path_requirement = 0.0
+prerequisite_skills = []

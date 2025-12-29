@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "true_terror"
+display_name = "True Terror"
+description = "ULTIMATE: Reveal what lies beyond the Veil to all enemies. Those who witness it may never recover. Massive damage with chance to instantly defeat weak-willed foes."
+icon_path = "res://assets/ui/skills/true_terror.png"
+
+skill_type = 0
+element = 11
+damage_type = 1
+target_type = 4
+brand_requirement = -1
+
+mp_cost = 35
+hp_cost = 0
+cooldown_turns = 8
+
+base_power = 50
+scaling_stat = 6
+scaling_ratio = 1.5
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 6, "chance": 1.0, "duration": 4}, {"effect": 5, "chance": 0.5, "duration": 2}]
+stat_modifiers = [{"stat": 4, "amount": -50, "duration": 4}, {"stat": 5, "amount": -50, "duration": 4}]
+special_effects = ["instant_defeat_low_resist", "terror_aura"]
+
+animation_id = "true_terror"
+sound_effect = "sfx_ultimate"
+particle_effect = "ultimate_horror"
+screen_shake = true
+
+level_requirement = 30
+path_requirement = 0.0
+prerequisite_skills = ["reality_shatter"]

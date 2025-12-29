@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "between_seconds"
+display_name = "Between Seconds"
+description = "Acts twice this turn, but attacks deal reduced damage."
+icon_path = "res://assets/ui/skills/monsters/between_seconds.png"
+
+skill_type = 0
+element = 7
+damage_type = 0
+target_type = 3
+brand_requirement = 0
+
+mp_cost = 8
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 8
+scaling_stat = 4
+scaling_ratio = 0.7
+hit_count = 2
+accuracy_modifier = 0.0
+crit_modifier = 0.15
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["double_action_weak"]
+
+animation_id = "double_strike"
+sound_effect = "sfx_flash"
+particle_effect = "afterimage"
+screen_shake = false
+
+level_requirement = 7
+path_requirement = 0.0
+prerequisite_skills = []

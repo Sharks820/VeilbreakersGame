@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "predator_leap"
+display_name = "Predator Leap"
+description = "Pounce on the weakest enemy with savage precision. Guaranteed critical hit on targets below 50% HP."
+icon_path = "res://assets/ui/skills/predator_leap.png"
+
+skill_type = 0
+element = 1
+damage_type = 0
+target_type = 3
+brand_requirement = -1
+
+mp_cost = 8
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 25
+scaling_stat = 4
+scaling_ratio = 1.2
+hit_count = 1
+accuracy_modifier = 0.2
+crit_modifier = 0.3
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["guaranteed_crit_below_50_hp"]
+
+animation_id = "predator_leap"
+sound_effect = "sfx_pounce"
+particle_effect = "claw_impact"
+screen_shake = true
+
+level_requirement = 10
+path_requirement = 0.0
+prerequisite_skills = ["bloodletting"]

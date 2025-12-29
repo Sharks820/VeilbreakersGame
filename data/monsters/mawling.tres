@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "mawling"
+display_name = "Mawling"
+description = "A small, hovering mass of dark viscous matter with a single oversized mouth. Pure hunger given form - no thought, no plan. Drawn to warmth and movement."
+tier = 0
+brand = 0
+rarity = 0
+
+category = 0
+role = 0
+evolution_names = ["Mawling", "Loyal Maw"]
+evolution_sprites = ["res://assets/characters/monsters/mawling_corrupted.png", "res://assets/characters/monsters/mawling_awakened.png"]
+
+sprite_path = "res://assets/sprites/monsters/mawling.png"
+portrait_path = "res://assets/characters/monsters/mawling_portrait.png"
+color_palette = Color(0.2, 0.1, 0.15, 1)
+
+primary_element = 1
+secondary_element = 0
+weaknesses = [8]
+resistances = [9]
+
+base_hp = 45
+base_mp = 0
+base_attack = 14
+base_defense = 6
+base_magic = 2
+base_resistance = 4
+base_speed = 11
+base_luck = 3
+
+hp_growth = 1.25
+mp_growth = 1.0
+attack_growth = 1.2
+defense_growth = 1.1
+magic_growth = 1.05
+resistance_growth = 1.08
+speed_growth = 1.1
+
+innate_skills = ["gnaw"]
+learnable_skills = {5: "desperate_lunge", 12: "devour_scraps", 20: "loyal_bite", 30: "pack_feast"}
+
+ai_pattern = "aggressive"
+skill_weights = {"gnaw": 60, "desperate_lunge": 30, "devour_scraps": 10}
+
+base_corruption = 50.0
+corruption_resistance = 5.0
+
+base_experience = 12
+base_currency = 5
+drop_table = [{"item_id": "viscous_residue", "chance": 0.6, "quantity": 1}, {"item_id": "cracked_fang", "chance": 0.3, "quantity": 1}]
+
+habitat = "Near Veil cracks, dark areas"
+behavior_notes = "Targets weakest enemy, never retreats. Intensely loyal when purified."
+purification_hint = "Becomes loyal - the first creature to show it anything other than fear."

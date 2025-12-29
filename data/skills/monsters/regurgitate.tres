@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "regurgitate"
+display_name = "Regurgitate"
+description = "Expels consumed matter in a devastating area attack."
+icon_path = "res://assets/ui/skills/monsters/regurgitate.png"
+
+skill_type = 0
+element = 7
+damage_type = 1
+target_type = 4
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 4
+
+base_power = 22
+scaling_stat = 4
+scaling_ratio = 0.8
+hit_count = 1
+accuracy_modifier = -0.1
+crit_modifier = 0.0
+
+status_effects = [{"effect": 1, "chance": 0.4, "duration": 3}]
+stat_modifiers = []
+special_effects = ["bonus_from_absorbed"]
+
+animation_id = "regurgitate"
+sound_effect = "sfx_vomit"
+particle_effect = "bile_splash"
+screen_shake = true
+
+level_requirement = 20
+path_requirement = 0.0
+prerequisite_skills = []

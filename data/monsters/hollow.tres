@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "hollow"
+display_name = "Hollow"
+description = "A towering shadow entity with a muscular upper form dissolving into writhing tendrils below. A single glowing red core pulses in its chest - the only light in its darkness. Massive clawed hands reach outward as debris floats in its presence. Imposing yet lonely."
+tier = 0
+brand = 4
+rarity = 0
+
+category = 0
+role = 3
+evolution_names = ["Hollow", "The Defined"]
+evolution_sprites = ["res://assets/characters/monsters/hollow_corrupted.png", "res://assets/characters/monsters/hollow_awakened.png"]
+
+sprite_path = "res://assets/sprites/monsters/hollow.png"
+portrait_path = "res://assets/characters/monsters/hollow_portrait.png"
+color_palette = Color(0.15, 0.1, 0.2, 1)
+
+primary_element = 9
+secondary_element = 0
+weaknesses = [8, 10]
+resistances = [1, 9]
+
+base_hp = 35
+base_mp = 15
+base_attack = 8
+base_defense = 8
+base_magic = 12
+base_resistance = 10
+base_speed = 9
+base_luck = 5
+
+hp_growth = 1.15
+mp_growth = 1.2
+attack_growth = 1.08
+defense_growth = 1.12
+magic_growth = 1.18
+resistance_growth = 1.15
+speed_growth = 1.08
+
+innate_skills = ["empty_grasp"]
+learnable_skills = {5: "hollow_wail", 10: "mimic_stance", 18: "void_touch", 25: "defined_purpose"}
+
+ai_pattern = "support"
+skill_weights = {"empty_grasp": 40, "hollow_wail": 35, "mimic_stance": 25}
+
+base_corruption = 45.0
+corruption_resistance = 3.0
+
+base_experience = 14
+base_currency = 6
+drop_table = [{"item_id": "essence_fragment", "chance": 0.5, "quantity": 1}, {"item_id": "shadow_wisp", "chance": 0.25, "quantity": 1}]
+
+habitat = "Near recent death or great grief, abandoned places"
+behavior_notes = "Wandering, reaching toward living beings. Lonely in a way it can't comprehend."
+purification_hint = "Finally gains definition. The first thing it does is look at its hands in wonder."

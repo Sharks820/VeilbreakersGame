@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "help_us"
+display_name = "\"Help Us\""
+description = "Phase 3: The villagers sabotage from within, causing random debuffs to the Congregation."
+icon_path = "res://assets/ui/skills/monsters/help_us.png"
+
+skill_type = 3
+element = 0
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 0
+scaling_stat = 0
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = [{"stat": 4, "amount": -0.1, "duration": 2}, {"stat": 5, "amount": -0.1, "duration": 2}]
+special_effects = ["self_sabotage", "villagers_resist"]
+
+animation_id = "struggle"
+sound_effect = "sfx_pleas"
+particle_effect = "ghost_hands"
+screen_shake = false
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []

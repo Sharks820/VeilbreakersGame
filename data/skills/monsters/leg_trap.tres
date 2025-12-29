@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "leg_trap"
+display_name = "Leg Trap"
+description = "Wraps around the target's legs, immobilizing them."
+icon_path = "res://assets/ui/skills/monsters/leg_trap.png"
+
+skill_type = 4
+element = 1
+damage_type = 0
+target_type = 3
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 8
+scaling_stat = 4
+scaling_ratio = 0.6
+hit_count = 1
+accuracy_modifier = 0.1
+crit_modifier = 0.0
+
+status_effects = [{"effect": 18, "chance": 0.75, "duration": 2}]
+stat_modifiers = []
+special_effects = []
+
+animation_id = "entangle"
+sound_effect = "sfx_wrap"
+particle_effect = "bind_effect"
+screen_shake = false
+
+level_requirement = 15
+path_requirement = 0.0
+prerequisite_skills = []

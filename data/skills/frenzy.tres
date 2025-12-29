@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "frenzy"
+display_name = "Frenzy"
+description = "Enter a blood rage. Massively increases attack and speed but reduces defense. Each kill extends duration."
+icon_path = "res://assets/ui/skills/frenzy.png"
+
+skill_type = 2
+element = 0
+damage_type = 0
+target_type = 0
+brand_requirement = -1
+
+mp_cost = 12
+hp_cost = 0
+cooldown_turns = 4
+
+base_power = 0
+scaling_stat = 4
+scaling_ratio = 0.0
+hit_count = 0
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 12, "chance": 1.0, "duration": 3}]
+stat_modifiers = [{"stat": 4, "amount": 60, "duration": 3}, {"stat": 8, "amount": 40, "duration": 3}, {"stat": 5, "amount": -30, "duration": 3}]
+special_effects = ["extend_on_kill"]
+
+animation_id = "frenzy"
+sound_effect = "sfx_rage"
+particle_effect = "blood_aura"
+screen_shake = false
+
+level_requirement = 20
+path_requirement = 0.0
+prerequisite_skills = ["execute"]

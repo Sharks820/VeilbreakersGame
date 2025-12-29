@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "toxic_cloud"
+display_name = "Toxic Cloud"
+description = "Releases a cloud of noxious gas that poisons all nearby."
+icon_path = "res://assets/ui/skills/monsters/toxic_cloud.png"
+
+skill_type = 4
+element = 7
+damage_type = 3
+target_type = 4
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 0
+scaling_stat = 6
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 1, "chance": 0.8, "duration": 4}]
+stat_modifiers = []
+special_effects = []
+
+animation_id = "gas_cloud"
+sound_effect = "sfx_gas"
+particle_effect = "poison_cloud"
+screen_shake = false
+
+level_requirement = 15
+path_requirement = 0.0
+prerequisite_skills = []

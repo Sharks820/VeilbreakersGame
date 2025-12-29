@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "void_touch"
+display_name = "Void Touch"
+description = "A touch of nothingness that silences magic users."
+icon_path = "res://assets/ui/skills/monsters/void_touch.png"
+
+skill_type = 0
+element = 9
+damage_type = 1
+target_type = 3
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 16
+scaling_stat = 6
+scaling_ratio = 1.1
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 8, "chance": 0.6, "duration": 2}]
+stat_modifiers = []
+special_effects = []
+
+animation_id = "void_touch"
+sound_effect = "sfx_void"
+particle_effect = "void_ripple"
+screen_shake = false
+
+level_requirement = 10
+path_requirement = 0.0
+prerequisite_skills = []

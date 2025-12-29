@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "cover_ally"
+display_name = "Cover"
+description = "Intercept all attacks targeting an ally this turn, taking the damage in their place."
+icon_path = "res://assets/ui/skills/cover_ally.png"
+
+skill_type = 5
+element = 0
+damage_type = 0
+target_type = 1
+brand_requirement = -1
+
+mp_cost = 5
+hp_cost = 0
+cooldown_turns = 1
+
+base_power = 0
+scaling_stat = 5
+scaling_ratio = 0.0
+hit_count = 0
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["redirect_damage_to_self"]
+
+animation_id = "cover"
+sound_effect = "sfx_cover"
+particle_effect = ""
+screen_shake = false
+
+level_requirement = 15
+path_requirement = 0.0
+prerequisite_skills = ["iron_wall"]

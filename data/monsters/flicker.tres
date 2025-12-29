@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "flicker"
+display_name = "Flicker"
+description = "Barely visible. A blur. An afterimage. Something insectoid but wrong, made of consumed wings - bird, bat, butterfly, dragonfly - all layered. No solid core, just motion given form."
+tier = 0
+brand = 3
+rarity = 2
+
+category = 1
+role = 0
+evolution_names = ["Flicker", "Stormwing", "Quicksilver"]
+evolution_sprites = ["res://assets/characters/monsters/flicker_corrupted.png", "res://assets/characters/monsters/flicker_awakened.png", "res://assets/characters/monsters/flicker_ascended.png"]
+
+sprite_path = "res://assets/sprites/monsters/flicker.png"
+portrait_path = "res://assets/characters/monsters/flicker_portrait.png"
+color_palette = Color(0.3, 0.6, 0.9, 1)
+
+primary_element = 4
+secondary_element = 7
+weaknesses = [5, 6]
+resistances = [4, 7]
+
+base_hp = 28
+base_mp = 10
+base_attack = 11
+base_defense = 4
+base_magic = 8
+base_resistance = 6
+base_speed = 26
+base_luck = 12
+
+hp_growth = 1.1
+mp_growth = 1.12
+attack_growth = 1.15
+defense_growth = 1.05
+magic_growth = 1.1
+resistance_growth = 1.08
+speed_growth = 1.25
+
+innate_skills = ["blur_strike", "too_fast"]
+learnable_skills = {7: "between_seconds", 12: "interrupt", 18: "hit_and_run", 25: "quicksilver_blitz"}
+
+ai_pattern = "speed"
+skill_weights = {"blur_strike": 50, "between_seconds": 30, "interrupt": 20}
+
+base_corruption = 45.0
+corruption_resistance = 4.0
+
+base_experience = 22
+base_currency = 10
+drop_table = [{"item_id": "velocity_shard", "chance": 0.5, "quantity": 1}, {"item_id": "blur_feather", "chance": 0.3, "quantity": 1}, {"item_id": "moment_frozen", "chance": 0.04, "quantity": 1}]
+
+habitat = "Open skies, windy passes, near Veil cracks where air tears"
+behavior_notes = "Cannot stop - stillness is death. Exists between moments. Doesn't think - thinking is too slow."
+purification_hint = "Learns to be still. Discovers the space between movements contains thought, peace."

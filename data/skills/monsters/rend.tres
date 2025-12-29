@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "rend"
+display_name = "Rend"
+description = "Tears into the target with savage claws."
+icon_path = "res://assets/ui/skills/monsters/rend.png"
+
+skill_type = 0
+element = 1
+damage_type = 0
+target_type = 3
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 18
+scaling_stat = 4
+scaling_ratio = 1.2
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.1
+
+status_effects = [{"effect": 9, "chance": 0.4, "duration": 3}]
+stat_modifiers = []
+special_effects = []
+
+animation_id = "rend"
+sound_effect = "sfx_rend"
+particle_effect = "claw_slash"
+screen_shake = false
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []

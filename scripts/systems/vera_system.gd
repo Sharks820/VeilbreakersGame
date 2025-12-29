@@ -102,12 +102,12 @@ func _connect_signals() -> void:
 # =============================================================================
 
 func add_corruption(source: String) -> void:
-	var amount := CORRUPTION_SOURCES.get(source, 0.0)
+	var amount: float = CORRUPTION_SOURCES.get(source, 0.0)
 	if amount > 0:
 		_modify_corruption(amount, source)
 
 func reduce_corruption(source: String) -> void:
-	var amount := CORRUPTION_REDUCERS.get(source, 0.0)
+	var amount: float = CORRUPTION_REDUCERS.get(source, 0.0)
 	if amount < 0:
 		_modify_corruption(amount, source)
 
@@ -294,8 +294,8 @@ func _ability_dark_blessing() -> Dictionary:
 # =============================================================================
 
 func get_dialogue(context: String) -> String:
-	var state_suffix := Enums.VERAState.keys()[current_state].to_lower()
-	var dialogue_key := "%s_%s" % [context, state_suffix]
+	var state_suffix: String = Enums.VERAState.keys()[current_state].to_lower()
+	var dialogue_key: String = "%s_%s" % [context, state_suffix]
 
 	var dialogues := {
 		# =========== INTERFACE: The perfect lie ===========

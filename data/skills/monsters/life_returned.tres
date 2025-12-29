@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "life_returned"
+display_name = "Life Returned"
+description = "Revives a fallen ally with 25% of their maximum HP. Once per battle."
+icon_path = "res://assets/ui/skills/monsters/life_returned.png"
+
+skill_type = 1
+element = 10
+damage_type = 3
+target_type = 1
+brand_requirement = 0
+
+mp_cost = 25
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 25
+scaling_stat = 6
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["revive_ally", "once_per_battle"]
+
+animation_id = "revive"
+sound_effect = "sfx_revive"
+particle_effect = "life_surge"
+screen_shake = false
+
+level_requirement = 22
+path_requirement = 0.0
+prerequisite_skills = []

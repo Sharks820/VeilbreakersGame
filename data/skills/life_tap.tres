@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "life_tap"
+display_name = "Life Tap"
+description = "Drain a small amount of life from an enemy, healing yourself for the damage dealt."
+icon_path = "res://assets/ui/skills/life_tap.png"
+
+skill_type = 0
+element = 9
+damage_type = 1
+target_type = 3
+brand_requirement = -1
+
+mp_cost = 3
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 12
+scaling_stat = 6
+scaling_ratio = 0.8
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["life_steal_100"]
+
+animation_id = "life_tap"
+sound_effect = "sfx_drain"
+particle_effect = "life_drain"
+screen_shake = false
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []

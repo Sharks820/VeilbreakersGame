@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "assimilate"
+display_name = "Assimilate"
+description = "Absorbs a fallen body into the collective, gaining power."
+icon_path = "res://assets/ui/skills/monsters/assimilate.png"
+
+skill_type = 2
+element = 9
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 0
+scaling_stat = 4
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["consume_corpse_buff", "heal_on_consume"]
+
+animation_id = "assimilate"
+sound_effect = "sfx_absorb_flesh"
+particle_effect = "flesh_absorb"
+screen_shake = false
+
+level_requirement = 10
+path_requirement = 0.0
+prerequisite_skills = []

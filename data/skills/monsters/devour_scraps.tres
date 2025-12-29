@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "devour_scraps"
+display_name = "Devour Scraps"
+description = "Consume a fallen ally to restore HP. Desperate but effective."
+icon_path = "res://assets/ui/skills/monsters/devour_scraps.png"
+
+skill_type = 1
+element = 9
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 50
+scaling_stat = 4
+scaling_ratio = 0.5
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["consume_corpse_heal"]
+
+animation_id = "devour"
+sound_effect = "sfx_consume"
+particle_effect = "dark_consume"
+screen_shake = false
+
+level_requirement = 12
+path_requirement = 0.0
+prerequisite_skills = []

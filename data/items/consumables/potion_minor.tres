@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+item_id = "potion_minor"
+display_name = "Minor Potion"
+description = "A small vial of healing elixir. Restores a modest amount of HP."
+icon_path = "res://assets/ui/items/potion_minor.png"
+
+item_type = 0
+rarity = 0
+is_key_item = false
+is_stackable = true
+max_stack = 99
+
+buy_price = 50
+sell_price = 25
+can_sell = true
+
+usable_in_battle = true
+usable_in_field = true
+target_type = 1
+consumed_on_use = true
+
+hp_restore = 30
+hp_restore_percent = 0.0
+mp_restore = 0
+mp_restore_percent = 0.0
+
+cures_status = []
+applies_status = []
+revives = false
+revive_hp_percent = 0.0
+
+stat_buffs = []
+permanent_stat_increase = {}
+
+special_effect = ""
+corruption_change = 0.0
+path_change = 0.0

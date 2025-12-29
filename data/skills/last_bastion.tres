@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "last_bastion"
+display_name = "Last Bastion"
+description = "ULTIMATE: Become the final line of defense. Absorb ALL damage for the party for 3 turns while gaining massive regeneration."
+icon_path = "res://assets/ui/skills/last_bastion.png"
+
+skill_type = 2
+element = 0
+damage_type = 0
+target_type = 0
+brand_requirement = -1
+
+mp_cost = 25
+hp_cost = 0
+cooldown_turns = 8
+
+base_power = 0
+scaling_stat = 5
+scaling_ratio = 0.0
+hit_count = 0
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 10, "chance": 1.0, "duration": 3}, {"effect": 14, "chance": 1.0, "duration": 3}]
+stat_modifiers = [{"stat": 5, "amount": 100, "duration": 3}]
+special_effects = ["redirect_all_party_damage", "hp_regen_massive", "taunt_all"]
+
+animation_id = "last_bastion"
+sound_effect = "sfx_ultimate"
+particle_effect = "ultimate_shield"
+screen_shake = true
+
+level_requirement = 30
+path_requirement = 0.0
+prerequisite_skills = ["unbreakable"]

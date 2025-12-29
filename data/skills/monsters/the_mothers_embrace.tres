@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "the_mothers_embrace"
+display_name = "The Mother's Embrace"
+description = "Wraps around a target, dealing damage over time while healing self."
+icon_path = "res://assets/ui/skills/monsters/the_mothers_embrace.png"
+
+skill_type = 0
+element = 9
+damage_type = 0
+target_type = 3
+brand_requirement = 0
+
+mp_cost = 15
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 15
+scaling_stat = 4
+scaling_ratio = 0.8
+hit_count = 1
+accuracy_modifier = 0.1
+crit_modifier = 0.0
+
+status_effects = [{"effect": 18, "chance": 0.8, "duration": 2}]
+stat_modifiers = []
+special_effects = ["lifesteal_50", "dot_damage"]
+
+animation_id = "embrace"
+sound_effect = "sfx_grab"
+particle_effect = "flesh_wrap"
+screen_shake = false
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []

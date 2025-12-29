@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "the_congregation"
+display_name = "The Congregation"
+description = "Massive 15-foot tall writhing pillar of absorbed humanity. Dozens of bodies fused into one, still moving, still reaching. Faces press against surface from inside, mouths in silent screams. It introduces itself using all their names."
+tier = 3
+brand = 5
+rarity = 4
+
+category = 1
+role = 0
+evolution_names = ["The Congregation"]
+evolution_sprites = ["res://assets/characters/monsters/the_congregation.png"]
+
+sprite_path = "res://assets/sprites/monsters/the_congregation.png"
+portrait_path = "res://assets/characters/monsters/the_congregation_portrait.png"
+color_palette = Color(0.4, 0.15, 0.2, 1)
+
+primary_element = 9
+secondary_element = 11
+weaknesses = [8, 10]
+resistances = [1, 9, 11]
+
+base_hp = 450
+base_mp = 60
+base_attack = 18
+base_defense = 14
+base_magic = 16
+base_resistance = 12
+base_speed = 7
+base_luck = 5
+
+hp_growth = 1.0
+mp_growth = 1.0
+attack_growth = 1.0
+defense_growth = 1.0
+magic_growth = 1.0
+resistance_growth = 1.0
+speed_growth = 1.0
+
+innate_skills = ["the_smiths_hammer", "the_elders_wisdom", "the_mothers_embrace", "chorus_of_names"]
+learnable_skills = {}
+
+ai_pattern = "boss_congregation"
+skill_weights = {"the_smiths_hammer": 30, "the_elders_wisdom": 20, "the_mothers_embrace": 25, "chorus_of_names": 25}
+
+base_corruption = 100.0
+corruption_resistance = 50.0
+
+base_experience = 500
+base_currency = 200
+drop_table = [{"item_id": "congregation_core", "chance": 1.0, "quantity": 1}, {"item_id": "village_memory", "chance": 1.0, "quantity": 1}, {"item_id": "festival_remnant", "chance": 0.15, "quantity": 1}, {"item_id": "brides_veil", "chance": 0.1, "quantity": 1}]
+
+habitat = "Abandoned Village (Tutorial Area)"
+behavior_notes = "Phase 1: 2 actions per turn. Phase 2 (60%): Opens torso mouth, uses Invitation. Phase 3 (30%): Villagers inside fight back, sometimes skips turns."
+purification_hint = "Cannot be purified - releases souls instead. Dozens of ghostly figures pour out, finally free."

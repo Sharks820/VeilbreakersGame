@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "festival_dance"
+display_name = "Festival Dance"
+description = "A chaotic flailing of limbs, hitting random targets multiple times."
+icon_path = "res://assets/ui/skills/monsters/festival_dance.png"
+
+skill_type = 0
+element = 1
+damage_type = 0
+target_type = 4
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 12
+scaling_stat = 4
+scaling_ratio = 0.9
+hit_count = 4
+accuracy_modifier = -0.1
+crit_modifier = 0.1
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["random_targets"]
+
+animation_id = "flail"
+sound_effect = "sfx_flail"
+particle_effect = "limb_chaos"
+screen_shake = true
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []

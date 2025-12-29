@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "collective_scream"
+display_name = "Collective Scream"
+description = "Countless voices shriek in unison, shattering minds."
+icon_path = "res://assets/ui/skills/monsters/collective_scream.png"
+
+skill_type = 0
+element = 9
+damage_type = 1
+target_type = 4
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 18
+scaling_stat = 6
+scaling_ratio = 1.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 19, "chance": 0.5, "duration": 2}]
+stat_modifiers = []
+special_effects = []
+
+animation_id = "scream"
+sound_effect = "sfx_collective_scream"
+particle_effect = "scream_wave"
+screen_shake = true
+
+level_requirement = 15
+path_requirement = 0.0
+prerequisite_skills = []

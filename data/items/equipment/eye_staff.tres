@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+item_id = "eye_staff"
+display_name = "Eye Staff"
+description = "Mirage's focus of power. A crystalline eye that sees what isn't there."
+icon_path = "res://assets/ui/items/eye_staff.png"
+
+item_type = 1
+rarity = 0
+is_key_item = false
+is_stackable = false
+max_stack = 1
+
+buy_price = 0
+sell_price = 55
+can_sell = false
+
+usable_in_battle = false
+usable_in_field = false
+target_type = 0
+consumed_on_use = false
+
+hp_restore = 0
+hp_restore_percent = 0.0
+mp_restore = 0
+mp_restore_percent = 0.0
+
+cures_status = []
+applies_status = []
+revives = false
+revive_hp_percent = 0.0
+
+stat_buffs = []
+permanent_stat_increase = {}
+
+special_effect = ""
+corruption_change = 0.0
+path_change = 0.0
+
+equipment_slot = 0
+stat_bonuses = {6: 7, 9: 3}
+element_affinity = 11
+brand_requirement = -1

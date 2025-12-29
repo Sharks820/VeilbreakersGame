@@ -1,6 +1,13 @@
-[gd_scene load_steps=2 format=3 uid="uid://b5qx2vqe1yf6h"]
+[gd_scene load_steps=8 format=3 uid="uid://b5qx2vqe1yf6h"]
 
 [ext_resource type="Script" path="res://scripts/ui/main_menu_controller.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/ui/title/title_background.png" id="2_bg"]
+[ext_resource type="Texture2D" path="res://assets/ui/title/title_logo_upscaled.png" id="3_logo"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/btn_new_game.png" id="4_newgame"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/btn_continue.png" id="5_continue"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/btn_continue_disabled.png" id="5b_continue_disabled"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/btn_settings.png" id="6_settings"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/btn_quit.png" id="7_quit"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -11,67 +18,87 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.0941176, 0.0941176, 0.14902, 1)
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="DarkOverlay" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+color = Color(0, 0, 0, 0.15)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
-layout_mode = 2
-theme_override_constants/separation = 20
+[node name="Logo" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -180.0
+offset_top = 15.0
+offset_right = 180.0
+offset_bottom = 165.0
+grow_horizontal = 2
+texture = ExtResource("3_logo")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="Title" type="Label" parent="CenterContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 72
-text = "VEILBREAKERS"
-horizontal_alignment = 1
+[node name="ButtonContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -480.0
+offset_top = -110.0
+offset_right = 480.0
+offset_bottom = -25.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 30
 
-[node name="Subtitle" type="Label" parent="CenterContainer/VBoxContainer"]
+[node name="NewGameButton" type="TextureButton" parent="ButtonContainer"]
+custom_minimum_size = Vector2(200, 70)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "The Veil is Cracking..."
-horizontal_alignment = 1
-modulate = Color(0.8, 0.8, 0.9, 0.8)
+size_flags_horizontal = 6
+texture_normal = ExtResource("4_newgame")
+ignore_texture_size = true
+stretch_mode = 5
 
-[node name="Spacer" type="Control" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 40)
+[node name="ContinueButton" type="TextureButton" parent="ButtonContainer"]
+custom_minimum_size = Vector2(200, 70)
 layout_mode = 2
+size_flags_horizontal = 6
+texture_normal = ExtResource("5_continue")
+texture_disabled = ExtResource("5b_continue_disabled")
+ignore_texture_size = true
+stretch_mode = 5
 
-[node name="ButtonContainer" type="VBoxContainer" parent="CenterContainer/VBoxContainer"]
+[node name="SettingsButton" type="TextureButton" parent="ButtonContainer"]
+custom_minimum_size = Vector2(200, 70)
 layout_mode = 2
-theme_override_constants/separation = 12
+size_flags_horizontal = 6
+texture_normal = ExtResource("6_settings")
+ignore_texture_size = true
+stretch_mode = 5
 
-[node name="NewGameButton" type="Button" parent="CenterContainer/VBoxContainer/ButtonContainer"]
-custom_minimum_size = Vector2(300, 50)
+[node name="QuitButton" type="TextureButton" parent="ButtonContainer"]
+custom_minimum_size = Vector2(200, 70)
 layout_mode = 2
-text = "New Game"
-
-[node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer/ButtonContainer"]
-custom_minimum_size = Vector2(300, 50)
-layout_mode = 2
-text = "Continue"
-
-[node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer/ButtonContainer"]
-custom_minimum_size = Vector2(300, 50)
-layout_mode = 2
-text = "Settings"
-
-[node name="QuitButton" type="Button" parent="CenterContainer/VBoxContainer/ButtonContainer"]
-custom_minimum_size = Vector2(300, 50)
-layout_mode = 2
-text = "Quit"
+size_flags_horizontal = 6
+texture_normal = ExtResource("7_quit")
+ignore_texture_size = true
+stretch_mode = 5
 
 [node name="VersionLabel" type="Label" parent="."]
 layout_mode = 1
@@ -80,12 +107,12 @@ anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 10.0
 offset_top = -30.0
-offset_right = 200.0
+offset_right = 300.0
 grow_vertical = 0
 text = "v0.1.0 - Development Build"
-modulate = Color(1, 1, 1, 0.5)
+modulate = Color(1, 1, 1, 0.6)
 
-[connection signal="pressed" from="CenterContainer/VBoxContainer/ButtonContainer/NewGameButton" to="." method="_on_new_game_pressed"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/ButtonContainer/ContinueButton" to="." method="_on_continue_pressed"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/ButtonContainer/SettingsButton" to="." method="_on_settings_pressed"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/ButtonContainer/QuitButton" to="." method="_on_quit_pressed"]
+[connection signal="pressed" from="ButtonContainer/NewGameButton" to="." method="_on_new_game_pressed"]
+[connection signal="pressed" from="ButtonContainer/ContinueButton" to="." method="_on_continue_pressed"]
+[connection signal="pressed" from="ButtonContainer/SettingsButton" to="." method="_on_settings_pressed"]
+[connection signal="pressed" from="ButtonContainer/QuitButton" to="." method="_on_quit_pressed"]

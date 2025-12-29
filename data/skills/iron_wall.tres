@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "iron_wall"
+display_name = "Iron Wall"
+description = "Massively increase your defense for 3 turns, becoming an immovable bulwark."
+icon_path = "res://assets/ui/skills/iron_wall.png"
+
+skill_type = 2
+element = 0
+damage_type = 0
+target_type = 0
+brand_requirement = -1
+
+mp_cost = 8
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 0
+scaling_stat = 5
+scaling_ratio = 0.0
+hit_count = 0
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 14, "chance": 1.0, "duration": 3}]
+stat_modifiers = [{"stat": 5, "amount": 75, "duration": 3}]
+special_effects = []
+
+animation_id = "iron_wall"
+sound_effect = "sfx_buff_defense"
+particle_effect = "shield_glow"
+screen_shake = false
+
+level_requirement = 10
+path_requirement = 0.0
+prerequisite_skills = ["taunt"]

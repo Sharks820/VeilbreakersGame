@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "mass_drain"
+display_name = "Mass Drain"
+description = "Drain life from ALL enemies, distributing the stolen vitality among all allies."
+icon_path = "res://assets/ui/skills/mass_drain.png"
+
+skill_type = 0
+element = 9
+damage_type = 1
+target_type = 4
+brand_requirement = -1
+
+mp_cost = 18
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 20
+scaling_stat = 6
+scaling_ratio = 1.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["heal_party_from_damage"]
+
+animation_id = "mass_drain"
+sound_effect = "sfx_mass_drain"
+particle_effect = "soul_harvest"
+screen_shake = true
+
+level_requirement = 25
+path_requirement = 0.0
+prerequisite_skills = ["life_link"]

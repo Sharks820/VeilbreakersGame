@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "skitter_teeth"
+display_name = "Skitter-Teeth"
+description = "A ribcage crawling on finger-like legs, with a jaw that splits four ways. Made of bones from multiple creatures fused wrong. Moves in jerky, stop-motion bursts."
+tier = 0
+brand = 1
+rarity = 0
+
+category = 0
+role = 1
+evolution_names = ["Skitter-Teeth", "Bone Warden"]
+evolution_sprites = ["res://assets/characters/monsters/skitter_teeth_corrupted.png", "res://assets/characters/monsters/skitter_teeth_awakened.png"]
+
+sprite_path = "res://assets/sprites/monsters/skitter_teeth.png"
+portrait_path = "res://assets/characters/monsters/skitter_teeth_portrait.png"
+color_palette = Color(0.9, 0.85, 0.7, 1)
+
+primary_element = 1
+secondary_element = 0
+weaknesses = [2, 10]
+resistances = [1, 9]
+
+base_hp = 50
+base_mp = 5
+base_attack = 12
+base_defense = 14
+base_magic = 3
+base_resistance = 8
+base_speed = 10
+base_luck = 5
+
+hp_growth = 1.25
+mp_growth = 1.05
+attack_growth = 1.15
+defense_growth = 1.25
+magic_growth = 1.02
+resistance_growth = 1.1
+speed_growth = 1.08
+
+innate_skills = ["bone_snap"]
+learnable_skills = {5: "harvest", 10: "reassemble", 16: "bone_wall", 24: "wardens_stand"}
+
+ai_pattern = "tank"
+skill_weights = {"bone_snap": 40, "harvest": 20, "bone_wall": 40}
+
+base_corruption = 55.0
+corruption_resistance = 8.0
+
+base_experience = 14
+base_currency = 6
+drop_table = [{"item_id": "fused_bone_fragment", "chance": 0.55, "quantity": 1}, {"item_id": "chattering_jaw", "chance": 0.3, "quantity": 1}, {"item_id": "intact_skull", "chance": 0.05, "quantity": 1}]
+
+habitat = "Battlefields, graveyards, predator feeding grounds"
+behavior_notes = "Collects bones constantly. Builds itself from remains."
+purification_hint = "Becomes guardian of the dead. Understands bones are sacred, not material."

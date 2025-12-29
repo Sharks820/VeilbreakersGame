@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "bloat"
+display_name = "Bloat"
+description = "Expands grotesquely, increasing HP but reducing Speed."
+icon_path = "res://assets/ui/skills/monsters/bloat.png"
+
+skill_type = 2
+element = 0
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 4
+
+base_power = 0
+scaling_stat = 0
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = [{"stat": 1, "amount": 0.3, "duration": 4}, {"stat": 8, "amount": -0.2, "duration": 4}]
+special_effects = ["increase_size"]
+
+animation_id = "bloat"
+sound_effect = "sfx_expand"
+particle_effect = "flesh_grow"
+screen_shake = false
+
+level_requirement = 8
+path_requirement = 0.0
+prerequisite_skills = []

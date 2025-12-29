@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "the_elders_wisdom"
+display_name = "The Elder's Wisdom"
+description = "Ancient knowledge grants defensive fortification."
+icon_path = "res://assets/ui/skills/monsters/the_elders_wisdom.png"
+
+skill_type = 2
+element = 0
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 10
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 0
+scaling_stat = 5
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = [{"stat": 5, "amount": 0.3, "duration": 3}, {"stat": 7, "amount": 0.3, "duration": 3}]
+special_effects = []
+
+animation_id = "wisdom"
+sound_effect = "sfx_chant"
+particle_effect = "ancient_glow"
+screen_shake = false
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []

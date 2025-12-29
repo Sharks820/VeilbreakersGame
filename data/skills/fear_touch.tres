@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "fear_touch"
+display_name = "Fear Touch"
+description = "Touch an enemy's mind, inflicting terror that reduces their attack and may cause them to skip their turn."
+icon_path = "res://assets/ui/skills/fear_touch.png"
+
+skill_type = 3
+element = 9
+damage_type = 1
+target_type = 3
+brand_requirement = -1
+
+mp_cost = 6
+hp_cost = 0
+cooldown_turns = 1
+
+base_power = 10
+scaling_stat = 6
+scaling_ratio = 0.8
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 4, "chance": 0.3, "duration": 1}]
+stat_modifiers = [{"stat": 4, "amount": -30, "duration": 2}]
+special_effects = []
+
+animation_id = "fear_touch"
+sound_effect = "sfx_fear"
+particle_effect = "dark_tendrils"
+screen_shake = false
+
+level_requirement = 5
+path_requirement = 0.0
+prerequisite_skills = ["minor_illusion"]

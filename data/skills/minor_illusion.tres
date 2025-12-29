@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "minor_illusion"
+display_name = "Minor Illusion"
+description = "Create a small distraction that reduces an enemy's accuracy. They attack what isn't there."
+icon_path = "res://assets/ui/skills/minor_illusion.png"
+
+skill_type = 3
+element = 11
+damage_type = 1
+target_type = 3
+brand_requirement = -1
+
+mp_cost = 4
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 8
+scaling_stat = 6
+scaling_ratio = 0.6
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 7, "chance": 0.5, "duration": 2}]
+stat_modifiers = [{"stat": 12, "amount": -25, "duration": 2}]
+special_effects = []
+
+animation_id = "minor_illusion"
+sound_effect = "sfx_illusion"
+particle_effect = "shimmer"
+screen_shake = false
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []

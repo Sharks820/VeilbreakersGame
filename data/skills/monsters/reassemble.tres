@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "reassemble"
+display_name = "Reassemble"
+description = "Consumes a corpse on the battlefield to heal significantly."
+icon_path = "res://assets/ui/skills/monsters/reassemble.png"
+
+skill_type = 1
+element = 9
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 40
+scaling_stat = 5
+scaling_ratio = 0.5
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["consume_corpse_heal", "requires_corpse"]
+
+animation_id = "reassemble"
+sound_effect = "sfx_bones_click"
+particle_effect = "bone_reconstruct"
+screen_shake = false
+
+level_requirement = 10
+path_requirement = 0.0
+prerequisite_skills = []

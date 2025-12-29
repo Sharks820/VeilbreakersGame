@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "vessels_burden"
+display_name = "Vessel's Burden"
+description = "Takes damage in place of an ally, reducing incoming harm."
+icon_path = "res://assets/ui/skills/monsters/vessels_burden.png"
+
+skill_type = 2
+element = 0
+damage_type = 3
+target_type = 1
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 0
+scaling_stat = 5
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["redirect_damage", "reduce_redirected_25"]
+
+animation_id = "protect"
+sound_effect = "sfx_shield"
+particle_effect = "soul_shield"
+screen_shake = false
+
+level_requirement = 12
+path_requirement = 0.0
+prerequisite_skills = []

@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "blur_strike"
+display_name = "Blur Strike"
+description = "A blindingly fast attack that grants evasion until next turn."
+icon_path = "res://assets/ui/skills/monsters/blur_strike.png"
+
+skill_type = 0
+element = 7
+damage_type = 0
+target_type = 3
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 12
+scaling_stat = 4
+scaling_ratio = 1.0
+hit_count = 1
+accuracy_modifier = 0.1
+crit_modifier = 0.1
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["evasion_boost_self_1_turn"]
+
+animation_id = "blur"
+sound_effect = "sfx_whoosh"
+particle_effect = "speed_blur"
+screen_shake = false
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []

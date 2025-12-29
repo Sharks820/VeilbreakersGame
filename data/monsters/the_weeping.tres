@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "the_weeping"
+display_name = "The Weeping"
+description = "Floating cluster of eyes - dozens, all different sizes and colors, harvested from various creatures. Connected by wet, red threads of tissue. Constantly crying dark oily fluid. No mouth. No body. Just eyes."
+tier = 0
+brand = 4
+rarity = 2
+
+category = 1
+role = 3
+evolution_names = ["The Weeping", "Gazing Dread", "The Witness"]
+evolution_sprites = ["res://assets/characters/monsters/the_weeping_corrupted.png", "res://assets/characters/monsters/the_weeping_awakened.png", "res://assets/characters/monsters/the_weeping_ascended.png"]
+
+sprite_path = "res://assets/sprites/monsters/the_weeping.png"
+portrait_path = "res://assets/characters/monsters/the_weeping_portrait.png"
+color_palette = Color(0.5, 0.2, 0.3, 1)
+
+primary_element = 9
+secondary_element = 11
+weaknesses = [8, 10]
+resistances = [9, 11]
+
+base_hp = 30
+base_mp = 25
+base_attack = 4
+base_defense = 5
+base_magic = 16
+base_resistance = 12
+base_speed = 8
+base_luck = 10
+
+hp_growth = 1.12
+mp_growth = 1.2
+attack_growth = 1.05
+defense_growth = 1.08
+magic_growth = 1.22
+resistance_growth = 1.18
+speed_growth = 1.08
+
+innate_skills = ["witnessed"]
+learnable_skills = {5: "glimpse_of_death", 10: "many_eyed_gaze", 14: "shared_vision", 20: "foresight", 26: "absolute_vision"}
+
+ai_pattern = "debuffer"
+skill_weights = {"witnessed": 30, "glimpse_of_death": 35, "many_eyed_gaze": 35}
+
+base_corruption = 55.0
+corruption_resistance = 7.0
+
+base_experience = 24
+base_currency = 11
+drop_table = [{"item_id": "weeping_eye", "chance": 0.5, "quantity": 1}, {"item_id": "vision_thread", "chance": 0.3, "quantity": 1}, {"item_id": "memory_lens", "chance": 0.04, "quantity": 1}]
+
+habitat = "Dark places, near scenes of violence, anywhere eyes have witnessed horror"
+behavior_notes = "Became obsessed with SEEING. Every eye carries fragments of former owner's last sight. Haunted by visions it can't process."
+purification_hint = "Chooses which eyes to keep - those with beautiful memories. Uses vision for guidance, not hunting."

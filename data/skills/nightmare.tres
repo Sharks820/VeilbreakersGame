@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "nightmare"
+display_name = "Nightmare"
+description = "Trap an enemy in their worst fears. They take damage each turn and cannot act while asleep. Breaking free leaves them terrified."
+icon_path = "res://assets/ui/skills/nightmare.png"
+
+skill_type = 4
+element = 9
+damage_type = 1
+target_type = 3
+brand_requirement = -1
+
+mp_cost = 15
+hp_cost = 0
+cooldown_turns = 4
+
+base_power = 25
+scaling_stat = 6
+scaling_ratio = 1.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 5, "chance": 0.8, "duration": 3}]
+stat_modifiers = []
+special_effects = ["nightmare_dot", "break_leaves_fear"]
+
+animation_id = "nightmare"
+sound_effect = "sfx_nightmare"
+particle_effect = "dark_dreams"
+screen_shake = true
+
+level_requirement = 20
+path_requirement = 0.0
+prerequisite_skills = ["mass_confusion"]

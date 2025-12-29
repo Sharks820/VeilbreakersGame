@@ -132,7 +132,7 @@ func _load_settings() -> void:
 
 func save_settings() -> void:
 	for key in settings:
-		var parts := key.split("/")
+		var parts: PackedStringArray = key.split("/")
 		if parts.size() == 2:
 			_config.set_value(parts[0], parts[1], settings[key])
 
@@ -176,7 +176,7 @@ func _apply_setting(key: String, value: Variant) -> void:
 			if not get_setting("display/fullscreen"):
 				var res_index: int = value
 				if res_index >= 0 and res_index < RESOLUTIONS.size():
-					var resolution := RESOLUTIONS[res_index]
+					var resolution: Vector2i = RESOLUTIONS[res_index]
 					DisplayServer.window_set_size(resolution)
 		"display/ui_scale":
 			# Will be applied to UI theme

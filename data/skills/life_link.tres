@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "life_link"
+display_name = "Life Link"
+description = "Create a bond between yourself and all allies. Damage is shared equally among the linked. Lasts 3 turns."
+icon_path = "res://assets/ui/skills/life_link.png"
+
+skill_type = 2
+element = 0
+damage_type = 0
+target_type = 2
+brand_requirement = -1
+
+mp_cost = 12
+hp_cost = 0
+cooldown_turns = 4
+
+base_power = 0
+scaling_stat = 6
+scaling_ratio = 0.0
+hit_count = 0
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["shared_damage_pool"]
+
+animation_id = "life_link"
+sound_effect = "sfx_link_cast"
+particle_effect = "soul_chains"
+screen_shake = false
+
+level_requirement = 20
+path_requirement = 0.0
+prerequisite_skills = ["pain_split"]

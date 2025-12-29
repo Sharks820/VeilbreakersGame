@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "divine_devotion"
+display_name = "Divine Devotion"
+description = "Ultimate: Full party heal, cleanse all debuffs, and revive fallen allies. Once per battle."
+icon_path = "res://assets/ui/skills/monsters/divine_devotion.png"
+
+skill_type = 1
+element = 10
+damage_type = 3
+target_type = 5
+brand_requirement = 0
+
+mp_cost = 50
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 50
+scaling_stat = 6
+scaling_ratio = 1.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["cleanse_all_debuffs", "revive_all_fallen", "once_per_battle", "ascension_skill"]
+
+animation_id = "divine_light"
+sound_effect = "sfx_divine"
+particle_effect = "divine_radiance"
+screen_shake = true
+
+level_requirement = 28
+path_requirement = 0.0
+prerequisite_skills = []

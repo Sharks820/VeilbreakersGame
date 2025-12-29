@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "phase_shift"
+display_name = "Phase Shift"
+description = "Shifts between dimensions, becoming briefly intangible."
+icon_path = "res://assets/ui/skills/monsters/phase_shift.png"
+
+skill_type = 2
+element = 8
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 0
+scaling_stat = 8
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["intangible_1_turn"]
+
+animation_id = "phase"
+sound_effect = "sfx_phase"
+particle_effect = "dimension_shift"
+screen_shake = false
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []

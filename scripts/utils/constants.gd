@@ -29,6 +29,31 @@ const PURIFICATION_BASE_CHANCE: float = 0.3
 const PURIFICATION_CORRUPTION_PENALTY: float = 0.01  # Per corruption point
 const MAX_CORRUPTION: float = 100.0
 
+# Timed Defense System
+const TIMED_DEFENSE_POPUP_DELAY_MIN: float = 0.3   # Random delay before popup appears (min)
+const TIMED_DEFENSE_POPUP_DELAY_MAX: float = 0.7   # Random delay before popup appears (max)
+const TIMED_DEFENSE_WINDOW: float = 0.8            # Window to press defend button
+const TIMED_DEFENSE_PERFECT_WINDOW: float = 0.15   # Window for perfect defense
+const TIMED_DEFENSE_REDUCTION: float = 0.3         # 30% damage reduction on success
+const TIMED_DEFENSE_PERFECT_REDUCTION: float = 0.5 # 50% damage reduction on perfect
+
+# Brand Effectiveness System
+const BRAND_STRONG: float = 1.5     # Strong brand vs weak: 150% damage
+const BRAND_WEAK: float = 0.75      # Weak brand vs strong: 75% damage
+
+# Path System
+const PATH_SKILL_TREE_UNLOCK: float = 30.0    # 30% affinity to unlock skill tree
+const PATH_MONSTER_REQUIREMENT: float = 30.0  # 30% affinity to catch aligned monsters
+const PATH_MAX_AFFINITY: float = 100.0
+const PATH_MIN_AFFINITY: float = 0.0
+
+# Loyalty/Evolution System (The Bargain)
+const LOYALTY_MIN: float = 0.0
+const LOYALTY_MAX: float = 100.0
+const LOYALTY_AWAKENED_THRESHOLD: float = 25.0   # Evolve to AWAKENED
+const LOYALTY_ASCENDED_THRESHOLD: float = 60.0   # Evolve to ASCENDED
+const LOYALTY_PURIFIED_THRESHOLD: float = 90.0   # Evolve to PURIFIED
+
 # VERA / VERATH - Memory Awakening Thresholds
 const VERA_CORRUPTION_DECAY_RATE: float = 0.1  # Per minute
 const VERA_INTERFACE_THRESHOLD: float = 0.0    # The lie

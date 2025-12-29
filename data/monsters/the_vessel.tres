@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "the_vessel"
+display_name = "The Vessel"
+description = "Humanoid figure in tattered robes, floating slightly. Open cavity where chest should be, glowing with soft stolen light. Face serene but wrong - features taken from priests, healers, mothers."
+tier = 0
+brand = 5
+rarity = 2
+
+category = 1
+role = 2
+evolution_names = ["The Vessel", "Absolution", "The Devoted"]
+evolution_sprites = ["res://assets/characters/monsters/the_vessel_corrupted.png", "res://assets/characters/monsters/the_vessel_awakened.png", "res://assets/characters/monsters/the_vessel_ascended.png"]
+
+sprite_path = "res://assets/sprites/monsters/the_vessel.png"
+portrait_path = "res://assets/characters/monsters/the_vessel_portrait.png"
+color_palette = Color(1.0, 0.95, 0.8, 1)
+
+primary_element = 8
+secondary_element = 10
+weaknesses = [9, 11]
+resistances = [8, 10]
+
+base_hp = 50
+base_mp = 40
+base_attack = 3
+base_defense = 8
+base_magic = 18
+base_resistance = 15
+base_speed = 6
+base_luck = 9
+
+hp_growth = 1.2
+mp_growth = 1.25
+attack_growth = 1.02
+defense_growth = 1.1
+magic_growth = 1.25
+resistance_growth = 1.2
+speed_growth = 1.05
+
+innate_skills = ["stolen_grace"]
+learnable_skills = {5: "merciful_light", 10: "absorb_suffering", 15: "blessed_touch", 20: "sanctuary", 28: "divine_devotion"}
+
+ai_pattern = "healer"
+skill_weights = {"stolen_grace": 45, "merciful_light": 35, "absorb_suffering": 20}
+
+base_corruption = 50.0
+corruption_resistance = 6.0
+
+base_experience = 28
+base_currency = 15
+drop_table = [{"item_id": "healers_essence", "chance": 0.45, "quantity": 1}, {"item_id": "stolen_light", "chance": 0.3, "quantity": 1}, {"item_id": "tear_of_compassion", "chance": 0.05, "quantity": 1}]
+
+habitat = "Near places of worship, hospitals, orphanages"
+behavior_notes = "Still WANTS to heal - but twisted. Approaches wounded creatures and 'heals' them by absorbing them."
+purification_hint = "The stolen light becomes its own. Remembers every healer it consumed, honors them by continuing their work properly."

@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "expel_soul"
+display_name = "Expel Soul"
+description = "Releases stored spiritual energy in a devastating blast."
+icon_path = "res://assets/ui/skills/monsters/expel_soul.png"
+
+skill_type = 0
+element = 9
+damage_type = 1
+target_type = 4
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 5
+
+base_power = 30
+scaling_stat = 6
+scaling_ratio = 1.2
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.1
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["bonus_from_stored_souls"]
+
+animation_id = "expel"
+sound_effect = "sfx_soul_burst"
+particle_effect = "soul_explosion"
+screen_shake = true
+
+level_requirement = 22
+path_requirement = 0.0
+prerequisite_skills = []

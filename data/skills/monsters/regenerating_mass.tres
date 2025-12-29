@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "regenerating_mass"
+display_name = "Regenerating Mass"
+description = "The collective flesh knits itself back together."
+icon_path = "res://assets/ui/skills/monsters/regenerating_mass.png"
+
+skill_type = 1
+element = 9
+damage_type = 3
+target_type = 0
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 25
+scaling_stat = 1
+scaling_ratio = 0.3
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 10, "chance": 1.0, "duration": 3}]
+stat_modifiers = []
+special_effects = []
+
+animation_id = "regenerate"
+sound_effect = "sfx_regenerate"
+particle_effect = "flesh_heal"
+screen_shake = false
+
+level_requirement = 12
+path_requirement = 0.0
+prerequisite_skills = []

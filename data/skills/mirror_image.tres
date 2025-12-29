@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "mirror_image"
+display_name = "Mirror Image"
+description = "Create 3 illusory copies of yourself. Each copy absorbs one attack before vanishing. Enemies cannot tell which is real."
+icon_path = "res://assets/ui/skills/mirror_image.png"
+
+skill_type = 2
+element = 0
+damage_type = 0
+target_type = 0
+brand_requirement = -1
+
+mp_cost = 10
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 0
+scaling_stat = 6
+scaling_ratio = 0.0
+hit_count = 0
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = [{"stat": 13, "amount": 75, "duration": 3}]
+special_effects = ["mirror_images_3"]
+
+animation_id = "mirror_image"
+sound_effect = "sfx_clone"
+particle_effect = "mirror_split"
+screen_shake = false
+
+level_requirement = 10
+path_requirement = 0.0
+prerequisite_skills = ["fear_touch"]

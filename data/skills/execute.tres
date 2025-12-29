@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "execute"
+display_name = "Execute"
+description = "A killing blow aimed at weakened prey. Deals massive bonus damage to targets below 25% HP. Instant kill below 10%."
+icon_path = "res://assets/ui/skills/execute.png"
+
+skill_type = 0
+element = 1
+damage_type = 0
+target_type = 3
+brand_requirement = -1
+
+mp_cost = 10
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 30
+scaling_stat = 4
+scaling_ratio = 1.5
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["execute_threshold_25", "instant_kill_below_10"]
+
+animation_id = "execute"
+sound_effect = "sfx_execute"
+particle_effect = "execution_strike"
+screen_shake = true
+
+level_requirement = 15
+path_requirement = 0.0
+prerequisite_skills = ["predator_leap"]

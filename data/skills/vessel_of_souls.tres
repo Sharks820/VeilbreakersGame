@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "vessel_of_souls"
+display_name = "Vessel of Souls"
+description = "ULTIMATE: Become a conduit for all life energy. For 4 turns, all damage dealt by allies heals the party, and fallen allies are revived at 50% HP."
+icon_path = "res://assets/ui/skills/vessel_of_souls.png"
+
+skill_type = 2
+element = 8
+damage_type = 0
+target_type = 2
+brand_requirement = -1
+
+mp_cost = 35
+hp_cost = 0
+cooldown_turns = 8
+
+base_power = 0
+scaling_stat = 6
+scaling_ratio = 0.0
+hit_count = 0
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 10, "chance": 1.0, "duration": 4}]
+stat_modifiers = []
+special_effects = ["party_damage_heals", "revive_fallen_50"]
+
+animation_id = "vessel_of_souls"
+sound_effect = "sfx_ultimate"
+particle_effect = "ultimate_souls"
+screen_shake = true
+
+level_requirement = 30
+path_requirement = 0.0
+prerequisite_skills = ["mass_drain"]

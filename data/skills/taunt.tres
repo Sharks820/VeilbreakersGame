@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "taunt"
+display_name = "Taunt"
+description = "Force all enemies to target you for 2 turns. They cannot ignore your challenge."
+icon_path = "res://assets/ui/skills/taunt.png"
+
+skill_type = 3
+element = 0
+damage_type = 0
+target_type = 4
+brand_requirement = -1
+
+mp_cost = 6
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 0
+scaling_stat = 5
+scaling_ratio = 0.0
+hit_count = 0
+accuracy_modifier = 1.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["force_target_self"]
+
+animation_id = "taunt"
+sound_effect = "sfx_taunt"
+particle_effect = "provoke_aura"
+screen_shake = false
+
+level_requirement = 5
+path_requirement = 0.0
+prerequisite_skills = []

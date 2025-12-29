@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/hero_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+hero_id = "bastion"
+display_name = "Bastion"
+title = "The Ironclad"
+description = "Child of the Shield Wall - an ancient order sworn to hold the line against the Veil. Never retreats. Never leaves an ally behind."
+backstory = "Born in a fortress overlooking the nearest Veil breach, raised to the sound of monsters dying against the walls. At 16, during a breach event, they held a collapsed gatehouse alone for six hours while civilians evacuated. The Compact didn't recruit Bastion - they requested transfer, wanting to take the fight TO the corruption instead of just holding it back. Speaks in short sentences."
+
+primary_brand = 1
+primary_path = 0
+role = "Tank"
+
+sprite_path = "res://assets/characters/heroes/bastion.png"
+portrait_path = "res://assets/characters/heroes/bastion_portrait.png"
+battle_sprite_path = "res://assets/characters/heroes/bastion_battle.png"
+color_palette = Color(0.48, 0.53, 0.58, 1)
+
+base_hp = 65
+base_mp = 10
+base_attack = 12
+base_defense = 18
+base_magic = 6
+base_resistance = 14
+base_speed = 6
+base_luck = 5
+
+hp_growth = 0.9
+mp_growth = 0.4
+attack_growth = 0.5
+defense_growth = 0.85
+magic_growth = 0.25
+resistance_growth = 0.7
+speed_growth = 0.25
+luck_growth = 0.25
+
+innate_skills = ["attack_basic", "defend", "shield_bash"]
+learnable_skills = {5: "taunt", 10: "iron_wall", 15: "cover_ally", 20: "fortress_stance", 25: "unbreakable"}
+ultimate_skill = "last_bastion"
+
+combat_description = "Taunt and damage redirection, damage reduction abilities, shield bash stuns, party-wide defense buffs."
+preferred_targets = "any"

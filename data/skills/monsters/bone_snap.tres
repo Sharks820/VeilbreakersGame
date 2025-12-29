@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "bone_snap"
+display_name = "Bone Snap"
+description = "A fast, vicious bite with bone-crushing force. High critical rate."
+icon_path = "res://assets/ui/skills/monsters/bone_snap.png"
+
+skill_type = 0
+element = 1
+damage_type = 0
+target_type = 3
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 14
+scaling_stat = 4
+scaling_ratio = 1.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.2
+
+status_effects = []
+stat_modifiers = []
+special_effects = []
+
+animation_id = "bone_snap"
+sound_effect = "sfx_bone_crunch"
+particle_effect = "bone_shards"
+screen_shake = false
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []

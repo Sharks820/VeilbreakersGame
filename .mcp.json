@@ -1,0 +1,72 @@
+{
+  "mcpServers": {
+    "godot-screenshots": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@fernforestgames/mcp-server-godot", "C:/Users/Conner/Downloads/VeilbreakersGame"],
+      "env": {
+        "GODOT_PATH": "C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe"
+      }
+    },
+    "godot-editor": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["C:/Users/Conner/Downloads/godot-mcp/build/index.js"],
+      "env": {
+        "GODOT_PATH": "C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe",
+        "DEBUG": "true"
+      }
+    },
+    "gsap-animation": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "bruzethegreat-gsap-master-mcp-server@latest"]
+    },
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    "memory": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-memory"]
+    },
+    "image-process": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "image-process-mcp-server"]
+    },
+    "lottiefiles": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-server-lottiefiles"]
+    },
+    "wolfram": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "wolfram-mcp"],
+      "env": {
+        "WOLFRAM_APP_ID": "YOUR_WOLFRAM_APP_ID"
+      }
+    },
+    "figma": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-figma"],
+      "env": {
+        "FIGMA_ACCESS_TOKEN": "FIGMA_TOKEN_REMOVED"
+      }
+    },
+    "trello": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-trello"],
+      "env": {
+        "TRELLO_API_KEY": "TRELLO_KEY_REMOVED",
+        "TRELLO_TOKEN": "TRELLO_TOKEN_REMOVED",
+        "TRELLO_BOARD_ID": "6950ca3940d7adf3fcb1da09"
+      }
+    }
+  }
+}

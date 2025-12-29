@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+item_id = "remedy"
+display_name = "Remedy"
+description = "A universal cure-all that removes most negative status effects."
+icon_path = "res://assets/ui/items/remedy.png"
+
+item_type = 0
+rarity = 2
+is_key_item = false
+is_stackable = true
+max_stack = 99
+
+buy_price = 350
+sell_price = 175
+can_sell = true
+
+usable_in_battle = true
+usable_in_field = true
+target_type = 1
+consumed_on_use = true
+
+hp_restore = 0
+hp_restore_percent = 0.0
+mp_restore = 0
+mp_restore_percent = 0.0
+
+cures_status = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+applies_status = []
+revives = false
+revive_hp_percent = 0.0
+
+stat_buffs = []
+permanent_stat_increase = {}
+
+special_effect = ""
+corruption_change = 0.0
+path_change = 0.0

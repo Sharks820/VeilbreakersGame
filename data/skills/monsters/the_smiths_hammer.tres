@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "the_smiths_hammer"
+display_name = "The Smith's Hammer"
+description = "A massive blow channeling the village blacksmith's strength."
+icon_path = "res://assets/ui/skills/monsters/the_smiths_hammer.png"
+
+skill_type = 0
+element = 1
+damage_type = 0
+target_type = 3
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 28
+scaling_stat = 4
+scaling_ratio = 1.2
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.15
+
+status_effects = []
+stat_modifiers = []
+special_effects = []
+
+animation_id = "hammer_slam"
+sound_effect = "sfx_hammer"
+particle_effect = "impact_heavy"
+screen_shake = true
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []

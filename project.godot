@@ -14,7 +14,7 @@ config/name="VEILBREAKERS"
 config/description="Anime-style turn-based RPG with monster hunting and purification mechanics"
 config/version="0.1.0"
 run/main_scene="res://scenes/main/main_menu.tscn"
-config/features=PackedStringArray("4.3", "Forward Plus")
+config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
@@ -113,6 +113,5 @@ pause={
 
 [rendering]
 
-renderer/rendering_method="forward_plus"
 textures/canvas_textures/default_texture_filter=0
 anti_aliasing/quality/msaa_2d=1

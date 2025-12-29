@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "scatter"
+display_name = "Scatter"
+description = "Breaks apart and reforms, damaging nearby enemies."
+icon_path = "res://assets/ui/skills/monsters/scatter.png"
+
+skill_type = 0
+element = 1
+damage_type = 0
+target_type = 4
+brand_requirement = 0
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 10
+scaling_stat = 8
+scaling_ratio = 0.8
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["evasion_boost_self"]
+
+animation_id = "scatter"
+sound_effect = "sfx_scatter"
+particle_effect = "fragment_burst"
+screen_shake = false
+
+level_requirement = 8
+path_requirement = 0.0
+prerequisite_skills = []

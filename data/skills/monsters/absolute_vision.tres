@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "absolute_vision"
+display_name = "Absolute Vision"
+description = "Ultimate: All enemies cannot evade, take more damage, weaknesses revealed for 3 turns. Once per battle."
+icon_path = "res://assets/ui/skills/monsters/absolute_vision.png"
+
+skill_type = 3
+element = 9
+damage_type = 3
+target_type = 4
+brand_requirement = 0
+
+mp_cost = 25
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 0
+scaling_stat = 6
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 20, "chance": 1.0, "duration": 3}]
+stat_modifiers = []
+special_effects = ["cannot_evade", "reveal_weaknesses", "once_per_battle", "ascension_skill"]
+
+animation_id = "all_seeing"
+sound_effect = "sfx_absolute"
+particle_effect = "omniscient_gaze"
+screen_shake = true
+
+level_requirement = 26
+path_requirement = 0.0
+prerequisite_skills = []

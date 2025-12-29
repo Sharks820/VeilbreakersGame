@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "interrupt"
+display_name = "Interrupt"
+description = "If enemy is casting, instantly attack and cancel their ability."
+icon_path = "res://assets/ui/skills/monsters/interrupt.png"
+
+skill_type = 0
+element = 7
+damage_type = 0
+target_type = 3
+brand_requirement = 0
+
+mp_cost = 5
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 14
+scaling_stat = 8
+scaling_ratio = 0.9
+hit_count = 1
+accuracy_modifier = 0.2
+crit_modifier = 0.1
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["interrupt_casting", "bonus_vs_casting"]
+
+animation_id = "interrupt"
+sound_effect = "sfx_interrupt"
+particle_effect = "cancel_flash"
+screen_shake = false
+
+level_requirement = 12
+path_requirement = 0.0
+prerequisite_skills = []
