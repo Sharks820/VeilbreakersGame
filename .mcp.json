@@ -67,6 +67,11 @@
         "TRELLO_TOKEN": "TRELLO_TOKEN_REMOVED",
         "TRELLO_BOARD_ID": "6950ca3940d7adf3fcb1da09"
       }
+    },
+    "git": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@anthropic/mcp-git-server", "C:/Users/Conner/Downloads/VeilbreakersGame"]
     }
   }
 }
