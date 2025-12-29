@@ -47,7 +47,7 @@
       "command": "cmd",
       "args": ["/c", "npx", "-y", "wolfram-mcp"],
       "env": {
-        "WOLFRAM_APP_ID": "YOUR_WOLFRAM_APP_ID"
+        "WOLFRAM_APP_ID": "WOLFRAM_ID_REMOVED"
       }
     },
     "figma": {
