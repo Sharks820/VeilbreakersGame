@@ -96,16 +96,7 @@
       "command": "cmd",
       "args": ["/c", "npx", "-y", "fal-mcp-server"],
       "env": {
-        "FAL_KEY": "YOUR_FAL_API_KEY"
-      }
-    },
-    "recraft": {
-      "type": "stdio",
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "@recraft-ai/mcp-recraft-server@latest"],
-      "env": {
-        "RECRAFT_API_KEY": "YOUR_RECRAFT_API_KEY",
-        "IMAGE_STORAGE_DIRECTORY": "C:/Users/Conner/Downloads/VeilbreakersGame/assets/generated"
+        "FAL_KEY": "FAL_KEY_REMOVED"
       }
     }
   }
