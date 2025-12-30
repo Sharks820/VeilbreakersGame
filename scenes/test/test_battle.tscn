@@ -1,6 +1,31 @@
-[gd_scene load_steps=2 format=3 uid="uid://test_battle_scene"]
+[gd_scene load_steps=15 format=3 uid="uid://test_battle_scene"]
 
 [ext_resource type="Script" path="res://scripts/test/test_battle.gd" id="1_test"]
+[ext_resource type="Texture2D" path="res://assets/environments/battles/corrupted_grove.png" id="2_bg"]
+[ext_resource type="Texture2D" path="res://assets/characters/heroes/marrow.png" id="3_hero1"]
+[ext_resource type="Texture2D" path="res://assets/characters/heroes/rend.png" id="4_hero2"]
+[ext_resource type="Texture2D" path="res://assets/characters/heroes/bastion.png" id="5_hero3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/monsters/hollow.png" id="6_enemy1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/monsters/mawling.png" id="7_enemy2"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/actions/attack.png" id="8_attack"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/actions/skill.png" id="9_skills"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/actions/defend.png" id="10_defend"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/actions/analyze.png" id="11_capture"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/actions/flee.png" id="12_flee"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
+bg_color = Color(0.2, 0.75, 0.3, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_bg"]
+bg_color = Color(0.15, 0.15, 0.2, 0.9)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
 
 [node name="TestBattle" type="Node"]
 script = ExtResource("1_test")
@@ -12,9 +37,50 @@ enemy_type = "shadow_imp"
 starting_corruption = 25.0
 vera_state = 0
 
-[node name="BattleSystem" type="Node" parent="."]
+[node name="BattleArena" type="Node2D" parent="."]
 
-[node name="BattleUI" type="Control" parent="."]
+[node name="Background" type="TextureRect" parent="BattleArena"]
+offset_right = 1920.0
+offset_bottom = 1080.0
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="CharacterLayer" type="Node2D" parent="BattleArena"]
+
+[node name="Heroes" type="Node2D" parent="BattleArena/CharacterLayer"]
+
+[node name="Hero1" type="Sprite2D" parent="BattleArena/CharacterLayer/Heroes"]
+position = Vector2(320, 380)
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("3_hero1")
+
+[node name="Hero2" type="Sprite2D" parent="BattleArena/CharacterLayer/Heroes"]
+position = Vector2(220, 500)
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("4_hero2")
+
+[node name="Hero3" type="Sprite2D" parent="BattleArena/CharacterLayer/Heroes"]
+position = Vector2(320, 620)
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("5_hero3")
+
+[node name="Enemies" type="Node2D" parent="BattleArena/CharacterLayer"]
+
+[node name="Enemy1" type="Sprite2D" parent="BattleArena/CharacterLayer/Enemies"]
+position = Vector2(1500, 450)
+scale = Vector2(0.22, 0.22)
+texture = ExtResource("6_enemy1")
+
+[node name="Enemy2" type="Sprite2D" parent="BattleArena/CharacterLayer/Enemies"]
+position = Vector2(1650, 580)
+scale = Vector2(0.2, 0.2)
+texture = ExtResource("7_enemy2")
+
+[node name="BattleUI" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="UIRoot" type="Control" parent="BattleUI"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -22,108 +88,214 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Background" type="ColorRect" parent="BattleUI"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.1, 0.1, 0.15, 1)
-
-[node name="PartyPanel" type="Panel" parent="BattleUI"]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -150.0
-grow_horizontal = 2
-grow_vertical = 0
-
-[node name="PartyContainer" type="HBoxContainer" parent="BattleUI/PartyPanel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = 10.0
-offset_right = -10.0
-offset_bottom = -10.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="EnemyPanel" type="Panel" parent="BattleUI"]
+[node name="TopBar" type="PanelContainer" parent="BattleUI/UIRoot"]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 120.0
+offset_bottom = 50.0
 grow_horizontal = 2
 
-[node name="EnemyContainer" type="HBoxContainer" parent="BattleUI/EnemyPanel"]
+[node name="HBox" type="HBoxContainer" parent="BattleUI/UIRoot/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TurnOrderLabel" type="Label" parent="BattleUI/UIRoot/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.85, 0.7, 1)
+theme_override_font_sizes/font_size = 18
+text = "Turn Order:"
+
+[node name="TurnOrderIcons" type="HBoxContainer" parent="BattleUI/UIRoot/TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RoundLabel" type="Label" parent="BattleUI/UIRoot/TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_colors/font_color = Color(0.9, 0.85, 0.7, 1)
+theme_override_font_sizes/font_size = 18
+text = "Round 1"
+
+[node name="HeroHealthBars" type="VBoxContainer" parent="BattleUI/UIRoot"]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = 10.0
-offset_right = -10.0
-offset_bottom = -10.0
-grow_horizontal = 2
-grow_vertical = 2
-alignment = 1
+anchors_preset = 0
+offset_left = 20.0
+offset_top = 300.0
+offset_right = 280.0
+offset_bottom = 600.0
+theme_override_constants/separation = 15
 
-[node name="ActionMenu" type="VBoxContainer" parent="BattleUI"]
+[node name="Hero1HP" type="VBoxContainer" parent="BattleUI/UIRoot/HeroHealthBars"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="BattleUI/UIRoot/HeroHealthBars/Hero1HP"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.8, 1)
+theme_override_font_sizes/font_size = 14
+text = "Marrow"
+
+[node name="HPBar" type="ProgressBar" parent="BattleUI/UIRoot/HeroHealthBars/Hero1HP"]
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
+theme_override_styles/background = SubResource("StyleBoxFlat_hp_bg")
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="Hero2HP" type="VBoxContainer" parent="BattleUI/UIRoot/HeroHealthBars"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="BattleUI/UIRoot/HeroHealthBars/Hero2HP"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.8, 1)
+theme_override_font_sizes/font_size = 14
+text = "Rend"
+
+[node name="HPBar" type="ProgressBar" parent="BattleUI/UIRoot/HeroHealthBars/Hero2HP"]
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
+theme_override_styles/background = SubResource("StyleBoxFlat_hp_bg")
+max_value = 100.0
+value = 85.0
+show_percentage = false
+
+[node name="Hero3HP" type="VBoxContainer" parent="BattleUI/UIRoot/HeroHealthBars"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="BattleUI/UIRoot/HeroHealthBars/Hero3HP"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.8, 1)
+theme_override_font_sizes/font_size = 14
+text = "Bastion"
+
+[node name="HPBar" type="ProgressBar" parent="BattleUI/UIRoot/HeroHealthBars/Hero3HP"]
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
+theme_override_styles/background = SubResource("StyleBoxFlat_hp_bg")
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="CombatLog" type="PanelContainer" parent="BattleUI/UIRoot"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -280.0
+offset_top = 400.0
+offset_right = -20.0
+offset_bottom = 680.0
+grow_horizontal = 0
+
+[node name="VBox" type="VBoxContainer" parent="BattleUI/UIRoot/CombatLog"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="BattleUI/UIRoot/CombatLog/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.85, 0.7, 1)
+theme_override_font_sizes/font_size = 16
+text = "Combat Log"
+horizontal_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="BattleUI/UIRoot/CombatLog/VBox"]
+layout_mode = 2
+
+[node name="LogScroll" type="ScrollContainer" parent="BattleUI/UIRoot/CombatLog/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LogContent" type="VBoxContainer" parent="BattleUI/UIRoot/CombatLog/VBox/LogScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Log1" type="Label" parent="BattleUI/UIRoot/CombatLog/VBox/LogScroll/LogContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "sliced!"
+
+[node name="Log2" type="Label" parent="BattleUI/UIRoot/CombatLog/VBox/LogScroll/LogContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.9, 0.7, 1)
+theme_override_font_sizes/font_size = 12
+text = "Marrow takes a defensive stance..."
+
+[node name="Log3" type="Label" parent="BattleUI/UIRoot/CombatLog/VBox/LogScroll/LogContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "sliced!"
+
+[node name="Log4" type="Label" parent="BattleUI/UIRoot/CombatLog/VBox/LogScroll/LogContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.9, 0.7, 1)
+theme_override_font_sizes/font_size = 12
+text = "Rend's buff applied!"
+
+[node name="ActionBar" type="HBoxContainer" parent="BattleUI/UIRoot"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -100.0
-offset_top = -300.0
-offset_right = 100.0
-offset_bottom = -160.0
+offset_left = -300.0
+offset_top = -120.0
+offset_right = 300.0
+offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 0
+alignment = 1
+theme_override_constants/separation = 15
 
-[node name="AttackButton" type="Button" parent="BattleUI/ActionMenu"]
+[node name="AttackBtn" type="TextureButton" parent="BattleUI/UIRoot/ActionBar"]
+custom_minimum_size = Vector2(90, 90)
 layout_mode = 2
-text = "Attack"
+texture_normal = ExtResource("8_attack")
+ignore_texture_size = true
+stretch_mode = 5
 
-[node name="SkillButton" type="Button" parent="BattleUI/ActionMenu"]
+[node name="SkillsBtn" type="TextureButton" parent="BattleUI/UIRoot/ActionBar"]
+custom_minimum_size = Vector2(90, 90)
 layout_mode = 2
-text = "Skills"
+texture_normal = ExtResource("9_skills")
+ignore_texture_size = true
+stretch_mode = 5
 
-[node name="ItemButton" type="Button" parent="BattleUI/ActionMenu"]
+[node name="CaptureBtn" type="TextureButton" parent="BattleUI/UIRoot/ActionBar"]
+custom_minimum_size = Vector2(90, 90)
 layout_mode = 2
-text = "Items"
+texture_normal = ExtResource("11_capture")
+ignore_texture_size = true
+stretch_mode = 5
 
-[node name="PurifyButton" type="Button" parent="BattleUI/ActionMenu"]
+[node name="DefendBtn" type="TextureButton" parent="BattleUI/UIRoot/ActionBar"]
+custom_minimum_size = Vector2(90, 90)
 layout_mode = 2
-text = "Purify"
+texture_normal = ExtResource("10_defend")
+ignore_texture_size = true
+stretch_mode = 5
 
-[node name="DefendButton" type="Button" parent="BattleUI/ActionMenu"]
+[node name="FleeBtn" type="TextureButton" parent="BattleUI/UIRoot/ActionBar"]
+custom_minimum_size = Vector2(90, 90)
 layout_mode = 2
-text = "Defend"
+texture_normal = ExtResource("12_flee")
+ignore_texture_size = true
+stretch_mode = 5
 
-[node name="VERAOverlay" type="CanvasLayer" parent="."]
-layer = 10
-
-[node name="VERAEffects" type="Control" parent="VERAOverlay"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="DebugLabel" type="Label" parent="."]
+[node name="DebugLabel" type="Label" parent="BattleUI/UIRoot"]
+layout_mode = 1
+anchors_preset = 0
 offset_left = 10.0
-offset_top = 130.0
+offset_top = 60.0
 offset_right = 400.0
-offset_bottom = 250.0
-text = "Test Battle Debug Controls:
+offset_bottom = 180.0
+theme_override_colors/font_color = Color(1, 1, 1, 0.7)
+theme_override_font_sizes/font_size = 12
+text = "Debug Controls:
 F5 - Restart Battle
 F6 - Win Battle
 F7 - Lose Battle

@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://b5qx2vqe1yf6h"]
+[gd_scene load_steps=13 format=3 uid="uid://b5qx2vqe1yf6h"]
 
 [ext_resource type="Script" path="res://scripts/ui/main_menu_controller.gd" id="1_menu"]
 [ext_resource type="Texture2D" path="res://assets/ui/title/title_background.png" id="2_bg"]
@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/buttons/btn_continue_disabled.png" id="5b_continue_disabled"]
 [ext_resource type="Texture2D" path="res://assets/ui/buttons/btn_settings.png" id="6_settings"]
 [ext_resource type="Texture2D" path="res://assets/ui/buttons/btn_quit.png" id="7_quit"]
+[ext_resource type="Texture2D" path="res://assets/ui/demon_eyes_final.png" id="8_eye_sheet"]
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_ember"]
 lifetime_randomness = 0.4
@@ -79,91 +80,15 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0.0)
 
-[node name="MonsterEyes" type="Control" parent="."]
-visible = false
-layout_mode = 0
-mouse_filter = 2
+[node name="MonsterEye" type="Sprite2D" parent="."]
+position = Vector2(496, 355)
+rotation = -0.08
+scale = Vector2(0.17, 0.17)
 z_index = 10
-
-[node name="LeftEye" type="Control" parent="MonsterEyes"]
-layout_mode = 0
-offset_left = 456.0
-offset_top = 362.0
-offset_right = 476.0
-offset_bottom = 382.0
-pivot_offset = Vector2(10, 0)
-
-[node name="OuterGlow" type="ColorRect" parent="MonsterEyes/LeftEye"]
-layout_mode = 0
-offset_left = -8.0
-offset_top = -8.0
-offset_right = 28.0
-offset_bottom = 28.0
-color = Color(1.0, 0.3, 0.05, 0.15)
-
-[node name="MidGlow" type="ColorRect" parent="MonsterEyes/LeftEye"]
-layout_mode = 0
-offset_left = -4.0
-offset_top = -4.0
-offset_right = 24.0
-offset_bottom = 24.0
-color = Color(1.0, 0.4, 0.08, 0.3)
-
-[node name="InnerGlow" type="ColorRect" parent="MonsterEyes/LeftEye"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 20.0
-offset_bottom = 20.0
-color = Color(1.0, 0.5, 0.1, 0.6)
-
-[node name="Core" type="ColorRect" parent="MonsterEyes/LeftEye"]
-layout_mode = 0
-offset_left = 4.0
-offset_top = 4.0
-offset_right = 16.0
-offset_bottom = 16.0
-color = Color(1.0, 0.7, 0.3, 1.0)
-
-[node name="RightEye" type="Control" parent="MonsterEyes"]
-layout_mode = 0
-offset_left = 504.0
-offset_top = 362.0
-offset_right = 524.0
-offset_bottom = 382.0
-pivot_offset = Vector2(10, 0)
-
-[node name="OuterGlow" type="ColorRect" parent="MonsterEyes/RightEye"]
-layout_mode = 0
-offset_left = -8.0
-offset_top = -8.0
-offset_right = 28.0
-offset_bottom = 28.0
-color = Color(1.0, 0.3, 0.05, 0.15)
-
-[node name="MidGlow" type="ColorRect" parent="MonsterEyes/RightEye"]
-layout_mode = 0
-offset_left = -4.0
-offset_top = -4.0
-offset_right = 24.0
-offset_bottom = 24.0
-color = Color(1.0, 0.4, 0.08, 0.3)
-
-[node name="InnerGlow" type="ColorRect" parent="MonsterEyes/RightEye"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 20.0
-offset_bottom = 20.0
-color = Color(1.0, 0.5, 0.1, 0.6)
-
-[node name="Core" type="ColorRect" parent="MonsterEyes/RightEye"]
-layout_mode = 0
-offset_left = 4.0
-offset_top = 4.0
-offset_right = 16.0
-offset_bottom = 16.0
-color = Color(1.0, 0.7, 0.3, 1.0)
+texture = ExtResource("8_eye_sheet")
+hframes = 6
+vframes = 7
+frame = 16
 
 [node name="Logo" type="Sprite2D" parent="."]
 position = Vector2(960, 160)

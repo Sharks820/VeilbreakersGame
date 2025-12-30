@@ -40,16 +40,19 @@
 | NewGame/Continue Y Offset | -20 (alignment fix) |
 | Position | Right side over lava field, raised to cliff edge |
 
-### Monster Eyes Effect
+### Monster Eye Animation (Sprite Sheet)
 | Property | Value |
 |----------|-------|
-| Left Eye Position | offset_left=456, offset_top=362, size=20x20 |
-| Right Eye Position | offset_left=504, offset_top=362, size=20x20 |
-| Pivot | Vector2(10, 0) for center |
+| Sprite Sheet | assets/ui/monster_eye_spritesheet.png |
+| Dimensions | 1536x1024 (6x4 grid) |
+| Frame Count | 24 frames |
+| Frame Size | 256x256 |
+| Position | (480, 400) |
+| Scale | 0.5 |
+| Frame Rate | 12 FPS |
 | Z-Index | 10 |
-| Size | 3.5 |
-| Spacing | 38px |
-| Brightness Pulse | 0.7 - 1.3 |
+| Source Video | asset_xfXLxe1WPDrs9pbE4TvEjUPz.mp4 |
+| Background | Transparent (white removed via Python PIL) |
 
 ---
 
@@ -191,6 +194,9 @@ battle, ui, art, audio, vera, monsters, critical
 - Clean button transparency
 - Subtle, fast animations
 - GSAP power3.out = Godot EASE_OUT + TRANS_CUBIC
+- Sprite sheet animation with hframes/vframes
+- Python PIL for removing white backgrounds (threshold >220)
+- Force Godot reimport: `godot --headless --path PROJECT --import --quit`
 
 ---
 

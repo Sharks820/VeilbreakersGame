@@ -1,9 +1,16 @@
-[gd_scene load_steps=5 format=3 uid="uid://battle_arena"]
+[gd_scene load_steps=12 format=3 uid="uid://battle_arena"]
 
 [ext_resource type="Script" path="res://scripts/battle/battle_arena.gd" id="1_arena"]
 [ext_resource type="Script" path="res://scripts/battle/battle_manager.gd" id="1_manager"]
 [ext_resource type="Script" path="res://scripts/battle/turn_manager.gd" id="2_turn"]
 [ext_resource type="Script" path="res://scripts/battle/damage_calculator.gd" id="3_damage"]
+[ext_resource type="Script" path="res://scripts/battle/animation/vfx_manager.gd" id="4_vfx"]
+[ext_resource type="Script" path="res://scripts/battle/animation/damage_number_spawner.gd" id="5_damage_num"]
+[ext_resource type="Script" path="res://scripts/battle/animation/screen_effects_manager.gd" id="6_screen_fx"]
+[ext_resource type="Script" path="res://scripts/battle/animation/battle_camera_controller.gd" id="7_camera"]
+[ext_resource type="Script" path="res://scripts/battle/animation/battle_sequencer.gd" id="8_sequencer"]
+[ext_resource type="Script" path="res://scripts/battle/animation/battle_ui_animator.gd" id="9_ui_animator"]
+[ext_resource type="PackedScene" path="res://scenes/battle/damage_number.tscn" id="10_damage_number"]
 
 [node name="BattleArena" type="Node2D"]
 script = ExtResource("1_arena")
@@ -75,11 +82,85 @@ script = ExtResource("2_turn")
 [node name="DamageCalculator" type="Node" parent="Systems"]
 script = ExtResource("3_damage")
 
+[node name="BattleSequencer" type="Node" parent="Systems"]
+script = ExtResource("8_sequencer")
+
+[node name="AnimationSystems" type="Node" parent="."]
+
+[node name="VFXManager" type="Node" parent="AnimationSystems"]
+script = ExtResource("4_vfx")
+
+[node name="DamageNumberSpawner" type="Node" parent="AnimationSystems"]
+script = ExtResource("5_damage_num")
+damage_number_scene = ExtResource("10_damage_number")
+
+[node name="ScreenEffectsLayer" type="CanvasLayer" parent="."]
+layer = 15
+
+[node name="ScreenEffectsManager" type="Control" parent="ScreenEffectsLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("6_screen_fx")
+
+[node name="FlashRect" type="ColorRect" parent="ScreenEffectsLayer/ScreenEffectsManager"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0)
+
+[node name="VignetteRect" type="ColorRect" parent="ScreenEffectsLayer/ScreenEffectsManager"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.5, 0, 0, 0)
+
+[node name="FadeRect" type="ColorRect" parent="ScreenEffectsLayer/ScreenEffectsManager"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="LetterboxTop" type="ColorRect" parent="ScreenEffectsLayer/ScreenEffectsManager"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = -80.0
+grow_horizontal = 2
+color = Color(0, 0, 0, 1)
+
+[node name="LetterboxBottom" type="ColorRect" parent="ScreenEffectsLayer/ScreenEffectsManager"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 80.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0, 0, 0, 1)
+
 [node name="UILayer" type="CanvasLayer" parent="."]
 layer = 10
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="BattleCamera" type="Camera2D" parent="."]
 position = Vector2(640, 360)
+script = ExtResource("7_camera")
 
 [node name="AudioPlayers" type="Node" parent="."]
 

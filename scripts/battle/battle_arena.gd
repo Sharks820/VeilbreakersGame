@@ -1,8 +1,9 @@
 extends Node2D
 ## BattleArena: Visual representation of battle with character placement and effects.
+## Now integrated with full animation systems for AAA-quality combat.
 
 # =============================================================================
-# NODE REFERENCES
+# NODE REFERENCES - Core Systems
 # =============================================================================
 
 @onready var player_positions: Node2D = $BattleField/PlayerPositions
@@ -10,12 +11,21 @@ extends Node2D
 @onready var players_container: Node2D = $BattleField/CharacterContainer/Players
 @onready var enemies_container: Node2D = $BattleField/CharacterContainer/Enemies
 @onready var vfx_container: Node2D = $EffectsLayer/VFXContainer
-@onready var damage_numbers: Node2D = $EffectsLayer/DamageNumbers
+@onready var damage_numbers_container: Node2D = $EffectsLayer/DamageNumbers
 @onready var battle_manager: BattleManager = $Systems/BattleManager
 @onready var turn_manager: TurnManager = $Systems/TurnManager
 @onready var damage_calculator: DamageCalculator = $Systems/DamageCalculator
 @onready var ui_layer: CanvasLayer = $UILayer
-@onready var camera: Camera2D = $Camera2D
+
+# =============================================================================
+# NODE REFERENCES - Animation Systems (NEW)
+# =============================================================================
+
+@onready var battle_camera: BattleCameraController = $BattleCamera
+@onready var vfx_manager: VFXManager = $AnimationSystems/VFXManager
+@onready var damage_number_spawner: DamageNumberSpawner = $AnimationSystems/DamageNumberSpawner
+@onready var screen_effects: ScreenEffectsManager = $ScreenEffectsLayer/ScreenEffectsManager
+@onready var battle_sequencer: BattleSequencer = $Systems/BattleSequencer
 
 # =============================================================================
 # STATE
@@ -34,12 +44,54 @@ func _ready() -> void:
 	_connect_signals()
 	_setup_battle_ui()
 	_setup_battle_manager()
-	EventBus.emit_debug("BattleArena ready")
+	_setup_animation_systems()
+	_setup_screen_effects()
+	EventBus.emit_debug("BattleArena ready with animation systems")
 
 func _connect_signals() -> void:
+	# Core battle events
 	EventBus.battle_started.connect(_on_battle_started)
 	EventBus.damage_dealt.connect(_on_damage_dealt)
 	EventBus.healing_done.connect(_on_healing_done)
+
+	# Connect Battle Sequencer command signals to animation systems
+	if battle_sequencer:
+		battle_sequencer.camera_command.connect(_on_camera_command)
+		battle_sequencer.vfx_command.connect(_on_vfx_command)
+		battle_sequencer.ui_command.connect(_on_ui_command)
+		battle_sequencer.audio_command.connect(_on_audio_command)
+		battle_sequencer.turn_started.connect(_on_sequencer_turn_started)
+		battle_sequencer.action_execution_started.connect(_on_action_execution_started)
+
+func _setup_animation_systems() -> void:
+	"""Initialize and configure animation systems"""
+	# Configure VFX Manager
+	if vfx_manager:
+		vfx_manager.effect_spawned.connect(_on_vfx_spawned)
+		vfx_manager.effect_completed.connect(_on_vfx_completed)
+
+	# Configure Damage Number Spawner
+	if damage_number_spawner:
+		damage_number_spawner.number_spawned.connect(_on_damage_number_spawned)
+
+	# Configure Battle Camera
+	if battle_camera:
+		battle_camera.shake_completed.connect(_on_camera_shake_completed)
+		battle_camera.focus_completed.connect(_on_camera_focus_completed)
+		# Set battle bounds
+		battle_camera.set_battle_bounds(Rect2(0, 0, 1920, 1080))
+
+	EventBus.emit_debug("Animation systems initialized")
+
+func _setup_screen_effects() -> void:
+	"""Configure screen effects manager with node references"""
+	if screen_effects:
+		# Assign the effect rects (they're child nodes)
+		screen_effects.flash_rect = screen_effects.get_node_or_null("FlashRect")
+		screen_effects.vignette_rect = screen_effects.get_node_or_null("VignetteRect")
+		screen_effects.fade_rect = screen_effects.get_node_or_null("FadeRect")
+		screen_effects.letterbox_top = screen_effects.get_node_or_null("LetterboxTop")
+		screen_effects.letterbox_bottom = screen_effects.get_node_or_null("LetterboxBottom")
 
 func _setup_battle_ui() -> void:
 	# Load and instantiate battle UI
@@ -251,7 +303,7 @@ func _on_battle_started(enemy_data: Array) -> void:
 func _on_battle_initialized() -> void:
 	EventBus.emit_debug("Battle arena: Battle initialized")
 
-func _on_damage_dealt(_source: Node, target: Node, amount: int, is_critical: bool) -> void:
+func _on_damage_dealt(source: Node, target: Node, amount: int, is_critical: bool) -> void:
 	if not target is CharacterBase:
 		return
 
@@ -265,15 +317,56 @@ func _on_damage_dealt(_source: Node, target: Node, amount: int, is_critical: boo
 	if hp_bar:
 		hp_bar.value = character.current_hp
 
-	# Spawn damage number
-	_spawn_damage_number(sprite.global_position + Vector2(0, -80), amount, is_critical)
+	# Update screen effects with health percent for vignette
+	if screen_effects and character in battle_manager.player_party:
+		var hp_percent = float(character.current_hp) / float(character.get_max_hp())
+		screen_effects.set_health_percent(hp_percent)
+
+	# Get brand for color coding
+	var brand := ""
+	if source and source.has_method("get_brand"):
+		brand = source.get_brand()
+
+	# Spawn damage number (using advanced system)
+	_spawn_advanced_damage_number({
+		"position": sprite.global_position + Vector2(0, -80),
+		"amount": amount,
+		"is_critical": is_critical,
+		"brand": brand
+	})
 
 	# Play hit animation
 	_play_hit_animation(sprite)
 
+	# Apply knockback using the KnockbackAnimator
+	var knockback_direction := Vector2.LEFT
+	if source and source is Node2D and source.has_meta("battle_sprite"):
+		var source_sprite: Node2D = source.get_meta("battle_sprite")
+		knockback_direction = (sprite.global_position - source_sprite.global_position).normalized()
+
+	KnockbackAnimator.apply_knockback(sprite, knockback_direction, 1.0, is_critical)
+
+	# Camera shake on hit
+	if battle_camera:
+		if is_critical:
+			battle_camera.shake_preset("critical")
+			battle_camera.impact_freeze(0.05)
+		else:
+			battle_camera.shake_preset("light")
+
+	# Screen effects on player damage
+	if screen_effects and character in battle_manager.player_party:
+		if is_critical:
+			screen_effects.on_player_crit_hit()
+		else:
+			var damage_percent = float(amount) / float(character.get_max_hp())
+			screen_effects.on_player_hit(damage_percent)
+
 	# Check for death
 	if character.is_dead():
 		_play_death_animation(sprite)
+		if screen_effects:
+			screen_effects.on_enemy_death()
 
 func _on_healing_done(_source: Node, target: Node, amount: int) -> void:
 	if not target is CharacterBase:
@@ -289,8 +382,25 @@ func _on_healing_done(_source: Node, target: Node, amount: int) -> void:
 	if hp_bar:
 		hp_bar.value = character.current_hp
 
-	# Spawn heal number
-	_spawn_damage_number(sprite.global_position + Vector2(0, -80), amount, false, true)
+	# Update screen effects with health percent for vignette
+	if screen_effects and character in battle_manager.player_party:
+		var hp_percent = float(character.current_hp) / float(character.get_max_hp())
+		screen_effects.set_health_percent(hp_percent)
+
+	# Spawn heal number (using advanced system)
+	_spawn_advanced_damage_number({
+		"position": sprite.global_position + Vector2(0, -80),
+		"amount": amount,
+		"is_heal": true
+	})
+
+	# Spawn heal VFX
+	if vfx_manager:
+		vfx_manager.spawn_heal_effect({"position": sprite.global_position})
+
+	# Screen flash for heal
+	if screen_effects:
+		screen_effects.flash_heal()
 
 	# Play heal animation
 	_play_heal_animation(sprite)
@@ -310,11 +420,260 @@ func _on_battle_defeat() -> void:
 	EventBus.emit_debug("Defeat!")
 
 # =============================================================================
-# CAMERA EFFECTS
+# SEQUENCER COMMAND HANDLERS - Route commands to animation systems
+# =============================================================================
+
+func _on_camera_command(command: String, data: Dictionary) -> void:
+	"""Handle camera commands from the battle sequencer"""
+	if not battle_camera:
+		return
+
+	match command:
+		"battle_intro":
+			battle_camera.release_focus(data.get("duration", 1.5))
+		"focus":
+			var target = data.get("target")
+			var zoom = data.get("zoom", -1.0)
+			var duration = data.get("duration", 0.3)
+			if target:
+				battle_camera.focus_on(target, zoom, duration)
+		"focus_between":
+			var from = data.get("from")
+			var to = data.get("to")
+			var bias = data.get("bias", 0.5)
+			if from and to:
+				battle_camera.focus_between(from, to, bias)
+		"focus_group":
+			var targets = data.get("targets", [])
+			if targets.size() > 0:
+				var typed_targets: Array[Node2D] = []
+				for t in targets:
+					if t is Node2D:
+						typed_targets.append(t)
+				battle_camera.focus_on_multiple(typed_targets)
+		"return_to_battle":
+			battle_camera.release_focus(data.get("duration", 0.3))
+		"shake":
+			var intensity = data.get("intensity", 8.0)
+			var duration = data.get("duration", 0.2)
+			battle_camera.shake(Vector2(intensity, intensity), duration)
+		"impact_freeze":
+			var duration = data.get("duration", 0.05)
+			battle_camera.impact_freeze(duration)
+		"boss_intro":
+			var target = data.get("target")
+			var duration = data.get("duration", 3.0)
+			if target:
+				battle_camera.play_boss_intro_camera(target, duration)
+		"boss_phase_transition":
+			var target = data.get("target")
+			if target:
+				battle_camera.focus_on(target, 1.2, 0.3)
+				battle_camera.shake(Vector2(15, 15), 1.0)
+		"victory_pan", "defeat_pan":
+			battle_camera.release_focus(1.0)
+		_:
+			EventBus.emit_debug("Unknown camera command: %s" % command)
+
+func _on_vfx_command(command: String, data: Dictionary) -> void:
+	"""Handle VFX commands from the battle sequencer"""
+	match command:
+		"spawn_hit_effect":
+			if vfx_manager:
+				vfx_manager.spawn_hit_effect(data)
+		"spawn_damage_number":
+			_spawn_advanced_damage_number(data)
+		"screen_flash":
+			if screen_effects:
+				var color = data.get("color", Color.WHITE)
+				var duration = data.get("duration", 0.1)
+				screen_effects.flash(color, duration)
+		"heal_effect":
+			if vfx_manager:
+				vfx_manager.spawn_heal_effect(data)
+		"death_effect":
+			if vfx_manager:
+				vfx_manager.spawn_death_effect(data)
+		"defend_effect":
+			if vfx_manager:
+				vfx_manager.spawn_defend_effect(data)
+		"skill_charge":
+			if vfx_manager:
+				vfx_manager.spawn_skill_charge(data)
+		"buff_effect", "debuff_effect":
+			if vfx_manager:
+				vfx_manager.spawn_status_apply(data)
+		"status_apply":
+			if vfx_manager:
+				vfx_manager.spawn_status_apply(data)
+		"poison_tick", "burn_tick", "bleed_tick", "regen_tick":
+			if vfx_manager:
+				data["status"] = command.replace("_tick", "")
+				vfx_manager.spawn_status_tick(data)
+		"capture_projectile":
+			if vfx_manager:
+				vfx_manager.spawn_capture_projectile(data)
+		"capture_beam":
+			if vfx_manager:
+				vfx_manager.spawn_capture_beam(data)
+		"capture_shake":
+			if vfx_manager:
+				vfx_manager.spawn_capture_shake(data)
+		"capture_success":
+			if vfx_manager:
+				vfx_manager.spawn_capture_success(data)
+			if screen_effects:
+				screen_effects.on_capture_success()
+		"capture_break":
+			if vfx_manager:
+				vfx_manager.spawn_capture_break(data)
+		"monster_summon", "monster_return":
+			if vfx_manager:
+				vfx_manager.spawn_summon_effect(data)
+		"boss_death_explosion":
+			if vfx_manager:
+				vfx_manager.spawn_boss_death_explosion(data)
+		"boss_rage_aura":
+			if vfx_manager:
+				vfx_manager.spawn_boss_rage_aura(data)
+		_:
+			EventBus.emit_debug("Unknown VFX command: %s" % command)
+
+func _on_ui_command(command: String, data: Dictionary) -> void:
+	"""Handle UI commands from the battle sequencer"""
+	if not battle_ui:
+		return
+
+	match command:
+		"show_turn_order":
+			if battle_ui.has_method("update_turn_order"):
+				battle_ui.update_turn_order(data.get("order", []))
+		"show_action_menu":
+			if battle_ui.has_method("show_action_menu"):
+				battle_ui.show_action_menu()
+		"hide_action_menu":
+			if battle_ui.has_method("hide_action_menu"):
+				battle_ui.hide_action_menu()
+		"show_skill_name":
+			if battle_ui.has_method("show_skill_announcement"):
+				battle_ui.show_skill_announcement(data.get("name", ""), data.get("brand", "NEUTRAL"))
+		"show_status_popup":
+			if battle_ui.has_method("show_status_popup"):
+				battle_ui.show_status_popup(data.get("target"), data.get("status", ""), data.get("positive", true))
+		"show_message":
+			if battle_ui.has_method("show_battle_message"):
+				battle_ui.show_battle_message(data.get("text", ""))
+		"capture_announcement":
+			if battle_ui.has_method("show_capture_success"):
+				battle_ui.show_capture_success(data.get("monster_name", ""))
+		"phase_announcement":
+			if battle_ui.has_method("show_phase_announcement"):
+				battle_ui.show_phase_announcement(data.get("boss_name", ""), data.get("phase", 1), data.get("phase_name", ""))
+		"show_victory_screen":
+			if battle_ui.has_method("show_victory"):
+				battle_ui.show_victory(data)
+		"show_defeat_screen":
+			if battle_ui.has_method("show_defeat"):
+				battle_ui.show_defeat(data)
+		"hide_ui":
+			if battle_ui.has_method("hide_all"):
+				battle_ui.hide_all()
+		"show_ui":
+			if battle_ui.has_method("show_all"):
+				battle_ui.show_all()
+		_:
+			EventBus.emit_debug("Unknown UI command: %s" % command)
+
+func _on_audio_command(command: String, data: Dictionary) -> void:
+	"""Handle audio commands from the battle sequencer"""
+	match command:
+		"play_sfx":
+			var sound = data.get("sound", "")
+			AudioManager.play_sfx(sound) if AudioManager.has_method("play_sfx") else null
+		"play_music":
+			var track = data.get("track", "")
+			AudioManager.play_music(track) if AudioManager.has_method("play_music") else null
+		"play_jingle":
+			var jingle = data.get("jingle", "")
+			AudioManager.play_jingle(jingle) if AudioManager.has_method("play_jingle") else null
+		"intensify_music":
+			var phase = data.get("phase", 1)
+			# Could add music intensity logic here
+			pass
+		_:
+			EventBus.emit_debug("Unknown audio command: %s" % command)
+
+func _on_sequencer_turn_started(entity: Node, turn_number: int) -> void:
+	"""Handle turn started from sequencer"""
+	EventBus.emit_debug("Turn %d started for %s" % [turn_number, entity.name if entity else "unknown"])
+
+	# Register entity with camera
+	if battle_camera and entity is Node2D:
+		battle_camera.register_combatant(entity)
+
+func _on_action_execution_started(action: Dictionary) -> void:
+	"""Handle action execution started"""
+	var source = action.get("source")
+	EventBus.emit_debug("Action started: %s" % str(action.get("type", "unknown")))
+
+# =============================================================================
+# ANIMATION SYSTEM CALLBACKS
+# =============================================================================
+
+func _on_vfx_spawned(effect_name: String, instance: Node) -> void:
+	EventBus.emit_debug("VFX spawned: %s" % effect_name)
+
+func _on_vfx_completed(effect_name: String) -> void:
+	pass  # Effect completed, could trigger follow-up
+
+func _on_damage_number_spawned(number_node: Node) -> void:
+	pass  # Damage number visible
+
+func _on_camera_shake_completed() -> void:
+	pass  # Camera shake done
+
+func _on_camera_focus_completed() -> void:
+	pass  # Camera focus transition done
+
+# =============================================================================
+# ADVANCED DAMAGE NUMBERS
+# =============================================================================
+
+func _spawn_advanced_damage_number(data: Dictionary) -> void:
+	"""Spawn damage number using the advanced system or fallback"""
+	var position = data.get("position", Vector2.ZERO)
+	var amount = data.get("amount", 0)
+	var is_critical = data.get("is_critical", false)
+	var is_heal = data.get("is_heal", false)
+	var brand = data.get("brand", "")
+
+	if damage_number_spawner:
+		if is_heal:
+			damage_number_spawner.spawn_heal(position, amount)
+		else:
+			damage_number_spawner.spawn_damage(position, amount, is_critical, brand)
+	else:
+		# Fallback to basic damage number
+		_spawn_damage_number(position, amount, is_critical, is_heal)
+
+# =============================================================================
+# CAMERA EFFECTS (Legacy - kept for compatibility)
 # =============================================================================
 
 func shake_camera(intensity: float = 5.0, duration: float = 0.2) -> void:
-	var original_offset := camera.offset
+	"""Legacy camera shake - now routes to battle camera"""
+	if battle_camera:
+		battle_camera.shake(Vector2(intensity, intensity), duration)
+	else:
+		# Fallback for when battle camera isn't available
+		_legacy_shake_camera(intensity, duration)
+
+func _legacy_shake_camera(intensity: float, duration: float) -> void:
+	"""Original camera shake implementation as fallback"""
+	var camera_node = get_node_or_null("BattleCamera")
+	if not camera_node:
+		return
+	var original_offset := camera_node.offset
 	var tween := create_tween()
 
 	for i in range(int(duration / 0.05)):
@@ -322,9 +681,9 @@ func shake_camera(intensity: float = 5.0, duration: float = 0.2) -> void:
 			randf_range(-intensity, intensity),
 			randf_range(-intensity, intensity)
 		)
-		tween.tween_property(camera, "offset", original_offset + shake_offset, 0.05)
+		tween.tween_property(camera_node, "offset", original_offset + shake_offset, 0.05)
 
-	tween.tween_property(camera, "offset", original_offset, 0.05)
+	tween.tween_property(camera_node, "offset", original_offset, 0.05)
 
 # =============================================================================
 # CLEANUP

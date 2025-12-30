@@ -5,6 +5,7 @@ extends Control
 signal action_selected(action: Enums.BattleAction, target: CharacterBase, skill_id: String)
 signal target_confirmed(target: CharacterBase)
 signal target_cancelled
+signal target_highlight_changed(target: CharacterBase)
 
 # =============================================================================
 # NODE REFERENCES
@@ -13,6 +14,10 @@ signal target_cancelled
 @onready var top_bar: PanelContainer = $TopBar
 @onready var turn_order_display: HBoxContainer = $TopBar/HBoxContainer/TurnOrderDisplay
 @onready var battle_info_label: Label = $TopBar/HBoxContainer/BattleInfoLabel
+
+@onready var combat_log: PanelContainer = $CombatLog
+@onready var combat_log_text: RichTextLabel = $CombatLog/VBoxContainer/ScrollContainer/CombatLogText
+@onready var combat_log_scroll: ScrollContainer = $CombatLog/VBoxContainer/ScrollContainer
 
 @onready var party_panel: PanelContainer = $PartyPanel
 @onready var party_status_container: HBoxContainer = $PartyPanel/VBoxContainer/PartyStatusContainer
@@ -91,9 +96,46 @@ func set_battle_manager(manager: BattleManager) -> void:
 	battle_manager.round_started.connect(_on_round_started)
 	battle_manager.battle_victory.connect(_on_victory)
 	battle_manager.battle_defeat.connect(_on_defeat)
+	battle_manager.action_animation_started.connect(_on_action_started)
+
+	# Connect to EventBus for action results
+	if not EventBus.action_executed.is_connected(_on_action_executed):
+		EventBus.action_executed.connect(_on_action_executed)
 
 	# Connect UI signals to battle manager
 	action_selected.connect(_on_action_selected)
+
+	# Clear combat log for new battle
+	clear_combat_log()
+
+func _on_action_started(character: CharacterBase, action: int) -> void:
+	var action_name := ""
+	match action:
+		Enums.BattleAction.ATTACK:
+			action_name = "Attack"
+		Enums.BattleAction.SKILL:
+			action_name = "Skill"
+		Enums.BattleAction.DEFEND:
+			action_name = "Defend"
+		Enums.BattleAction.ITEM:
+			action_name = "Item"
+		Enums.BattleAction.PURIFY:
+			action_name = "Purify"
+		Enums.BattleAction.FLEE:
+			action_name = "Flee"
+
+	log_action(character.character_name, action_name)
+
+func _on_action_executed(character: CharacterBase, action: int, result: Dictionary) -> void:
+	if result.has("is_miss") and result.is_miss:
+		log_miss(character.character_name, result.get("target_name", "target"))
+	elif result.has("damage") and result.damage > 0:
+		var target_name := result.get("target_name", "target")
+		var is_crit := result.get("is_critical", false)
+		log_damage(target_name, result.damage, is_crit)
+	elif result.has("heal") and result.heal > 0:
+		var target_name := result.get("target_name", character.character_name)
+		log_heal(target_name, result.heal)
 
 func _on_action_selected(action: Enums.BattleAction, target: CharacterBase, skill_id: String) -> void:
 	if battle_manager:
@@ -104,6 +146,7 @@ func _on_waiting_for_input(character: CharacterBase) -> void:
 
 func _on_round_started(round_number: int) -> void:
 	update_round_display(round_number)
+	log_round_start(round_number)
 	if battle_manager:
 		update_turn_order(battle_manager.turn_order)
 
@@ -167,6 +210,10 @@ func setup_battle(player_party: Array[CharacterBase], enemy_party: Array[Charact
 
 func start_turn(character: CharacterBase) -> void:
 	current_character = character
+
+	# Log turn start
+	var is_ally := character is PlayerCharacter or character in party_members
+	log_turn_start(character.character_name, is_ally)
 
 	if character is PlayerCharacter:
 		show_action_menu()
@@ -390,13 +437,17 @@ func _update_target_display() -> void:
 
 	var target := valid_targets[current_target_index]
 
-	# Position indicator
-	# TODO: Get actual world position of target
-	target_name_label.text = target.character_name
+	# Update target name with highlight
+	target_name_label.text = "► " + target.character_name + " ◄"
+	target_name_label.add_theme_color_override("font_color", Color.YELLOW)
+	target_name_label.add_theme_font_size_override("font_size", 18)
 
 	# Update enemy info panel if targeting enemy
 	if target in enemies:
 		_update_enemy_display(target)
+
+	# Emit signal for battle arena to highlight the target sprite
+	target_highlight_changed.emit(target)
 
 func _confirm_target() -> void:
 	if valid_targets.is_empty():
@@ -498,12 +549,64 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 	for child in turn_order_display.get_children():
 		child.queue_free()
 
-	for i in range(mini(6, order.size())):
-		var label := Label.new()
-		label.text = order[i].character_name
+	for i in range(mini(8, order.size())):
+		var character := order[i]
+		var is_ally := character is PlayerCharacter or (character is Monster and character in party_members)
+
+		# Create portrait container
+		var portrait_panel := PanelContainer.new()
+		portrait_panel.custom_minimum_size = Vector2(50, 50)
+
+		# Create stylebox for colored border
+		var style := StyleBoxFlat.new()
 		if i == 0:
-			label.add_theme_color_override("font_color", Color.YELLOW)
-		turn_order_display.add_child(label)
+			# Current turn - bright yellow border
+			style.bg_color = Color(0.2, 0.2, 0.2, 0.9)
+			style.border_color = Color.YELLOW
+			style.set_border_width_all(3)
+		elif is_ally:
+			# Ally - green border
+			style.bg_color = Color(0.1, 0.2, 0.1, 0.8)
+			style.border_color = Color(0.3, 0.9, 0.3)  # Green
+			style.set_border_width_all(2)
+		else:
+			# Enemy - red border
+			style.bg_color = Color(0.2, 0.1, 0.1, 0.8)
+			style.border_color = Color(0.9, 0.3, 0.3)  # Red
+			style.set_border_width_all(2)
+
+		style.set_corner_radius_all(5)
+		portrait_panel.add_theme_stylebox_override("panel", style)
+
+		# Character name/icon inside
+		var vbox := VBoxContainer.new()
+		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		portrait_panel.add_child(vbox)
+
+		# Portrait placeholder (colored rect for now)
+		var portrait := ColorRect.new()
+		portrait.custom_minimum_size = Vector2(30, 30)
+		portrait.color = Color(0.3, 0.8, 0.3) if is_ally else Color(0.8, 0.3, 0.3)
+		portrait.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		vbox.add_child(portrait)
+
+		# Name label
+		var name_label := Label.new()
+		name_label.text = character.character_name.substr(0, 6)  # Truncate long names
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.add_theme_font_size_override("font_size", 10)
+		vbox.add_child(name_label)
+
+		turn_order_display.add_child(portrait_panel)
+
+		# Add arrow between characters (except after last)
+		if i < mini(7, order.size() - 1):
+			var arrow := Label.new()
+			arrow.text = "►"
+			arrow.add_theme_font_size_override("font_size", 12)
+			arrow.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+			arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			turn_order_display.add_child(arrow)
 
 func update_round_display(round_number: int) -> void:
 	battle_info_label.text = "Round %d" % round_number
@@ -522,6 +625,61 @@ func show_message(text: String, duration: float = 2.0) -> void:
 
 func hide_message() -> void:
 	message_box.hide()
+
+# =============================================================================
+# COMBAT LOG
+# =============================================================================
+
+func log_action(attacker_name: String, action_name: String, target_name: String = "") -> void:
+	var entry := ""
+	if target_name.is_empty():
+		entry = "[color=white]%s[/color] uses [color=cyan]%s[/color]" % [attacker_name, action_name]
+	else:
+		entry = "[color=white]%s[/color] uses [color=cyan]%s[/color] on [color=yellow]%s[/color]" % [attacker_name, action_name, target_name]
+	_append_to_log(entry)
+
+func log_damage(target_name: String, amount: int, is_critical: bool = false) -> void:
+	var color := "red" if not is_critical else "orange"
+	var crit_text := " [color=orange]CRITICAL![/color]" if is_critical else ""
+	var entry := "[color=%s]%s takes %d damage!%s[/color]" % [color, target_name, amount, crit_text]
+	_append_to_log(entry)
+
+func log_heal(target_name: String, amount: int) -> void:
+	var entry := "[color=green]%s recovers %d HP![/color]" % [target_name, amount]
+	_append_to_log(entry)
+
+func log_miss(attacker_name: String, target_name: String) -> void:
+	var entry := "[color=gray]%s's attack missed %s![/color]" % [attacker_name, target_name]
+	_append_to_log(entry)
+
+func log_status_effect(target_name: String, effect_name: String, applied: bool = true) -> void:
+	var action := "afflicted with" if applied else "recovered from"
+	var color := "purple" if applied else "lime"
+	var entry := "[color=%s]%s is %s %s![/color]" % [color, target_name, action, effect_name]
+	_append_to_log(entry)
+
+func log_defeat(character_name: String) -> void:
+	var entry := "[color=red][b]%s has been defeated![/b][/color]" % character_name
+	_append_to_log(entry)
+
+func log_turn_start(character_name: String, is_ally: bool) -> void:
+	var color := "lime" if is_ally else "salmon"
+	var entry := "\n[color=%s]>>> %s's turn <<<[/color]" % [color, character_name]
+	_append_to_log(entry)
+
+func log_round_start(round_number: int) -> void:
+	var entry := "\n[color=gold]========== ROUND %d ==========[/color]" % round_number
+	_append_to_log(entry)
+
+func _append_to_log(entry: String) -> void:
+	combat_log_text.append_text("\n" + entry)
+	# Auto-scroll to bottom
+	await get_tree().process_frame
+	combat_log_scroll.scroll_vertical = combat_log_scroll.get_v_scroll_bar().max_value
+
+func clear_combat_log() -> void:
+	combat_log_text.clear()
+	combat_log_text.append_text("[color=gray]Battle started...[/color]")
 
 # =============================================================================
 # BATTLE END SCREENS

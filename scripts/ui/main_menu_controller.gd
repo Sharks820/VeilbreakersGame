@@ -1,5 +1,5 @@
 extends Control
-## MainMenuController: AAA-quality main menu with Diablo/God of War tier animations.
+## MainMenuController: AAA-quality main menu with perfect cursor-tracking demon eyes.
 
 @onready var logo: Sprite2D = $Logo
 @onready var button_container: HBoxContainer = $ButtonContainer
@@ -8,26 +8,89 @@ extends Control
 @onready var settings_button: TextureButton = $ButtonContainer/SettingsButton
 @onready var quit_button: TextureButton = $ButtonContainer/QuitButton
 @onready var version_label: Label = $VersionLabel
-@onready var monster_eyes: Control = $MonsterEyes
-@onready var left_eye: Control = $MonsterEyes/LeftEye
-@onready var right_eye: Control = $MonsterEyes/RightEye
+@onready var monster_eye: Sprite2D = $MonsterEye
 @onready var dark_overlay: ColorRect = $DarkOverlay
 @onready var red_breath_overlay: ColorRect = $RedBreathOverlay
 @onready var background: TextureRect = $Background
 @onready var vignette: ColorRect = $Vignette
 @onready var ember_particles: GPUParticles2D = $EmberParticles
 
-# Animation state
-var left_eye_base_pos: Vector2
-var right_eye_base_pos: Vector2
+# =============================================================================
+# EYE TRACKING SYSTEM - 6x7 SPRITE SHEET (42 frames)
+# =============================================================================
+# 4 frames per direction + 4 blink frames for smooth animation.
+# Layout (6 columns x 7 rows):
+#   Row 0: UP-LEFT (0-3), UP (4-5)
+#   Row 1: UP (6-7), UP-RIGHT (8-11)
+#   Row 2: LEFT (12-15), CENTER (16-17)
+#   Row 3: CENTER (18-19), RIGHT (20-23)
+#   Row 4: DOWN-LEFT (24-27), DOWN (28-29)
+#   Row 5: DOWN (30-31), DOWN-RIGHT (32-35)
+#   Row 6: BLINK (36-39), empty (40-41)
+
+# Sprite sheet configuration
+const EYE_GRID_COLS: int = 6
+const EYE_GRID_ROWS: int = 7
+const EYE_TOTAL_FRAMES: int = 42
+
+# =============================================================================
+# DIRECTIONAL FRAME ARRAYS - 4 frames each for smooth animation
+# =============================================================================
+const FRAMES_UP_LEFT: Array[int] = [0, 1, 2, 3]
+const FRAMES_UP: Array[int] = [4, 5, 6, 7]
+const FRAMES_UP_RIGHT: Array[int] = [8, 9, 10, 11]
+const FRAMES_LEFT: Array[int] = [12, 13, 14, 15]
+const FRAMES_CENTER: Array[int] = [16, 17, 18, 19]
+const FRAMES_RIGHT: Array[int] = [20, 21, 22, 23]
+const FRAMES_DOWN_LEFT: Array[int] = [24, 25, 26, 27]
+const FRAMES_DOWN: Array[int] = [28, 29, 30, 31]
+const FRAMES_DOWN_RIGHT: Array[int] = [32, 33, 34, 35]
+
+# Blink frames (eyes squinting/closing)
+const BLINK_ENABLED: bool = true
+const BLINK_FRAMES: Array[int] = [36, 37, 38, 39]
+const BLINK_FRAME_COUNT: int = 4
+
+# Zone threshold - distance from center to trigger edge zones (normalized 0-1)
+# Lower value = more sensitive, triggers directions more easily
+const ZONE_THRESHOLD: float = 0.08
+
+# Smooth animation timing - very slow cycling for subtle variation
+const FRAME_CYCLE_SPEED: float = 0.3  # Frames per second within direction (slow = subtle)
+
+# Timing constants
+const EYE_TRACK_SPEED: float = 12.0  # Higher = snappier tracking
+const EYE_SMOOTHING: float = 0.08    # Lower = smoother frame transitions
+const BLINK_INTERVAL_MIN: float = 2.5
+const BLINK_INTERVAL_MAX: float = 6.0
+const BLINK_FRAME_DURATION: float = 0.035  # Time per blink frame (faster blink)
+
+# Eye state
+var eye_current_frame: float = 0.0
+var eye_target_frame: int = 0
+var eye_is_blinking: bool = false
+var eye_blink_timer: float = 0.0
+var eye_next_blink: float = 4.0
+var eye_blink_frame_index: int = 0
+var eye_blink_frame_timer: float = 0.0
+
+# Store last valid tracking frame for after blink
+var eye_last_tracking_frame: int = 0
+
+# Shader-based gaze tracking
+var eye_gaze_target: Vector2 = Vector2.ZERO
+var eye_gaze_current: Vector2 = Vector2.ZERO
+
+# =============================================================================
+# GENERAL ANIMATION STATE
+# =============================================================================
+
 var background_base_pos: Vector2
 var ambient_time: float = 0.0
 var animations_ready: bool = false
 var continue_has_saves: bool = false
-var next_blink_time: float = 0.0
-var is_blinking: bool = false
 
-# Logo scale pulse constants - subtle breathing
+# Logo scale pulse constants
 const LOGO_BASE_SCALE: float = 0.11
 const LOGO_SCALE_MIN: float = 0.11
 const LOGO_SCALE_MAX: float = 0.112
@@ -38,16 +101,15 @@ var logo_tween: Tween
 # Button base positions for hover restoration
 var button_base_positions: Dictionary = {}
 
-# AAA Animation constants - Diablo/Dark Souls style (SLOW and atmospheric)
-const PUPIL_TRACK_RANGE: float = 3.0
-const PUPIL_TRACK_SPEED: float = 4.0
-const BLINK_MIN_INTERVAL: float = 2.0
-const BLINK_MAX_INTERVAL: float = 6.0
-const BLINK_DURATION: float = 0.15
+# Breathing effect constants
 const BREATH_SPEED: float = 0.35
 const VIGNETTE_SPEED: float = 0.25
 const VIGNETTE_MIN: float = 0.15
 const VIGNETTE_MAX: float = 0.35
+
+# =============================================================================
+# LIFECYCLE
+# =============================================================================
 
 func _ready() -> void:
 	GameManager.change_state(Enums.GameState.MAIN_MENU)
@@ -56,19 +118,14 @@ func _ready() -> void:
 	var version: String = ProjectSettings.get_setting("application/config/version", "0.1.0")
 	version_label.text = "v%s - Development Build" % version
 
-	# Check saves for Continue button - store result but DON'T disable
+	# Check saves for Continue button
 	continue_has_saves = SaveManager.has_any_saves()
 
 	# Setup hover effects
 	_setup_button_effects()
 
-	# Store base positions BEFORE hiding
-	left_eye_base_pos = left_eye.position
-	right_eye_base_pos = right_eye.position
+	# Store base positions
 	background_base_pos = background.position
-
-	# Schedule first blink
-	next_blink_time = randf_range(BLINK_MIN_INTERVAL, BLINK_MAX_INTERVAL)
 
 	# Store button base positions
 	for btn in [new_game_button, continue_button, settings_button, quit_button]:
@@ -77,19 +134,22 @@ func _ready() -> void:
 	# Initialize hidden state
 	_hide_all_elements()
 
-	# Play AAA entrance sequence
+	# Randomize first blink
+	eye_next_blink = randf_range(BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX)
+
+	# Play entrance sequence
 	_play_aaa_entrance()
 
-	EventBus.emit_debug("Main menu ready")
+	EventBus.emit_debug("Main menu ready - Demon eyes tracking active")
 
 func _hide_all_elements() -> void:
-	# Logo - starts invisible (pivot already set in scene file)
+	# Logo - starts invisible
 	logo.modulate.a = 0.0
 
-	# Eyes - invisible
-	monster_eyes.modulate.a = 0.0
+	# Monster eye - invisible initially
+	monster_eye.modulate.a = 0.0
 
-	# Buttons - invisible and offset down (ALL buttons including continue)
+	# Buttons - invisible and offset down
 	for btn in [new_game_button, continue_button, settings_button, quit_button]:
 		btn.modulate.a = 0.0
 		btn.position.y += 100
@@ -99,49 +159,44 @@ func _hide_all_elements() -> void:
 	# Version label
 	version_label.modulate.a = 0.0
 
-	# Red overlay starts invisible
+	# Overlays
 	red_breath_overlay.modulate.a = 0.0
-
-	# Vignette starts invisible
 	vignette.modulate.a = 0.0
-
-	# Ember particles start invisible
 	ember_particles.modulate.a = 0.0
 
+# =============================================================================
+# ENTRANCE ANIMATION
+# =============================================================================
+
 func _play_aaa_entrance() -> void:
-	# === PHASE 1: Embers start floating up from darkness ===
+	# Phase 1: Embers
 	var ember_tween = create_tween()
 	ember_tween.tween_property(ember_particles, "modulate:a", 1.0, 2.0).set_ease(Tween.EASE_OUT)
 
-	# === PHASE 2: Background breathing starts ===
+	# Phase 2: Background breathing
 	await get_tree().create_timer(0.5).timeout
 	var breath_tween = create_tween()
 	breath_tween.tween_property(red_breath_overlay, "modulate:a", 1.0, 1.5).set_ease(Tween.EASE_OUT)
 
-	# Vignette fades in
 	var vignette_tween = create_tween()
 	vignette_tween.tween_property(vignette, "modulate:a", VIGNETTE_MIN, 2.0).set_ease(Tween.EASE_OUT)
 
-	# === PHASE 3: Logo entrance - ONLY OPACITY (no scale to avoid conflict with idle) ===
+	# Phase 3: Logo entrance
 	await get_tree().create_timer(0.4).timeout
+	var logo_entrance = create_tween()
+	logo_entrance.tween_property(logo, "modulate:a", 1.0, 1.8).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
-	var logo_tween = create_tween()
-	logo_tween.tween_property(logo, "modulate:a", 1.0, 1.8).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-
-	# === PHASE 4: Monster eyes fade in eerily ===
+	# Phase 4: Monster eye fades in
 	await get_tree().create_timer(0.8).timeout
-
 	var eyes_tween = create_tween()
-	eyes_tween.tween_property(monster_eyes, "modulate:a", 1.0, 1.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	eyes_tween.tween_property(monster_eye, "modulate:a", 1.0, 1.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
-	# === PHASE 5: Buttons slide up with stagger (power3.out style) ===
+	# Phase 5: Buttons slide up
 	await get_tree().create_timer(0.5).timeout
-
 	var buttons = [new_game_button, continue_button, settings_button, quit_button]
 	for i in range(buttons.size()):
 		var btn = buttons[i]
-		var delay = i * 0.15  # Stagger
-		# Continue button animates but appears dimmer if no saves
+		var delay = i * 0.15
 		var target_alpha = 0.4 if (btn == continue_button and not continue_has_saves) else 1.0
 		var target_y = button_base_positions[btn]
 
@@ -150,16 +205,20 @@ func _play_aaa_entrance() -> void:
 		btn_tween.tween_property(btn, "position:y", target_y, 0.9).set_delay(delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 		btn_tween.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.8).set_delay(delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 
-	# === PHASE 6: Version label ===
+	# Phase 6: Version label
 	await get_tree().create_timer(0.8).timeout
 	var version_tween = create_tween()
 	version_tween.tween_property(version_label, "modulate:a", 0.5, 0.6).set_ease(Tween.EASE_OUT)
 
-	# === PHASE 7: Start idle animations ===
+	# Phase 7: Start idle animations
 	await get_tree().create_timer(0.5).timeout
 	animations_ready = true
 	_start_logo_pulse()
 	new_game_button.grab_focus()
+
+# =============================================================================
+# PROCESS LOOP
+# =============================================================================
 
 func _process(delta: float) -> void:
 	if not animations_ready:
@@ -168,11 +227,117 @@ func _process(delta: float) -> void:
 	ambient_time += delta
 	_update_breathing(delta)
 	_update_eye_tracking(delta)
-	_update_blinking(delta)
 	_update_vignette(delta)
 
+# =============================================================================
+# EYE TRACKING SYSTEM
+# =============================================================================
+
+func _update_eye_tracking(delta: float) -> void:
+	# Handle blink timer (only if blinking is enabled)
+	if BLINK_ENABLED and not eye_is_blinking:
+		eye_blink_timer += delta
+		if eye_blink_timer >= eye_next_blink:
+			_start_blink()
+
+	# Handle blinking animation
+	if eye_is_blinking:
+		_update_blink(delta)
+	else:
+		_update_cursor_tracking(delta)
+
+	# Apply subtle breathing pulse to eye scale (base scale is 0.17x0.17)
+	var breath = (sin(ambient_time * BREATH_SPEED) + 1.0) * 0.5
+	var base_scale_x = 0.17
+	var base_scale_y = 0.17
+	var pulse_x = base_scale_x + breath * 0.005
+	var pulse_y = base_scale_y + breath * 0.005
+	monster_eye.scale = Vector2(pulse_x, pulse_y)
+
+	# Blend eyes with fiery red background
+	var red_tint = 1.0 + breath * 0.15
+	var alpha = 0.85  # Slight transparency to mesh with background
+	monster_eye.modulate = Color(red_tint, 0.7, 0.5, alpha)
+
+func _update_cursor_tracking(delta: float) -> void:
+	# SMOOTH 9-ZONE TRACKING with frame cycling within each direction
+	var mouse_pos = get_global_mouse_position()
+	var eye_pos = monster_eye.global_position
+	var viewport_size = get_viewport_rect().size
+
+	# Calculate normalized direction from eye to cursor (-1 to 1)
+	var dx = (mouse_pos.x - eye_pos.x) / (viewport_size.x * 0.35)
+	var dy = (mouse_pos.y - eye_pos.y) / (viewport_size.y * 0.35)
+
+	# Clamp to valid range
+	dx = clamp(dx, -1.0, 1.0)
+	dy = clamp(dy, -1.0, 1.0)
+
+	# Determine 9-zone direction based on thresholds
+	var look_left = dx < -ZONE_THRESHOLD
+	var look_right = dx > ZONE_THRESHOLD
+	var look_up = dy < -ZONE_THRESHOLD
+	var look_down = dy > ZONE_THRESHOLD
+
+	# Select frame array based on zone
+	var target_frames: Array[int] = FRAMES_CENTER
+
+	if look_up and look_left:
+		target_frames = FRAMES_UP_LEFT
+	elif look_up and look_right:
+		target_frames = FRAMES_UP_RIGHT
+	elif look_up:
+		target_frames = FRAMES_UP
+	elif look_down and look_left:
+		target_frames = FRAMES_DOWN_LEFT
+	elif look_down and look_right:
+		target_frames = FRAMES_DOWN_RIGHT
+	elif look_down:
+		target_frames = FRAMES_DOWN
+	elif look_left:
+		target_frames = FRAMES_LEFT
+	elif look_right:
+		target_frames = FRAMES_RIGHT
+	else:
+		target_frames = FRAMES_CENTER
+
+	# Use first frame only - cycling disabled to prevent glitching
+	var target_frame: int = target_frames[0]
+
+	# Update frame
+	eye_target_frame = target_frame
+	eye_last_tracking_frame = target_frame
+	monster_eye.frame = target_frame
+
+func _start_blink() -> void:
+	eye_is_blinking = true
+	eye_blink_frame_index = 0
+	eye_blink_frame_timer = 0.0
+	eye_blink_timer = 0.0
+	eye_next_blink = randf_range(BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX)
+
+func _update_blink(delta: float) -> void:
+	eye_blink_frame_timer += delta
+
+	if eye_blink_frame_timer >= BLINK_FRAME_DURATION:
+		eye_blink_frame_timer = 0.0
+		eye_blink_frame_index += 1
+
+		if eye_blink_frame_index >= BLINK_FRAME_COUNT:
+			# Blink finished, return to tracking
+			eye_is_blinking = false
+			monster_eye.frame = eye_last_tracking_frame
+			return
+
+	# Use blink frames from the BLINK_FRAMES array
+	var blink_frame: int = BLINK_FRAMES[eye_blink_frame_index % BLINK_FRAMES.size()]
+	monster_eye.frame = blink_frame
+
+# =============================================================================
+# AMBIENT ANIMATIONS
+# =============================================================================
+
 func _start_logo_pulse() -> void:
-	# Smooth looping tween for logo scale pulse
 	if logo_tween:
 		logo_tween.kill()
 	logo_tween = create_tween().set_loops()
@@ -180,66 +345,18 @@ func _start_logo_pulse() -> void:
 	logo_tween.tween_property(logo, "scale", Vector2(LOGO_SCALE_MIN, LOGO_SCALE_MIN), LOGO_PULSE_DURATION).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 func _update_breathing(delta: float) -> void:
-	# Dark Souls style breathing - the background art's red glows and dims
-	var breath = (sin(ambient_time * BREATH_SPEED) + 1.0) * 0.5  # 0 to 1
-
-	# Visible but not overwhelming breathing effect
-	# At peak: warm glow (1.2), at low: slightly darker (0.85)
-	var brightness = 0.85 + breath * 0.35  # Range: 0.85 to 1.2
-	# Emphasize red channel for hellish glow
+	var breath = (sin(ambient_time * BREATH_SPEED) + 1.0) * 0.5
+	var brightness = 0.85 + breath * 0.35
 	background.self_modulate = Color(brightness * 1.15, brightness * 0.85, brightness * 0.75, 1.0)
-
-	# Subtle darkening overlay pulse
-	dark_overlay.color.a = 0.15 - breath * 0.1  # Range: 0.05 to 0.15
+	dark_overlay.color.a = 0.15 - breath * 0.1
 
 func _update_vignette(delta: float) -> void:
-	# Vignette pulses very slowly for cinematic feel
 	var vignette_pulse = (sin(ambient_time * VIGNETTE_SPEED) + 1.0) * 0.5
 	vignette.color.a = VIGNETTE_MIN + vignette_pulse * (VIGNETTE_MAX - VIGNETTE_MIN)
 
-func _update_eye_tracking(delta: float) -> void:
-	var mouse_pos = get_global_mouse_position()
-
-	# Track left eye - subtle movement toward mouse
-	var left_dir = (mouse_pos - left_eye.global_position).normalized()
-	var left_dist = clamp((mouse_pos - left_eye.global_position).length() / 500.0, 0.0, 1.0)
-	var left_target = left_eye_base_pos + left_dir * PUPIL_TRACK_RANGE * left_dist
-	left_eye.position = left_eye.position.lerp(left_target, delta * PUPIL_TRACK_SPEED)
-
-	# Track right eye
-	var right_dir = (mouse_pos - right_eye.global_position).normalized()
-	var right_dist = clamp((mouse_pos - right_eye.global_position).length() / 500.0, 0.0, 1.0)
-	var right_target = right_eye_base_pos + right_dir * PUPIL_TRACK_RANGE * right_dist
-	right_eye.position = right_eye.position.lerp(right_target, delta * PUPIL_TRACK_SPEED)
-
-	# Subtle pulse synchronized with breathing
-	var breath = (sin(ambient_time * BREATH_SPEED) + 1.0) * 0.5
-	var pulse = 1.0 + breath * 0.1
-	left_eye.scale = Vector2(pulse, pulse)
-	right_eye.scale = Vector2(pulse, pulse)
-
-func _update_blinking(delta: float) -> void:
-	if is_blinking:
-		return
-
-	next_blink_time -= delta
-	if next_blink_time <= 0:
-		_do_blink()
-		next_blink_time = randf_range(BLINK_MIN_INTERVAL, BLINK_MAX_INTERVAL)
-
-func _do_blink() -> void:
-	is_blinking = true
-
-	# Glowing eyes blink by fading out then back in
-	var blink_tween = create_tween()
-	blink_tween.tween_property(left_eye, "modulate:a", 0.1, BLINK_DURATION).set_ease(Tween.EASE_IN)
-	blink_tween.parallel().tween_property(right_eye, "modulate:a", 0.1, BLINK_DURATION).set_ease(Tween.EASE_IN)
-
-	# Fade back in
-	blink_tween.tween_property(left_eye, "modulate:a", 1.0, BLINK_DURATION).set_ease(Tween.EASE_OUT)
-	blink_tween.parallel().tween_property(right_eye, "modulate:a", 1.0, BLINK_DURATION).set_ease(Tween.EASE_OUT)
-
-	blink_tween.tween_callback(func(): is_blinking = false)
+# =============================================================================
+# BUTTON EFFECTS
+# =============================================================================
 
 func _setup_button_effects() -> void:
 	for button in [new_game_button, continue_button, settings_button, quit_button]:
@@ -249,15 +366,12 @@ func _setup_button_effects() -> void:
 		button.focus_exited.connect(_on_button_unhover.bind(button))
 
 func _on_button_hover(button: TextureButton) -> void:
-	# Continue button can hover even without saves (but can't click)
 	if button == continue_button and not continue_has_saves:
-		# Subtle hover for disabled state
 		var tween = create_tween().set_parallel(true)
 		tween.tween_property(button, "scale", Vector2(1.03, 1.03), 0.2).set_ease(Tween.EASE_OUT)
 		tween.tween_property(button, "modulate:a", 0.55, 0.2)
 		return
 
-	# AAA hover - scale up with lift and subtle glow
 	var base_y = button_base_positions.get(button, button.position.y)
 	var tween = create_tween().set_parallel(true)
 	tween.tween_property(button, "scale", Vector2(1.12, 1.12), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
@@ -275,6 +389,10 @@ func _on_button_unhover(button: TextureButton) -> void:
 	tween.tween_property(button, "modulate", Color(1.0, 1.0, 1.0, target_alpha), 0.2)
 	tween.tween_property(button, "rotation_degrees", 0.0, 0.15)
 
+# =============================================================================
+# BUTTON ACTIONS
+# =============================================================================
+
 func _on_new_game_pressed() -> void:
 	EventBus.emit_debug("New Game selected")
 	_play_button_press(new_game_button)
@@ -283,7 +401,6 @@ func _on_new_game_pressed() -> void:
 	SceneManager.change_scene("res://scenes/test/test_battle.tscn")
 
 func _on_continue_pressed() -> void:
-	# Block if no saves
 	if not continue_has_saves:
 		EventBus.emit_notification("No save data found", "warning")
 		return
@@ -308,7 +425,6 @@ func _on_quit_pressed() -> void:
 	get_tree().quit()
 
 func _play_button_press(button: TextureButton) -> void:
-	# Satisfying press animation - quick squish then bounce back
 	var tween = create_tween()
 	tween.tween_property(button, "scale", Vector2(0.9, 0.9), 0.08).set_trans(Tween.TRANS_CUBIC)
 	tween.tween_property(button, "scale", Vector2(1.05, 1.05), 0.1).set_trans(Tween.TRANS_BACK)
