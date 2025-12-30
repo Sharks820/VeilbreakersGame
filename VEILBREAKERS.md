@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Last updated: 2024-12-29
+> **THE SINGLE SOURCE OF TRUTH** | Last updated: 2025-12-29
 
 ---
 
@@ -71,7 +71,7 @@
 power * ATK/DEF * level * element * variance * crits
 ```
 
-### Recent Fixes (Dec 2024)
+### Recent Fixes (Dec 2025)
 - Fixed stat modifier cleanup bug in StatusEffectManager
 - Created KnockbackAnimator with multiple types (normal, critical, heavy, flinch, shake, death)
 - AI healer targeting: +100 threat for healers, +30 for support
@@ -215,7 +215,7 @@ battle, ui, art, audio, vera, monsters, critical
 
 | Date | Summary |
 |------|---------|
-| 2024-12-29 | Consolidated memory to single VEILBREAKERS.md file |
+| 2025-12-29 | Consolidated memory to single VEILBREAKERS.md file |
 
 ---
 
