@@ -211,4 +211,12 @@ battle, ui, art, audio, vera, monsters, critical
 
 ---
 
-*This file is synced with Memory MCP for cross-session persistence.*
+## Session Log
+
+| Date | Summary |
+|------|---------|
+| 2024-12-29 | Consolidated memory to single VEILBREAKERS.md file |
+
+---
+
+*Claude Code reads this file at the start of every session per CLAUDE.md protocol.*

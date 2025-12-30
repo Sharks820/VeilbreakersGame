@@ -4,6 +4,48 @@
 
 ---
 
+# ⚠️ MANDATORY: SESSION PROTOCOLS
+
+## 1. Memory Protocol
+**EVERY SESSION MUST:**
+1. **READ `VEILBREAKERS.md`** at the start of every conversation
+2. **ACKNOWLEDGE** current project state before taking any action
+3. **UPDATE `VEILBREAKERS.md`** when making significant changes (new systems, UI values, lessons learned)
+
+> **VEILBREAKERS.md is THE SINGLE SOURCE OF TRUTH for cross-session memory.**
+> Do NOT rely on MCP memory server. Do NOT create new memory files.
+> All persistent project knowledge lives in VEILBREAKERS.md.
+
+## 2. Auto-Save Protocol (EVERY 15 MINUTES - NO EXCEPTIONS)
+
+⏰ **COMMIT AND PUSH EVERY 15 MINUTES. PERIOD.**
+
+This is NON-NEGOTIABLE. Every 15 minutes of active work:
+1. `git add -A`
+2. `git commit -m "WIP: [brief description] - autosave [timestamp]"`
+3. `git push`
+4. Update version number in VEILBREAKERS.md if significant progress
+
+**Why:** Unexpected shutdowns happen. Losing work is unacceptable.
+
+**Track time mentally.** After approximately 15 minutes of work, stop and commit.
+If unsure, err on the side of committing MORE often, not less.
+
+### What to Update in VEILBREAKERS.md:
+- UI position/scale values that work
+- New systems implemented
+- Bug fixes worth remembering
+- User preferences discovered
+- Lessons learned (failed approaches)
+- Version history (important commits)
+
+### What NOT to Put in VEILBREAKERS.md:
+- Temporary debugging info
+- Session-specific context
+- Duplicate info from CLAUDE.md
+
+---
+
 # THE ARSENAL - 15 MCP SERVERS
 
 ## GODOT ENGINE CONTROL
