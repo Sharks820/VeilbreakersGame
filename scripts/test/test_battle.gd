@@ -22,8 +22,8 @@ extends Node
 # NODES
 # =============================================================================
 
-@onready var battle_system: Node = $BattleSystem
-@onready var battle_ui: Control = $BattleUI
+@onready var battle_arena: Node2D = $BattleArena
+@onready var battle_ui: CanvasLayer = $BattleUI
 
 # =============================================================================
 # LIFECYCLE
