@@ -350,7 +350,7 @@ func _update_breathing(delta: float) -> void:
 	background.self_modulate = Color(brightness * 1.15, brightness * 0.85, brightness * 0.75, 1.0)
 	dark_overlay.color.a = 0.15 - breath * 0.1
 
-func _update_vignette(delta: float) -> void:
+func _update_vignette(_delta: float) -> void:
 	var vignette_pulse = (sin(ambient_time * VIGNETTE_SPEED) + 1.0) * 0.5
 	vignette.color.a = VIGNETTE_MIN + vignette_pulse * (VIGNETTE_MAX - VIGNETTE_MIN)
 

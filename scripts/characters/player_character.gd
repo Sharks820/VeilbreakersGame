@@ -58,9 +58,12 @@ func has_brand(brand: Enums.Brand) -> bool:
 	return brand in unlocked_brands
 
 func _apply_brand_bonuses() -> void:
-	# Clear previous brand modifiers
-	if stat_modifiers.has("brand"):
-		stat_modifiers.erase("brand")
+	# Clear previous brand modifiers by removing all with "brand" source
+	for stat in stat_modifiers.keys():
+		var mods: Array = stat_modifiers[stat]
+		for i in range(mods.size() - 1, -1, -1):
+			if mods[i].get("source", "") == "brand":
+				mods.remove_at(i)
 
 	if current_brand == Enums.Brand.NONE:
 		return
