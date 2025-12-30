@@ -9,6 +9,7 @@ extends Control
 @onready var quit_button: TextureButton = $ButtonContainer/QuitButton
 @onready var version_label: Label = $VersionLabel
 @onready var monster_eye: Sprite2D = $MonsterEye
+@onready var eye_backdrop: Sprite2D = $EyeBackdrop
 @onready var dark_overlay: ColorRect = $DarkOverlay
 @onready var red_breath_overlay: ColorRect = $RedBreathOverlay
 @onready var background: TextureRect = $Background
@@ -146,8 +147,10 @@ func _hide_all_elements() -> void:
 	# Logo - starts invisible
 	logo.modulate.a = 0.0
 
-	# Monster eye - invisible initially
-	monster_eye.modulate.a = 0.0
+	# Monster eye and backdrop - visible immediately to cover background eyes
+	# Eyes slightly more visible than background
+	monster_eye.modulate.a = 1.0
+	eye_backdrop.modulate.a = 1.0
 
 	# Buttons - invisible and offset down
 	for btn in [new_game_button, continue_button, settings_button, quit_button]:
@@ -159,40 +162,33 @@ func _hide_all_elements() -> void:
 	# Version label
 	version_label.modulate.a = 0.0
 
-	# Overlays
-	red_breath_overlay.modulate.a = 0.0
-	vignette.modulate.a = 0.0
-	ember_particles.modulate.a = 0.0
+	# RED BREATH - START IMMEDIATELY with background!
+	red_breath_overlay.modulate.a = 0.6
+	vignette.modulate.a = VIGNETTE_MIN
+	ember_particles.modulate.a = 0.5
 
 # =============================================================================
 # ENTRANCE ANIMATION
 # =============================================================================
 
 func _play_aaa_entrance() -> void:
-	# Phase 1: Embers
+	# Effects already visible from _hide_all_elements - just intensify them smoothly
+
+	# Phase 1: Embers intensify
 	var ember_tween = create_tween()
-	ember_tween.tween_property(ember_particles, "modulate:a", 1.0, 2.0).set_ease(Tween.EASE_OUT)
+	ember_tween.tween_property(ember_particles, "modulate:a", 1.0, 1.5).set_ease(Tween.EASE_OUT)
 
-	# Phase 2: Background breathing
-	await get_tree().create_timer(0.5).timeout
+	# Phase 2: Red breath intensifies (already at 0.6, going to 1.0)
 	var breath_tween = create_tween()
-	breath_tween.tween_property(red_breath_overlay, "modulate:a", 1.0, 1.5).set_ease(Tween.EASE_OUT)
+	breath_tween.tween_property(red_breath_overlay, "modulate:a", 1.0, 2.0).set_ease(Tween.EASE_OUT)
 
-	var vignette_tween = create_tween()
-	vignette_tween.tween_property(vignette, "modulate:a", VIGNETTE_MIN, 2.0).set_ease(Tween.EASE_OUT)
-
-	# Phase 3: Logo entrance
-	await get_tree().create_timer(0.4).timeout
+	# Phase 3: Logo entrance after short delay
+	await get_tree().create_timer(0.3).timeout
 	var logo_entrance = create_tween()
-	logo_entrance.tween_property(logo, "modulate:a", 1.0, 1.8).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	logo_entrance.tween_property(logo, "modulate:a", 1.0, 1.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
-	# Phase 4: Monster eye fades in
+	# Phase 4: Buttons slide up (shortened delays for snappier feel)
 	await get_tree().create_timer(0.8).timeout
-	var eyes_tween = create_tween()
-	eyes_tween.tween_property(monster_eye, "modulate:a", 1.0, 1.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-
-	# Phase 5: Buttons slide up
-	await get_tree().create_timer(0.5).timeout
 	var buttons = [new_game_button, continue_button, settings_button, quit_button]
 	for i in range(buttons.size()):
 		var btn = buttons[i]
@@ -221,9 +217,7 @@ func _play_aaa_entrance() -> void:
 # =============================================================================
 
 func _process(delta: float) -> void:
-	if not animations_ready:
-		return
-
+	# Eye tracking and breathing start IMMEDIATELY - no waiting!
 	ambient_time += delta
 	_update_breathing(delta)
 	_update_eye_tracking(delta)
@@ -253,11 +247,14 @@ func _update_eye_tracking(delta: float) -> void:
 	var pulse_x = base_scale_x + breath * 0.005
 	var pulse_y = base_scale_y + breath * 0.005
 	monster_eye.scale = Vector2(pulse_x, pulse_y)
+	eye_backdrop.scale = Vector2(pulse_x, pulse_y)
 
-	# Blend eyes with fiery red background
-	var red_tint = 1.0 + breath * 0.15
-	var alpha = 0.85  # Slight transparency to mesh with background
-	monster_eye.modulate = Color(red_tint, 0.7, 0.5, alpha)
+	# Blend eyes with fiery red background - brighter but with red warmth
+	var red_tint = 1.0 + breath * 0.1
+	var green = 0.65 + breath * 0.05
+	var blue = 0.55 + breath * 0.03
+	var alpha = 0.95  # Nearly opaque
+	monster_eye.modulate = Color(red_tint, green, blue, alpha)
 
 func _update_cursor_tracking(delta: float) -> void:
 	# SMOOTH 9-ZONE TRACKING with frame cycling within each direction
@@ -304,10 +301,11 @@ func _update_cursor_tracking(delta: float) -> void:
 	# Use first frame only - cycling disabled to prevent glitching
 	var target_frame: int = target_frames[0]
 
-	# Update frame
+	# Update frame for both eye and backdrop
 	eye_target_frame = target_frame
 	eye_last_tracking_frame = target_frame
 	monster_eye.frame = target_frame
+	eye_backdrop.frame = target_frame
 
 func _start_blink() -> void:
 	eye_is_blinking = true
@@ -327,11 +325,13 @@ func _update_blink(delta: float) -> void:
 			# Blink finished, return to tracking
 			eye_is_blinking = false
 			monster_eye.frame = eye_last_tracking_frame
+			eye_backdrop.frame = eye_last_tracking_frame
 			return
 
 	# Use blink frames from the BLINK_FRAMES array
 	var blink_frame: int = BLINK_FRAMES[eye_blink_frame_index % BLINK_FRAMES.size()]
 	monster_eye.frame = blink_frame
+	eye_backdrop.frame = blink_frame
 
 # =============================================================================
 # AMBIENT ANIMATIONS

@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/buttons/btn_continue_disabled.png" id="5b_continue_disabled"]
 [ext_resource type="Texture2D" path="res://assets/ui/buttons/btn_settings.png" id="6_settings"]
 [ext_resource type="Texture2D" path="res://assets/ui/buttons/btn_quit.png" id="7_quit"]
-[ext_resource type="Texture2D" path="res://assets/ui/demon_eyes_final.png" id="8_eye_sheet"]
+[ext_resource type="Texture2D" path="res://assets/ui/demon_eyes_angular_stretch.png" id="8_eye_sheet"]
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_ember"]
 lifetime_randomness = 0.4
@@ -80,8 +80,19 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0.0)
 
+[node name="EyeBackdrop" type="Sprite2D" parent="."]
+position = Vector2(496, 362)
+rotation = -0.08
+scale = Vector2(0.17, 0.17)
+z_index = 9
+modulate = Color(0.02, 0.01, 0.01, 1.0)
+texture = ExtResource("8_eye_sheet")
+hframes = 6
+vframes = 7
+frame = 16
+
 [node name="MonsterEye" type="Sprite2D" parent="."]
-position = Vector2(496, 355)
+position = Vector2(496, 362)
 rotation = -0.08
 scale = Vector2(0.17, 0.17)
 z_index = 10
