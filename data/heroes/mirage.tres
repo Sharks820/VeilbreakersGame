@@ -12,7 +12,7 @@ description = "Something touched them near the Veil as a child. Now they see wha
 backstory = "No one knows where Mirage came from. They appeared at the Compact's gates three years ago, asking to join, knowing things they shouldn't know. Tests revealed they're human - mostly. The Compact keeps them close because the alternative - Mirage alone and unsupervised - is terrifying. They're genuinely trying to help, but their perception of 'help' is sometimes skewed. Finds humor in situations others find horrifying. May or may not be aware of conversations happening in other rooms."
 
 primary_brand = 4
-primary_path = 2
+primary_path = 3
 role = "Illusionist"
 
 sprite_path = "res://assets/characters/heroes/mirage.png"
