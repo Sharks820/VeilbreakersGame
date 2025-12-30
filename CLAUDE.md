@@ -31,6 +31,12 @@ This is NON-NEGOTIABLE. Every 15 minutes of active work:
 - **Minor:** v2.1, v2.2, v2.3 = Every single commit increments by 0.1
 - **Current version is in VEILBREAKERS.md header** - ALWAYS increment before commit
 
+### Commit Message Rules
+- **NO** "Generated with Claude Code" tags
+- **NO** "Co-Authored-By: Claude" tags
+- **NO** mentions of Claude or AI in commits
+- Keep messages clean and professional
+
 **Why:** Unexpected shutdowns happen. Losing work is unacceptable.
 
 **Track time mentally.** After approximately 15 minutes of work, stop and commit.
