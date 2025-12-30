@@ -36,6 +36,22 @@ This is NON-NEGOTIABLE. Every 15 minutes of active work:
 **Track time mentally.** After approximately 15 minutes of work, stop and commit.
 If unsure, err on the side of committing MORE often, not less.
 
+## 3. Screenshot Protocol (MANDATORY)
+
+**ALL screenshots MUST go to: `screenshots/`**
+
+When capturing screenshots:
+```
+screenshots/screenshot_[descriptive_name].png
+```
+
+**NEVER save screenshots to:**
+- Project root ❌
+- assets/ folder ❌
+- Any other location ❌
+
+This keeps the project clean. Screenshots are debug artifacts, not game assets.
+
 ### What to Update in VEILBREAKERS.md:
 - UI position/scale values that work
 - New systems implemented

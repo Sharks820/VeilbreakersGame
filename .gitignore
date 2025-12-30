@@ -10,6 +10,9 @@ secrets/
 nul
 NUL
 
+# Debug screenshots (captured by Claude Code)
+screenshots/
+
 # Godot 4+ specific ignores
 .godot/
 

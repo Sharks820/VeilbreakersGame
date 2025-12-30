@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v2.3** | Last updated: 2025-12-29
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v2.4** | Last updated: 2025-12-29
 
 ---
 
@@ -216,6 +216,8 @@ battle, ui, art, audio, vera, monsters, critical
 | Date | Summary |
 |------|---------|
 | 2025-12-29 | Consolidated memory to single VEILBREAKERS.md file |
+| 2025-12-29 | v2.3: Security fix - removed API keys from git history |
+| 2025-12-29 | v2.4: Screenshot organization - all screenshots to screenshots/ folder |
 
 ---
 
