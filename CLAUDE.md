@@ -42,7 +42,16 @@ This is NON-NEGOTIABLE. Every 15 minutes of active work:
 **Track time mentally.** After approximately 15 minutes of work, stop and commit.
 If unsure, err on the side of committing MORE often, not less.
 
-## 3. Screenshot Protocol (MANDATORY)
+## 3. File Naming Rules (MANDATORY)
+
+**NEVER create files with Windows reserved names:**
+- `NUL`, `CON`, `PRN`, `AUX`
+- `COM1`-`COM9`, `LPT1`-`LPT9`
+- These cause undeletable phantom files on Windows
+
+**NEVER redirect output to `nul` in scripts** - use `$null` in PowerShell or `> NUL` only in pure CMD.
+
+## 4. Screenshot Protocol (MANDATORY)
 
 **ALL screenshots MUST go to: `screenshots/`**
 
