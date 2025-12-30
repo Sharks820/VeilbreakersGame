@@ -47,7 +47,7 @@
       "command": "cmd",
       "args": ["/c", "npx", "-y", "wolfram-mcp"],
       "env": {
-        "WOLFRAM_APP_ID": "WOLFRAM_ID_REMOVED"
+        "WOLFRAM_APP_ID": "YOUR_WOLFRAM_APP_ID_HERE"
       }
     },
     "figma": {
@@ -55,7 +55,7 @@
       "command": "cmd",
       "args": ["/c", "npx", "-y", "mcp-figma"],
       "env": {
-        "FIGMA_ACCESS_TOKEN": "FIGMA_TOKEN_REMOVED"
+        "FIGMA_ACCESS_TOKEN": "YOUR_FIGMA_TOKEN_HERE"
       }
     },
     "trello": {
@@ -63,20 +63,23 @@
       "command": "cmd",
       "args": ["/c", "npx", "-y", "mcp-trello"],
       "env": {
-        "TRELLO_API_KEY": "TRELLO_KEY_REMOVED",
-        "TRELLO_TOKEN": "TRELLO_TOKEN_REMOVED",
-        "TRELLO_BOARD_ID": "6950ca3940d7adf3fcb1da09"
+        "TRELLO_API_KEY": "YOUR_TRELLO_API_KEY_HERE",
+        "TRELLO_TOKEN": "YOUR_TRELLO_TOKEN_HERE",
+        "TRELLO_BOARD_ID": "YOUR_TRELLO_BOARD_ID_HERE"
       }
     },
     "git": {
       "type": "stdio",
       "command": "cmd",
-      "args": ["/c", "npx", "-y", "@anthropic/mcp-git-server", "C:/Users/Conner/Downloads/VeilbreakersGame"]
+      "args": ["/c", "npx", "-y", "@cyanheads/git-mcp-server"],
+      "env": {
+        "GIT_REPOS_PATH": "C:/Users/Conner/Downloads/VeilbreakersGame"
+      }
     },
     "gdai-mcp": {
       "type": "stdio",
-      "command": "uv",
-      "args": ["run", "C:/Users/Conner/Downloads/VeilbreakersGame/addons/gdai-mcp-plugin-godot/gdai_mcp_server.py"]
+      "command": "python",
+      "args": ["-m", "uv", "run", "C:/Users/Conner/Downloads/VeilbreakersGame/addons/gdai-mcp-plugin-godot/gdai_mcp_server.py"]
     },
     "minimal-godot": {
       "type": "stdio",
@@ -96,7 +99,7 @@
       "command": "cmd",
       "args": ["/c", "npx", "-y", "fal-mcp-server"],
       "env": {
-        "FAL_KEY": "FAL_KEY_REMOVED"
+        "FAL_KEY": "YOUR_FAL_KEY_HERE"
       }
     }
   }

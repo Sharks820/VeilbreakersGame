@@ -21,10 +21,15 @@
 ⏰ **COMMIT AND PUSH EVERY 15 MINUTES. PERIOD.**
 
 This is NON-NEGOTIABLE. Every 15 minutes of active work:
-1. `git add -A`
-2. `git commit -m "WIP: [brief description] - autosave [timestamp]"`
-3. `git push`
-4. Update version number in VEILBREAKERS.md if significant progress
+1. Increment version in VEILBREAKERS.md header (v2.3 → v2.4 → v2.5...)
+2. `git add -A`
+3. `git commit -m "v2.X: [brief description]"`
+4. `git push`
+
+### Version Format
+- **Major:** v3.0, v4.0 = Major milestones (new systems, releases)
+- **Minor:** v2.1, v2.2, v2.3 = Every single commit increments by 0.1
+- **Current version is in VEILBREAKERS.md header** - ALWAYS increment before commit
 
 **Why:** Unexpected shutdowns happen. Losing work is unacceptable.
 
