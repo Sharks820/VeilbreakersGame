@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> Synced from Memory MCP | Last updated: 2024-12-28
+> **THE SINGLE SOURCE OF TRUTH** | Last updated: 2024-12-29
 
 ---
 
