@@ -178,8 +178,8 @@ func can_use_method(monster: Node, captor: Node, method: CaptureMethod) -> Dicti
 			result.reason = "RNG-based. Good for rare/high-level monsters."
 
 		CaptureMethod.FORCE:
-			var monster_level: int = monster.level if monster.has_method("get") else 1
-			var captor_level: int = captor.level if captor.has_method("get") else 1
+			var monster_level: int = monster.level if "level" in monster else 1
+			var captor_level: int = captor.level if "level" in captor else 1
 			var monster_hp_percent: float = _get_hp_percent(monster)
 
 			if monster_level >= captor_level:
@@ -260,10 +260,10 @@ func _execute_orb_capture() -> void:
 	_reset_state()
 
 func calculate_orb_capture_chance(monster: Node, captor: Node, orb_tier: OrbTier) -> float:
-	# Check for boss (tier 3+ or rarity 4+ = uncapturable)
-	var tier: int = monster.tier if "tier" in monster else 0
+	# Check for boss (monster_tier BOSS+ or rarity LEGENDARY+ = uncapturable)
+	var tier: int = monster.monster_tier if "monster_tier" in monster else 0
 	var rarity: int = monster.rarity if "rarity" in monster else 0
-	if tier >= 3 or rarity >= 4:
+	if tier >= 3 or rarity >= 4:  # BOSS tier or LEGENDARY rarity
 		return 0.0  # Bosses cannot be captured
 
 	var min_rate: float
@@ -434,9 +434,12 @@ func _execute_bargain() -> void:
 
 	_reset_state()
 
-func calculate_bargain_rate(monster: Node) -> float:
+func calculate_bargain_rate(monster: Node, captor: Node = null) -> float:
 	# 10% at battle start, up to 20% at peak conditions
-	var scaling := _calculate_capture_scaling(monster, active_captor)
+	var effective_captor = captor if captor else active_captor
+	if effective_captor == null:
+		return BARGAIN_MIN_RATE  # Return minimum if no captor available
+	var scaling := _calculate_capture_scaling(monster, effective_captor)
 	return lerpf(BARGAIN_MIN_RATE, BARGAIN_MAX_RATE, scaling)
 
 # -----------------------------------------------------------------------------
@@ -532,7 +535,9 @@ func _get_hp_percent(monster: Node) -> float:
 	if monster.has_method("get_hp_percent"):
 		return monster.get_hp_percent()
 	elif "current_hp" in monster and "max_hp" in monster:
-		return float(monster.current_hp) / float(monster.max_hp)
+		if monster.max_hp > 0:
+			return float(monster.current_hp) / float(monster.max_hp)
+		return 1.0
 	return 1.0
 
 func _get_corruption(monster: Node) -> float:
@@ -556,11 +561,10 @@ func _consume_orb(tier: OrbTier) -> void:
 		OrbTier.MASTER: orb_id = "master_capture_orb"
 		OrbTier.LEGENDARY: orb_id = "legendary_capture_orb"
 
-	# Remove from inventory
-	if Engine.has_singleton("InventorySystem"):
-		var inv = Engine.get_singleton("InventorySystem")
-		if inv.has_method("remove_item"):
-			inv.remove_item(orb_id, 1)
+	# Remove from inventory (autoload access in Godot 4.x)
+	var inv = get_node_or_null("/root/InventorySystem")
+	if inv and inv.has_method("remove_item"):
+		inv.remove_item(orb_id, 1)
 
 func _reset_state() -> void:
 	current_state = CaptureState.IDLE

@@ -31,7 +31,20 @@
       "Bash(git push:*)",
       "Bash(if not exist \"C:\\\\Users\\\\Conner\\\\Downloads\\\\VeilbreakersGame\\\\screenshots\" mkdir \"C:\\\\Users\\\\Conner\\\\Downloads\\\\VeilbreakersGame\\\\screenshots\")",
       "Bash(powershell -Command \"cd ''C:\\\\Users\\\\Conner\\\\Downloads\\\\VeilbreakersGame''; Get-ChildItem -Name ''screenshot*.png'' | ForEach-Object { Move-Item $_screenshots\\\\ -Force }; Write-Host ''Moved screenshots to screenshots/''\")",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --headless --script \"res://scripts/utils/enums.gd\" --quit)",
+      "Bash(echo:*)",
+      "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --headless --check-only --path .)",
+      "Bash(timeout:*)",
+      "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --headless --quit)",
+      "WebFetch(domain:docs.godotengine.org)",
+      "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --headless --script res://tests/test_enum_alias.gd --quit)",
+      "Bash(ping:*)",
+      "Bash(dir:*)",
+      "mcp__godot-editor__run_project",
+      "mcp__godot-editor__get_debug_output",
+      "mcp__godot-editor__stop_project",
+      "Bash(del \"C:\\\\Users\\\\Conner\\\\Downloads\\\\VeilbreakersGame\\\\tests\\\\test_enum_alias.gd\")"
     ]
   },
   "enableAllProjectMcpServers": true,

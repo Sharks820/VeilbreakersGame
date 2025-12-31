@@ -719,8 +719,8 @@ func execute_orb_capture(caster: CharacterBase, target: CharacterBase, orb_tier:
 
 	var monster: Monster = target as Monster
 
-	# Check for boss
-	if monster.tier >= 3 or monster.rarity >= 4:
+	# Check for boss (tier 3+ = BOSS, rarity 4+ = LEGENDARY)
+	if monster.monster_tier >= Enums.MonsterTier.BOSS or monster.rarity >= Enums.Rarity.LEGENDARY:
 		ui_command.emit("show_message", {"text": "Cannot capture boss monsters!"})
 		return {"success": false, "reason": "Boss monsters cannot be captured"}
 
