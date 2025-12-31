@@ -126,9 +126,21 @@ func _get_stat_modifier(stat: Enums.Stat) -> float:
 		total += mod.value
 	return total
 
-func _get_equipment_bonus(_stat: Enums.Stat) -> float:
-	# TODO: Implement equipment stat bonuses
-	return 0.0
+func _get_equipment_bonus(stat: Enums.Stat) -> float:
+	var total := 0.0
+
+	# Get bonuses from each equipment slot
+	var equipment_ids := [equipped_weapon, equipped_armor, equipped_accessory_1, equipped_accessory_2]
+
+	for item_id in equipment_ids:
+		if item_id == "":
+			continue
+
+		var item_data: ItemData = InventorySystem.get_item_data(item_id) if InventorySystem else null
+		if item_data and item_data.stat_bonuses.has(stat):
+			total += item_data.stat_bonuses[stat]
+
+	return total
 
 func get_max_hp() -> int:
 	return int(get_stat(Enums.Stat.MAX_HP))
@@ -369,9 +381,17 @@ func can_use_skill(skill_id: String) -> bool:
 	if skill_id not in known_skills:
 		return false
 
-	# TODO: Check MP cost, cooldowns, silence status
+	# Check silence status
 	if has_status_effect(Enums.StatusEffect.SILENCE):
 		return false
+
+	# Check MP cost from skill data
+	var skill_data: SkillData = DataManager.get_skill(skill_id) if DataManager else null
+	if skill_data:
+		if current_mp < skill_data.mp_cost:
+			return false
+		if current_hp <= skill_data.hp_cost:
+			return false
 
 	return true
 

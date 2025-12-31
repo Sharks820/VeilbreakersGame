@@ -259,20 +259,153 @@ func _execute_attack(attacker: CharacterBase, target: CharacterBase) -> Dictiona
 	return result
 
 func _execute_skill(caster: CharacterBase, target: CharacterBase, skill_id: String) -> Dictionary:
-	if not caster.can_use_skill(skill_id):
-		return {"success": false, "reason": "Cannot use skill"}
+	# Load skill data from DataManager
+	var skill_data: SkillData = DataManager.get_skill(skill_id)
+	if not skill_data:
+		return {"success": false, "reason": "Unknown skill: %s" % skill_id}
 
-	# TODO: Load skill data and execute properly
-	# For now, treat as enhanced attack
-	var result := damage_calculator.calculate_damage(caster, target, null)
-	result.damage = int(result.damage * 1.5)
+	# Check if caster can use the skill
+	var can_use_result := skill_data.can_use(caster)
+	if not can_use_result.can_use:
+		return {"success": false, "reason": can_use_result.reasons[0] if can_use_result.reasons.size() > 0 else "Cannot use skill"}
 
-	if not result.is_miss and target:
-		target.take_damage(result.damage, caster, result.is_critical)
+	# Check for silence status
+	if caster.has_status_effect(Enums.StatusEffect.SILENCE):
+		return {"success": false, "reason": "Silenced!"}
 
-	EventBus.emit_debug("%s used %s!" % [caster.character_name, skill_id])
+	# Deduct costs
+	if skill_data.mp_cost > 0:
+		caster.use_mp(skill_data.mp_cost)
+	if skill_data.hp_cost > 0:
+		caster.take_damage(skill_data.hp_cost, null, false)
+
+	var result := {"success": true, "skill_id": skill_id, "effects": []}
+
+	# Get targets based on target type
+	var targets: Array[CharacterBase] = _get_skill_targets(caster, target, skill_data.target_type)
+
+	# Execute based on skill type
+	match skill_data.skill_type:
+		SkillData.SkillType.DAMAGE:
+			for t in targets:
+				var dmg_result := damage_calculator.calculate_damage(caster, t, skill_data)
+				if not dmg_result.is_miss:
+					t.take_damage(dmg_result.damage, caster, dmg_result.is_critical)
+					result.effects.append({"target": t.character_name, "damage": dmg_result.damage, "critical": dmg_result.is_critical})
+				else:
+					result.effects.append({"target": t.character_name, "miss": true})
+
+		SkillData.SkillType.HEAL:
+			for t in targets:
+				var heal_result := damage_calculator.calculate_healing(caster, t, skill_data)
+				var actual_heal := t.heal(heal_result.heal_amount, caster)
+				result.effects.append({"target": t.character_name, "heal": actual_heal})
+
+		SkillData.SkillType.BUFF, SkillData.SkillType.DEBUFF:
+			for t in targets:
+				_apply_skill_modifiers(t, skill_data, caster)
+				result.effects.append({"target": t.character_name, "buffs_applied": true})
+
+		SkillData.SkillType.STATUS:
+			for t in targets:
+				_apply_skill_status_effects(t, skill_data, caster)
+				result.effects.append({"target": t.character_name, "status_applied": true})
+
+		SkillData.SkillType.UTILITY:
+			# Handle special effects
+			for effect_id in skill_data.special_effects:
+				_handle_special_effect(caster, targets, effect_id, skill_data)
+
+	# Apply status effects from damage/heal skills too
+	if skill_data.skill_type in [SkillData.SkillType.DAMAGE, SkillData.SkillType.HEAL]:
+		for t in targets:
+			_apply_skill_status_effects(t, skill_data, caster)
+			_apply_skill_modifiers(t, skill_data, caster)
+
+	EventBus.emit_debug("%s used %s!" % [caster.character_name, skill_data.display_name])
+	EventBus.skill_used.emit(caster, skill_id)
 
 	return result
+
+func _get_skill_targets(caster: CharacterBase, primary_target: CharacterBase, target_type: Enums.TargetType) -> Array[CharacterBase]:
+	var targets: Array[CharacterBase] = []
+	var is_player := caster in player_party
+
+	match target_type:
+		Enums.TargetType.SELF:
+			targets.append(caster)
+
+		Enums.TargetType.SINGLE_ALLY:
+			if primary_target and ((is_player and primary_target in player_party) or (not is_player and primary_target in enemy_party)):
+				targets.append(primary_target)
+			else:
+				targets.append(caster)
+
+		Enums.TargetType.SINGLE_ENEMY:
+			if primary_target:
+				targets.append(primary_target)
+			else:
+				var enemy_group := enemy_party if is_player else player_party
+				for e in enemy_group:
+					if e.is_alive():
+						targets.append(e)
+						break
+
+		Enums.TargetType.ALL_ALLIES:
+			var ally_group := player_party if is_player else enemy_party
+			for ally in ally_group:
+				if ally.is_alive():
+					targets.append(ally)
+
+		Enums.TargetType.ALL_ENEMIES:
+			var enemy_group := enemy_party if is_player else player_party
+			for enemy in enemy_group:
+				if enemy.is_alive():
+					targets.append(enemy)
+
+		Enums.TargetType.ALL:
+			for p in player_party:
+				if p.is_alive():
+					targets.append(p)
+			for e in enemy_party:
+				if e.is_alive():
+					targets.append(e)
+
+	return targets
+
+func _apply_skill_status_effects(target: CharacterBase, skill_data: SkillData, source: CharacterBase) -> void:
+	for effect_data in skill_data.status_effects:
+		var chance: float = effect_data.get("chance", 1.0)
+		var roll := randf()
+		if roll <= chance:
+			var effect: Enums.StatusEffect = effect_data.effect
+			var duration: int = effect_data.get("duration", 3)
+			target.add_status_effect(effect, duration, source)
+
+func _apply_skill_modifiers(target: CharacterBase, skill_data: SkillData, source: CharacterBase) -> void:
+	for mod_data in skill_data.stat_modifiers:
+		var stat: Enums.Stat = mod_data.stat
+		var amount: float = mod_data.amount
+		var duration: int = mod_data.get("duration", 3)
+		target.add_stat_modifier(stat, amount, duration, skill_data.skill_id)
+
+func _handle_special_effect(caster: CharacterBase, targets: Array[CharacterBase], effect_id: String, _skill_data: SkillData) -> void:
+	match effect_id:
+		"extend_on_kill":
+			# Handled by listening to death signals
+			pass
+		"life_steal":
+			# Already handled in damage calculation
+			pass
+		"dispel":
+			for t in targets:
+				t.clear_all_status_effects()
+		"revive":
+			for t in targets:
+				if t.is_dead():
+					t.revive(0.5)
+		_:
+			EventBus.emit_debug("Unknown special effect: %s" % effect_id)
 
 func _execute_defend(character: CharacterBase) -> Dictionary:
 	character.set_defending(true)
@@ -280,9 +413,24 @@ func _execute_defend(character: CharacterBase) -> Dictionary:
 	return {"success": true, "defense_boost": character.base_defense * 0.5}
 
 func _execute_item(user: CharacterBase, target: CharacterBase, item_id: String) -> Dictionary:
-	# TODO: Implement item usage through inventory system
-	EventBus.emit_debug("%s used item %s on %s" % [user.character_name, item_id, target.character_name if target else "self"])
-	return {"success": false, "reason": "Not implemented"}
+	# Use item through inventory system
+	var use_target := target if target else user
+	var result := InventorySystem.use_item(item_id, use_target)
+
+	if result.success:
+		EventBus.emit_debug("%s used %s on %s" % [user.character_name, item_id, use_target.character_name])
+		# Log effects
+		for effect in result.get("effects", []):
+			if effect.has("heal_hp"):
+				EventBus.emit_debug("  Restored %d HP" % effect.heal_hp)
+			if effect.has("heal_mp"):
+				EventBus.emit_debug("  Restored %d MP" % effect.heal_mp)
+			if effect.has("revive"):
+				EventBus.emit_debug("  Revived!")
+	else:
+		EventBus.emit_debug("Failed to use item: %s" % result.get("reason", "Unknown error"))
+
+	return result
 
 func _execute_purify(purifier: CharacterBase, target: CharacterBase) -> Dictionary:
 	if not target is Monster:
@@ -478,7 +626,7 @@ func get_current_character() -> CharacterBase:
 		return turn_order[current_turn_index]
 	return null
 
-func get_valid_targets(action: Enums.BattleAction, _skill: String = "") -> Array[CharacterBase]:
+func get_valid_targets(action: Enums.BattleAction, skill_or_item: String = "") -> Array[CharacterBase]:
 	var targets: Array[CharacterBase] = []
 
 	match action:
@@ -486,14 +634,67 @@ func get_valid_targets(action: Enums.BattleAction, _skill: String = "") -> Array
 			for enemy in enemy_party:
 				if enemy.is_alive():
 					targets.append(enemy)
-		Enums.BattleAction.ITEM, Enums.BattleAction.SKILL:
-			# TODO: Check skill target type
-			for player in player_party:
-				if player.is_alive():
-					targets.append(player)
-			for enemy in enemy_party:
-				if enemy.is_alive():
-					targets.append(enemy)
+
+		Enums.BattleAction.SKILL:
+			# Check skill target type
+			var skill_data: SkillData = DataManager.get_skill(skill_or_item)
+			if skill_data:
+				match skill_data.target_type:
+					Enums.TargetType.SELF:
+						var current := get_current_character()
+						if current:
+							targets.append(current)
+					Enums.TargetType.SINGLE_ALLY, Enums.TargetType.ALL_ALLIES:
+						for player in player_party:
+							if player.is_alive():
+								targets.append(player)
+					Enums.TargetType.SINGLE_ENEMY, Enums.TargetType.ALL_ENEMIES:
+						for enemy in enemy_party:
+							if enemy.is_alive():
+								targets.append(enemy)
+					Enums.TargetType.ALL:
+						for player in player_party:
+							if player.is_alive():
+								targets.append(player)
+						for enemy in enemy_party:
+							if enemy.is_alive():
+								targets.append(enemy)
+			else:
+				# Unknown skill, allow all targets
+				for player in player_party:
+					if player.is_alive():
+						targets.append(player)
+				for enemy in enemy_party:
+					if enemy.is_alive():
+						targets.append(enemy)
+
+		Enums.BattleAction.ITEM:
+			# Check item target type
+			var item_data: ItemData = InventorySystem.get_item_data(skill_or_item)
+			if item_data:
+				match item_data.target_type:
+					Enums.TargetType.SELF:
+						var current := get_current_character()
+						if current:
+							targets.append(current)
+					Enums.TargetType.SINGLE_ALLY, Enums.TargetType.ALL_ALLIES:
+						for player in player_party:
+							if player.is_alive() or item_data.revives:
+								targets.append(player)
+					Enums.TargetType.SINGLE_ENEMY, Enums.TargetType.ALL_ENEMIES:
+						for enemy in enemy_party:
+							if enemy.is_alive():
+								targets.append(enemy)
+					_:
+						for player in player_party:
+							if player.is_alive():
+								targets.append(player)
+			else:
+				# Unknown item, allow all allies
+				for player in player_party:
+					if player.is_alive():
+						targets.append(player)
+
 		Enums.BattleAction.DEFEND, Enums.BattleAction.FLEE:
 			# No target needed
 			pass

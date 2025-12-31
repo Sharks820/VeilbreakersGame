@@ -16,8 +16,11 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 		"damage_type": Enums.DamageType.PHYSICAL
 	}
 
-	# Check for miss
-	var hit_chance := calculate_hit_chance(attacker, defender)
+	# Check for miss (skill accuracy modifier applied after)
+	var skill_accuracy_mod := 0.0
+	if skill != null and skill is SkillData:
+		skill_accuracy_mod = skill.accuracy_modifier
+	var hit_chance := calculate_hit_chance(attacker, defender) + skill_accuracy_mod
 
 	if randf() > hit_chance:
 		result.is_miss = true
@@ -29,14 +32,18 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	var defense_stat := Enums.Stat.DEFENSE
 	var element := Enums.Element.PHYSICAL
 	var damage_type := Enums.DamageType.PHYSICAL
+	var accuracy_mod := 0.0
+	var crit_mod := 0.0
+	var hit_count := 1
 
-	if skill != null:
-		# TODO: Read from skill resource
-		# power = skill.power
-		# scaling_stat = skill.scaling_stat
-		# element = skill.element
-		# damage_type = skill.damage_type
-		pass
+	if skill != null and skill is SkillData:
+		power = float(skill.base_power)
+		scaling_stat = skill.scaling_stat
+		element = skill.element
+		damage_type = skill.damage_type
+		accuracy_mod = skill.accuracy_modifier
+		crit_mod = skill.crit_modifier
+		hit_count = skill.hit_count
 
 	# Select appropriate defense stat
 	if damage_type == Enums.DamageType.MAGICAL:
@@ -58,11 +65,15 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	result.element = element
 	result.damage_type = damage_type
 
-	# Critical hit check
-	var crit_chance := attacker.get_stat(Enums.Stat.CRIT_CHANCE)
+	# Critical hit check (skill can modify crit chance)
+	var crit_chance := attacker.get_stat(Enums.Stat.CRIT_CHANCE) + crit_mod
 	if randf() < crit_chance:
 		result.is_critical = true
 		raw_damage *= attacker.get_stat(Enums.Stat.CRIT_DAMAGE)
+
+	# Multi-hit skills
+	if hit_count > 1:
+		raw_damage *= hit_count
 
 	# Damage variance (+/- 10%)
 	var variance := randf_range(1.0 - Constants.DAMAGE_VARIANCE, 1.0 + Constants.DAMAGE_VARIANCE)
@@ -174,16 +185,16 @@ func get_effectiveness_text(modifier: float) -> String:
 
 func calculate_healing(healer: CharacterBase, target: CharacterBase, skill: Resource) -> Dictionary:
 	var power := 20.0  # Base healing power
+	var scaling_ratio := 1.0
 
-	if skill != null:
-		# TODO: Read from skill resource
-		# power = skill.power
-		pass
+	if skill != null and skill is SkillData:
+		power = float(skill.base_power)
+		scaling_ratio = skill.scaling_ratio
 
 	var magic := healer.get_stat(Enums.Stat.MAGIC)
 	var level_factor := (float(healer.level) / 10.0) + 1.0
 
-	var raw_healing := power * (magic / 10.0) * level_factor
+	var raw_healing := power * (magic / 10.0) * level_factor * scaling_ratio
 
 	# Healing variance (+/- 5%)
 	var variance := randf_range(0.95, 1.05)
@@ -227,10 +238,15 @@ func preview_damage(attacker: CharacterBase, defender: CharacterBase, skill: Res
 	var scaling_stat := Enums.Stat.ATTACK
 	var defense_stat := Enums.Stat.DEFENSE
 	var element := Enums.Element.PHYSICAL
+	var hit_count := 1
 
-	if skill != null:
-		# TODO: Read from skill resource
-		pass
+	if skill != null and skill is SkillData:
+		power = float(skill.base_power)
+		scaling_stat = skill.scaling_stat
+		element = skill.element
+		hit_count = skill.hit_count
+		if skill.damage_type == Enums.DamageType.MAGICAL:
+			defense_stat = Enums.Stat.RESISTANCE
 
 	var attack := attacker.get_stat(scaling_stat)
 	var defense := defender.get_stat(defense_stat)
@@ -238,6 +254,9 @@ func preview_damage(attacker: CharacterBase, defender: CharacterBase, skill: Res
 
 	var base_damage := (power * (attack / maxf(1.0, defense))) * level_factor
 	var element_mod := _get_element_modifier(element, defender.elements)
+
+	# Apply hit_count multiplier
+	base_damage *= hit_count
 
 	var min_damage := int(base_damage * element_mod * (1.0 - Constants.DAMAGE_VARIANCE))
 	var max_damage := int(base_damage * element_mod * (1.0 + Constants.DAMAGE_VARIANCE))
