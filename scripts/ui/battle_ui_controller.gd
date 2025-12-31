@@ -87,6 +87,9 @@ var battle_manager: BattleManager = null
 func _ready() -> void:
 	_connect_signals()
 	_hide_all_menus()
+	print("[BattleUI] Ready - TopBar visible: ", top_bar.visible if top_bar else "null")
+	print("[BattleUI] PartyPanel visible: ", party_panel.visible if party_panel else "null")
+	print("[BattleUI] CombatLog visible: ", combat_log.visible if combat_log else "null")
 
 func set_battle_manager(manager: BattleManager) -> void:
 	battle_manager = manager
@@ -212,10 +215,11 @@ func start_turn(character: CharacterBase) -> void:
 	current_character = character
 
 	# Log turn start
-	var is_ally := character is PlayerCharacter or character in party_members
+	var is_ally := character.is_protagonist or character in party_members
 	log_turn_start(character.character_name, is_ally)
 
-	if character is PlayerCharacter:
+	# Show action menu for protagonist (the player character)
+	if character.is_protagonist:
 		show_action_menu()
 	else:
 		set_ui_state(UIState.ANIMATING)
@@ -551,7 +555,7 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 
 	for i in range(mini(8, order.size())):
 		var character := order[i]
-		var is_ally := character is PlayerCharacter or (character is Monster and character in party_members)
+		var is_ally := character.is_protagonist or character in party_members
 
 		# Create portrait container
 		var portrait_panel := PanelContainer.new()

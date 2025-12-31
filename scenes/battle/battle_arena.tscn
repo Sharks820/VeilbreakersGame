@@ -9,7 +9,7 @@
 [ext_resource type="Script" path="res://scripts/battle/animation/screen_effects_manager.gd" id="6_screen_fx"]
 [ext_resource type="Script" path="res://scripts/battle/animation/battle_camera_controller.gd" id="7_camera"]
 [ext_resource type="Script" path="res://scripts/battle/animation/battle_sequencer.gd" id="8_sequencer"]
-[ext_resource type="Script" path="res://scripts/battle/animation/battle_ui_animator.gd" id="9_ui_animator"]
+[ext_resource type="Script" path="res://scripts/ui/battle_ui_animator.gd" id="9_ui_animator"]
 [ext_resource type="PackedScene" path="res://scenes/battle/damage_number.tscn" id="10_damage_number"]
 
 [node name="BattleArena" type="Node2D"]
@@ -29,34 +29,28 @@ motion_scale = Vector2(0.5, 0.5)
 [node name="BattleField" type="Node2D" parent="."]
 
 [node name="PlayerPositions" type="Node2D" parent="BattleField"]
-position = Vector2(200, 400)
+position = Vector2(120, 620)
 
 [node name="Position1" type="Marker2D" parent="BattleField/PlayerPositions"]
 position = Vector2(0, 0)
 
 [node name="Position2" type="Marker2D" parent="BattleField/PlayerPositions"]
-position = Vector2(0, 80)
+position = Vector2(80, -120)
 
 [node name="Position3" type="Marker2D" parent="BattleField/PlayerPositions"]
-position = Vector2(0, 160)
+position = Vector2(110, 0)
 
 [node name="Position4" type="Marker2D" parent="BattleField/PlayerPositions"]
-position = Vector2(0, 240)
+position = Vector2(80, 120)
 
 [node name="EnemyPositions" type="Node2D" parent="BattleField"]
-position = Vector2(1080, 400)
+position = Vector2(1450, 600)
 
 [node name="Position1" type="Marker2D" parent="BattleField/EnemyPositions"]
-position = Vector2(0, 0)
+position = Vector2(0, -80)
 
 [node name="Position2" type="Marker2D" parent="BattleField/EnemyPositions"]
 position = Vector2(0, 80)
-
-[node name="Position3" type="Marker2D" parent="BattleField/EnemyPositions"]
-position = Vector2(0, 160)
-
-[node name="Position4" type="Marker2D" parent="BattleField/EnemyPositions"]
-position = Vector2(0, 240)
 
 [node name="CharacterContainer" type="Node2D" parent="BattleField"]
 

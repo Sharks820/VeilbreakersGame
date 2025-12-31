@@ -28,6 +28,7 @@ AudioManager="*res://scripts/autoload/audio_manager.gd"
 SceneManager="*res://scripts/autoload/scene_manager.gd"
 SettingsManager="*res://scripts/autoload/settings_manager.gd"
 VERASystem="*res://scripts/systems/vera_system.gd"
+InventorySystem="*res://scripts/systems/inventory_system.gd"
 
 [display]
 

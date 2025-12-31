@@ -42,11 +42,25 @@ var is_battle_active: bool = false
 
 func _ready() -> void:
 	_connect_signals()
+	_setup_background()
 	_setup_battle_ui()
 	_setup_battle_manager()
 	_setup_animation_systems()
 	_setup_screen_effects()
 	EventBus.emit_debug("BattleArena ready with animation systems")
+
+func _setup_background() -> void:
+	"""Load a battle background"""
+	var bg_sprite: Sprite2D = get_node_or_null("Background/BackgroundSprite")
+	if bg_sprite:
+		var bg_texture := load("res://assets/environments/battles/corrupted_grove.png")
+		if bg_texture:
+			bg_sprite.texture = bg_texture
+			bg_sprite.centered = false
+			bg_sprite.position = Vector2.ZERO
+			# Scale to fill 1920x1080
+			var tex_size = bg_texture.get_size()
+			bg_sprite.scale = Vector2(1920.0 / tex_size.x, 1080.0 / tex_size.y)
 
 func _connect_signals() -> void:
 	# Core battle events
@@ -95,11 +109,16 @@ func _setup_screen_effects() -> void:
 
 func _setup_battle_ui() -> void:
 	# Load and instantiate battle UI
+	EventBus.emit_debug("Setting up battle UI...")
 	var ui_scene := load("res://scenes/battle/battle_ui.tscn")
 	if ui_scene:
 		battle_ui = ui_scene.instantiate()
 		ui_layer.add_child(battle_ui)
 		battle_ui.set_battle_manager(battle_manager)
+		EventBus.emit_debug("Battle UI loaded and added to layer %d" % ui_layer.layer)
+	else:
+		push_error("Failed to load battle_ui.tscn!")
+		EventBus.emit_debug("ERROR: Failed to load battle_ui.tscn")
 
 func _setup_battle_manager() -> void:
 	# Connect battle manager signals
@@ -123,6 +142,10 @@ func initialize_battle(players: Array[CharacterBase], enemies: Array[CharacterBa
 	_place_characters(players, player_positions, players_container, player_sprites)
 	_place_characters(enemies, enemy_positions, enemies_container, enemy_sprites)
 
+	# Setup battle UI with party and enemy info
+	if battle_ui and battle_ui.has_method("setup_battle"):
+		battle_ui.setup_battle(players, enemies)
+
 	# Start battle logic
 	battle_manager.start_battle(players, enemies)
 
@@ -132,9 +155,18 @@ func _place_characters(characters: Array[CharacterBase], positions_node: Node2D,
 	sprite_array.clear()
 	var markers := positions_node.get_children()
 
+	EventBus.emit_debug("Placing %d characters with %d markers" % [characters.size(), markers.size()])
+
 	for i in range(mini(characters.size(), markers.size())):
 		var character := characters[i]
 		var marker: Marker2D = markers[i]
+
+		EventBus.emit_debug("  Placing %s (type=%d, protagonist=%s) at %s" % [
+			character.character_name,
+			character.character_type,
+			str(character.is_protagonist),
+			str(marker.global_position)
+		])
 
 		# Create visual representation
 		var sprite := _create_character_sprite(character)
@@ -152,41 +184,61 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 
 	# Placeholder colored rectangle (will be replaced with Spine/sprites)
 	var sprite := ColorRect.new()
-	sprite.size = Vector2(80, 120)
-	sprite.position = Vector2(-40, -120)
 
-	# Color based on character type
+	# Size based on character type - monsters smaller, player larger
 	match character.character_type:
 		Enums.CharacterType.PLAYER:
+			sprite.size = Vector2(100, 150)
+			sprite.position = Vector2(-50, -150)
 			sprite.color = Color(0.2, 0.6, 1.0, 0.9)
 		Enums.CharacterType.MONSTER:
+			sprite.size = Vector2(50, 75)  # Monsters significantly smaller
+			sprite.position = Vector2(-25, -75)
 			sprite.color = Color(0.8, 0.2, 0.2, 0.9)
 		Enums.CharacterType.BOSS:
+			sprite.size = Vector2(80, 120)  # Bosses medium-large
+			sprite.position = Vector2(-40, -120)
 			sprite.color = Color(0.6, 0.1, 0.6, 0.9)
-			sprite.size = Vector2(100, 150)  # Bosses are larger
-			sprite.position = Vector2(-50, -150)
 		_:
+			sprite.size = Vector2(50, 75)
+			sprite.position = Vector2(-25, -75)
 			sprite.color = Color(0.5, 0.5, 0.5, 0.9)
 
 	container.add_child(sprite)
 
-	# Name label
+	# Name label - position based on sprite size
 	var label := Label.new()
 	label.text = character.character_name
-	label.position = Vector2(-40, -140)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 14)
+	label.add_theme_font_size_override("font_size", 12)
 	container.add_child(label)
 
-	# HP bar above character
+	# HP bar above character - size and position based on character type
 	var hp_bar := ProgressBar.new()
-	hp_bar.size = Vector2(70, 8)
-	hp_bar.position = Vector2(-35, -150)
 	hp_bar.max_value = character.get_max_hp()
 	hp_bar.value = character.current_hp
 	hp_bar.show_percentage = false
 	hp_bar.name = "HPBar"
 	container.add_child(hp_bar)
+
+	# Adjust label and HP bar based on character type
+	match character.character_type:
+		Enums.CharacterType.PLAYER:
+			label.position = Vector2(-50, -170)
+			hp_bar.size = Vector2(80, 10)
+			hp_bar.position = Vector2(-40, -160)
+		Enums.CharacterType.MONSTER:
+			label.position = Vector2(-30, -95)
+			hp_bar.size = Vector2(50, 6)
+			hp_bar.position = Vector2(-25, -85)
+		Enums.CharacterType.BOSS:
+			label.position = Vector2(-40, -140)
+			hp_bar.size = Vector2(70, 8)
+			hp_bar.position = Vector2(-35, -130)
+		_:
+			label.position = Vector2(-30, -95)
+			hp_bar.size = Vector2(50, 6)
+			hp_bar.position = Vector2(-25, -85)
 
 	return container
 
@@ -290,10 +342,14 @@ func _on_battle_started(enemy_data: Array) -> void:
 			enemies.append(data)
 		elif data is Dictionary:
 			enemies.append(Monster.create_from_data(data))
+		# Limit to 2 enemy monsters
+		if enemies.size() >= 2:
+			break
 
-	# Get current party
+	# Get full party (1 player + up to 3 allied monsters = 4 max)
 	var players: Array[CharacterBase] = []
-	for member in GameManager.player_party:
+	for i in range(mini(4, GameManager.player_party.size())):
+		var member = GameManager.player_party[i]
 		if member is CharacterBase:
 			players.append(member)
 
@@ -670,10 +726,10 @@ func shake_camera(intensity: float = 5.0, duration: float = 0.2) -> void:
 
 func _legacy_shake_camera(intensity: float, duration: float) -> void:
 	"""Original camera shake implementation as fallback"""
-	var camera_node = get_node_or_null("BattleCamera")
+	var camera_node: Camera2D = get_node_or_null("BattleCamera") as Camera2D
 	if not camera_node:
 		return
-	var original_offset := camera_node.offset
+	var original_offset: Vector2 = camera_node.offset
 	var tween := create_tween()
 
 	for i in range(int(duration / 0.05)):

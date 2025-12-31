@@ -6,11 +6,11 @@ extends Node
 # =============================================================================
 
 @export_group("Party Setup")
-@export var party_size: int = 3
+@export var ally_monster_count: int = 3  # 3 allied monsters with player
 @export var party_level: int = 10
 
 @export_group("Enemy Setup")
-@export var enemy_count: int = 2
+@export var enemy_count: int = 2  # 2 enemy monsters
 @export var enemy_level: int = 8
 @export var enemy_type: String = "shadow_imp"
 
@@ -22,8 +22,7 @@ extends Node
 # NODES
 # =============================================================================
 
-@onready var battle_arena: Node2D = $BattleArena
-@onready var battle_ui: CanvasLayer = $BattleUI
+var battle_arena: Node2D = null
 
 # =============================================================================
 # LIFECYCLE
@@ -31,6 +30,22 @@ extends Node
 
 func _ready() -> void:
 	EventBus.emit_debug("TestBattle scene loaded")
+
+	# Remove the fake placeholder BattleArena (we'll load the real one)
+	var fake_arena = get_node_or_null("BattleArena")
+	if fake_arena:
+		fake_arena.queue_free()
+	# Keep the styled BattleUI from the scene - it has visible buttons and combat log
+
+	# Load and instantiate the REAL battle arena scene
+	var arena_scene := load("res://scenes/battle/battle_arena.tscn")
+	if arena_scene:
+		battle_arena = arena_scene.instantiate()
+		add_child(battle_arena)
+		EventBus.emit_debug("Real battle arena loaded")
+	else:
+		push_error("Failed to load battle_arena.tscn")
+		return
 
 	# Wait a frame for everything to initialize
 	await get_tree().process_frame
@@ -70,25 +85,54 @@ func _setup_vera() -> void:
 func _create_test_party() -> Array[CharacterBase]:
 	var party: Array[CharacterBase] = []
 
-	# Create protagonist
+	# Create protagonist (the player character)
 	var protagonist := _create_test_character("Kira", party_level, Enums.Brand.FANG)
 	protagonist.is_protagonist = true
 	party.append(protagonist)
 
-	# Create additional party members
-	var party_templates := [
-		{"name": "Luna", "brand": Enums.Brand.RADIANT},
-		{"name": "Rex", "brand": Enums.Brand.BULWARK},
-		{"name": "Sera", "brand": Enums.Brand.VOID}
+	# Create allied monsters (recruited/captured monsters that fight with the player)
+	var ally_monster_templates := [
+		{"name": "Mawling", "id": "mawling", "brand": Enums.Brand.SAVAGE},
+		{"name": "Hollow", "id": "hollow", "brand": Enums.Brand.VOID},
+		{"name": "Flicker", "id": "flicker", "brand": Enums.Brand.SURGE}
 	]
 
-	for i in range(mini(party_size - 1, party_templates.size())):
-		var template: Dictionary = party_templates[i]
-		var member := _create_test_character(template.name, party_level, template.brand)
-		party.append(member)
+	for i in range(mini(ally_monster_count, ally_monster_templates.size())):
+		var template: Dictionary = ally_monster_templates[i]
+		var ally_monster := _create_ally_monster(template.id, party_level, template.brand)
+		ally_monster.character_name = template.name
+		party.append(ally_monster)
 
-	EventBus.emit_debug("Created test party with %d members" % party.size())
+	EventBus.emit_debug("Created test party: 1 player + %d allied monsters" % (party.size() - 1))
 	return party
+
+func _create_ally_monster(monster_id: String, level: int, brand: Enums.Brand) -> Monster:
+	var monster := Monster.new()
+
+	monster.monster_id = monster_id
+	monster.level = level
+	monster.brand = brand
+	monster.character_type = Enums.CharacterType.MONSTER
+	monster.is_corrupted = false  # Allied monsters are purified/recruited
+
+	# Base stats scaled by level
+	monster.base_max_hp = 60 + (level * 10)
+	monster.base_attack = 12 + (level * 2)
+	monster.base_defense = 8 + level
+	monster.base_magic = 10 + level
+	monster.base_speed = 10 + level
+
+	monster.current_hp = monster.base_max_hp
+
+	# No corruption - this is an ally
+	monster.corruption_level = 0.0
+
+	# Add skills
+	monster.known_skills = ["basic_attack", "fury_strike"]
+
+	monster.rarity = Enums.Rarity.COMMON
+
+	return monster
 
 func _create_test_character(char_name: String, level: int, brand: Enums.Brand) -> CharacterBase:
 	var character := CharacterBase.new()
@@ -184,6 +228,8 @@ func _create_test_enemy(monster_id: String, level: int) -> Monster:
 	monster.monster_id = monster_id
 	monster.character_name = monster_id.capitalize().replace("_", " ")
 	monster.level = level
+	monster.character_type = Enums.CharacterType.MONSTER  # Enemies are monsters
+	monster.is_corrupted = true  # Enemy monsters are corrupted
 
 	# Base stats scaled by level
 	monster.base_max_hp = 40 + (level * 8)

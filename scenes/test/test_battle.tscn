@@ -29,9 +29,9 @@ corner_radius_bottom_left = 3
 
 [node name="TestBattle" type="Node"]
 script = ExtResource("1_test")
-party_size = 3
+party_size = 1
 party_level = 10
-enemy_count = 2
+enemy_count = 3
 enemy_level = 8
 enemy_type = "shadow_imp"
 starting_corruption = 25.0

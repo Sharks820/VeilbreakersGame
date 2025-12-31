@@ -269,7 +269,7 @@ func _play_boss_intro(boss: Node) -> void:
 	if boss.has_method("play_intro"):
 		boss.play_intro()
 
-	var boss_name := boss.character_name if boss is CharacterBase else "Boss"
+	var boss_name: String = boss.character_name if boss is CharacterBase else "Boss"
 	var boss_title := ""
 	if boss.has_method("get_title"):
 		boss_title = boss.get_title()
@@ -700,8 +700,8 @@ func _execute_defend(character: CharacterBase) -> Dictionary:
 
 func _execute_item(user: CharacterBase, target: CharacterBase, item_id: String) -> Dictionary:
 	# Use item through inventory system
-	var use_target := target if target else user
-	var result := InventorySystem.use_item(item_id, use_target)
+	var use_target: CharacterBase = target if target else user
+	var result: Dictionary = InventorySystem.use_item(item_id, use_target)
 
 	if result.success:
 		audio_command.emit("play_sfx", {"sound": "item_use"})
@@ -817,11 +817,11 @@ func get_capture_chance_preview(caster: CharacterBase, target: CharacterBase, me
 	if not target is Monster:
 		return {"available": false, "chance": 0.0, "reason": "Not a monster"}
 
-	var capture_method := method as CaptureSystem.CaptureMethod
-	var check := capture_system.can_use_method(target, caster, capture_method)
+	var capture_method: int = method
+	var check: Dictionary = capture_system.can_use_method(target, caster, capture_method)
 
 	if capture_method == CaptureSystem.CaptureMethod.ORB:
-		var tier := orb_tier as CaptureSystem.OrbTier
+		var tier: int = orb_tier
 		check.capture_chance = capture_system.calculate_orb_capture_chance(target, caster, tier)
 		check.chance_text = capture_system.get_capture_chance_text(check.capture_chance)
 
@@ -1034,8 +1034,8 @@ func _on_battle_victory() -> void:
 	GameManager.add_currency(total_rewards.currency)
 
 	# Distribute experience to party
-	var alive_players := player_party.filter(func(p): return p.is_alive())
-	var exp_per_player := total_rewards.experience / maxi(1, alive_players.size())
+	var alive_players: Array = player_party.filter(func(p): return p.is_alive())
+	var exp_per_player: int = int(total_rewards.experience) / maxi(1, alive_players.size())
 
 	for player in alive_players:
 		if player is PlayerCharacter:

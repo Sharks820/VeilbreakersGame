@@ -61,8 +61,8 @@ func add_item(item_id: String, quantity: int = 1) -> bool:
 		max_stack = item_data.max_stack
 
 	if items.has(item_id):
-		var new_quantity := mini(items[item_id] + quantity, max_stack)
-		var actual_added := new_quantity - items[item_id]
+		var new_quantity: int = mini(items[item_id] + quantity, max_stack)
+		var actual_added: int = new_quantity - int(items[item_id])
 		items[item_id] = new_quantity
 
 		if actual_added > 0:
