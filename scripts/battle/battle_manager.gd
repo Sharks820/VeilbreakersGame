@@ -74,6 +74,13 @@ var total_rewards: Dictionary = {"experience": 0, "currency": 0, "items": []}
 var pending_action: Dictionary = {}
 var is_executing_action: bool = false
 
+# Lock-in turn system
+var queued_party_actions: Dictionary = {}  # {character: {action, target, skill}}
+var party_lock_in_index: int = 0           # Which party member is selecting
+var party_execution_index: int = 0         # Which queued action to execute
+var enemy_attacks_remaining: int = 0       # Enemies get attacks = alive party count
+var enemy_attack_index: int = 0            # Which enemy is attacking
+
 # Boss tracking (from BattleSequencer)
 var active_bosses: Array = []
 var boss_phases: Dictionary = {}  # boss_node -> current_phase
@@ -87,13 +94,13 @@ var battle_stats: Dictionary = {
 	"captures_successful": 0,
 }
 
-# References to subsystems
-var turn_manager: TurnManager
-var damage_calculator: DamageCalculator
-var status_effect_manager: StatusEffectManager
-var ai_controller: AIController
-var purification_system: PurificationSystem
-var capture_system: CaptureSystem
+# References to subsystems (untyped to avoid cyclic dependency issues)
+var turn_manager = null
+var damage_calculator = null
+var status_effect_manager = null
+var ai_controller = null
+var purification_system = null
+var capture_system = null
 
 # =============================================================================
 # INITIALIZATION
@@ -284,19 +291,26 @@ func _start_round() -> void:
 	battle_stats.turns_taken += 1
 	battle_state = Enums.BattleState.TURN_START
 
-	# Calculate turn order based on speed
+	# Calculate turn order based on speed (for display purposes)
 	turn_order = turn_manager.calculate_turn_order(player_party + enemy_party)
 	current_turn_index = 0
+
+	# Clear queued actions for new round
+	queued_party_actions.clear()
+	party_lock_in_index = 0
+	party_execution_index = 0
+	enemy_attack_index = 0
 
 	# UI: Show turn order bar
 	ui_command.emit("show_turn_order", {"order": turn_order})
 
 	round_started.emit(current_round)
-	EventBus.emit_debug("Round %d started" % current_round)
+	EventBus.emit_debug("Round %d started - Lock-in Phase" % current_round)
 
 	await get_tree().create_timer(turn_start_delay).timeout
 
-	_start_next_turn()
+	# Start with party lock-in phase
+	_start_party_lock_in()
 
 func _start_next_turn() -> void:
 	if _check_battle_end():
@@ -368,6 +382,311 @@ func _execute_ai_turn(character: CharacterBase) -> void:
 	execute_action(character, ai_decision.action, ai_decision.target, ai_decision.get("skill", ""))
 
 # =============================================================================
+# LOCK-IN TURN SYSTEM
+# =============================================================================
+
+func _start_party_lock_in() -> void:
+	"""Begin the party lock-in phase where all allies select actions before executing"""
+	battle_state = Enums.BattleState.PARTY_LOCK_IN
+	party_lock_in_index = 0
+	queued_party_actions.clear()
+
+	EventBus.emit_debug("=== PARTY LOCK-IN PHASE ===")
+	ui_command.emit("show_message", {"text": "Select Actions!", "duration": 1.0})
+
+	await get_tree().create_timer(0.5).timeout
+	_prompt_next_party_member()
+
+func _prompt_next_party_member() -> void:
+	"""Prompt the next party member to select their action"""
+	if _check_battle_end():
+		return
+
+	# Find next alive party member
+	while party_lock_in_index < player_party.size():
+		var character := player_party[party_lock_in_index]
+
+		if character.is_dead():
+			party_lock_in_index += 1
+			continue
+
+		# Process start-of-turn effects for this character
+		var tick_results := character.tick_status_effects()
+		character.tick_stat_modifiers()
+
+		# Log status effect damage
+		for result in tick_results:
+			if result.has("damage"):
+				EventBus.emit_debug("%s took %d damage from %s" % [
+					character.character_name,
+					result.damage,
+					Enums.StatusEffect.keys()[result.effect]
+				])
+
+		# Check if character died from status effects
+		if character.is_dead():
+			party_lock_in_index += 1
+			continue
+
+		# Check if character can act (stunned, frozen, etc.)
+		if not character.can_act():
+			EventBus.emit_debug("%s cannot act due to status effect" % character.character_name)
+			ui_command.emit("show_message", {"text": character.character_name + " is stunned!"})
+			# Auto-defend for stunned characters
+			queued_party_actions[character] = {
+				"action": Enums.BattleAction.DEFEND,
+				"target": character,
+				"skill": ""
+			}
+			party_lock_in_index += 1
+			await get_tree().create_timer(0.5).timeout
+			continue
+
+		# This character can select an action
+		EventBus.turn_started.emit(character)
+		turn_started_signal.emit(character)
+
+		# Camera: Focus on character selecting
+		camera_command.emit("focus", {"target": character, "duration": camera_focus_time})
+
+		# Show action menu based on character type
+		if character.is_protagonist:
+			# Player selects action
+			battle_state = Enums.BattleState.SELECTING_ACTION
+			ui_command.emit("show_action_menu", {"entity": character})
+			waiting_for_player_input.emit(character)
+		else:
+			# AI-controlled ally monster
+			await get_tree().create_timer(0.3).timeout
+			_queue_ally_ai_action(character)
+		return
+
+	# All party members have selected - move to execution phase
+	_execute_party_actions()
+
+func _queue_ally_ai_action(character: CharacterBase) -> void:
+	"""AI ally selects and queues their action"""
+	var ai_decision := ai_controller.get_action(character, player_party, enemy_party)
+
+	queued_party_actions[character] = {
+		"action": ai_decision.action,
+		"target": ai_decision.target,
+		"skill": ai_decision.get("skill", "")
+	}
+
+	EventBus.emit_debug("%s locked in: %s" % [character.character_name, Enums.BattleAction.keys()[ai_decision.action]])
+
+	party_lock_in_index += 1
+	await get_tree().create_timer(0.2).timeout
+	_prompt_next_party_member()
+
+func _queue_player_action(action: Enums.BattleAction, target: CharacterBase, skill: String) -> void:
+	"""Queue the player's action during lock-in phase"""
+	var character := player_party[party_lock_in_index]
+
+	queued_party_actions[character] = {
+		"action": action,
+		"target": target,
+		"skill": skill
+	}
+
+	EventBus.emit_debug("%s locked in: %s" % [character.character_name, Enums.BattleAction.keys()[action]])
+
+	party_lock_in_index += 1
+
+	await get_tree().create_timer(0.2).timeout
+	_prompt_next_party_member()
+
+func _execute_party_actions() -> void:
+	"""Execute all queued party actions in order"""
+	battle_state = Enums.BattleState.PARTY_EXECUTING
+	party_execution_index = 0
+
+	EventBus.emit_debug("=== PARTY EXECUTION PHASE ===")
+	ui_command.emit("show_message", {"text": "Attack!", "duration": 0.8})
+
+	await get_tree().create_timer(0.5).timeout
+	_execute_next_party_action()
+
+func _execute_next_party_action() -> void:
+	"""Execute the next queued party action"""
+	if _check_battle_end():
+		return
+
+	# Find next alive party member with a queued action
+	var executing_characters: Array = []
+	for character in player_party:
+		if queued_party_actions.has(character) and character.is_alive():
+			executing_characters.append(character)
+
+	if party_execution_index >= executing_characters.size():
+		# All party actions executed - move to enemy phase
+		_start_enemy_phase()
+		return
+
+	var character := executing_characters[party_execution_index] as CharacterBase
+	var queued := queued_party_actions[character] as Dictionary
+
+	# Execute the queued action
+	is_executing_action = true
+	action_animation_started.emit(character, queued.action)
+
+	var result: Dictionary = {}
+	match queued.action:
+		Enums.BattleAction.ATTACK:
+			result = await _execute_attack(character, queued.target)
+		Enums.BattleAction.SKILL:
+			result = await _execute_skill(character, queued.target, queued.skill)
+		Enums.BattleAction.DEFEND:
+			result = _execute_defend(character)
+		Enums.BattleAction.ITEM:
+			result = _execute_item(character, queued.target, queued.skill)
+		Enums.BattleAction.PURIFY:
+			result = await _execute_purify(character, queued.target)
+		Enums.BattleAction.FLEE:
+			result = _execute_flee(character)
+
+	EventBus.action_executed.emit(character, queued.action, result)
+
+	camera_command.emit("return_to_battle", {"duration": camera_return_time})
+
+	await get_tree().create_timer(action_recovery_time).timeout
+
+	action_animation_finished.emit(character)
+	is_executing_action = false
+
+	if battle_state == Enums.BattleState.FLED:
+		return
+
+	party_execution_index += 1
+
+	# Continue to next action
+	await get_tree().create_timer(0.2).timeout
+	_execute_next_party_action()
+
+func _start_enemy_phase() -> void:
+	"""Begin the enemy attack phase - enemies get attacks = alive party count"""
+	if _check_battle_end():
+		return
+
+	battle_state = Enums.BattleState.ENEMY_EXECUTING
+
+	# Calculate how many attack phases enemies get
+	var alive_party_count := 0
+	for p in player_party:
+		if p.is_alive():
+			alive_party_count += 1
+
+	# Enemies get attack phases equal to alive party members
+	enemy_attacks_remaining = alive_party_count
+	enemy_attack_index = 0
+
+	EventBus.emit_debug("=== ENEMY PHASE === (%d attacks)" % enemy_attacks_remaining)
+	ui_command.emit("show_message", {"text": "Enemy Turn!", "duration": 0.8})
+
+	await get_tree().create_timer(0.5).timeout
+	_execute_next_enemy_attack()
+
+func _execute_next_enemy_attack() -> void:
+	"""Execute the next enemy attack"""
+	if _check_battle_end():
+		return
+
+	if enemy_attacks_remaining <= 0:
+		# All enemy attacks done - end round
+		_end_round()
+		return
+
+	# Find alive enemies
+	var alive_enemies: Array[CharacterBase] = []
+	for e in enemy_party:
+		if e.is_alive():
+			alive_enemies.append(e)
+
+	if alive_enemies.is_empty():
+		_end_round()
+		return
+
+	# Select which enemy attacks (cycle through alive enemies)
+	var attacker := alive_enemies[enemy_attack_index % alive_enemies.size()]
+
+	# Check if this is a boss with custom attack patterns
+	var is_boss := attacker in active_bosses
+
+	# Process status effects for the attacker
+	var tick_results := attacker.tick_status_effects()
+	attacker.tick_stat_modifiers()
+
+	for result in tick_results:
+		if result.has("damage"):
+			EventBus.emit_debug("%s took %d damage from %s" % [
+				attacker.character_name,
+				result.damage,
+				Enums.StatusEffect.keys()[result.effect]
+			])
+
+	if attacker.is_dead():
+		enemy_attacks_remaining -= 1
+		enemy_attack_index += 1
+		_execute_next_enemy_attack()
+		return
+
+	# Check if enemy can act
+	if not attacker.can_act():
+		EventBus.emit_debug("%s cannot act due to status effect" % attacker.character_name)
+		ui_command.emit("show_message", {"text": attacker.character_name + " is stunned!"})
+		enemy_attacks_remaining -= 1
+		enemy_attack_index += 1
+		await get_tree().create_timer(0.5).timeout
+		_execute_next_enemy_attack()
+		return
+
+	EventBus.turn_started.emit(attacker)
+	turn_started_signal.emit(attacker)
+
+	# Camera focus on enemy
+	camera_command.emit("focus", {"target": attacker, "duration": camera_focus_time})
+
+	await get_tree().create_timer(0.3).timeout
+
+	# AI decides action
+	var ai_decision := ai_controller.get_action(attacker, enemy_party, player_party)
+
+	# Execute enemy action
+	is_executing_action = true
+	action_animation_started.emit(attacker, ai_decision.action)
+
+	var result: Dictionary = {}
+	match ai_decision.action:
+		Enums.BattleAction.ATTACK:
+			result = await _execute_attack(attacker, ai_decision.target)
+		Enums.BattleAction.SKILL:
+			result = await _execute_skill(attacker, ai_decision.target, ai_decision.get("skill", ""))
+		Enums.BattleAction.DEFEND:
+			result = _execute_defend(attacker)
+		_:
+			result = await _execute_attack(attacker, ai_decision.target)
+
+	EventBus.action_executed.emit(attacker, ai_decision.action, result)
+
+	camera_command.emit("return_to_battle", {"duration": camera_return_time})
+
+	await get_tree().create_timer(action_recovery_time).timeout
+
+	action_animation_finished.emit(attacker)
+	is_executing_action = false
+
+	enemy_attacks_remaining -= 1
+	enemy_attack_index += 1
+
+	EventBus.turn_ended.emit(attacker)
+	turn_ended_signal.emit(attacker)
+
+	# Continue to next enemy attack
+	await get_tree().create_timer(turn_end_delay).timeout
+	_execute_next_enemy_attack()
+
+# =============================================================================
 # ACTION EXECUTION
 # =============================================================================
 
@@ -380,8 +699,14 @@ func submit_player_action(action: Enums.BattleAction, target: CharacterBase = nu
 
 	ui_command.emit("hide_action_menu", {})
 
-	var current_character := turn_order[current_turn_index]
-	execute_action(current_character, action, target, skill)
+	# Check if we're in lock-in phase
+	if battle_state == Enums.BattleState.SELECTING_ACTION or battle_state == Enums.BattleState.PARTY_LOCK_IN:
+		# Queue action for lock-in system
+		_queue_player_action(action, target, skill)
+	else:
+		# Fallback to old system (shouldn't happen with new flow)
+		var current_character := turn_order[current_turn_index]
+		execute_action(current_character, action, target, skill)
 
 func execute_action(character: CharacterBase, action: Enums.BattleAction, target: CharacterBase, skill: String = "") -> void:
 	if is_executing_action:

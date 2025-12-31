@@ -44,7 +44,14 @@
       "mcp__godot-editor__run_project",
       "mcp__godot-editor__get_debug_output",
       "mcp__godot-editor__stop_project",
-      "Bash(del \"C:\\\\Users\\\\Conner\\\\Downloads\\\\VeilbreakersGame\\\\tests\\\\test_enum_alias.gd\")"
+      "Bash(del \"C:\\\\Users\\\\Conner\\\\Downloads\\\\VeilbreakersGame\\\\tests\\\\test_enum_alias.gd\")",
+      "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --headless --check-only --path \"C:/Users/Conner/Downloads/VeilbreakersGame\")",
+      "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --headless --check-only --path /c/Users/Conner/Downloads/VeilbreakersGame)",
+      "Bash(where:*)",
+      "Bash(python:*)",
+      "Bash(git checkout:*)",
+      "Bash(grep:*)",
+      "Bash(git restore:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

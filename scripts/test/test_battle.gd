@@ -85,8 +85,8 @@ func _setup_vera() -> void:
 func _create_test_party() -> Array[CharacterBase]:
 	var party: Array[CharacterBase] = []
 
-	# Create protagonist (the player character)
-	var protagonist := _create_test_character("Kira", party_level, Enums.Brand.FANG)
+	# Create protagonist (the player character) - "Rend" matches hero sprite
+	var protagonist := _create_test_character("Rend", party_level, Enums.Brand.FANG)
 	protagonist.is_protagonist = true
 	party.append(protagonist)
 
@@ -274,7 +274,188 @@ func _start_battle(party: Array[CharacterBase], enemies: Array[CharacterBase]) -
 	# Emit battle started signal
 	EventBus.battle_started.emit(enemies)
 
+	# Update health bars to show actual party members
+	_update_health_bars(party)
+
 	EventBus.emit_debug("Test battle started: %d party vs %d enemies" % [party.size(), enemies.size()])
+
+func _update_health_bars(party: Array[CharacterBase]) -> void:
+	var health_bars_container = get_node_or_null("BattleUI/UIRoot/HeroHealthBars")
+	if not health_bars_container:
+		return
+
+	# Clear existing health bars
+	for child in health_bars_container.get_children():
+		child.queue_free()
+
+	# Wait a frame for children to be freed
+	await get_tree().process_frame
+
+	# Create health bars with portraits for each party member
+	for character in party:
+		var panel := _create_party_panel_with_portrait(character)
+		health_bars_container.add_child(panel)
+
+func _create_party_panel_with_portrait(character: CharacterBase) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(150, 48)  # Compact size
+
+	# Panel style - minimal
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.08, 0.06, 0.1, 0.8)
+	panel_style.border_color = Color(0.3, 0.25, 0.4, 0.6)
+	panel_style.border_width_top = 1
+	panel_style.border_width_bottom = 1
+	panel_style.border_width_left = 1
+	panel_style.border_width_right = 1
+	panel_style.corner_radius_top_left = 3
+	panel_style.corner_radius_top_right = 3
+	panel_style.corner_radius_bottom_left = 3
+	panel_style.corner_radius_bottom_right = 3
+	panel.add_theme_stylebox_override("panel", panel_style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 4)
+	panel.add_child(hbox)
+
+	# Portrait container - smaller
+	var portrait_container := PanelContainer.new()
+	portrait_container.custom_minimum_size = Vector2(32, 32)
+	var portrait_style := StyleBoxFlat.new()
+	portrait_style.bg_color = Color(0.12, 0.12, 0.18, 1.0)
+	portrait_style.border_color = Color(0.35, 0.3, 0.45, 1.0)
+	portrait_style.border_width_top = 1
+	portrait_style.border_width_bottom = 1
+	portrait_style.border_width_left = 1
+	portrait_style.border_width_right = 1
+	portrait_style.corner_radius_top_left = 2
+	portrait_style.corner_radius_top_right = 2
+	portrait_style.corner_radius_bottom_left = 2
+	portrait_style.corner_radius_bottom_right = 2
+	portrait_container.add_theme_stylebox_override("panel", portrait_style)
+	hbox.add_child(portrait_container)
+
+	# Load portrait texture
+	var portrait := TextureRect.new()
+	portrait.custom_minimum_size = Vector2(30, 30)
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+
+	# Try to load portrait based on character
+	var portrait_path := _get_character_portrait_path(character)
+	if portrait_path != "":
+		var tex := load(portrait_path)
+		if tex:
+			portrait.texture = tex
+	portrait_container.add_child(portrait)
+
+	# Info container (name + bars)
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 1)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(vbox)
+
+	var name_label := Label.new()
+	name_label.text = character.character_name
+	name_label.add_theme_font_size_override("font_size", 10)
+	name_label.add_theme_color_override("font_color", Color(0.95, 0.9, 0.8, 1.0))
+	vbox.add_child(name_label)
+
+	# HP Bar with custom frame - compact
+	var hp_container := Control.new()
+	hp_container.custom_minimum_size = Vector2(95, 14)
+	vbox.add_child(hp_container)
+
+	# HP frame background
+	var hp_frame := TextureRect.new()
+	var hp_frame_tex := load("res://assets/ui/bars/hp_bar_frame.png")
+	if hp_frame_tex:
+		hp_frame.texture = hp_frame_tex
+		hp_frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		hp_frame.stretch_mode = TextureRect.STRETCH_SCALE
+		hp_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+		hp_frame.size = Vector2(95, 14)
+		hp_container.add_child(hp_frame)
+
+	# HP fill bar - scaled for smaller frame
+	var hp_bar := ProgressBar.new()
+	hp_bar.max_value = character.get_max_hp()
+	hp_bar.value = character.current_hp
+	hp_bar.show_percentage = false
+	hp_bar.position = Vector2(22, 4)  # Scaled offset
+	hp_bar.size = Vector2(65, 6)  # Scaled fill area
+	hp_bar.name = "HPBar"
+
+	var hp_fill := StyleBoxFlat.new()
+	hp_fill.bg_color = Color(0.85, 0.2, 0.2, 1.0)
+	hp_fill.corner_radius_top_left = 1
+	hp_fill.corner_radius_top_right = 1
+	hp_fill.corner_radius_bottom_left = 1
+	hp_fill.corner_radius_bottom_right = 1
+	hp_bar.add_theme_stylebox_override("fill", hp_fill)
+
+	var hp_bg := StyleBoxEmpty.new()
+	hp_bar.add_theme_stylebox_override("background", hp_bg)
+	hp_container.add_child(hp_bar)
+
+	# MP Bar with custom frame - compact
+	var mp_container := Control.new()
+	mp_container.custom_minimum_size = Vector2(95, 14)
+	vbox.add_child(mp_container)
+
+	# MP frame background
+	var mp_frame := TextureRect.new()
+	var mp_frame_tex := load("res://assets/ui/bars/mp_bar_frame.png")
+	if mp_frame_tex:
+		mp_frame.texture = mp_frame_tex
+		mp_frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		mp_frame.stretch_mode = TextureRect.STRETCH_SCALE
+		mp_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+		mp_frame.size = Vector2(95, 14)
+		mp_container.add_child(mp_frame)
+
+	# MP fill bar - scaled for smaller frame
+	var mp_bar := ProgressBar.new()
+	mp_bar.max_value = character.get_max_mp() if character.has_method("get_max_mp") else 100
+	mp_bar.value = character.current_mp if "current_mp" in character else 100
+	mp_bar.show_percentage = false
+	mp_bar.position = Vector2(22, 4)  # Scaled offset
+	mp_bar.size = Vector2(65, 6)  # Scaled fill area
+	mp_bar.name = "MPBar"
+
+	var mp_fill := StyleBoxFlat.new()
+	mp_fill.bg_color = Color(0.3, 0.5, 0.95, 1.0)
+	mp_fill.corner_radius_top_left = 1
+	mp_fill.corner_radius_top_right = 1
+	mp_fill.corner_radius_bottom_left = 1
+	mp_fill.corner_radius_bottom_right = 1
+	mp_bar.add_theme_stylebox_override("fill", mp_fill)
+
+	var mp_bg := StyleBoxEmpty.new()
+	mp_bar.add_theme_stylebox_override("background", mp_bg)
+	mp_container.add_child(mp_bar)
+
+	# Store references
+	character.set_meta("hp_bar", hp_bar)
+	character.set_meta("mp_bar", mp_bar)
+
+	return panel
+
+func _get_character_portrait_path(character: CharacterBase) -> String:
+	# Check if it's a monster with a sprite
+	if character is Monster:
+		var monster := character as Monster
+		var monster_path := "res://assets/sprites/monsters/%s.png" % monster.monster_id
+		if ResourceLoader.exists(monster_path):
+			return monster_path
+
+	# Check for hero portraits
+	var hero_path := "res://assets/characters/heroes/%s.png" % character.character_name.to_lower()
+	if ResourceLoader.exists(hero_path):
+		return hero_path
+
+	# Default - no portrait found
+	return ""
 
 # =============================================================================
 # DEBUG CONTROLS

@@ -96,6 +96,10 @@ enum BattleState {
 	DEFEAT,
 	FLED,
 	CAPTURING,
+	# Lock-in turn system states
+	PARTY_LOCK_IN,      # Party members selecting actions (all before any execute)
+	PARTY_EXECUTING,    # Party members executing queued actions
+	ENEMY_EXECUTING,    # Enemies executing their attacks
 	# Legacy alias
 	PURIFICATION = CAPTURING
 }

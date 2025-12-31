@@ -484,35 +484,148 @@ func _update_party_display() -> void:
 
 func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(150, 80)
+	panel.custom_minimum_size = Vector2(180, 70)
 
+	# Style the panel
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.1, 0.1, 0.15, 0.85)
+	panel_style.border_color = Color(0.3, 0.25, 0.4, 1.0)
+	panel_style.border_width_top = 1
+	panel_style.border_width_bottom = 1
+	panel_style.border_width_left = 1
+	panel_style.border_width_right = 1
+	panel_style.corner_radius_top_left = 4
+	panel_style.corner_radius_top_right = 4
+	panel_style.corner_radius_bottom_left = 4
+	panel_style.corner_radius_bottom_right = 4
+	panel.add_theme_stylebox_override("panel", panel_style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 8)
+	panel.add_child(hbox)
+
+	# Portrait container
+	var portrait_container := PanelContainer.new()
+	portrait_container.custom_minimum_size = Vector2(50, 50)
+	var portrait_style := StyleBoxFlat.new()
+	portrait_style.bg_color = Color(0.15, 0.15, 0.2, 1.0)
+	portrait_style.border_color = Color(0.4, 0.35, 0.5, 1.0)
+	portrait_style.border_width_top = 2
+	portrait_style.border_width_bottom = 2
+	portrait_style.border_width_left = 2
+	portrait_style.border_width_right = 2
+	portrait_style.corner_radius_top_left = 3
+	portrait_style.corner_radius_top_right = 3
+	portrait_style.corner_radius_bottom_left = 3
+	portrait_style.corner_radius_bottom_right = 3
+	portrait_container.add_theme_stylebox_override("panel", portrait_style)
+	hbox.add_child(portrait_container)
+
+	# Load portrait texture
+	var portrait := TextureRect.new()
+	portrait.custom_minimum_size = Vector2(46, 46)
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+
+	# Try to load portrait based on character
+	var portrait_path := _get_portrait_path(character)
+	if portrait_path != "":
+		var tex := load(portrait_path)
+		if tex:
+			portrait.texture = tex
+
+	portrait_container.add_child(portrait)
+
+	# Info container (name + bars)
 	var vbox := VBoxContainer.new()
-	panel.add_child(vbox)
+	vbox.add_theme_constant_override("separation", 2)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(vbox)
 
 	var name_label := Label.new()
 	name_label.text = character.character_name
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.add_theme_font_size_override("font_size", 12)
+	name_label.add_theme_color_override("font_color", Color(0.95, 0.9, 0.8, 1.0))
 	vbox.add_child(name_label)
 
+	# HP Bar with styling
 	var hp_bar := ProgressBar.new()
 	hp_bar.max_value = character.get_max_hp()
 	hp_bar.value = character.current_hp
 	hp_bar.show_percentage = false
-	hp_bar.custom_minimum_size = Vector2(0, 15)
+	hp_bar.custom_minimum_size = Vector2(100, 12)
+	hp_bar.name = "HPBar"
+
+	var hp_fill := StyleBoxFlat.new()
+	hp_fill.bg_color = Color(0.2, 0.8, 0.3, 1.0)
+	hp_fill.corner_radius_top_left = 2
+	hp_fill.corner_radius_top_right = 2
+	hp_fill.corner_radius_bottom_left = 2
+	hp_fill.corner_radius_bottom_right = 2
+	hp_bar.add_theme_stylebox_override("fill", hp_fill)
+
+	var hp_bg := StyleBoxFlat.new()
+	hp_bg.bg_color = Color(0.15, 0.1, 0.1, 0.9)
+	hp_bg.corner_radius_top_left = 2
+	hp_bg.corner_radius_top_right = 2
+	hp_bg.corner_radius_bottom_left = 2
+	hp_bg.corner_radius_bottom_right = 2
+	hp_bar.add_theme_stylebox_override("background", hp_bg)
 	vbox.add_child(hp_bar)
 
 	var hp_label := Label.new()
-	hp_label.text = "HP: %d/%d" % [character.current_hp, character.get_max_hp()]
-	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hp_label.text = "%d/%d" % [character.current_hp, character.get_max_hp()]
+	hp_label.add_theme_font_size_override("font_size", 10)
+	hp_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 1.0))
+	hp_label.name = "HPLabel"
 	vbox.add_child(hp_label)
 
+	# MP Bar if character has MP
 	if character.get_max_mp() > 0:
-		var mp_label := Label.new()
-		mp_label.text = "MP: %d/%d" % [character.current_mp, character.get_max_mp()]
-		mp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		vbox.add_child(mp_label)
+		var mp_bar := ProgressBar.new()
+		mp_bar.max_value = character.get_max_mp()
+		mp_bar.value = character.current_mp
+		mp_bar.show_percentage = false
+		mp_bar.custom_minimum_size = Vector2(100, 8)
+		mp_bar.name = "MPBar"
+
+		var mp_fill := StyleBoxFlat.new()
+		mp_fill.bg_color = Color(0.2, 0.4, 0.9, 1.0)
+		mp_fill.corner_radius_top_left = 2
+		mp_fill.corner_radius_top_right = 2
+		mp_fill.corner_radius_bottom_left = 2
+		mp_fill.corner_radius_bottom_right = 2
+		mp_bar.add_theme_stylebox_override("fill", mp_fill)
+
+		var mp_bg := StyleBoxFlat.new()
+		mp_bg.bg_color = Color(0.1, 0.1, 0.15, 0.9)
+		mp_bg.corner_radius_top_left = 2
+		mp_bg.corner_radius_top_right = 2
+		mp_bg.corner_radius_bottom_left = 2
+		mp_bg.corner_radius_bottom_right = 2
+		mp_bar.add_theme_stylebox_override("background", mp_bg)
+		vbox.add_child(mp_bar)
+
+	# Store reference for updates
+	character.set_meta("ui_panel", panel)
 
 	return panel
+
+func _get_portrait_path(character: CharacterBase) -> String:
+	# Check if it's a monster with a sprite
+	if character is Monster:
+		var monster := character as Monster
+		var monster_path := "res://assets/sprites/monsters/%s.png" % monster.monster_id
+		if ResourceLoader.exists(monster_path):
+			return monster_path
+
+	# Check for hero portraits
+	var hero_path := "res://assets/characters/heroes/%s.png" % character.character_name.to_lower()
+	if ResourceLoader.exists(hero_path):
+		return hero_path
+
+	# Default - no portrait found
+	return ""
 
 func _update_enemy_display(enemy: CharacterBase) -> void:
 	if enemy == null:
@@ -557,49 +670,55 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 		var character := order[i]
 		var is_ally := character.is_protagonist or character in party_members
 
-		# Create portrait container
+		# Create portrait container - compact 36x36
 		var portrait_panel := PanelContainer.new()
-		portrait_panel.custom_minimum_size = Vector2(50, 50)
+		portrait_panel.custom_minimum_size = Vector2(36, 36)
 
 		# Create stylebox for colored border
 		var style := StyleBoxFlat.new()
 		if i == 0:
 			# Current turn - bright yellow border
-			style.bg_color = Color(0.2, 0.2, 0.2, 0.9)
+			style.bg_color = Color(0.15, 0.15, 0.15, 0.95)
 			style.border_color = Color.YELLOW
-			style.set_border_width_all(3)
+			style.set_border_width_all(2)
 		elif is_ally:
 			# Ally - green border
-			style.bg_color = Color(0.1, 0.2, 0.1, 0.8)
+			style.bg_color = Color(0.1, 0.15, 0.1, 0.9)
 			style.border_color = Color(0.3, 0.9, 0.3)  # Green
-			style.set_border_width_all(2)
+			style.set_border_width_all(1)
 		else:
 			# Enemy - red border
-			style.bg_color = Color(0.2, 0.1, 0.1, 0.8)
+			style.bg_color = Color(0.15, 0.1, 0.1, 0.9)
 			style.border_color = Color(0.9, 0.3, 0.3)  # Red
-			style.set_border_width_all(2)
+			style.set_border_width_all(1)
 
-		style.set_corner_radius_all(5)
+		style.set_corner_radius_all(3)
 		portrait_panel.add_theme_stylebox_override("panel", style)
 
-		# Character name/icon inside
-		var vbox := VBoxContainer.new()
-		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		portrait_panel.add_child(vbox)
-
-		# Portrait placeholder (colored rect for now)
-		var portrait := ColorRect.new()
-		portrait.custom_minimum_size = Vector2(30, 30)
-		portrait.color = Color(0.3, 0.8, 0.3) if is_ally else Color(0.8, 0.3, 0.3)
+		# Portrait TextureRect with actual character sprite
+		var portrait := TextureRect.new()
+		portrait.custom_minimum_size = Vector2(32, 32)
+		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		portrait.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		vbox.add_child(portrait)
+		portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
-		# Name label
-		var name_label := Label.new()
-		name_label.text = character.character_name.substr(0, 6)  # Truncate long names
-		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_label.add_theme_font_size_override("font_size", 10)
-		vbox.add_child(name_label)
+		# Load actual portrait texture
+		var portrait_path := _get_portrait_path(character)
+		if portrait_path != "":
+			var tex := load(portrait_path)
+			if tex:
+				portrait.texture = tex
+
+		# Fallback to colored placeholder if no texture found
+		if portrait.texture == null:
+			var fallback := ColorRect.new()
+			fallback.custom_minimum_size = Vector2(32, 32)
+			fallback.color = Color(0.3, 0.8, 0.3) if is_ally else Color(0.8, 0.3, 0.3)
+			fallback.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			portrait_panel.add_child(fallback)
+		else:
+			portrait_panel.add_child(portrait)
 
 		turn_order_display.add_child(portrait_panel)
 
@@ -607,8 +726,8 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 		if i < mini(7, order.size() - 1):
 			var arrow := Label.new()
 			arrow.text = "►"
-			arrow.add_theme_font_size_override("font_size", 12)
-			arrow.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+			arrow.add_theme_font_size_override("font_size", 10)
+			arrow.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 			arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			turn_order_display.add_child(arrow)
 

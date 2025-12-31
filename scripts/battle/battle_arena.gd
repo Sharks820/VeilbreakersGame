@@ -182,29 +182,71 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 	var container := Node2D.new()
 	container.name = character.character_name
 
-	# Placeholder colored rectangle (will be replaced with Spine/sprites)
-	var sprite := ColorRect.new()
+	# Try to load actual sprite texture
+	var sprite_path := _get_character_sprite_path(character)
+	var sprite_loaded := false
 
-	# Size based on character type - monsters smaller, player larger
-	match character.character_type:
-		Enums.CharacterType.PLAYER:
-			sprite.size = Vector2(100, 150)
-			sprite.position = Vector2(-50, -150)
-			sprite.color = Color(0.2, 0.6, 1.0, 0.9)
-		Enums.CharacterType.MONSTER:
-			sprite.size = Vector2(50, 75)  # Monsters significantly smaller
-			sprite.position = Vector2(-25, -75)
-			sprite.color = Color(0.8, 0.2, 0.2, 0.9)
-		Enums.CharacterType.BOSS:
-			sprite.size = Vector2(80, 120)  # Bosses medium-large
-			sprite.position = Vector2(-40, -120)
-			sprite.color = Color(0.6, 0.1, 0.6, 0.9)
-		_:
-			sprite.size = Vector2(50, 75)
-			sprite.position = Vector2(-25, -75)
-			sprite.color = Color(0.5, 0.5, 0.5, 0.9)
+	if sprite_path != "" and ResourceLoader.exists(sprite_path):
+		var tex := load(sprite_path)
+		if tex:
+			var sprite := Sprite2D.new()
+			sprite.texture = tex
+			sprite.name = "CharacterSprite"
 
-	container.add_child(sprite)
+			# Scale and position based on character type
+			match character.character_type:
+				Enums.CharacterType.PLAYER:
+					sprite.scale = Vector2(0.12, 0.12)
+					sprite.position = Vector2(0, -90)
+				Enums.CharacterType.MONSTER:
+					if character is Monster and character.is_corrupted:
+						# Enemy monsters
+						sprite.scale = Vector2(0.06, 0.06)
+						sprite.position = Vector2(0, -45)
+					else:
+						# Allied monsters
+						sprite.scale = Vector2(0.08, 0.08)
+						sprite.position = Vector2(0, -55)
+				Enums.CharacterType.BOSS:
+					sprite.scale = Vector2(0.1, 0.1)
+					sprite.position = Vector2(0, -70)
+				_:
+					sprite.scale = Vector2(0.08, 0.08)
+					sprite.position = Vector2(0, -55)
+
+			# Flip sprite to face enemies (allies face right, enemies face left)
+			# Monster sprites are drawn facing left by default
+			if character is Monster and character.is_corrupted:
+				# Enemy on right - keep facing left (toward allies)
+				sprite.flip_h = false
+			else:
+				# Ally/Player on left - flip to face right (toward enemies)
+				sprite.flip_h = true
+
+			container.add_child(sprite)
+			sprite_loaded = true
+
+	# Fallback to colored rectangle if no sprite
+	if not sprite_loaded:
+		var sprite := ColorRect.new()
+		match character.character_type:
+			Enums.CharacterType.PLAYER:
+				sprite.size = Vector2(100, 150)
+				sprite.position = Vector2(-50, -150)
+				sprite.color = Color(0.2, 0.6, 1.0, 0.9)
+			Enums.CharacterType.MONSTER:
+				sprite.size = Vector2(50, 75)
+				sprite.position = Vector2(-25, -75)
+				sprite.color = Color(0.8, 0.2, 0.2, 0.9)
+			Enums.CharacterType.BOSS:
+				sprite.size = Vector2(80, 120)
+				sprite.position = Vector2(-40, -120)
+				sprite.color = Color(0.6, 0.1, 0.6, 0.9)
+			_:
+				sprite.size = Vector2(50, 75)
+				sprite.position = Vector2(-25, -75)
+				sprite.color = Color(0.5, 0.5, 0.5, 0.9)
+		container.add_child(sprite)
 
 	# Name label - position based on sprite size
 	var label := Label.new()
@@ -219,26 +261,49 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 	hp_bar.value = character.current_hp
 	hp_bar.show_percentage = false
 	hp_bar.name = "HPBar"
+
+	# Style the HP bar to be visible
+	var fill_style := StyleBoxFlat.new()
+	fill_style.bg_color = Color(0.2, 0.8, 0.3, 1.0)  # Green fill
+	fill_style.corner_radius_top_left = 2
+	fill_style.corner_radius_top_right = 2
+	fill_style.corner_radius_bottom_left = 2
+	fill_style.corner_radius_bottom_right = 2
+	hp_bar.add_theme_stylebox_override("fill", fill_style)
+
+	var bg_style := StyleBoxFlat.new()
+	bg_style.bg_color = Color(0.15, 0.1, 0.1, 0.9)  # Dark background
+	bg_style.border_color = Color(0.3, 0.25, 0.2, 1.0)  # Border
+	bg_style.border_width_top = 1
+	bg_style.border_width_bottom = 1
+	bg_style.border_width_left = 1
+	bg_style.border_width_right = 1
+	bg_style.corner_radius_top_left = 2
+	bg_style.corner_radius_top_right = 2
+	bg_style.corner_radius_bottom_left = 2
+	bg_style.corner_radius_bottom_right = 2
+	hp_bar.add_theme_stylebox_override("background", bg_style)
+
 	container.add_child(hp_bar)
 
 	# Adjust label and HP bar based on character type
 	match character.character_type:
 		Enums.CharacterType.PLAYER:
-			label.position = Vector2(-50, -170)
-			hp_bar.size = Vector2(80, 10)
-			hp_bar.position = Vector2(-40, -160)
+			label.position = Vector2(-50, -175)
+			hp_bar.size = Vector2(100, 12)
+			hp_bar.position = Vector2(-50, -160)
 		Enums.CharacterType.MONSTER:
-			label.position = Vector2(-30, -95)
-			hp_bar.size = Vector2(50, 6)
-			hp_bar.position = Vector2(-25, -85)
+			label.position = Vector2(-35, -100)
+			hp_bar.size = Vector2(70, 10)
+			hp_bar.position = Vector2(-35, -88)
 		Enums.CharacterType.BOSS:
-			label.position = Vector2(-40, -140)
-			hp_bar.size = Vector2(70, 8)
-			hp_bar.position = Vector2(-35, -130)
+			label.position = Vector2(-50, -145)
+			hp_bar.size = Vector2(100, 12)
+			hp_bar.position = Vector2(-50, -132)
 		_:
-			label.position = Vector2(-30, -95)
-			hp_bar.size = Vector2(50, 6)
-			hp_bar.position = Vector2(-25, -85)
+			label.position = Vector2(-35, -100)
+			hp_bar.size = Vector2(70, 10)
+			hp_bar.position = Vector2(-35, -88)
 
 	return container
 
@@ -740,6 +805,23 @@ func _legacy_shake_camera(intensity: float, duration: float) -> void:
 		tween.tween_property(camera_node, "offset", original_offset + shake_offset, 0.05)
 
 	tween.tween_property(camera_node, "offset", original_offset, 0.05)
+
+
+func _get_character_sprite_path(character: CharacterBase) -> String:
+	# Check if it's a monster with a sprite
+	if character is Monster:
+		var monster := character as Monster
+		var monster_path := "res://assets/sprites/monsters/%s.png" % monster.monster_id
+		if ResourceLoader.exists(monster_path):
+			return monster_path
+
+	# Check for hero portraits
+	var hero_path := "res://assets/characters/heroes/%s.png" % character.character_name.to_lower()
+	if ResourceLoader.exists(hero_path):
+		return hero_path
+
+	# Default - no sprite found
+	return ""
 
 # =============================================================================
 # CLEANUP
