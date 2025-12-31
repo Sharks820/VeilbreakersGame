@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v3.7** | Last updated: 2025-12-31
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v3.8** | Last updated: 2025-12-31
 
 ---
 
@@ -264,6 +264,7 @@ battle, ui, art, audio, vera, monsters, critical
 | 2025-12-29 | v2.4: Screenshot organization - all screenshots to screenshots/ folder |
 | 2025-12-30 | v3.0: New Capture System - 4 methods (ORB, PURIFY, BARGAIN, FORCE), 4 orb tiers, 80%+ corruption baseline |
 | 2025-12-31 | v3.7: Monster XP/leveling system, level up notifications, XP distribution to allied monsters |
+| 2025-12-31 | v3.8: Battle animation interface in CharacterBase, victory->overworld transition for dev testing |
 
 ---
 

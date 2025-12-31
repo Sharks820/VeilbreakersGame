@@ -1155,7 +1155,9 @@ func show_defeat() -> void:
 
 func _on_continue_pressed() -> void:
 	victory_screen.hide()
-	# Signal is already emitted from BattleManager with rewards, this just hides UI
+	# [DEV] For testing: return to overworld after victory
+	# In production, this would return to the location where battle was triggered
+	SceneManager.go_to_overworld()
 
 func _on_retry_pressed() -> void:
 	defeat_screen.hide()

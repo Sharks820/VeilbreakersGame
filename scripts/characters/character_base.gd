@@ -481,6 +481,87 @@ func level_up() -> Dictionary:
 	return stat_gains
 
 # =============================================================================
+# ANIMATION INTERFACE (Override in subclasses for actual animations)
+# =============================================================================
+# These methods provide a common interface for BattleSequencer to call.
+# Base implementations use simple tweens; subclasses can override with sprites.
+
+func play_idle() -> void:
+	## Return to idle state - base implementation does nothing
+	pass
+
+func play_attack_windup() -> void:
+	## Attack anticipation - character prepares to strike
+	_tween_scale(Vector2(1.1, 0.9), 0.2)
+
+func play_attack_strike() -> void:
+	## Attack execution - character strikes
+	_tween_position_offset(Vector2(30, 0), 0.1)
+
+func play_attack_recovery() -> void:
+	## Attack recovery - return to idle position
+	_tween_position_offset(Vector2.ZERO, 0.2)
+	_tween_scale(Vector2.ONE, 0.2)
+
+func play_hurt(is_critical: bool = false) -> void:
+	## React to being hit
+	var offset := Vector2(-20, 0) if is_critical else Vector2(-10, 0)
+	_tween_position_offset(offset, 0.08)
+	flash_hit()
+	await get_tree().create_timer(0.15).timeout
+	_tween_position_offset(Vector2.ZERO, 0.15)
+
+func play_death() -> void:
+	## Death sequence
+	var tween := create_tween()
+	tween.parallel().tween_property(self, "modulate:a", 0.0, 0.8)
+	tween.parallel().tween_property(self, "rotation", deg_to_rad(15), 0.4)
+	tween.parallel().tween_property(self, "position:y", position.y + 30, 0.8)
+
+func play_victory() -> void:
+	## Victory celebration
+	var tween := create_tween()
+	tween.tween_property(self, "position:y", position.y - 20, 0.2).set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(self, "position:y", position.y, 0.3).set_trans(Tween.TRANS_BOUNCE)
+
+func play_skill_cast(skill_name: String) -> void:
+	## Skill/magic casting animation
+	_tween_scale(Vector2(1.15, 1.15), 0.3)
+	await get_tree().create_timer(0.3).timeout
+	_tween_scale(Vector2.ONE, 0.2)
+
+func flash_hit() -> void:
+	## Quick white flash when hit
+	var original_modulate := modulate
+	modulate = Color(2.0, 2.0, 2.0)
+	await get_tree().create_timer(0.1).timeout
+	modulate = original_modulate
+
+func play_defend() -> void:
+	## Defensive stance
+	_tween_scale(Vector2(0.95, 1.05), 0.2)
+
+func play_item_use() -> void:
+	## Using an item
+	_tween_scale(Vector2(1.05, 1.05), 0.15)
+	await get_tree().create_timer(0.3).timeout
+	_tween_scale(Vector2.ONE, 0.15)
+
+# Animation helper tweens
+var _position_offset := Vector2.ZERO
+var _base_position := Vector2.ZERO
+
+func _tween_scale(target_scale: Vector2, duration: float) -> void:
+	var tween := create_tween()
+	tween.tween_property(self, "scale", target_scale, duration).set_ease(Tween.EASE_OUT)
+
+func _tween_position_offset(offset: Vector2, duration: float) -> void:
+	if _base_position == Vector2.ZERO:
+		_base_position = position
+	var tween := create_tween()
+	tween.tween_property(self, "position", _base_position + offset, duration).set_ease(Tween.EASE_OUT)
+
+# =============================================================================
 # SERIALIZATION
 # =============================================================================
 
