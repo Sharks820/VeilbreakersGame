@@ -145,8 +145,8 @@ func emit_debug(message: String, level: int = 0) -> void:
 func emit_warning(message: String) -> void:
 	if OS.is_debug_build():
 		debug_log.emit(message, 1)
-		push_warning("[WARN] ", message)
+		push_warning("[WARN] " + message)
 
 func emit_error(message: String) -> void:
 	debug_log.emit(message, 2)
-	push_error("[ERROR] ", message)
+	push_error("[ERROR] " + message)

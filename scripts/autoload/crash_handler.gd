@@ -35,9 +35,10 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		# Clean shutdown - remove recovery file
 		_clear_crash_recovery()
-	elif what == NOTIFICATION_CRASH:
-		# Game is crashing - emergency save
-		_emergency_save()
+	elif what == NOTIFICATION_PREDELETE:
+		# Node is being deleted unexpectedly - attempt emergency save
+		if not _is_recovering:
+			_emergency_save()
 
 
 # =============================================================================
