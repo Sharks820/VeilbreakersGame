@@ -54,6 +54,7 @@ const BRAND_COLORS = {
 # -----------------------------------------------------------------------------
 var turn_icons: Array = []  # Current turn order icons
 var active_popups: Array = []
+var _current_turn_tween: Tween = null  # Track infinite pulse tween to prevent leaks
 
 # -----------------------------------------------------------------------------
 # TURN ORDER BAR
@@ -122,9 +123,12 @@ func highlight_current_turn(entity: Node) -> void:
 
 		# Pulse animation for current
 		if is_current:
-			var tween = create_tween().set_loops()
-			tween.tween_property(icon, "scale", Vector2(1.1, 1.1), 0.5)
-			tween.tween_property(icon, "scale", Vector2.ONE, 0.5)
+			# CRITICAL FIX: Kill any existing pulse tween to prevent infinite accumulation
+			if _current_turn_tween and _current_turn_tween.is_valid():
+				_current_turn_tween.kill()
+			_current_turn_tween = create_tween().set_loops()
+			_current_turn_tween.tween_property(icon, "scale", Vector2(1.1, 1.1), 0.5)
+			_current_turn_tween.tween_property(icon, "scale", Vector2.ONE, 0.5)
 
 func advance_turn_order() -> void:
 	"""Animate the turn order advancing (first icon out, rest slide left)"""

@@ -223,6 +223,10 @@ var _original_scale: Vector2 = Vector2.ONE
 var _breathing_offset: float = 0.0
 var _is_flashing: bool = false
 
+# HIGH FIX: Track tweens to prevent accumulation during rapid hits
+var _flash_tween: Tween = null
+var _squash_tween: Tween = null
+
 # -----------------------------------------------------------------------------
 # LIFECYCLE
 # -----------------------------------------------------------------------------
@@ -495,41 +499,49 @@ func play_hurt(is_critical: bool = false) -> void:
 func _flash_white() -> void:
 	if not flash_material or _is_flashing:
 		return
-	
+
 	_is_flashing = true
 	var original_material = animated_sprite.material
 	animated_sprite.material = flash_material
 	flash_material.set_shader_parameter("flash_amount", 1.0)
-	
-	var tween = create_tween()
-	tween.tween_property(flash_material, "shader_parameter/flash_amount", 0.0, hit_flash_duration)
-	tween.tween_callback(func():
+
+	# HIGH FIX: Kill previous flash tween to prevent accumulation
+	if _flash_tween and _flash_tween.is_valid():
+		_flash_tween.kill()
+
+	_flash_tween = create_tween()
+	_flash_tween.tween_property(flash_material, "shader_parameter/flash_amount", 0.0, hit_flash_duration)
+	_flash_tween.tween_callback(func():
 		animated_sprite.material = original_material
 		_is_flashing = false
 	)
 
 func _squash() -> void:
 	"""Squash on impact, stretch on recovery"""
-	var tween = create_tween()
-	
+	# HIGH FIX: Kill previous squash tween to prevent stacking
+	if _squash_tween and _squash_tween.is_valid():
+		_squash_tween.kill()
+
+	_squash_tween = create_tween()
+
 	# Squash
-	tween.tween_property(
-		animated_sprite, 
-		"scale", 
+	_squash_tween.tween_property(
+		animated_sprite,
+		"scale",
 		_original_scale * Vector2(1.0 + squash_stretch_amount, 1.0 - squash_stretch_amount),
 		0.05
 	)
-	
+
 	# Stretch
-	tween.tween_property(
+	_squash_tween.tween_property(
 		animated_sprite,
 		"scale",
 		_original_scale * Vector2(1.0 - squash_stretch_amount * 0.5, 1.0 + squash_stretch_amount * 0.5),
 		0.1
 	)
-	
+
 	# Return
-	tween.tween_property(animated_sprite, "scale", _original_scale, 0.15)
+	_squash_tween.tween_property(animated_sprite, "scale", _original_scale, 0.15)
 
 # -----------------------------------------------------------------------------
 # DEATH ANIMATIONS

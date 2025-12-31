@@ -82,6 +82,11 @@ var _transition_ease: Tween.EaseType
 var _freeze_timer: float = 0.0
 var _pre_freeze_time_scale: float = 1.0
 
+# Tween tracking (prevents accumulation on rapid calls)
+var _shake_decay_tween: Tween = null
+var _zoom_tween: Tween = null
+var _focus_tween: Tween = null
+
 # Boundaries
 var _bounds_enabled: bool = false
 var _bounds_rect: Rect2
@@ -128,11 +133,15 @@ func _process(delta: float) -> void:
 func shake(intensity: Vector2, duration: float = 0.3) -> void:
 	_shake_intensity = intensity.clamp(Vector2.ZERO, max_shake_offset)
 	_shake_trauma = 1.0
-	
+
+	# HIGH FIX: Kill previous shake tween to prevent accumulation during combos
+	if _shake_decay_tween and _shake_decay_tween.is_valid():
+		_shake_decay_tween.kill()
+
 	# Auto-decay over duration
-	var tween = create_tween()
-	tween.tween_property(self, "_shake_trauma", 0.0, duration)
-	tween.tween_callback(func(): shake_completed.emit())
+	_shake_decay_tween = create_tween()
+	_shake_decay_tween.tween_property(self, "_shake_trauma", 0.0, duration)
+	_shake_decay_tween.tween_callback(func(): shake_completed.emit())
 
 func shake_preset(preset: String) -> void:
 	match preset:
@@ -183,13 +192,17 @@ func focus_on(target: Node2D, zoom_level: float = -1.0, duration: float = 0.3) -
 	_focus_target = target
 	_focus_targets.clear()
 	_is_focusing = true
-	
+
 	if zoom_level > 0:
 		zoom_to(Vector2(zoom_level, zoom_level), duration)
-	
-	var tween = create_tween()
-	tween.tween_property(self, "_focus_weight", 1.0, duration).set_ease(Tween.EASE_OUT)
-	tween.tween_callback(func(): focus_completed.emit())
+
+	# HIGH FIX: Kill previous focus tween to prevent conflicts
+	if _focus_tween and _focus_tween.is_valid():
+		_focus_tween.kill()
+
+	_focus_tween = create_tween()
+	_focus_tween.tween_property(self, "_focus_weight", 1.0, duration).set_ease(Tween.EASE_OUT)
+	_focus_tween.tween_callback(func(): focus_completed.emit())
 
 func focus_on_multiple(targets: Array[Node2D], padding: float = -1.0) -> void:
 	"""Focus camera to frame multiple targets"""
@@ -280,10 +293,14 @@ func _calculate_zoom_for_bounds(bounds: Rect2) -> Vector2:
 # -----------------------------------------------------------------------------
 func zoom_to(target: Vector2, duration: float = 0.3) -> void:
 	_target_zoom = target.clamp(min_zoom, max_zoom)
-	
-	var tween = create_tween()
-	tween.tween_property(self, "zoom", _target_zoom, duration).set_ease(Tween.EASE_OUT)
-	tween.tween_callback(func(): zoom_completed.emit())
+
+	# HIGH FIX: Kill previous zoom tween to prevent conflicting animations
+	if _zoom_tween and _zoom_tween.is_valid():
+		_zoom_tween.kill()
+
+	_zoom_tween = create_tween()
+	_zoom_tween.tween_property(self, "zoom", _target_zoom, duration).set_ease(Tween.EASE_OUT)
+	_zoom_tween.tween_callback(func(): zoom_completed.emit())
 
 func zoom_punch(amount: float = 0.1, duration: float = 0.15) -> void:
 	"""Quick zoom in-out for impact"""
@@ -344,10 +361,15 @@ func impact_freeze(duration: float = 0.05, time_scale: float = 0.1) -> void:
 	"""Brief time freeze for impact feel"""
 	if not impact_freeze_enabled:
 		return
-	
-	_pre_freeze_time_scale = Engine.time_scale
+
+	# CRITICAL FIX: Only store pre-freeze time scale if not already frozen
+	# Otherwise we'd overwrite with the already-slowed time scale
+	if _freeze_timer <= 0:
+		_pre_freeze_time_scale = Engine.time_scale
+
+	# Extend freeze duration instead of resetting (prevents stacking issues)
+	_freeze_timer = maxf(_freeze_timer, duration)
 	Engine.time_scale = time_scale
-	_freeze_timer = duration
 
 func impact_flash(color: Color = Color.WHITE, duration: float = 0.05) -> void:
 	"""Screen flash on big hits"""

@@ -266,7 +266,7 @@ func _spawn_damage_number(pos: Vector2, amount: int, is_critical: bool, is_heal:
 		color = Color.WHITE
 	label.add_theme_color_override("font_color", color)
 
-	damage_numbers.add_child(label)
+	damage_numbers_container.add_child(label)
 
 	# Animate
 	var tween := create_tween()
@@ -702,7 +702,7 @@ func cleanup_battle() -> void:
 	enemy_sprites.clear()
 
 	# Clear damage numbers
-	for child in damage_numbers.get_children():
+	for child in damage_numbers_container.get_children():
 		child.queue_free()
 
 	is_battle_active = false

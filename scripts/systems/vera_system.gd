@@ -9,6 +9,9 @@ extends Node
 # CONSTANTS
 # =============================================================================
 
+# HIGH FIX: Bound dialogue history to prevent unbounded memory growth
+const MAX_DIALOGUE_HISTORY: int = 100
+
 # Memory awakening sources (things that make her remember)
 const CORRUPTION_SOURCES := {
 	"veil_monster_killed": 2.0,       # Fragments of her returning
@@ -344,6 +347,9 @@ func get_dialogue(context: String) -> String:
 
 func trigger_dialogue(dialogue_id: String) -> void:
 	dialogue_history.append(dialogue_id)
+	# HIGH FIX: Prevent unbounded growth of dialogue history
+	if dialogue_history.size() > MAX_DIALOGUE_HISTORY:
+		dialogue_history = dialogue_history.slice(-MAX_DIALOGUE_HISTORY)
 	EventBus.vera_dialogue_triggered.emit(dialogue_id)
 
 func get_portrait_id() -> String:
