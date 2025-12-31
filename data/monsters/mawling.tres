@@ -49,7 +49,7 @@ learnable_skills = {5: "desperate_lunge", 12: "devour_scraps", 20: "loyal_bite",
 ai_pattern = "aggressive"
 skill_weights = {"gnaw": 60, "desperate_lunge": 30, "devour_scraps": 10}
 
-base_corruption = 50.0
+base_corruption = 85.0
 corruption_resistance = 5.0
 
 base_experience = 12

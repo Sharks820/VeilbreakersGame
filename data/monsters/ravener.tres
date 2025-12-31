@@ -49,7 +49,7 @@ learnable_skills = {8: "prey_on_weak", 15: "feeding_frenzy", 22: "pack_tactics",
 ai_pattern = "aggressive"
 skill_weights = {"rend": 50, "bloodscent": 0, "prey_on_weak": 35, "feeding_frenzy": 15}
 
-base_corruption = 60.0
+base_corruption = 90.0
 corruption_resistance = 10.0
 
 base_experience = 25

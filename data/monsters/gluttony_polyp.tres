@@ -49,7 +49,7 @@ learnable_skills = {5: "acid_splash", 10: "absorb_pain", 15: "nurturing_light", 
 ai_pattern = "healer"
 skill_weights = {"soothing_pulse": 50, "acid_splash": 20, "absorb_pain": 30}
 
-base_corruption = 40.0
+base_corruption = 80.0
 corruption_resistance = 2.0
 
 base_experience = 15

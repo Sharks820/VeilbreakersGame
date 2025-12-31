@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v2.9** | Last updated: 2025-12-30
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v3.0** | Last updated: 2025-12-30
 
 ---
 
@@ -116,9 +116,32 @@ power * ATK/DEF * level * element * variance * crits
 | DREAD | - |
 | LEECH | - |
 
-### Purification
-- 0-100% scale
-- Evolution at 50% and 100%
+### Capture System (v3.0)
+
+**4 Capture Methods:**
+| Method | Rate | Conditions |
+|--------|------|------------|
+| ORB | Varies by tier | Primary method |
+| PURIFY | 20-80% | Reduces corruption, more effective late battle |
+| BARGAIN | 10-20% | RNG-based, no penalty for broken promises |
+| FORCE | 60% | Monster < player level AND HP < 45%, applies debuff |
+
+**Orb Tiers:**
+| Tier | Rate | Availability |
+|------|------|--------------|
+| Basic | 5-25% | Shop (100g) |
+| Greater | 15-40% | Shop (350g) |
+| Master | 50-70% | Shop (800g) + Craftable |
+| Legendary | 80% flat | Chest drop (5-10%) + Craftable |
+
+**Monster Corruption:**
+- All monsters start at 80%+ corruption
+- Corruption drops slower based on rarity (Common 1.0x → Legendary 0.4x)
+- Lower HP = faster corruption drop + higher capture chance
+- Bosses (tier 3+, rarity 4+) cannot be captured
+
+**Force Debuff:**
+- -15% to one random stat until 15% purification progress
 
 ---
 
@@ -218,6 +241,7 @@ battle, ui, art, audio, vera, monsters, critical
 | 2025-12-29 | Consolidated memory to single VEILBREAKERS.md file |
 | 2025-12-29 | v2.3: Security fix - removed API keys from git history |
 | 2025-12-29 | v2.4: Screenshot organization - all screenshots to screenshots/ folder |
+| 2025-12-30 | v3.0: New Capture System - 4 methods (ORB, PURIFY, BARGAIN, FORCE), 4 orb tiers, 80%+ corruption baseline |
 
 ---
 

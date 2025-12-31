@@ -49,7 +49,7 @@ learnable_skills = {5: "merciful_light", 10: "absorb_suffering", 15: "blessed_to
 ai_pattern = "healer"
 skill_weights = {"stolen_grace": 45, "merciful_light": 35, "absorb_suffering": 20}
 
-base_corruption = 50.0
+base_corruption = 85.0
 corruption_resistance = 6.0
 
 base_experience = 28

@@ -93,6 +93,7 @@ var damage_calculator: DamageCalculator
 var status_effect_manager: StatusEffectManager
 var ai_controller: AIController
 var purification_system: PurificationSystem
+var capture_system: CaptureSystem
 
 # =============================================================================
 # INITIALIZATION
@@ -121,6 +122,48 @@ func _setup_subsystems() -> void:
 	purification_system = PurificationSystem.new()
 	purification_system.name = "PurificationSystem"
 	add_child(purification_system)
+
+	capture_system = CaptureSystem.new()
+	capture_system.name = "CaptureSystem"
+	add_child(capture_system)
+	_connect_capture_signals()
+
+func _connect_capture_signals() -> void:
+	capture_system.capture_succeeded.connect(_on_capture_succeeded)
+	capture_system.capture_failed.connect(_on_capture_failed)
+	capture_system.shake_progress.connect(_on_capture_shake)
+	capture_system.corruption_reduced.connect(_on_corruption_reduced)
+
+func _on_capture_succeeded(monster: Node, method: int, bonus_data: Dictionary) -> void:
+	battle_stats.captures_successful += 1
+	vfx_command.emit("screen_flash", {"color": Color.WHITE, "duration": 0.15})
+	vfx_command.emit("capture_success", {"position": monster.global_position})
+	audio_command.emit("play_sfx", {"sound": "capture_success"})
+	audio_command.emit("play_jingle", {"jingle": "capture_fanfare"})
+	ui_command.emit("capture_announcement", {"monster_name": monster.character_name})
+	EventBus.emit_debug("%s was captured! (method: %d)" % [monster.character_name, method])
+	if monster is Monster:
+		_add_monster_to_rewards(monster as Monster)
+	capture_result.emit(monster, true)
+
+func _on_capture_failed(monster: Node, method: int, reason: String) -> void:
+	camera_command.emit("shake", {"intensity": 10.0, "duration": 0.3})
+	vfx_command.emit("capture_break", {"position": monster.global_position})
+	audio_command.emit("play_sfx", {"sound": "capture_fail"})
+	ui_command.emit("show_message", {"text": reason})
+	EventBus.emit_debug("Capture failed: %s" % reason)
+	capture_result.emit(monster, false)
+
+func _on_capture_shake(monster: Node, current: int, total: int) -> void:
+	camera_command.emit("shake", {"intensity": 4.0, "duration": 0.3})
+	vfx_command.emit("capture_shake", {"position": monster.global_position, "shake_number": current})
+	audio_command.emit("play_sfx", {"sound": "capture_struggle"})
+
+func _on_corruption_reduced(monster: Node, old_val: float, new_val: float) -> void:
+	var reduction := old_val - new_val
+	vfx_command.emit("purify_effect", {"position": monster.global_position})
+	ui_command.emit("show_message", {"text": "Corruption -%.0f%%" % reduction, "position": monster.global_position})
+	EventBus.emit_debug("%s corruption: %.0f%% -> %.0f%%" % [monster.character_name, old_val, new_val])
 
 # =============================================================================
 # BATTLE FLOW
@@ -648,6 +691,8 @@ func _execute_item(user: CharacterBase, target: CharacterBase, item_id: String) 
 	return result
 
 func _execute_purify(purifier: CharacterBase, target: CharacterBase) -> Dictionary:
+	# This is now a wrapper that delegates to CaptureSystem
+	# The PURIFY action reduces corruption to improve capture odds
 	if not target is Monster:
 		return {"success": false, "reason": "Target is not a monster"}
 
@@ -660,78 +705,95 @@ func _execute_purify(purifier: CharacterBase, target: CharacterBase) -> Dictiona
 	battle_stats.captures_attempted += 1
 	capture_attempt_started.emit(target)
 
-	# Calculate capture chance (enhanced with status modifiers)
-	var base_chance := 0.3
-	var hp_modifier := 1.0 - monster.get_hp_percent()
-	var status_modifier := 0.1 if monster.get_status_effect_count() > 0 else 0.0
-	var purifier_power := 1.0 + (purifier.get_stat(Enums.Stat.MAGIC) / 100.0)
-	var capture_chance := (base_chance + (hp_modifier * 0.5) + status_modifier) * purifier_power
+	# Use the new CaptureSystem with PURIFY method
+	# This reduces corruption rather than attempting direct capture
+	await capture_system.attempt_capture(monster, purifier, CaptureSystem.CaptureMethod.PURIFY)
 
-	# 1. THROW/CAST
-	camera_command.emit("focus", {"target": purifier, "duration": 0.2})
+	# Return basic result - actual success/fail handled by signals
+	return {"success": true, "delegated": true}
+
+## Execute capture with orb (called when using capture items)
+func execute_orb_capture(caster: CharacterBase, target: CharacterBase, orb_tier: int) -> Dictionary:
+	if not target is Monster:
+		return {"success": false, "reason": "Target is not a monster"}
+
+	var monster: Monster = target as Monster
+
+	# Check for boss
+	if monster.tier >= 3 or monster.rarity >= 4:
+		ui_command.emit("show_message", {"text": "Cannot capture boss monsters!"})
+		return {"success": false, "reason": "Boss monsters cannot be captured"}
+
+	battle_state = Enums.BattleState.PURIFICATION
+	battle_stats.captures_attempted += 1
+	capture_attempt_started.emit(target)
+
+	# Camera focus
+	camera_command.emit("focus", {"target": caster, "duration": 0.2})
 	audio_command.emit("play_sfx", {"sound": "capture_throw"})
 
 	vfx_command.emit("capture_projectile", {
-		"from": purifier.global_position,
+		"from": caster.global_position,
 		"to": monster.global_position,
 		"duration": capture_throw_time
 	})
 
 	await get_tree().create_timer(capture_throw_time).timeout
 
-	# 2. CAPTURE BEAM
-	camera_command.emit("focus", {"target": monster, "zoom": 1.3, "duration": 0.3})
-	vfx_command.emit("capture_beam", {"position": monster.global_position})
-	audio_command.emit("play_sfx", {"sound": "capture_beam"})
+	# Use CaptureSystem
+	var tier_enum: CaptureSystem.OrbTier = orb_tier as CaptureSystem.OrbTier
+	await capture_system.attempt_capture(monster, caster, CaptureSystem.CaptureMethod.ORB, tier_enum)
 
-	await get_tree().create_timer(0.5).timeout
+	return {"success": true, "delegated": true}
 
-	# 3. STRUGGLE SEQUENCE - Build tension
-	var success := randf() < capture_chance
+## Execute bargain capture attempt
+func execute_bargain_capture(caster: CharacterBase, target: CharacterBase) -> Dictionary:
+	if not target is Monster:
+		return {"success": false, "reason": "Target is not a monster"}
 
-	for i in range(capture_shake_count):
-		camera_command.emit("shake", {"intensity": 4.0, "duration": 0.3})
-		vfx_command.emit("capture_shake", {"position": monster.global_position, "shake_number": i + 1})
-		audio_command.emit("play_sfx", {"sound": "capture_struggle"})
+	var monster: Monster = target as Monster
 
-		await get_tree().create_timer(capture_shake_interval).timeout
+	battle_state = Enums.BattleState.PURIFICATION
+	capture_attempt_started.emit(target)
 
-		# Early break on failure
-		if not success and randf() < 0.3:
-			break
+	await capture_system.attempt_capture(monster, caster, CaptureSystem.CaptureMethod.BARGAIN)
 
-	await get_tree().create_timer(capture_result_delay).timeout
+	return {"success": true, "delegated": true}
 
-	# 4. RESULT
-	if success:
-		battle_stats.captures_successful += 1
+## Execute force capture attempt
+func execute_force_capture(caster: CharacterBase, target: CharacterBase) -> Dictionary:
+	if not target is Monster:
+		return {"success": false, "reason": "Target is not a monster"}
 
-		# Success VFX
-		vfx_command.emit("screen_flash", {"color": Color.WHITE, "duration": 0.15})
-		vfx_command.emit("capture_success", {"position": monster.global_position})
-		audio_command.emit("play_sfx", {"sound": "capture_success"})
-		audio_command.emit("play_jingle", {"jingle": "capture_fanfare"})
+	var monster: Monster = target as Monster
 
-		ui_command.emit("capture_announcement", {"monster_name": monster.character_name})
+	# Validate force conditions
+	var check := capture_system.can_use_method(monster, caster, CaptureSystem.CaptureMethod.FORCE)
+	if not check.available:
+		ui_command.emit("show_message", {"text": check.reason})
+		return {"success": false, "reason": check.reason}
 
-		EventBus.emit_debug("%s was purified!" % monster.character_name)
-		_add_monster_to_rewards(monster)
+	battle_state = Enums.BattleState.PURIFICATION
+	capture_attempt_started.emit(target)
 
-		capture_result.emit(target, true)
-		await get_tree().create_timer(2.0).timeout
-	else:
-		# Failure VFX
-		camera_command.emit("shake", {"intensity": 10.0, "duration": 0.3})
-		vfx_command.emit("capture_break", {"position": monster.global_position})
-		audio_command.emit("play_sfx", {"sound": "capture_fail"})
+	await capture_system.attempt_capture(monster, caster, CaptureSystem.CaptureMethod.FORCE)
 
-		ui_command.emit("show_message", {"text": monster.character_name + " broke free!"})
+	return {"success": true, "delegated": true}
 
-		EventBus.emit_debug("Failed to purify %s (%.1f%% chance)" % [monster.character_name, capture_chance * 100])
-		capture_result.emit(target, false)
-		await get_tree().create_timer(1.0).timeout
+## Get capture chance preview for UI
+func get_capture_chance_preview(caster: CharacterBase, target: CharacterBase, method: int, orb_tier: int = 0) -> Dictionary:
+	if not target is Monster:
+		return {"available": false, "chance": 0.0, "reason": "Not a monster"}
 
-	return {"success": success, "chance": capture_chance}
+	var capture_method := method as CaptureSystem.CaptureMethod
+	var check := capture_system.can_use_method(target, caster, capture_method)
+
+	if capture_method == CaptureSystem.CaptureMethod.ORB:
+		var tier := orb_tier as CaptureSystem.OrbTier
+		check.capture_chance = capture_system.calculate_orb_capture_chance(target, caster, tier)
+		check.chance_text = capture_system.get_capture_chance_text(check.capture_chance)
+
+	return check
 
 func _execute_flee(character: CharacterBase) -> Dictionary:
 	var flee_chance := Constants.ESCAPE_BASE_CHANCE

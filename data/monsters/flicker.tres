@@ -49,7 +49,7 @@ learnable_skills = {7: "between_seconds", 12: "interrupt", 18: "hit_and_run", 25
 ai_pattern = "speed"
 skill_weights = {"blur_strike": 50, "between_seconds": 30, "interrupt": 20}
 
-base_corruption = 45.0
+base_corruption = 80.0
 corruption_resistance = 4.0
 
 base_experience = 22

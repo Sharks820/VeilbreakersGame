@@ -95,7 +95,9 @@ enum BattleState {
 	VICTORY,
 	DEFEAT,
 	FLED,
-	PURIFICATION
+	CAPTURING,
+	# Legacy alias
+	PURIFICATION = CAPTURING
 }
 
 enum BattleAction {
@@ -103,9 +105,11 @@ enum BattleAction {
 	SKILL,
 	DEFEND,
 	ITEM,
-	PURIFY,
+	CAPTURE,   # Opens capture menu (ORB, PURIFY, BARGAIN, FORCE)
 	FLEE,
-	SWAP
+	SWAP,
+	# Legacy alias
+	PURIFY = CAPTURE
 }
 
 enum StatusEffect {

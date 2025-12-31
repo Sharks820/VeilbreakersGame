@@ -49,7 +49,7 @@ learnable_skills = {5: "glimpse_of_death", 10: "many_eyed_gaze", 14: "shared_vis
 ai_pattern = "debuffer"
 skill_weights = {"witnessed": 30, "glimpse_of_death": 35, "many_eyed_gaze": 35}
 
-base_corruption = 55.0
+base_corruption = 85.0
 corruption_resistance = 7.0
 
 base_experience = 24
