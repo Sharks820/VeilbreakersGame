@@ -87,9 +87,45 @@ var battle_manager: BattleManager = null
 func _ready() -> void:
 	_connect_signals()
 	_hide_all_menus()
-	print("[BattleUI] Ready - TopBar visible: ", top_bar.visible if top_bar else "null")
-	print("[BattleUI] PartyPanel visible: ", party_panel.visible if party_panel else "null")
-	print("[BattleUI] CombatLog visible: ", combat_log.visible if combat_log else "null")
+
+	# Force full-screen size and positioning for CanvasLayer compatibility
+	await get_tree().process_frame
+	_force_ui_layout()
+
+func _force_ui_layout() -> void:
+	"""Force UI elements to correct positions for CanvasLayer rendering"""
+	var viewport_size := Vector2(1920, 1080)
+	var queried_size := get_viewport().get_visible_rect().size
+	if queried_size.x > 0 and queried_size.y > 0:
+		viewport_size = queried_size
+
+	# Set this control to fill screen
+	position = Vector2.ZERO
+	size = viewport_size
+	visible = true
+
+	# TopBar - top of screen, full width, 60px height
+	if top_bar:
+		top_bar.position = Vector2(0, 0)
+		top_bar.size = Vector2(viewport_size.x, 60)
+		top_bar.show()
+
+	# PartyPanel - bottom of screen, full width, 220px height
+	if party_panel:
+		party_panel.position = Vector2(0, viewport_size.y - 220)
+		party_panel.size = Vector2(viewport_size.x, 220)
+		party_panel.show()
+
+	# CombatLog - bottom-right, above party panel
+	if combat_log:
+		combat_log.position = Vector2(viewport_size.x - 290, viewport_size.y - 400)
+		combat_log.size = Vector2(280, 170)
+		combat_log.show()
+
+	# EnemyInfoPanel - top-right
+	if enemy_info_panel:
+		enemy_info_panel.position = Vector2(viewport_size.x - 300, 80)
+		enemy_info_panel.size = Vector2(280, 200)
 
 func set_battle_manager(manager: BattleManager) -> void:
 	battle_manager = manager
@@ -531,7 +567,7 @@ func _update_party_display() -> void:
 
 func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(180, 70)
+	panel.custom_minimum_size = Vector2(180, 60)
 
 	# Style the panel
 	var panel_style := StyleBoxFlat.new()

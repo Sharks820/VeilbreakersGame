@@ -110,12 +110,32 @@ func _setup_screen_effects() -> void:
 func _setup_battle_ui() -> void:
 	# Load and instantiate battle UI
 	EventBus.emit_debug("Setting up battle UI...")
+
+	# Check if UILayer exists
+	if ui_layer == null:
+		push_error("UILayer is NULL! Creating one dynamically.")
+		ui_layer = CanvasLayer.new()
+		ui_layer.name = "UILayer"
+		add_child(ui_layer)
+
+	# Configure UILayer for proper rendering
+	ui_layer.layer = 100  # WAY above everything else for testing
+	ui_layer.visible = true
+	ui_layer.follow_viewport_enabled = false  # Don't follow camera transforms
+	print("[BattleArena] UILayer configured: layer=%d, visible=%s" % [ui_layer.layer, ui_layer.visible])
+
 	var ui_scene := load("res://scenes/battle/battle_ui.tscn")
 	if ui_scene:
 		battle_ui = ui_scene.instantiate()
 		ui_layer.add_child(battle_ui)
+
+		# Force proper sizing for CanvasLayer context
+		battle_ui.position = Vector2.ZERO
+		battle_ui.size = Vector2(1920, 1080)  # Use project resolution
+		battle_ui.visible = true
+
 		battle_ui.set_battle_manager(battle_manager)
-		EventBus.emit_debug("Battle UI loaded and added to layer %d" % ui_layer.layer)
+		EventBus.emit_debug("Battle UI loaded and added to layer %d, size: %s" % [ui_layer.layer, battle_ui.size])
 	else:
 		push_error("Failed to load battle_ui.tscn!")
 		EventBus.emit_debug("ERROR: Failed to load battle_ui.tscn")
@@ -397,6 +417,10 @@ func _spawn_damage_number(pos: Vector2, amount: int, is_critical: bool, is_heal:
 # =============================================================================
 
 func _on_battle_started(enemy_data: Array) -> void:
+	# Guard against being called twice (battle_manager also emits this signal)
+	if is_battle_active:
+		return
+
 	# Create enemy characters from data if provided
 	if enemy_data.is_empty():
 		return
