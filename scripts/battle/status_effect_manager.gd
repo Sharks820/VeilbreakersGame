@@ -271,7 +271,9 @@ func _remove_effect_modifiers(target: CharacterBase, effect: Enums.StatusEffect)
 		Enums.StatusEffect.SPEED_DOWN:
 			source_name = "status_spd_down"
 
-	# TODO: Remove specific modifiers by source
+	# Remove the stat modifiers added by this effect
+	if source_name != "":
+		target.remove_stat_modifiers_by_source(source_name)
 
 # =============================================================================
 # CLEANSING

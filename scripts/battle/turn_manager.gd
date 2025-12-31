@@ -29,8 +29,8 @@ func _compare_speed(a: CharacterBase, b: CharacterBase) -> bool:
 		var luck_b := b.get_stat(Enums.Stat.LUCK)
 
 		if luck_a == luck_b:
-			# Final tie-breaker: random
-			return randf() > 0.5
+			# Final tie-breaker: deterministic by instance ID (stable sort)
+			return a.get_instance_id() > b.get_instance_id()
 
 		return luck_a > luck_b
 

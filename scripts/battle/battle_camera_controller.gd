@@ -102,12 +102,19 @@ func _ready() -> void:
 		shake_noise.noise_type = FastNoiseLite.TYPE_PERLIN
 		shake_noise.frequency = 2.0
 
+func _exit_tree() -> void:
+	# CRITICAL: Restore time scale if we're freed during freeze
+	if _freeze_timer > 0:
+		Engine.time_scale = _pre_freeze_time_scale if _pre_freeze_time_scale > 0 else 1.0
+
 func _process(delta: float) -> void:
 	# Handle impact freeze
 	if _freeze_timer > 0:
-		_freeze_timer -= delta / _pre_freeze_time_scale  # Use real time
+		# Protect against division by zero
+		var real_delta := delta / maxf(_pre_freeze_time_scale, 0.01)
+		_freeze_timer -= real_delta
 		if _freeze_timer <= 0:
-			Engine.time_scale = _pre_freeze_time_scale
+			Engine.time_scale = _pre_freeze_time_scale if _pre_freeze_time_scale > 0 else 1.0
 		return
 
 	_process_shake(delta)

@@ -373,6 +373,24 @@ func clear_stat_modifiers() -> void:
 	stat_modifiers.clear()
 	stats_changed.emit()
 
+func remove_stat_modifiers_by_source(source: String) -> void:
+	## Remove all stat modifiers with the given source string
+	var changed := false
+
+	for stat in stat_modifiers:
+		var to_remove := []
+		for i in range(stat_modifiers[stat].size()):
+			if stat_modifiers[stat][i].source == source:
+				to_remove.append(i)
+				changed = true
+
+		# Remove in reverse order to preserve indices
+		for i in range(to_remove.size() - 1, -1, -1):
+			stat_modifiers[stat].remove_at(to_remove[i])
+
+	if changed:
+		stats_changed.emit()
+
 # =============================================================================
 # SKILLS
 # =============================================================================
