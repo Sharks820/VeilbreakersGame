@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v2.7** | Last updated: 2025-12-29
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v2.8** | Last updated: 2025-12-30
 
 ---
 
@@ -84,12 +84,12 @@ power * ATK/DEF * level * element * variance * crits
 
 ## Heroes
 
-| Hero | Path | Role | Signature Skills |
-|------|------|------|------------------|
-| Bastion | IRON | Tank | shield_bash, taunt, iron_wall, fortress_stance |
-| Marrow | - | - | - |
-| Mirage | - | - | - |
-| Rend | - | - | - |
+| Hero | Path | Brand | Role | Signature Skills |
+|------|------|-------|------|------------------|
+| Bastion | IRONBOUND | IRON | Tank | shield_bash, taunt, iron_wall, fortress_stance |
+| Rend | FANGBORN | SAVAGE | DPS | rending_strike, bloodletting, execute, frenzy |
+| Marrow | VOIDTOUCHED | LEECH | Healer | life_tap, siphon_heal, essence_transfer, life_link |
+| Mirage | UNCHAINED | DREAD | Illusionist | minor_illusion, fear_touch, mirror_image, mass_confusion |
 
 - 4 paths: IRONBOUND, FANGBORN, VOIDTOUCHED, UNCHAINED
 - 15 stats per character with growth rates
