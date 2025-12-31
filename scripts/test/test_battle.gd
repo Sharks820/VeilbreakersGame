@@ -12,7 +12,7 @@ extends Node
 @export_group("Enemy Setup")
 @export var enemy_count: int = 2  # 2 enemy monsters
 @export var enemy_level: int = 8
-@export var enemy_type: String = "shadow_imp"
+@export var enemy_type: String = "ravener"
 
 @export_group("VERA Setup")
 @export var starting_corruption: float = 25.0
@@ -283,6 +283,10 @@ func _start_battle(party: Array[CharacterBase], enemies: Array[CharacterBase]) -
 
 	EventBus.emit_debug("Test battle started: %d party vs %d enemies" % [party.size(), enemies.size()])
 
+	# Auto-test damage numbers after 3 seconds (for debugging)
+	await get_tree().create_timer(3.0).timeout
+	_debug_auto_attack()
+
 # =============================================================================
 # DEBUG CONTROLS
 # =============================================================================
@@ -310,6 +314,70 @@ func _input(event: InputEvent) -> void:
 	# F9 - Add corruption
 	if event is InputEventKey and event.pressed and event.keycode == KEY_F9:
 		_debug_add_corruption()
+
+	# F10 - Test damage numbers
+	if event is InputEventKey and event.pressed and event.keycode == KEY_F10:
+		_debug_test_damage_numbers()
+
+	# F11 - Auto-attack first enemy
+	if event is InputEventKey and event.pressed and event.keycode == KEY_F11:
+		_debug_auto_attack()
+
+func _debug_test_damage_numbers() -> void:
+	# Emit fake damage events to test the damage number display system
+	var party = GameManager.player_party
+	if party.is_empty():
+		EventBus.emit_debug("No party to test damage on")
+		return
+
+	var target = party[0]
+	EventBus.emit_debug("Testing damage numbers on %s" % target.character_name)
+
+	# Test regular damage
+	EventBus.damage_dealt.emit(null, target, 42, false)
+
+	# Test critical damage after short delay
+	await get_tree().create_timer(0.3).timeout
+	EventBus.damage_dealt.emit(null, target, 128, true)
+
+	# Test healing after another delay
+	await get_tree().create_timer(0.3).timeout
+	EventBus.healing_done.emit(null, target, 25)
+
+func _debug_auto_attack() -> void:
+	EventBus.emit_debug("_debug_auto_attack called")
+	print("[TEST] _debug_auto_attack called")
+
+	if not battle_arena:
+		EventBus.emit_debug("battle_arena is null!")
+		print("[TEST] battle_arena is null!")
+		return
+
+	if not battle_arena.battle_manager:
+		EventBus.emit_debug("battle_manager is null!")
+		print("[TEST] battle_manager is null!")
+		return
+
+	var bm = battle_arena.battle_manager
+	print("[TEST] enemy_party size: %d" % bm.enemy_party.size())
+
+	if bm.enemy_party.is_empty():
+		EventBus.emit_debug("No enemies to attack")
+		print("[TEST] No enemies in enemy_party")
+		return
+
+	var attacker = GameManager.player_party[0] if not GameManager.player_party.is_empty() else null
+	var target = bm.enemy_party[0]
+
+	if attacker and target:
+		EventBus.emit_debug("Auto-attacking %s with %s" % [target.character_name, attacker.character_name])
+		print("[TEST] Attacking %s (HP: %d) with %s" % [target.character_name, target.current_hp, attacker.character_name])
+		# Directly deal damage to test the system
+		var result = target.take_damage(50, attacker, false)
+		print("[TEST] Damage result: %s" % str(result))
+		print("[TEST] Target HP after: %d" % target.current_hp)
+	else:
+		print("[TEST] attacker or target is null: attacker=%s, target=%s" % [str(attacker), str(target)])
 
 func _restart_battle() -> void:
 	EventBus.emit_debug("Restarting test battle...")

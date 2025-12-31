@@ -131,7 +131,7 @@ func _get_skill_evaluation(skill_id: String, _caster: CharacterBase, targets: Ar
 			var lowest_percent := 1.0
 			for ally in allies:
 				if ally is CharacterBase and ally.is_alive():
-					var hp_percent := ally.get_hp_percent()
+					var hp_percent: float = ally.get_hp_percent()
 					if hp_percent < lowest_percent:
 						lowest_percent = hp_percent
 						lowest_ally = ally

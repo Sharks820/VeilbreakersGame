@@ -417,23 +417,31 @@ func _spawn_damage_number(pos: Vector2, amount: int, is_critical: bool, is_heal:
 # =============================================================================
 
 func _on_battle_started(enemy_data: Array) -> void:
+	EventBus.emit_debug("_on_battle_started called with %d enemy_data, is_battle_active=%s" % [enemy_data.size(), str(is_battle_active)])
+
 	# Guard against being called twice (battle_manager also emits this signal)
 	if is_battle_active:
+		EventBus.emit_debug("  -> Returning early, battle already active")
 		return
 
 	# Create enemy characters from data if provided
 	if enemy_data.is_empty():
+		EventBus.emit_debug("  -> Returning early, enemy_data is empty")
 		return
 
 	var enemies: Array[CharacterBase] = []
 	for data in enemy_data:
+		EventBus.emit_debug("  Processing enemy data type: %s" % [typeof(data)])
 		if data is Monster:
 			enemies.append(data)
+			EventBus.emit_debug("    -> Added Monster: %s" % [data.character_name])
 		elif data is Dictionary:
 			enemies.append(Monster.create_from_data(data))
 		# Limit to 2 enemy monsters
 		if enemies.size() >= 2:
 			break
+
+	EventBus.emit_debug("  Created %d enemies from data" % [enemies.size()])
 
 	# Get full party (1 player + up to 3 allied monsters = 4 max)
 	var players: Array[CharacterBase] = []
@@ -442,19 +450,28 @@ func _on_battle_started(enemy_data: Array) -> void:
 		if member is CharacterBase:
 			players.append(member)
 
+	EventBus.emit_debug("  Found %d players in party" % [players.size()])
+
 	if not players.is_empty() and not enemies.is_empty():
+		EventBus.emit_debug("  -> Calling initialize_battle(%d players, %d enemies)" % [players.size(), enemies.size()])
 		initialize_battle(players, enemies)
+	else:
+		EventBus.emit_debug("  -> NOT initializing: players=%d, enemies=%d" % [players.size(), enemies.size()])
 
 func _on_battle_initialized() -> void:
 	EventBus.emit_debug("Battle arena: Battle initialized")
 
 func _on_damage_dealt(source: Node, target: Node, amount: int, is_critical: bool) -> void:
+	print("[DAMAGE] _on_damage_dealt called: target=%s, amount=%d, critical=%s" % [str(target), amount, str(is_critical)])
 	if not target is CharacterBase:
+		print("[DAMAGE] Target is not CharacterBase, returning")
 		return
 
 	var character: CharacterBase = target
 	var sprite: Node2D = character.get_meta("battle_sprite", null)
+	print("[DAMAGE] Character=%s, sprite=%s" % [character.character_name, str(sprite)])
 	if not sprite:
+		print("[DAMAGE] No battle_sprite meta, returning")
 		return
 
 	# Update HP bar
@@ -792,12 +809,16 @@ func _spawn_advanced_damage_number(data: Dictionary) -> void:
 	var is_heal = data.get("is_heal", false)
 	var brand = data.get("brand", "")
 
+	print("[DAMAGE] _spawn_advanced_damage_number: pos=%s, amount=%d, spawner=%s" % [str(position), amount, str(damage_number_spawner)])
+
 	if damage_number_spawner:
+		print("[DAMAGE] Using DamageNumberSpawner")
 		if is_heal:
 			damage_number_spawner.spawn_heal(position, amount)
 		else:
 			damage_number_spawner.spawn_damage(position, amount, is_critical, brand)
 	else:
+		print("[DAMAGE] Using fallback _spawn_damage_number")
 		# Fallback to basic damage number
 		_spawn_damage_number(position, amount, is_critical, is_heal)
 

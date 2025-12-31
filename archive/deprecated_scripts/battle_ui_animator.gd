@@ -4,7 +4,7 @@
 # Turn order, skill announcements, damage popups, status indicators
 # =============================================================================
 
-class_name BattleUIAnimator
+# class_name BattleUIAnimator  # DEPRECATED - commented out to avoid conflict
 extends Control
 
 # -----------------------------------------------------------------------------

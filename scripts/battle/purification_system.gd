@@ -139,7 +139,7 @@ func _check_corruption_breaks(monster: Monster, old_corruption: float) -> Dictio
 	var old := old_corruption / monster.max_corruption
 
 	for i in range(CORRUPTION_BREAK_THRESHOLDS.size()):
-		var threshold := CORRUPTION_BREAK_THRESHOLDS[i]
+		var threshold: float = CORRUPTION_BREAK_THRESHOLDS[i]
 		if old > threshold and current <= threshold:
 			return {"broke": true, "stage": i + 1}
 

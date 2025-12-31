@@ -30,13 +30,8 @@ signal target_highlight_changed(target: CharacterBase)
 @onready var defend_button: Button = $PartyPanel/VBoxContainer/ActionMenu/DefendButton
 @onready var flee_button: Button = $PartyPanel/VBoxContainer/ActionMenu/FleeButton
 
-@onready var enemy_info_panel: PanelContainer = $EnemyInfoPanel
-@onready var enemy_name_label: Label = $EnemyInfoPanel/VBoxContainer/EnemyNameLabel
-@onready var enemy_hp_bar: ProgressBar = $EnemyInfoPanel/VBoxContainer/EnemyHPBar
-@onready var enemy_hp_label: Label = $EnemyInfoPanel/VBoxContainer/EnemyHPLabel
-@onready var corruption_bar: ProgressBar = $EnemyInfoPanel/VBoxContainer/CorruptionBar
-@onready var corruption_label: Label = $EnemyInfoPanel/VBoxContainer/CorruptionLabel
-@onready var status_effects_container: HBoxContainer = $EnemyInfoPanel/VBoxContainer/StatusEffectsContainer
+@onready var enemy_panel: PanelContainer = $EnemyPanel
+@onready var enemy_status_container: VBoxContainer = $EnemyPanel/VBoxContainer/EnemyStatusContainer
 
 @onready var skill_menu: PanelContainer = $SkillMenu
 @onready var skill_list: VBoxContainer = $SkillMenu/VBoxContainer/SkillList
@@ -122,10 +117,11 @@ func _force_ui_layout() -> void:
 		combat_log.size = Vector2(280, 170)
 		combat_log.show()
 
-	# EnemyInfoPanel - top-right
-	if enemy_info_panel:
-		enemy_info_panel.position = Vector2(viewport_size.x - 300, 80)
-		enemy_info_panel.size = Vector2(280, 200)
+	# EnemyPanel - right side, vertical sidebar
+	if enemy_panel:
+		enemy_panel.position = Vector2(viewport_size.x - 220, 80)
+		enemy_panel.size = Vector2(210, viewport_size.y - 320)  # Leave space for top/bottom UI
+		enemy_panel.show()
 
 func set_battle_manager(manager: BattleManager) -> void:
 	battle_manager = manager
@@ -169,11 +165,11 @@ func _on_action_executed(character: CharacterBase, action: int, result: Dictiona
 	if result.has("is_miss") and result.is_miss:
 		log_miss(character.character_name, result.get("target_name", "target"))
 	elif result.has("damage") and result.damage > 0:
-		var target_name := result.get("target_name", "target")
-		var is_crit := result.get("is_critical", false)
+		var target_name: String = result.get("target_name", "target")
+		var is_crit: bool = result.get("is_critical", false)
 		log_damage(target_name, result.damage, is_crit)
 	elif result.has("heal") and result.heal > 0:
-		var target_name := result.get("target_name", character.character_name)
+		var target_name: String = result.get("target_name", character.character_name)
 		log_heal(target_name, result.heal)
 
 func _on_action_selected(action: Enums.BattleAction, target: CharacterBase, skill_id: String) -> void:
@@ -245,7 +241,7 @@ func setup_battle(player_party: Array[CharacterBase], enemy_party: Array[Charact
 	enemies = enemy_party
 
 	_update_party_display()
-	_update_enemy_display(enemies[0] if not enemies.is_empty() else null)
+	_update_enemy_sidebar()
 
 func start_turn(character: CharacterBase) -> void:
 	current_character = character
@@ -524,14 +520,22 @@ func _update_target_display() -> void:
 
 	var target := valid_targets[current_target_index]
 
-	# Update target name with highlight
+	# Determine if target is ally or enemy
+	var is_ally := target in party_members
+	var highlight_color := Color(0.4, 1.0, 0.4) if is_ally else Color(1.0, 0.4, 0.4)  # Green for ally, red for enemy
+
+	# Update target name with appropriate color highlight
 	target_name_label.text = "► " + target.character_name + " ◄"
-	target_name_label.add_theme_color_override("font_color", Color.YELLOW)
+	target_name_label.add_theme_color_override("font_color", highlight_color)
 	target_name_label.add_theme_font_size_override("font_size", 18)
 
-	# Update enemy info panel if targeting enemy
+	# Highlight target in enemy sidebar if targeting enemy
 	if target in enemies:
-		_update_enemy_display(target)
+		_highlight_enemy_in_sidebar(target)
+
+	# Highlight target in party sidebar if targeting ally
+	if is_ally:
+		_highlight_ally_in_sidebar(target)
 
 	# Emit signal for battle arena to highlight the target sprite
 	target_highlight_changed.emit(target)
@@ -636,7 +640,7 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 	hp_bar.max_value = character.get_max_hp()
 	hp_bar.value = character.current_hp
 	hp_bar.show_percentage = false
-	hp_bar.custom_minimum_size = Vector2(100, 12)
+	hp_bar.custom_minimum_size = Vector2(110, 14)
 	hp_bar.name = "HPBar"
 
 	var hp_fill := StyleBoxFlat.new()
@@ -669,7 +673,7 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 		mp_bar.max_value = character.get_max_mp()
 		mp_bar.value = character.current_mp
 		mp_bar.show_percentage = false
-		mp_bar.custom_minimum_size = Vector2(100, 8)
+		mp_bar.custom_minimum_size = Vector2(110, 10)
 		mp_bar.name = "MPBar"
 
 		var mp_fill := StyleBoxFlat.new()
@@ -688,6 +692,19 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 		mp_bg.corner_radius_bottom_right = 2
 		mp_bar.add_theme_stylebox_override("background", mp_bg)
 		vbox.add_child(mp_bar)
+
+	# Brand display for monsters
+	if character is Monster:
+		var monster := character as Monster
+		var brand_label := Label.new()
+		brand_label.name = "BrandLabel"
+		brand_label.add_theme_font_size_override("font_size", 9)
+
+		var brand_name := _get_brand_name(monster.brand)
+		var brand_color := _get_brand_color(monster.brand)
+		brand_label.text = brand_name
+		brand_label.add_theme_color_override("font_color", brand_color)
+		vbox.add_child(brand_label)
 
 	# Store reference for updates
 	character.set_meta("ui_panel", panel)
@@ -710,50 +727,178 @@ func _get_portrait_path(character: CharacterBase) -> String:
 	# Default - no portrait found
 	return ""
 
-func _update_enemy_display(enemy: CharacterBase) -> void:
-	if enemy == null:
-		enemy_info_panel.hide()
-		return
-
-	enemy_info_panel.show()
-	enemy_name_label.text = enemy.character_name
-
-	var hp_percent := enemy.get_hp_percent()
-	enemy_hp_bar.value = hp_percent
-	enemy_hp_label.text = "HP: %d/%d" % [enemy.current_hp, enemy.get_max_hp()]
-
-	if enemy is Monster:
-		var monster := enemy as Monster
-		corruption_bar.show()
-		corruption_label.show()
-		var corruption_percent := monster.corruption_level / monster.max_corruption
-		corruption_bar.value = corruption_percent
-		corruption_label.text = "Corruption: %d%%" % int(corruption_percent * 100)
-	else:
-		corruption_bar.hide()
-		corruption_label.hide()
-
-	_update_status_effects_display(enemy)
-
-func _update_status_effects_display(character: CharacterBase) -> void:
-	for child in status_effects_container.get_children():
+func _update_enemy_sidebar() -> void:
+	"""Populate the enemy sidebar with all enemies"""
+	# Clear existing enemy entries
+	for child in enemy_status_container.get_children():
 		child.queue_free()
 
-	for effect in character.status_effects.keys():
-		var icon_path := _get_status_effect_icon_path(effect)
-		if icon_path == "":
-			continue
+	for enemy in enemies:
+		var panel := _create_enemy_slot_panel(enemy)
+		enemy_status_container.add_child(panel)
 
-		var icon := TextureRect.new()
-		icon.custom_minimum_size = Vector2(24, 24)
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
+	"""Create a panel for one enemy in the sidebar"""
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(190, 80)
 
-		var tex := load(icon_path)
+	# Style the panel with red-tinted border for enemies
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.15, 0.1, 0.1, 0.85)
+	panel_style.border_color = Color(0.5, 0.25, 0.25, 1.0)
+	panel_style.set_border_width_all(1)
+	panel_style.set_corner_radius_all(4)
+	panel.add_theme_stylebox_override("panel", panel_style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	panel.add_child(hbox)
+
+	# Portrait container
+	var portrait_container := PanelContainer.new()
+	portrait_container.custom_minimum_size = Vector2(45, 45)
+	var portrait_style := StyleBoxFlat.new()
+	portrait_style.bg_color = Color(0.2, 0.1, 0.1, 1.0)
+	portrait_style.border_color = Color(0.6, 0.3, 0.3, 1.0)
+	portrait_style.set_border_width_all(2)
+	portrait_style.set_corner_radius_all(3)
+	portrait_container.add_theme_stylebox_override("panel", portrait_style)
+	hbox.add_child(portrait_container)
+
+	# Load portrait texture
+	var portrait := TextureRect.new()
+	portrait.custom_minimum_size = Vector2(41, 41)
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+
+	var portrait_path := _get_portrait_path(enemy)
+	if portrait_path != "":
+		var tex := load(portrait_path)
 		if tex:
-			icon.texture = tex
-			icon.tooltip_text = _get_status_effect_name(effect)
-		status_effects_container.add_child(icon)
+			portrait.texture = tex
+	portrait_container.add_child(portrait)
+
+	# Info container (name + bars)
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(vbox)
+
+	var name_label := Label.new()
+	name_label.text = enemy.character_name
+	name_label.add_theme_font_size_override("font_size", 11)
+	name_label.add_theme_color_override("font_color", Color(0.95, 0.85, 0.8, 1.0))
+	vbox.add_child(name_label)
+
+	# HP Bar - red themed
+	var hp_bar := ProgressBar.new()
+	hp_bar.max_value = enemy.get_max_hp()
+	hp_bar.value = enemy.current_hp
+	hp_bar.show_percentage = false
+	hp_bar.custom_minimum_size = Vector2(120, 12)
+	hp_bar.name = "HPBar"
+
+	var hp_fill := StyleBoxFlat.new()
+	hp_fill.bg_color = Color(0.8, 0.2, 0.2, 1.0)  # Red for enemies
+	hp_fill.set_corner_radius_all(2)
+	hp_bar.add_theme_stylebox_override("fill", hp_fill)
+
+	var hp_bg := StyleBoxFlat.new()
+	hp_bg.bg_color = Color(0.15, 0.1, 0.1, 0.9)
+	hp_bg.set_corner_radius_all(2)
+	hp_bar.add_theme_stylebox_override("background", hp_bg)
+	vbox.add_child(hp_bar)
+
+	var hp_label := Label.new()
+	hp_label.text = "%d/%d" % [enemy.current_hp, enemy.get_max_hp()]
+	hp_label.add_theme_font_size_override("font_size", 9)
+	hp_label.add_theme_color_override("font_color", Color(0.7, 0.6, 0.6, 1.0))
+	hp_label.name = "HPLabel"
+	vbox.add_child(hp_label)
+
+	# Corruption bar for monsters
+	if enemy is Monster:
+		var monster := enemy as Monster
+		var corruption_bar := ProgressBar.new()
+		corruption_bar.max_value = 100.0
+		var corruption_percent := (monster.corruption_level / monster.max_corruption) * 100.0
+		corruption_bar.value = corruption_percent
+		corruption_bar.show_percentage = false
+		corruption_bar.custom_minimum_size = Vector2(120, 8)
+		corruption_bar.name = "CorruptionBar"
+
+		var corruption_fill := StyleBoxFlat.new()
+		corruption_fill.bg_color = Color(0.5, 0.1, 0.6, 1.0)  # Purple for corruption
+		corruption_fill.set_corner_radius_all(2)
+		corruption_bar.add_theme_stylebox_override("fill", corruption_fill)
+
+		var corruption_bg := StyleBoxFlat.new()
+		corruption_bg.bg_color = Color(0.1, 0.05, 0.1, 0.9)
+		corruption_bg.set_corner_radius_all(2)
+		corruption_bar.add_theme_stylebox_override("background", corruption_bg)
+		vbox.add_child(corruption_bar)
+
+		# Brand display
+		var brand_label := Label.new()
+		brand_label.name = "BrandLabel"
+		brand_label.add_theme_font_size_override("font_size", 9)
+
+		var brand_name := _get_brand_name(monster.brand)
+		var brand_color := _get_brand_color(monster.brand)
+		brand_label.text = brand_name
+		brand_label.add_theme_color_override("font_color", brand_color)
+		vbox.add_child(brand_label)
+
+	# Store reference for updates
+	enemy.set_meta("ui_panel", panel)
+
+	return panel
+
+func _highlight_enemy_in_sidebar(target: CharacterBase) -> void:
+	"""Highlight the targeted enemy in the sidebar"""
+	for enemy in enemies:
+		if enemy.has_meta("ui_panel"):
+			var panel: PanelContainer = enemy.get_meta("ui_panel")
+			if is_instance_valid(panel):
+				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
+				if style:
+					if enemy == target:
+						# Highlight - bright red border for enemy target
+						style.border_color = Color(1.0, 0.3, 0.3, 1.0)
+						style.set_border_width_all(3)
+					else:
+						# Normal - red-tinted border
+						style.border_color = Color(0.5, 0.25, 0.25, 1.0)
+						style.set_border_width_all(1)
+
+func _highlight_ally_in_sidebar(target: CharacterBase) -> void:
+	"""Highlight the targeted ally in the party sidebar"""
+	for ally in party_members:
+		if ally.has_meta("ui_panel"):
+			var panel: PanelContainer = ally.get_meta("ui_panel")
+			if is_instance_valid(panel):
+				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
+				if style:
+					if ally == target:
+						# Highlight - bright green border for ally target
+						style.border_color = Color(0.3, 1.0, 0.3, 1.0)
+						style.set_border_width_all(3)
+					else:
+						# Normal - purple-tinted border
+						style.border_color = Color(0.3, 0.25, 0.4, 1.0)
+						style.set_border_width_all(1)
+
+func update_enemy_hp(enemy: CharacterBase) -> void:
+	"""Update a single enemy's HP display in the sidebar"""
+	if enemy.has_meta("ui_panel"):
+		var panel: PanelContainer = enemy.get_meta("ui_panel")
+		if is_instance_valid(panel):
+			var hp_bar := panel.find_child("HPBar", true, false) as ProgressBar
+			var hp_label := panel.find_child("HPLabel", true, false) as Label
+			if hp_bar:
+				hp_bar.value = enemy.current_hp
+			if hp_label:
+				hp_label.text = "%d/%d" % [enemy.current_hp, enemy.get_max_hp()]
 
 func _get_status_effect_icon_path(effect: Enums.StatusEffect) -> String:
 	"""Map status effects to icon paths"""
@@ -867,6 +1012,26 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 
 		turn_order_display.add_child(portrait_panel)
 
+		# Add breathing animation - subtle pulse effect
+		var base_color: Color
+		var glow_color: Color
+		if i == 0:
+			# Current turn - yellow breathing
+			base_color = Color(1.0, 1.0, 1.0, 1.0)
+			glow_color = Color(1.3, 1.2, 0.9, 1.0)
+		elif is_ally:
+			# Ally - green breathing
+			base_color = Color(1.0, 1.0, 1.0, 1.0)
+			glow_color = Color(0.9, 1.2, 0.9, 1.0)
+		else:
+			# Enemy - red breathing
+			base_color = Color(1.0, 1.0, 1.0, 1.0)
+			glow_color = Color(1.2, 0.9, 0.9, 1.0)
+
+		var breathe_tween := create_tween().set_loops()
+		breathe_tween.tween_property(portrait_panel, "modulate", glow_color, 0.8).set_ease(Tween.EASE_IN_OUT)
+		breathe_tween.tween_property(portrait_panel, "modulate", base_color, 0.8).set_ease(Tween.EASE_IN_OUT)
+
 		# Add arrow between characters (except after last)
 		if i < mini(7, order.size() - 1):
 			var arrow := Label.new()
@@ -941,9 +1106,12 @@ func log_round_start(round_number: int) -> void:
 
 func _append_to_log(entry: String) -> void:
 	combat_log_text.append_text("\n" + entry)
-	# Auto-scroll to bottom
+	# Auto-scroll to bottom only if user hasn't scrolled up
 	await get_tree().process_frame
-	combat_log_scroll.scroll_vertical = combat_log_scroll.get_v_scroll_bar().max_value
+	var scrollbar := combat_log_scroll.get_v_scroll_bar()
+	var at_bottom := scrollbar.value >= scrollbar.max_value - 30  # 30px tolerance
+	if at_bottom:
+		combat_log_scroll.scroll_vertical = scrollbar.max_value
 
 func clear_combat_log() -> void:
 	combat_log_text.clear()
@@ -1018,3 +1186,51 @@ func flash_character(character: CharacterBase, color: Color = Color.WHITE) -> vo
 func shake_screen(intensity: float = 5.0, duration: float = 0.2) -> void:
 	# TODO: Implement screen shake
 	pass
+
+# =============================================================================
+# BRAND DISPLAY
+# =============================================================================
+
+func _get_brand_name(brand: Enums.Brand) -> String:
+	"""Get display name for monster brand"""
+	match brand:
+		Enums.Brand.SAVAGE:
+			return "⚔ SAVAGE"
+		Enums.Brand.IRON:
+			return "🛡 IRON"
+		Enums.Brand.VENOM:
+			return "☠ VENOM"
+		Enums.Brand.SURGE:
+			return "⚡ SURGE"
+		Enums.Brand.DREAD:
+			return "💀 DREAD"
+		Enums.Brand.LEECH:
+			return "🩸 LEECH"
+		Enums.Brand.BULWARK:
+			return "🏔 BULWARK"
+		Enums.Brand.FANG:
+			return "🐺 FANG"
+		_:
+			return "— NONE"
+
+func _get_brand_color(brand: Enums.Brand) -> Color:
+	"""Get color for monster brand display"""
+	match brand:
+		Enums.Brand.SAVAGE:
+			return Color(1.0, 0.4, 0.3)  # Red-orange - raw power
+		Enums.Brand.IRON:
+			return Color(0.6, 0.7, 0.8)  # Steel blue - defense
+		Enums.Brand.VENOM:
+			return Color(0.4, 0.9, 0.3)  # Toxic green - poison/debuffs
+		Enums.Brand.SURGE:
+			return Color(0.3, 0.8, 1.0)  # Electric blue - speed/energy
+		Enums.Brand.DREAD:
+			return Color(0.6, 0.3, 0.8)  # Dark purple - fear/mental
+		Enums.Brand.LEECH:
+			return Color(0.8, 0.2, 0.4)  # Blood red - life drain
+		Enums.Brand.BULWARK:
+			return Color(0.7, 0.5, 0.3)  # Earthy brown - tank
+		Enums.Brand.FANG:
+			return Color(0.9, 0.8, 0.6)  # Bone/fang color - physical DPS
+		_:
+			return Color(0.5, 0.5, 0.5)  # Gray for none

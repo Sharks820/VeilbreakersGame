@@ -33,7 +33,7 @@ party_size = 1
 party_level = 10
 enemy_count = 3
 enemy_level = 8
-enemy_type = "shadow_imp"
+enemy_type = "ravener"
 starting_corruption = 25.0
 vera_state = 0
 

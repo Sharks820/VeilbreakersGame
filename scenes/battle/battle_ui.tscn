@@ -252,52 +252,33 @@ bbcode_enabled = true
 text = "[color=gray]Battle started...[/color]"
 scroll_following = true
 
-[node name="EnemyInfoPanel" type="PanelContainer" parent="."]
+[node name="EnemyPanel" type="PanelContainer" parent="."]
 layout_mode = 1
-anchors_preset = 1
+anchors_preset = 6
 anchor_left = 1.0
+anchor_top = 0.5
 anchor_right = 1.0
-offset_left = -300.0
-offset_top = 80.0
-offset_right = -20.0
-offset_bottom = 280.0
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -200.0
+offset_right = -10.0
+offset_bottom = 200.0
 grow_horizontal = 0
+grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="EnemyInfoPanel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="EnemyPanel"]
 layout_mode = 2
+theme_override_constants/separation = 8
 
-[node name="EnemyNameLabel" type="Label" parent="EnemyInfoPanel/VBoxContainer"]
+[node name="EnemyPanelTitle" type="Label" parent="EnemyPanel/VBoxContainer"]
 layout_mode = 2
-text = "Enemy Name"
+text = "Enemies"
 horizontal_alignment = 1
 
-[node name="EnemyHPBar" type="ProgressBar" parent="EnemyInfoPanel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 25)
+[node name="EnemyStatusContainer" type="VBoxContainer" parent="EnemyPanel/VBoxContainer"]
 layout_mode = 2
-max_value = 1.0
-value = 1.0
-show_percentage = false
-
-[node name="EnemyHPLabel" type="Label" parent="EnemyInfoPanel/VBoxContainer"]
-layout_mode = 2
-text = "HP: 100/100"
-horizontal_alignment = 1
-
-[node name="CorruptionBar" type="ProgressBar" parent="EnemyInfoPanel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 20)
-layout_mode = 2
-max_value = 1.0
-value = 0.8
-show_percentage = false
-
-[node name="CorruptionLabel" type="Label" parent="EnemyInfoPanel/VBoxContainer"]
-layout_mode = 2
-text = "Corruption: 80%"
-horizontal_alignment = 1
-
-[node name="StatusEffectsContainer" type="HBoxContainer" parent="EnemyInfoPanel/VBoxContainer"]
-layout_mode = 2
-alignment = 1
+size_flags_vertical = 3
+theme_override_constants/separation = 10
 
 [node name="SkillMenu" type="PanelContainer" parent="."]
 visible = false

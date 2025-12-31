@@ -3,6 +3,9 @@ extends Node
 ## BattleManager: Orchestrates the entire battle flow.
 ## Enhanced with dramatic camera choreography, boss phases, and cinematic timing.
 
+# Preload to avoid class_name load order issues
+const CaptureSystemScript = preload("res://scripts/battle/capture_system.gd")
+
 # =============================================================================
 # SIGNALS - Battle Flow
 # =============================================================================
@@ -130,7 +133,7 @@ func _setup_subsystems() -> void:
 	purification_system.name = "PurificationSystem"
 	add_child(purification_system)
 
-	capture_system = CaptureSystem.new()
+	capture_system = CaptureSystemScript.new()
 	capture_system.name = "CaptureSystem"
 	add_child(capture_system)
 	_connect_capture_signals()
@@ -375,7 +378,7 @@ func _start_next_turn() -> void:
 		_execute_ai_turn(current_character)
 
 func _execute_ai_turn(character: CharacterBase) -> void:
-	var ai_decision := ai_controller.get_action(character, enemy_party, player_party)
+	var ai_decision: Dictionary = ai_controller.get_action(character, enemy_party, player_party)
 
 	await get_tree().create_timer(0.3).timeout
 
@@ -466,7 +469,7 @@ func _prompt_next_party_member() -> void:
 
 func _queue_ally_ai_action(character: CharacterBase) -> void:
 	"""AI ally selects and queues their action"""
-	var ai_decision := ai_controller.get_action(character, player_party, enemy_party)
+	var ai_decision: Dictionary = ai_controller.get_action(character, player_party, enemy_party)
 
 	queued_party_actions[character] = {
 		"action": ai_decision.action,
@@ -650,7 +653,7 @@ func _execute_next_enemy_attack() -> void:
 	await get_tree().create_timer(0.3).timeout
 
 	# AI decides action
-	var ai_decision := ai_controller.get_action(attacker, enemy_party, player_party)
+	var ai_decision: Dictionary = ai_controller.get_action(attacker, enemy_party, player_party)
 
 	# Execute enemy action
 	is_executing_action = true
@@ -764,7 +767,7 @@ func _execute_attack(attacker: CharacterBase, target: CharacterBase) -> Dictiona
 	await get_tree().create_timer(action_windup_time).timeout
 
 	# 2. CALCULATE AND APPLY DAMAGE
-	var result := damage_calculator.calculate_damage(attacker, target, null)
+	var result: Dictionary = damage_calculator.calculate_damage(attacker, target, null)
 
 	if result.is_miss:
 		ui_command.emit("show_message", {"text": "MISS!", "position": target.global_position})
@@ -874,7 +877,7 @@ func _execute_skill(caster: CharacterBase, target: CharacterBase, skill_id: Stri
 	match skill_data.skill_type:
 		SkillData.SkillType.DAMAGE:
 			for t in targets:
-				var dmg_result := damage_calculator.calculate_damage(caster, t, skill_data)
+				var dmg_result: Dictionary = damage_calculator.calculate_damage(caster, t, skill_data)
 				if not dmg_result.is_miss:
 					# Impact effects
 					camera_command.emit("shake", {"intensity": 8.0, "duration": 0.15})
@@ -891,7 +894,7 @@ func _execute_skill(caster: CharacterBase, target: CharacterBase, skill_id: Stri
 
 		SkillData.SkillType.HEAL:
 			for t in targets:
-				var heal_result := damage_calculator.calculate_healing(caster, t, skill_data)
+				var heal_result: Dictionary = damage_calculator.calculate_healing(caster, t, skill_data)
 				var actual_heal := t.heal(heal_result.heal_amount, caster)
 				vfx_command.emit("heal_effect", {"position": t.global_position})
 				vfx_command.emit("spawn_damage_number", {"position": t.global_position, "amount": actual_heal, "is_heal": true})
@@ -1024,7 +1027,24 @@ func _execute_defend(character: CharacterBase) -> Dictionary:
 	return {"success": true, "defense_boost": character.base_defense * 0.5}
 
 func _execute_item(user: CharacterBase, target: CharacterBase, item_id: String) -> Dictionary:
-	# Use item through inventory system
+	# Check if this is a capture orb item first
+	var item_data: ItemData = InventorySystem.get_item_data(item_id)
+	if item_data and item_data.is_capture_item():
+		# Delegate to capture system
+		if not target is Monster:
+			ui_command.emit("show_message", {"text": "Can only capture monsters!"})
+			return {"success": false, "reason": "Target is not a monster"}
+
+		var capture_tier: int = item_data.get_capture_tier()
+		EventBus.emit_debug("%s throws %s at %s!" % [user.character_name, item_data.display_name, target.character_name])
+
+		# Consume the orb before capture attempt
+		InventorySystem.remove_item(item_id, 1)
+
+		# Execute the capture
+		return await execute_orb_capture(user, target, capture_tier)
+
+	# Use item through inventory system (non-capture items)
 	var use_target: CharacterBase = target if target else user
 	var result: Dictionary = InventorySystem.use_item(item_id, use_target)
 
@@ -1064,7 +1084,7 @@ func _execute_purify(purifier: CharacterBase, target: CharacterBase) -> Dictiona
 
 	# Use the new CaptureSystem with PURIFY method
 	# This reduces corruption rather than attempting direct capture
-	await capture_system.attempt_capture(monster, purifier, CaptureSystem.CaptureMethod.PURIFY)
+	await capture_system.attempt_capture(monster, purifier, CaptureSystemScript.CaptureMethod.PURIFY)
 
 	# Return basic result - actual success/fail handled by signals
 	return {"success": true, "delegated": true}
@@ -1098,8 +1118,8 @@ func execute_orb_capture(caster: CharacterBase, target: CharacterBase, orb_tier:
 	await get_tree().create_timer(capture_throw_time).timeout
 
 	# Use CaptureSystem
-	var tier_enum: CaptureSystem.OrbTier = orb_tier as CaptureSystem.OrbTier
-	await capture_system.attempt_capture(monster, caster, CaptureSystem.CaptureMethod.ORB, tier_enum)
+	var tier_enum: CaptureSystemScript.OrbTier = orb_tier as CaptureSystemScript.OrbTier
+	await capture_system.attempt_capture(monster, caster, CaptureSystemScript.CaptureMethod.ORB, tier_enum)
 
 	return {"success": true, "delegated": true}
 
@@ -1113,7 +1133,7 @@ func execute_bargain_capture(caster: CharacterBase, target: CharacterBase) -> Di
 	battle_state = Enums.BattleState.PURIFICATION
 	capture_attempt_started.emit(target)
 
-	await capture_system.attempt_capture(monster, caster, CaptureSystem.CaptureMethod.BARGAIN)
+	await capture_system.attempt_capture(monster, caster, CaptureSystemScript.CaptureMethod.BARGAIN)
 
 	return {"success": true, "delegated": true}
 
@@ -1125,7 +1145,7 @@ func execute_force_capture(caster: CharacterBase, target: CharacterBase) -> Dict
 	var monster: Monster = target as Monster
 
 	# Validate force conditions
-	var check := capture_system.can_use_method(monster, caster, CaptureSystem.CaptureMethod.FORCE)
+	var check: Dictionary = capture_system.can_use_method(monster, caster, CaptureSystemScript.CaptureMethod.FORCE)
 	if not check.available:
 		ui_command.emit("show_message", {"text": check.reason})
 		return {"success": false, "reason": check.reason}
@@ -1133,7 +1153,7 @@ func execute_force_capture(caster: CharacterBase, target: CharacterBase) -> Dict
 	battle_state = Enums.BattleState.PURIFICATION
 	capture_attempt_started.emit(target)
 
-	await capture_system.attempt_capture(monster, caster, CaptureSystem.CaptureMethod.FORCE)
+	await capture_system.attempt_capture(monster, caster, CaptureSystemScript.CaptureMethod.FORCE)
 
 	return {"success": true, "delegated": true}
 
@@ -1145,7 +1165,7 @@ func get_capture_chance_preview(caster: CharacterBase, target: CharacterBase, me
 	var capture_method: int = method
 	var check: Dictionary = capture_system.can_use_method(target, caster, capture_method)
 
-	if capture_method == CaptureSystem.CaptureMethod.ORB:
+	if capture_method == CaptureSystemScript.CaptureMethod.ORB:
 		var tier: int = orb_tier
 		check.capture_chance = capture_system.calculate_orb_capture_chance(target, caster, tier)
 		check.chance_text = capture_system.get_capture_chance_text(check.capture_chance)

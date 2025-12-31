@@ -208,7 +208,7 @@ func apply_effect(target: CharacterBase, effect: Enums.StatusEffect, duration: i
 		return false
 
 	var effect_info: Dictionary = EFFECT_DATA[effect]
-	var actual_duration := duration if duration > 0 else effect_info.default_duration
+	var actual_duration: int = duration if duration > 0 else effect_info.default_duration
 
 	# Check for immunity (some effects cancel each other)
 	if _check_immunity(target, effect):

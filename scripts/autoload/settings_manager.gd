@@ -14,7 +14,7 @@ const DEFAULTS := {
 	"audio/mute_when_unfocused": true,
 
 	# Display
-	"display/fullscreen": true,
+	"display/fullscreen": false,  # Default to windowed for easier development
 	"display/vsync": true,
 	"display/resolution_index": 0,
 	"display/ui_scale": 1.0,
