@@ -140,6 +140,8 @@ func set_battle_manager(manager: BattleManager) -> void:
 	# Connect to EventBus for action results
 	if not EventBus.action_executed.is_connected(_on_action_executed):
 		EventBus.action_executed.connect(_on_action_executed)
+	if not EventBus.level_up.is_connected(_on_level_up):
+		EventBus.level_up.connect(_on_level_up)
 
 	# Connect UI signals to battle manager
 	action_selected.connect(_on_action_selected)
@@ -1162,6 +1164,94 @@ func _on_retry_pressed() -> void:
 func _on_title_pressed() -> void:
 	defeat_screen.hide()
 	SceneManager.goto_main_menu()
+
+func _on_level_up(character: CharacterBase, new_level: int, stat_gains: Dictionary) -> void:
+	## Display level up notification during battle
+	_show_level_up_notification(character, new_level, stat_gains)
+	log_level_up(character.character_name, new_level)
+
+func _show_level_up_notification(character: CharacterBase, new_level: int, stat_gains: Dictionary) -> void:
+	## Creates a dramatic level up popup
+	var popup := PanelContainer.new()
+	popup.name = "LevelUpPopup"
+	popup.z_index = 100
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.15, 0.3, 0.95)
+	style.border_color = Color(1.0, 0.85, 0.3)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 20
+	style.content_margin_right = 20
+	style.content_margin_top = 15
+	style.content_margin_bottom = 15
+	popup.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	popup.add_child(vbox)
+
+	# Title
+	var title := Label.new()
+	title.text = "LEVEL UP!"
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	# Character name and level
+	var name_label := Label.new()
+	name_label.text = "%s → Level %d" % [character.character_name, new_level]
+	name_label.add_theme_font_size_override("font_size", 16)
+	name_label.add_theme_color_override("font_color", Color.WHITE)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(name_label)
+
+	# Stat gains
+	var stats_container := HBoxContainer.new()
+	stats_container.add_theme_constant_override("separation", 15)
+	stats_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_child(stats_container)
+
+	for stat_name in stat_gains:
+		var gain: int = stat_gains[stat_name]
+		if gain > 0:
+			var stat_label := Label.new()
+			stat_label.text = "%s +%d" % [stat_name.to_upper().left(3), gain]
+			stat_label.add_theme_font_size_override("font_size", 12)
+			stat_label.add_theme_color_override("font_color", Color(0.5, 1.0, 0.5))
+			stats_container.add_child(stat_label)
+
+	add_child(popup)
+
+	# Position in center of screen
+	await get_tree().process_frame
+	var viewport_size := get_viewport_rect().size
+	popup.position = (viewport_size - popup.size) / 2
+	popup.position.y -= 50  # Slightly above center
+
+	# Start off-screen and scale 0
+	popup.modulate.a = 0.0
+	popup.scale = Vector2(0.5, 0.5)
+	popup.pivot_offset = popup.size / 2
+
+	# Animate in
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(popup, "modulate:a", 1.0, 0.3).set_ease(Tween.EASE_OUT)
+	tween.tween_property(popup, "scale", Vector2(1.0, 1.0), 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
+	# Hold and fade out
+	tween.set_parallel(false)
+	tween.tween_interval(1.5)
+	tween.tween_property(popup, "modulate:a", 0.0, 0.5)
+	tween.tween_callback(popup.queue_free)
+
+func log_level_up(character_name: String, new_level: int) -> void:
+	## Logs level up to combat log
+	var msg := "[color=gold]★ %s reached Level %d! ★[/color]" % [character_name, new_level]
+	combat_log_text.append_text("\n" + msg)
+	_auto_scroll_combat_log()
 
 # =============================================================================
 # ANIMATION SUPPORT

@@ -1378,13 +1378,16 @@ func _on_battle_victory() -> void:
 	# Apply rewards
 	GameManager.add_currency(total_rewards.currency)
 
-	# Distribute experience to party
-	var alive_players: Array = player_party.filter(func(p): return p.is_alive())
-	var exp_per_player: int = int(total_rewards.experience) / maxi(1, alive_players.size())
+	# Distribute experience to all alive party members (players and allied monsters)
+	var alive_members: Array = player_party.filter(func(p): return p.is_alive())
+	var exp_per_member: int = int(total_rewards.experience) / maxi(1, alive_members.size())
 
-	for player in alive_players:
-		if player is PlayerCharacter:
-			player.add_experience(exp_per_player)
+	for member in alive_members:
+		if member is PlayerCharacter:
+			member.add_experience(exp_per_member)
+		elif member is Monster and not member.is_corrupted:
+			# Allied/purified monsters also gain experience
+			member.add_experience(exp_per_member)
 
 	for item in total_rewards.items:
 		EventBus.item_obtained.emit(item.item_id, item.quantity)
