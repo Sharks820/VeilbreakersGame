@@ -27,7 +27,11 @@
       "Bash(git log:*)",
       "Bash(git diff:*)",
       "Bash(git reflog:*)",
-      "Bash(git gc:*)"
+      "Bash(git gc:*)",
+      "Bash(git push:*)",
+      "Bash(if not exist \"C:\\\\Users\\\\Conner\\\\Downloads\\\\VeilbreakersGame\\\\screenshots\" mkdir \"C:\\\\Users\\\\Conner\\\\Downloads\\\\VeilbreakersGame\\\\screenshots\")",
+      "Bash(powershell -Command \"cd ''C:\\\\Users\\\\Conner\\\\Downloads\\\\VeilbreakersGame''; Get-ChildItem -Name ''screenshot*.png'' | ForEach-Object { Move-Item $_screenshots\\\\ -Force }; Write-Host ''Moved screenshots to screenshots/''\")",
+      "Bash(powershell -Command:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

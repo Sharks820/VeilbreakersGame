@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v2.8** | Last updated: 2025-12-30
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v2.9** | Last updated: 2025-12-30
 
 ---
 
@@ -43,9 +43,9 @@
 ### Monster Eye Animation (Sprite Sheet)
 | Property | Value |
 |----------|-------|
-| Sprite Sheet | assets/ui/monster_eye_spritesheet.png |
-| Dimensions | 1536x1024 (6x4 grid) |
-| Frame Count | 24 frames |
+| Sprite Sheet | assets/ui/demon_eyes_angular_stretch.png |
+| Dimensions | 1536x1792 (6x7 grid) |
+| Frame Count | 42 frames |
 | Frame Size | 256x256 |
 | Position | (480, 400) |
 | Scale | 0.5 |
