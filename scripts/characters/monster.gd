@@ -313,11 +313,11 @@ func _ai_defensive(allies: Array, enemies: Array) -> Dictionary:
 func _ai_support(allies: Array, enemies: Array) -> Dictionary:
 	# Find lowest HP ally
 	var lowest_ally: CharacterBase = null
-	var lowest_percent := 1.0
+	var lowest_percent: float = 1.0
 
 	for ally in allies:
 		if ally.is_alive():
-			var hp_percent := ally.get_hp_percent()
+			var hp_percent: float = ally.get_hp_percent()
 			if hp_percent < lowest_percent:
 				lowest_percent = hp_percent
 				lowest_ally = ally

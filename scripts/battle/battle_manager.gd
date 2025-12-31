@@ -136,34 +136,66 @@ func _connect_capture_signals() -> void:
 
 func _on_capture_succeeded(monster: Node, method: int, bonus_data: Dictionary) -> void:
 	battle_stats.captures_successful += 1
+
+	# Validate monster node before accessing properties
+	if not is_instance_valid(monster):
+		push_warning("BattleManager: Monster invalid in capture success handler")
+		capture_result.emit(null, true)
+		return
+
 	vfx_command.emit("screen_flash", {"color": Color.WHITE, "duration": 0.15})
 	vfx_command.emit("capture_success", {"position": monster.global_position})
 	audio_command.emit("play_sfx", {"sound": "capture_success"})
 	audio_command.emit("play_jingle", {"jingle": "capture_fanfare"})
-	ui_command.emit("capture_announcement", {"monster_name": monster.character_name})
-	EventBus.emit_debug("%s was captured! (method: %d)" % [monster.character_name, method])
+
+	# Use bonus_data for enhanced feedback if available
+	var monster_name: String = monster.character_name if "character_name" in monster else "Monster"
+	var capture_chance: float = bonus_data.get("capture_chance", 0.0)
+	var method_name: String = bonus_data.get("method_name", "capture")
+	ui_command.emit("capture_announcement", {"monster_name": monster_name, "method": method_name, "chance": capture_chance})
+	EventBus.emit_debug("%s was captured via %s! (chance: %.0f%%)" % [monster_name, method_name, capture_chance * 100])
+
 	if monster is Monster:
 		_add_monster_to_rewards(monster as Monster)
 	capture_result.emit(monster, true)
 
-func _on_capture_failed(monster: Node, method: int, reason: String) -> void:
-	camera_command.emit("shake", {"intensity": 10.0, "duration": 0.3})
-	vfx_command.emit("capture_break", {"position": monster.global_position})
+func _on_capture_failed(monster: Node, _method: int, reason: String) -> void:
+	# Validate monster node before accessing properties
+	if is_instance_valid(monster):
+		camera_command.emit("shake", {"intensity": 10.0, "duration": 0.3})
+		vfx_command.emit("capture_break", {"position": monster.global_position})
+	else:
+		camera_command.emit("shake", {"intensity": 8.0, "duration": 0.2})
+
 	audio_command.emit("play_sfx", {"sound": "capture_fail"})
 	ui_command.emit("show_message", {"text": reason})
 	EventBus.emit_debug("Capture failed: %s" % reason)
-	capture_result.emit(monster, false)
+	# Pass null if monster is invalid to signal listeners
+	capture_result.emit(monster if is_instance_valid(monster) else null, false)
 
 func _on_capture_shake(monster: Node, current: int, total: int) -> void:
-	camera_command.emit("shake", {"intensity": 4.0, "duration": 0.3})
-	vfx_command.emit("capture_shake", {"position": monster.global_position, "shake_number": current})
+	# Intensity increases with each shake (guard against division by zero)
+	var shake_total := maxi(total, 1)
+	var intensity := 4.0 + (float(current) / float(shake_total)) * 4.0
+	camera_command.emit("shake", {"intensity": intensity, "duration": 0.3})
+
+	# Validate monster node before accessing position
+	if is_instance_valid(monster):
+		vfx_command.emit("capture_shake", {"position": monster.global_position, "shake_number": current, "total_shakes": total})
 	audio_command.emit("play_sfx", {"sound": "capture_struggle"})
 
 func _on_corruption_reduced(monster: Node, old_val: float, new_val: float) -> void:
 	var reduction := old_val - new_val
+
+	# Validate monster node before accessing properties
+	if not is_instance_valid(monster):
+		push_warning("BattleManager: Monster invalid in corruption reduced handler")
+		return
+
 	vfx_command.emit("purify_effect", {"position": monster.global_position})
 	ui_command.emit("show_message", {"text": "Corruption -%.0f%%" % reduction, "position": monster.global_position})
-	EventBus.emit_debug("%s corruption: %.0f%% -> %.0f%%" % [monster.character_name, old_val, new_val])
+	var monster_name: String = monster.character_name if "character_name" in monster else "Monster"
+	EventBus.emit_debug("%s corruption: %.0f%% -> %.0f%%" % [monster_name, old_val, new_val])
 
 # =============================================================================
 # BATTLE FLOW

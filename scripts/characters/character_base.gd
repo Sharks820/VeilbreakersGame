@@ -52,6 +52,10 @@ var current_mp: int = 50
 var status_effects: Dictionary = {}  # {effect_id: {duration, stacks, source}}
 var stat_modifiers: Dictionary = {}  # {stat: [{value, duration, source}]}
 
+# Cached autoload references for performance
+var _inventory_system_cached: Node = null
+var _inventory_cache_valid: bool = false
+
 # =============================================================================
 # EQUIPMENT (for player characters)
 # =============================================================================
@@ -129,6 +133,14 @@ func _get_stat_modifier(stat: Enums.Stat) -> float:
 func _get_equipment_bonus(stat: Enums.Stat) -> float:
 	var total := 0.0
 
+	# Cache inventory reference for performance (called frequently during combat)
+	if not _inventory_cache_valid:
+		_inventory_system_cached = get_node_or_null("/root/InventorySystem")
+		_inventory_cache_valid = true
+
+	if _inventory_system_cached == null:
+		return total
+
 	# Get bonuses from each equipment slot
 	var equipment_ids := [equipped_weapon, equipped_armor, equipped_accessory_1, equipped_accessory_2]
 
@@ -136,7 +148,7 @@ func _get_equipment_bonus(stat: Enums.Stat) -> float:
 		if item_id == "":
 			continue
 
-		var item_data: ItemData = InventorySystem.get_item_data(item_id) if InventorySystem else null
+		var item_data: ItemData = _inventory_system_cached.get_item_data(item_id) if _inventory_system_cached.has_method("get_item_data") else null
 		if item_data and item_data.stat_bonuses.has(stat):
 			total += item_data.stat_bonuses[stat]
 

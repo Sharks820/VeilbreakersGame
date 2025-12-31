@@ -68,7 +68,7 @@ func _apply_brand_bonuses() -> void:
 	if current_brand == Enums.Brand.NONE:
 		return
 
-	var brand_key := Enums.Brand.keys()[current_brand]
+	var brand_key: String = Enums.Brand.keys()[current_brand]
 	if not Constants.BRAND_BONUSES.has(brand_key):
 		return
 
@@ -77,7 +77,7 @@ func _apply_brand_bonuses() -> void:
 	# Apply multipliers as percentage bonuses
 	for key in bonuses:
 		var mult: float = bonuses[key]
-		var bonus := (mult - 1.0)  # Convert multiplier to bonus
+		var bonus: float = (mult - 1.0)  # Convert multiplier to bonus
 
 		match key:
 			"hp_mult":

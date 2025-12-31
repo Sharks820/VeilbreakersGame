@@ -3,6 +3,23 @@ extends Node
 ## DamageCalculator: Handles all damage, healing, and combat calculations.
 
 # =============================================================================
+# CONSTANTS (Element weakness chart - computed once at compile time)
+# =============================================================================
+
+const ELEMENT_WEAKNESSES := {
+	Enums.Element.FIRE: [Enums.Element.ICE, Enums.Element.WIND],
+	Enums.Element.ICE: [Enums.Element.LIGHTNING, Enums.Element.EARTH],
+	Enums.Element.LIGHTNING: [Enums.Element.WATER],
+	Enums.Element.EARTH: [Enums.Element.LIGHTNING],
+	Enums.Element.WATER: [Enums.Element.FIRE],
+	Enums.Element.WIND: [Enums.Element.EARTH],
+	Enums.Element.LIGHT: [Enums.Element.DARK, Enums.Element.VOID],
+	Enums.Element.DARK: [Enums.Element.LIGHT],
+	Enums.Element.HOLY: [Enums.Element.VOID, Enums.Element.DARK],
+	Enums.Element.VOID: [Enums.Element.HOLY, Enums.Element.LIGHT]
+}
+
+# =============================================================================
 # DAMAGE CALCULATION
 # =============================================================================
 
@@ -134,21 +151,8 @@ func _get_element_modifier(attack_element: Enums.Element, defender_elements: Arr
 
 func _is_strong_against(attacker: Enums.Element, defender: Enums.Element) -> bool:
 	## Returns true if attacker element is strong against defender element
-	var weaknesses := {
-		Enums.Element.FIRE: [Enums.Element.ICE, Enums.Element.WIND],
-		Enums.Element.ICE: [Enums.Element.LIGHTNING, Enums.Element.EARTH],
-		Enums.Element.LIGHTNING: [Enums.Element.WATER],
-		Enums.Element.EARTH: [Enums.Element.LIGHTNING],
-		Enums.Element.WATER: [Enums.Element.FIRE],
-		Enums.Element.WIND: [Enums.Element.EARTH],
-		Enums.Element.LIGHT: [Enums.Element.DARK, Enums.Element.VOID],
-		Enums.Element.DARK: [Enums.Element.LIGHT],
-		Enums.Element.HOLY: [Enums.Element.VOID, Enums.Element.DARK],
-		Enums.Element.VOID: [Enums.Element.HOLY, Enums.Element.LIGHT]
-	}
-
-	if weaknesses.has(attacker):
-		return defender in weaknesses[attacker]
+	if ELEMENT_WEAKNESSES.has(attacker):
+		return defender in ELEMENT_WEAKNESSES[attacker]
 	return false
 
 func _is_weak_against(attacker: Enums.Element, defender: Enums.Element) -> bool:

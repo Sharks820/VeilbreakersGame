@@ -57,7 +57,14 @@ extends Resource
 # METHODS
 # =============================================================================
 
+## Apply this item's effects to a target character.
+## @param target The CharacterBase to receive the item's effects
+## @returns Dictionary with "success" (bool), "effects" (Array), and optionally "is_capture_item" and "capture_tier"
 func use_on_target(target: CharacterBase) -> Dictionary:
+	if target == null:
+		push_error("ItemData.use_on_target: target is null")
+		return {"success": false, "effects": [], "error": "null_target"}
+
 	var result := {"success": true, "effects": []}
 
 	# HP Restore
@@ -87,15 +94,22 @@ func use_on_target(target: CharacterBase) -> Dictionary:
 			target.remove_status_effect(status)
 			result.effects.append({"type": "cure", "status": status})
 
-	# Apply Status
+	# Apply Status (safe dictionary access)
 	for status_data in applies_status:
-		target.add_status_effect(status_data.effect, status_data.duration)
-		result.effects.append({"type": "apply", "status": status_data.effect})
+		var effect = status_data.get("effect", Enums.StatusEffect.NONE)
+		var duration: int = status_data.get("duration", 1)
+		if effect != Enums.StatusEffect.NONE:
+			target.add_status_effect(effect, duration)
+			result.effects.append({"type": "apply", "status": effect})
 
-	# Stat Buffs
+	# Stat Buffs (safe dictionary access)
 	for buff in stat_buffs:
-		target.add_stat_modifier(buff.stat, buff.amount, buff.duration, display_name)
-		result.effects.append({"type": "buff", "stat": buff.stat, "amount": buff.amount})
+		var buff_stat = buff.get("stat")
+		var buff_amount: float = buff.get("amount", 0.0)
+		var buff_duration: int = buff.get("duration", 1)
+		if buff_stat != null and buff_amount != 0.0:
+			target.add_stat_modifier(buff_stat, buff_amount, buff_duration, display_name)
+			result.effects.append({"type": "buff", "stat": buff_stat, "amount": buff_amount})
 
 	# Permanent Stat Increases
 	for stat in permanent_stat_increase:
@@ -130,9 +144,65 @@ func use_on_target(target: CharacterBase) -> Dictionary:
 		GameManager.modify_path_alignment(path_change, display_name)
 		result.effects.append({"type": "path", "amount": path_change})
 
+	# Special Effects (capture orbs, etc.)
+	if special_effect != "":
+		var special_result := _process_special_effect(target)
+		if special_result.size() > 0:
+			result.effects.append(special_result)
+			# Capture effects are handled differently - signal that this is a capture item
+			if special_effect.begins_with("attempt_capture"):
+				result["is_capture_item"] = true
+				result["capture_tier"] = _get_capture_tier_from_effect()
+
 	return result
 
+## Process special effects based on special_effect string
+## Note: target is available for future effects that need target info (buff items, etc.)
+func _process_special_effect(_target: CharacterBase) -> Dictionary:
+	match special_effect:
+		"attempt_capture":
+			return {"type": "capture", "tier": 0, "tier_name": "Basic"}
+		"attempt_capture_enhanced":
+			return {"type": "capture", "tier": 1, "tier_name": "Greater"}
+		"attempt_capture_master":
+			return {"type": "capture", "tier": 2, "tier_name": "Master"}
+		"attempt_capture_legendary":
+			return {"type": "capture", "tier": 3, "tier_name": "Legendary"}
+		"purify_monster_5":
+			return {"type": "purify", "corruption_reduction": 5.0}
+		"purify_monster_10":
+			return {"type": "purify", "corruption_reduction": 10.0}
+		"purify_monster_15":
+			return {"type": "purify", "corruption_reduction": 15.0}
+		_:
+			if special_effect != "":
+				push_warning("Unknown special effect: %s" % special_effect)
+			return {}
+
+## Get capture tier from special_effect string
+func _get_capture_tier_from_effect() -> int:
+	match special_effect:
+		"attempt_capture": return 0
+		"attempt_capture_enhanced": return 1
+		"attempt_capture_master": return 2
+		"attempt_capture_legendary": return 3
+	return 0
+
+## Check if this is a capture item
+func is_capture_item() -> bool:
+	return special_effect.begins_with("attempt_capture")
+
+## Get capture tier for this item (0-3)
+func get_capture_tier() -> int:
+	return _get_capture_tier_from_effect()
+
+## Check if this item can be used on the given target.
+## @param target The potential target CharacterBase
+## @returns true if the item can be used on this target, false otherwise
 func can_use(target: CharacterBase) -> bool:
+	if target == null:
+		return false
+
 	# Can't use healing items on full HP targets
 	if (hp_restore > 0 or hp_restore_percent > 0) and target.current_hp >= target.get_max_hp():
 		if mp_restore == 0 and mp_restore_percent == 0:

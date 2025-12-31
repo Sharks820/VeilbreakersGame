@@ -128,25 +128,33 @@ var active_captor: Node = null
 var active_method: CaptureMethod = CaptureMethod.ORB
 var active_orb_tier: OrbTier = OrbTier.BASIC
 
-var battle_progress: float = 0.0  # 0.0 = battle start, 1.0 = peak conditions
 var current_capture_chance: float = 0.0
 var shake_count: int = 0
 var max_shakes: int = 3
 
-# References
-var bargain_system: Node = null
+# Cached autoload references for performance
+var _inventory_system: Node = null
+
+# Additional constants for magic numbers
+const ESCAPE_CHECK_MULTIPLIER: float = 0.3
+const CORRUPTION_REDUCTION_ON_FAIL: float = 2.0
 
 # -----------------------------------------------------------------------------
-# INITIALIZATION
+# LIFECYCLE
 # -----------------------------------------------------------------------------
 func _ready() -> void:
-	_find_bargain_system()
+	_inventory_system = get_node_or_null("/root/InventorySystem")
+	tree_exiting.connect(_on_tree_exiting)
 
-func _find_bargain_system() -> void:
-	# Find existing BargainSystem
-	bargain_system = get_node_or_null("../animation/BargainSystem")
-	if bargain_system == null:
-		bargain_system = get_node_or_null("BargainSystem")
+func _on_tree_exiting() -> void:
+	_reset_state()
+
+## Safe async timer that won't crash if tree is unavailable
+func _safe_wait(duration: float) -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	await tree.create_timer(duration).timeout
 
 # -----------------------------------------------------------------------------
 # PUBLIC API - Check Capture Availability
@@ -211,6 +219,17 @@ func attempt_capture(monster: Node, captor: Node, method: CaptureMethod, orb_tie
 		push_warning("Capture already in progress")
 		return
 
+	# Null guards - ensure valid nodes
+	if not is_instance_valid(monster):
+		push_error("CaptureSystem: Invalid monster node")
+		capture_failed.emit(null, method, "Invalid target")
+		return
+
+	if not is_instance_valid(captor):
+		push_error("CaptureSystem: Invalid captor node")
+		capture_failed.emit(monster, method, "Invalid captor")
+		return
+
 	active_monster = monster
 	active_captor = captor
 	active_method = method
@@ -234,6 +253,12 @@ func attempt_capture(monster: Node, captor: Node, method: CaptureMethod, orb_tie
 func _execute_orb_capture() -> void:
 	current_state = CaptureState.THROWING_ORB
 
+	# Validate before use
+	if not is_instance_valid(active_monster) or not is_instance_valid(active_captor):
+		_handle_capture_failure("Target lost")
+		_reset_state()
+		return
+
 	# Calculate capture chance
 	current_capture_chance = calculate_orb_capture_chance(active_monster, active_captor, active_orb_tier)
 	capture_attempt_started.emit(active_monster, active_orb_tier, current_capture_chance)
@@ -242,15 +267,30 @@ func _execute_orb_capture() -> void:
 	_consume_orb(active_orb_tier)
 
 	# Throw animation delay
-	await get_tree().create_timer(0.5).timeout
+	await _safe_wait(0.5)
+
+	# Re-validate after await
+	if not is_instance_valid(active_monster):
+		_reset_state()
+		return
 
 	# Shake sequence
 	current_state = CaptureState.SHAKING
-	var success := await _shake_sequence()
+	var success: bool = await _shake_sequence()
+
+	# Re-validate after await
+	if not is_instance_valid(active_monster):
+		_reset_state()
+		return
 
 	# Result
 	current_state = CaptureState.RESOLVING
-	await get_tree().create_timer(0.3).timeout
+	await _safe_wait(0.3)
+
+	# Final validation
+	if not is_instance_valid(active_monster):
+		_reset_state()
+		return
 
 	if success:
 		_handle_capture_success({})
@@ -325,19 +365,21 @@ func _calculate_hp_factor(monster: Node) -> float:
 	var hp_percent := _get_hp_percent(monster)
 
 	if hp_percent <= CRITICAL_HP_THRESHOLD:
-		return 1.0  # Maximum bonus
+		return 1.0  # Maximum bonus at critical HP
 	elif hp_percent <= VERY_LOW_HP_THRESHOLD:
 		return 0.8
 	elif hp_percent <= LOW_HP_THRESHOLD:
 		return 0.5
 	else:
-		return hp_percent  # Linear scaling above 50%
+		# Higher HP = lower capture bonus (inverted scale)
+		# At 50% HP: 0.5 factor, at 100% HP: 0.0 factor
+		return maxf(0.0, 1.0 - hp_percent)
 
 func _calculate_corruption_factor(monster: Node) -> float:
 	var corruption := _get_corruption(monster)
 	# Lower corruption = higher factor (better capture)
 	# 80% corruption = 0.2 factor, 0% corruption = 1.0 factor
-	return 1.0 - (corruption / CORRUPTION_CAP)
+	return 1.0 - (corruption / maxf(CORRUPTION_CAP, 1.0))
 
 func _calculate_level_factor(monster: Node, captor: Node) -> float:
 	var monster_level: int = monster.level if "level" in monster else 1
@@ -360,8 +402,14 @@ func _calculate_level_factor(monster: Node, captor: Node) -> float:
 func _execute_purify() -> void:
 	current_state = CaptureState.PURIFYING
 
+	# Validate before use
+	if not is_instance_valid(active_monster):
+		_handle_capture_failure("Target lost")
+		_reset_state()
+		return
+
 	var success_rate := calculate_purify_success_rate(active_monster)
-	var success := randf() < success_rate
+	var success: bool = randf() < success_rate
 
 	if success:
 		var amount := calculate_purify_amount(active_monster)
@@ -375,13 +423,13 @@ func _execute_purify() -> void:
 	else:
 		purify_attempted.emit(active_monster, false, 0.0)
 
-	await get_tree().create_timer(0.8).timeout
+	await _safe_wait(0.8)
 	_reset_state()
 
 func calculate_purify_success_rate(monster: Node) -> float:
 	# Starts low, increases as battle progresses
 	var hp_factor := 1.0 - _get_hp_percent(monster)  # Lower HP = higher success
-	var corruption_factor := 1.0 - (_get_corruption(monster) / CORRUPTION_CAP)
+	var corruption_factor := 1.0 - (_get_corruption(monster) / maxf(CORRUPTION_CAP, 1.0))
 
 	# Combined "battle progress" factor
 	var progress := (hp_factor + corruption_factor) / 2.0
@@ -394,7 +442,8 @@ func calculate_purify_amount(monster: Node) -> float:
 
 	# Bonus at low HP
 	if hp_percent < LOW_HP_THRESHOLD:
-		base += PURIFY_BONUS_LOW_HP * (1.0 - hp_percent / LOW_HP_THRESHOLD)
+		if LOW_HP_THRESHOLD > 0.0:
+			base += PURIFY_BONUS_LOW_HP * (1.0 - hp_percent / LOW_HP_THRESHOLD)
 
 	# Apply rarity modifier (rarer = less reduction)
 	var rarity_mod := _get_corruption_drop_modifier(monster)
@@ -419,18 +468,26 @@ func _get_corruption_drop_modifier(monster: Node) -> float:
 func _execute_bargain() -> void:
 	current_state = CaptureState.BARGAINING
 
+	# Validate before use
+	if not is_instance_valid(active_monster):
+		_handle_capture_failure("Target lost")
+		_reset_state()
+		return
+
 	var success_rate := calculate_bargain_rate(active_monster)
-	var success := randf() < success_rate
+	var success: bool = randf() < success_rate
 
 	bargain_attempted.emit(active_monster, success)
 
 	if success:
 		# Bargain success = immediate capture
-		await get_tree().create_timer(1.0).timeout
-		_handle_capture_success({"method": "bargain", "willing": true})
+		await _safe_wait(1.0)
+		if is_instance_valid(active_monster):
+			_handle_capture_success({"method": "bargain", "willing": true})
 	else:
-		await get_tree().create_timer(0.8).timeout
-		capture_failed.emit(active_monster, CaptureMethod.BARGAIN, "The creature refused your bargain.")
+		await _safe_wait(0.8)
+		if is_instance_valid(active_monster):
+			capture_failed.emit(active_monster, CaptureMethod.BARGAIN, "The creature refused your bargain.")
 
 	_reset_state()
 
@@ -448,27 +505,35 @@ func calculate_bargain_rate(monster: Node, captor: Node = null) -> float:
 func _execute_force() -> void:
 	current_state = CaptureState.FORCING
 
+	# Validate before use
+	if not is_instance_valid(active_monster) or not is_instance_valid(active_captor):
+		_handle_capture_failure("Target lost")
+		_reset_state()
+		return
+
 	var check := can_use_method(active_monster, active_captor, CaptureMethod.FORCE)
 	if not check.available:
 		capture_failed.emit(active_monster, CaptureMethod.FORCE, check.reason)
 		_reset_state()
 		return
 
-	var success := randf() < FORCE_CAPTURE_RATE
+	var success: bool = randf() < FORCE_CAPTURE_RATE
 
 	force_attempted.emit(active_monster, success)
 
 	if success:
-		await get_tree().create_timer(0.5).timeout
-		_handle_capture_success({
-			"method": "force",
-			"has_debuff": true,
-			"debuff_purify_goal": FORCE_DEBUFF_PURIFY_GOAL,
-			"debuff_stat_reduction": FORCE_DEBUFF_STAT_REDUCTION
-		})
+		await _safe_wait(0.5)
+		if is_instance_valid(active_monster):
+			_handle_capture_success({
+				"method": "force",
+				"has_debuff": true,
+				"debuff_purify_goal": FORCE_DEBUFF_PURIFY_GOAL,
+				"debuff_stat_reduction": FORCE_DEBUFF_STAT_REDUCTION
+			})
 	else:
-		await get_tree().create_timer(0.5).timeout
-		capture_failed.emit(active_monster, CaptureMethod.FORCE, "Monster resisted the forced capture!")
+		await _safe_wait(0.5)
+		if is_instance_valid(active_monster):
+			capture_failed.emit(active_monster, CaptureMethod.FORCE, "Monster resisted the forced capture!")
 
 	_reset_state()
 
@@ -476,17 +541,27 @@ func _execute_force() -> void:
 # SHAKE SEQUENCE
 # -----------------------------------------------------------------------------
 func _shake_sequence() -> bool:
-	max_shakes = _get_shake_count()
+	if not is_instance_valid(active_monster):
+		return false
+
+	max_shakes = maxi(_get_shake_count(), 1)  # Guard against zero
 
 	for i in range(max_shakes):
 		shake_count = i + 1
+
+		if not is_instance_valid(active_monster):
+			return false
+
 		shake_progress.emit(active_monster, shake_count, max_shakes)
 
-		await get_tree().create_timer(0.6).timeout
+		await _safe_wait(0.6)
+
+		if not is_instance_valid(active_monster):
+			return false
 
 		# Check for escape (weighted towards later shakes)
-		var escape_check := (1.0 - current_capture_chance) * (float(i + 1) / max_shakes)
-		if randf() < escape_check * 0.3 and i < max_shakes - 1:
+		var escape_check := (1.0 - current_capture_chance) * (float(i + 1) / float(max_shakes))
+		if randf() < escape_check * ESCAPE_CHECK_MULTIPLIER and i < max_shakes - 1:
 			capture_escaped.emit(active_monster, shake_count)
 			return false
 
@@ -515,8 +590,11 @@ func _handle_capture_success(bonus_data: Dictionary) -> void:
 
 func _handle_capture_failure(reason: String) -> void:
 	# Small corruption reduction on failed capture
-	_reduce_corruption(active_monster, 2.0)
-	capture_failed.emit(active_monster, active_method, reason)
+	if is_instance_valid(active_monster):
+		_reduce_corruption(active_monster, CORRUPTION_REDUCTION_ON_FAIL)
+		capture_failed.emit(active_monster, active_method, reason)
+	else:
+		capture_failed.emit(null, active_method, reason)
 
 func _apply_force_debuff(monster: Node, data: Dictionary) -> void:
 	# Store debuff info on monster
@@ -554,17 +632,29 @@ func _reduce_corruption(monster: Node, amount: float) -> void:
 		monster.corruption_level = maxf(0.0, monster.corruption_level - amount)
 
 func _consume_orb(tier: OrbTier) -> void:
-	var orb_id: String
+	var orb_id: String = "capture_orb"  # Default to basic
 	match tier:
-		OrbTier.BASIC: orb_id = "capture_orb"
-		OrbTier.GREATER: orb_id = "greater_capture_orb"
-		OrbTier.MASTER: orb_id = "master_capture_orb"
-		OrbTier.LEGENDARY: orb_id = "legendary_capture_orb"
+		OrbTier.BASIC:
+			orb_id = "capture_orb"
+		OrbTier.GREATER:
+			orb_id = "greater_capture_orb"
+		OrbTier.MASTER:
+			orb_id = "master_capture_orb"
+		OrbTier.LEGENDARY:
+			orb_id = "legendary_capture_orb"
+		_:
+			push_warning("Unknown orb tier: %d, defaulting to basic" % tier)
 
-	# Remove from inventory (autoload access in Godot 4.x)
-	var inv = get_node_or_null("/root/InventorySystem")
-	if inv and inv.has_method("remove_item"):
-		inv.remove_item(orb_id, 1)
+	# Use cached inventory system for performance
+	if _inventory_system == null:
+		_inventory_system = get_node_or_null("/root/InventorySystem")
+
+	if _inventory_system and _inventory_system.has_method("remove_item"):
+		var success: bool = _inventory_system.remove_item(orb_id, 1)
+		if not success:
+			push_warning("CaptureSystem: Failed to consume orb '%s'" % orb_id)
+	else:
+		push_warning("CaptureSystem: InventorySystem not available, orb not consumed")
 
 func _reset_state() -> void:
 	current_state = CaptureState.IDLE
@@ -598,12 +688,20 @@ func get_method_description(method: CaptureMethod) -> String:
 			return "Make a deal with the creature. Low chance but works on any monster."
 		CaptureMethod.FORCE:
 			return "Force capture on weakened, lower-level monsters. Applies a temporary debuff."
-	return ""
+		_:
+			push_warning("Unknown CaptureMethod: %d" % method)
+			return "Unknown capture method."
 
 func get_orb_tier_name(tier: OrbTier) -> String:
 	match tier:
-		OrbTier.BASIC: return "Capture Orb"
-		OrbTier.GREATER: return "Greater Capture Orb"
-		OrbTier.MASTER: return "Master Capture Orb"
-		OrbTier.LEGENDARY: return "Legendary Capture Orb"
-	return "Unknown Orb"
+		OrbTier.BASIC:
+			return "Capture Orb"
+		OrbTier.GREATER:
+			return "Greater Capture Orb"
+		OrbTier.MASTER:
+			return "Master Capture Orb"
+		OrbTier.LEGENDARY:
+			return "Legendary Capture Orb"
+		_:
+			push_warning("Unknown OrbTier: %d" % tier)
+			return "Unknown Orb"
