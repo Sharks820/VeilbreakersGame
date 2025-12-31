@@ -1,9 +1,10 @@
 class_name BattleManager
 extends Node
 ## BattleManager: Orchestrates the entire battle flow.
+## Enhanced with dramatic camera choreography, boss phases, and cinematic timing.
 
 # =============================================================================
-# SIGNALS
+# SIGNALS - Battle Flow
 # =============================================================================
 
 signal battle_initialized()
@@ -17,6 +18,45 @@ signal action_animation_finished(character: CharacterBase)
 signal battle_victory(rewards: Dictionary)
 signal battle_defeat()
 signal battle_fled()
+
+# =============================================================================
+# SIGNALS - Camera/VFX/UI Commands (for BattleCameraController, VFXManager, etc.)
+# =============================================================================
+
+signal camera_command(command: String, data: Dictionary)
+signal vfx_command(command: String, data: Dictionary)
+signal ui_command(command: String, data: Dictionary)
+signal audio_command(command: String, data: Dictionary)
+
+# Boss phase signals
+signal phase_changed(boss: Node, phase: int)
+signal capture_attempt_started(target: Node)
+signal capture_result(target: Node, success: bool)
+
+# =============================================================================
+# EXPORTS - Dramatic Timing (from BattleSequencer)
+# =============================================================================
+
+@export_group("Timing - Dramatic Pacing")
+@export var turn_start_delay: float = 0.4
+@export var action_windup_time: float = 0.3
+@export var impact_pause_time: float = 0.08
+@export var action_recovery_time: float = 0.4
+@export var between_hits_delay: float = 0.15
+@export var turn_end_delay: float = 0.3
+@export var death_dramatic_pause: float = 0.8
+@export var boss_phase_transition_time: float = 2.0
+
+@export_group("Camera Timing")
+@export var camera_focus_time: float = 0.25
+@export var camera_return_time: float = 0.3
+@export var boss_intro_time: float = 3.0
+
+@export_group("Capture/Purify Timing")
+@export var capture_throw_time: float = 0.5
+@export var capture_shake_count: int = 3
+@export var capture_shake_interval: float = 0.8
+@export var capture_result_delay: float = 0.5
 
 # =============================================================================
 # STATE
@@ -33,6 +73,19 @@ var total_rewards: Dictionary = {"experience": 0, "currency": 0, "items": []}
 # Action queue for current turn
 var pending_action: Dictionary = {}
 var is_executing_action: bool = false
+
+# Boss tracking (from BattleSequencer)
+var active_bosses: Array = []
+var boss_phases: Dictionary = {}  # boss_node -> current_phase
+
+# Battle statistics (from BattleSequencer)
+var battle_stats: Dictionary = {
+	"turns_taken": 0,
+	"damage_dealt": 0,
+	"damage_received": 0,
+	"captures_attempted": 0,
+	"captures_successful": 0,
+}
 
 # References to subsystems
 var turn_manager: TurnManager
@@ -73,9 +126,20 @@ func _setup_subsystems() -> void:
 # BATTLE FLOW
 # =============================================================================
 
-func start_battle(players: Array, enemies: Array) -> void:
+func start_battle(players: Array, enemies: Array, is_boss_battle: bool = false) -> void:
 	player_party.clear()
 	enemy_party.clear()
+	active_bosses.clear()
+	boss_phases.clear()
+
+	# Reset statistics
+	battle_stats = {
+		"turns_taken": 0,
+		"damage_dealt": 0,
+		"damage_received": 0,
+		"captures_attempted": 0,
+		"captures_successful": 0,
+	}
 
 	# Convert to typed arrays
 	for p in players:
@@ -85,6 +149,10 @@ func start_battle(players: Array, enemies: Array) -> void:
 	for e in enemies:
 		if e is CharacterBase:
 			enemy_party.append(e)
+			# Track bosses
+			if e is Monster and e.is_boss():
+				active_bosses.append(e)
+				boss_phases[e] = 1
 
 	current_round = 0
 	current_turn_index = 0
@@ -98,6 +166,13 @@ func start_battle(players: Array, enemies: Array) -> void:
 		if not character.died.is_connected(_on_character_died):
 			character.died.connect(_on_character_died.bind(character))
 
+	# Camera: Wide shot of battlefield
+	camera_command.emit("battle_intro", {"duration": 1.5})
+
+	# If boss battle, dramatic intro
+	if is_boss_battle and active_bosses.size() > 0:
+		await _play_boss_intro(active_bosses[0])
+
 	EventBus.battle_started.emit(enemies)
 	GameManager.change_state(Enums.GameState.BATTLE)
 	GameManager.battle_count += 1
@@ -109,16 +184,42 @@ func start_battle(players: Array, enemies: Array) -> void:
 
 	_start_round()
 
+func _play_boss_intro(boss: Node) -> void:
+	"""Dramatic boss introduction sequence"""
+	ui_command.emit("hide_ui", {})
+	camera_command.emit("boss_intro", {"target": boss, "duration": boss_intro_time})
+	audio_command.emit("play_music", {"track": "boss_theme", "fade_in": 1.0})
+
+	# Boss roar/intro animation
+	if boss.has_method("play_intro"):
+		boss.play_intro()
+
+	var boss_name := boss.character_name if boss is CharacterBase else "Boss"
+	var boss_title := ""
+	if boss.has_method("get_title"):
+		boss_title = boss.get_title()
+
+	vfx_command.emit("boss_title_card", {"name": boss_name, "title": boss_title})
+
+	await get_tree().create_timer(boss_intro_time).timeout
+	ui_command.emit("show_ui", {})
+
 func _start_round() -> void:
 	current_round += 1
+	battle_stats.turns_taken += 1
 	battle_state = Enums.BattleState.TURN_START
 
 	# Calculate turn order based on speed
 	turn_order = turn_manager.calculate_turn_order(player_party + enemy_party)
 	current_turn_index = 0
 
+	# UI: Show turn order bar
+	ui_command.emit("show_turn_order", {"order": turn_order})
+
 	round_started.emit(current_round)
 	EventBus.emit_debug("Round %d started" % current_round)
+
+	await get_tree().create_timer(turn_start_delay).timeout
 
 	_start_next_turn()
 
@@ -157,22 +258,27 @@ func _start_next_turn() -> void:
 		_start_next_turn()
 		return
 
-	# Check if character can act
+	# Check if character can act (stunned, frozen, etc.)
 	if not current_character.can_act():
 		EventBus.emit_debug("%s cannot act due to status effect" % current_character.character_name)
+		ui_command.emit("show_message", {"text": current_character.character_name + " is stunned!"})
 		EventBus.turn_ended.emit(current_character)
 		turn_ended_signal.emit(current_character)
 		current_turn_index += 1
-		await get_tree().create_timer(0.3).timeout
+		await get_tree().create_timer(0.5).timeout
 		_start_next_turn()
 		return
 
 	EventBus.turn_started.emit(current_character)
 	turn_started_signal.emit(current_character)
 
+	# Camera: Focus on active entity
+	camera_command.emit("focus", {"target": current_character, "duration": camera_focus_time})
+
 	# Player or AI?
 	if current_character in player_party:
 		battle_state = Enums.BattleState.SELECTING_ACTION
+		ui_command.emit("show_action_menu", {"entity": current_character})
 		waiting_for_player_input.emit(current_character)
 	else:
 		# AI turn
@@ -197,6 +303,8 @@ func submit_player_action(action: Enums.BattleAction, target: CharacterBase = nu
 	if is_executing_action:
 		return
 
+	ui_command.emit("hide_action_menu", {})
+
 	var current_character := turn_order[current_turn_index]
 	execute_action(current_character, action, target, skill)
 
@@ -212,9 +320,9 @@ func execute_action(character: CharacterBase, action: Enums.BattleAction, target
 
 	match action:
 		Enums.BattleAction.ATTACK:
-			result = _execute_attack(character, target)
+			result = await _execute_attack(character, target)
 		Enums.BattleAction.SKILL:
-			result = _execute_skill(character, target, skill)
+			result = await _execute_skill(character, target, skill)
 		Enums.BattleAction.DEFEND:
 			result = _execute_defend(character)
 		Enums.BattleAction.ITEM:
@@ -226,7 +334,10 @@ func execute_action(character: CharacterBase, action: Enums.BattleAction, target
 
 	EventBus.action_executed.emit(character, action, result)
 
-	await get_tree().create_timer(Constants.BATTLE_ACTION_DELAY).timeout
+	# Camera return to battle view
+	camera_command.emit("return_to_battle", {"duration": camera_return_time})
+
+	await get_tree().create_timer(action_recovery_time).timeout
 
 	action_animation_finished.emit(character)
 	is_executing_action = false
@@ -241,13 +352,64 @@ func _execute_attack(attacker: CharacterBase, target: CharacterBase) -> Dictiona
 		if not target:
 			return {"success": false, "reason": "No valid target"}
 
+	# 1. WINDUP - Camera focus between attacker and target
+	camera_command.emit("focus_between", {
+		"from": attacker,
+		"to": target,
+		"bias": 0.3,
+		"duration": action_windup_time
+	})
+
+	audio_command.emit("play_sfx", {"sound": "attack_whoosh", "position": attacker.global_position})
+	await get_tree().create_timer(action_windup_time).timeout
+
+	# 2. CALCULATE AND APPLY DAMAGE
 	var result := damage_calculator.calculate_damage(attacker, target, null)
 
 	if result.is_miss:
+		ui_command.emit("show_message", {"text": "MISS!", "position": target.global_position})
 		EventBus.emit_debug("%s's attack missed!" % attacker.character_name)
 		return {"success": true, "is_miss": true}
 
+	# 3. IMPACT MOMENT
+	# Hitstop
+	var freeze_time := impact_pause_time * 2 if result.is_critical else impact_pause_time
+	camera_command.emit("impact_freeze", {"duration": freeze_time})
+
+	# Screen shake
+	var shake_intensity := 12.0 if result.is_critical else 6.0
+	camera_command.emit("shake", {"intensity": shake_intensity, "duration": 0.2})
+
+	# VFX
+	vfx_command.emit("spawn_hit_effect", {
+		"position": target.global_position,
+		"is_critical": result.is_critical
+	})
+
+	# Screen flash for crits
+	if result.is_critical:
+		vfx_command.emit("screen_flash", {"color": Color.WHITE, "duration": 0.1})
+		audio_command.emit("play_sfx", {"sound": "critical_hit"})
+
+	# Damage number
+	vfx_command.emit("spawn_damage_number", {
+		"position": target.global_position,
+		"amount": result.damage,
+		"is_critical": result.is_critical
+	})
+
+	# Apply damage
 	target.take_damage(result.damage, attacker, result.is_critical)
+
+	# Track stats
+	if attacker in player_party:
+		battle_stats.damage_dealt += result.damage
+	else:
+		battle_stats.damage_received += result.damage
+
+	# Check for boss phase transition
+	if target in active_bosses:
+		await _check_boss_phase(target)
 
 	EventBus.emit_debug("%s dealt %d damage to %s%s" % [
 		attacker.character_name,
@@ -255,6 +417,8 @@ func _execute_attack(attacker: CharacterBase, target: CharacterBase) -> Dictiona
 		target.character_name,
 		" (CRITICAL!)" if result.is_critical else ""
 	])
+
+	await get_tree().create_timer(impact_pause_time).timeout
 
 	return result
 
@@ -279,10 +443,32 @@ func _execute_skill(caster: CharacterBase, target: CharacterBase, skill_id: Stri
 	if skill_data.hp_cost > 0:
 		caster.take_damage(skill_data.hp_cost, null, false)
 
+	# SKILL ANNOUNCEMENT
+	ui_command.emit("show_skill_name", {"name": skill_data.display_name})
+	audio_command.emit("play_sfx", {"sound": "skill_announce"})
+
+	# CAST ANIMATION
+	camera_command.emit("focus", {"target": caster, "zoom": 1.2, "duration": 0.3})
+
+	vfx_command.emit("skill_charge", {
+		"position": caster.global_position,
+		"duration": 0.5
+	})
+
+	await get_tree().create_timer(0.5).timeout
+
 	var result := {"success": true, "skill_id": skill_id, "effects": []}
 
 	# Get targets based on target type
 	var targets: Array[CharacterBase] = _get_skill_targets(caster, target, skill_data.target_type)
+
+	# Camera to show all targets
+	if targets.size() > 1:
+		camera_command.emit("focus_group", {"targets": targets, "duration": 0.3})
+	elif targets.size() == 1:
+		camera_command.emit("focus", {"target": targets[0], "duration": 0.3})
+
+	await get_tree().create_timer(0.3).timeout
 
 	# Execute based on skill type
 	match skill_data.skill_type:
@@ -290,25 +476,37 @@ func _execute_skill(caster: CharacterBase, target: CharacterBase, skill_id: Stri
 			for t in targets:
 				var dmg_result := damage_calculator.calculate_damage(caster, t, skill_data)
 				if not dmg_result.is_miss:
+					# Impact effects
+					camera_command.emit("shake", {"intensity": 8.0, "duration": 0.15})
+					vfx_command.emit("spawn_hit_effect", {"position": t.global_position, "is_critical": dmg_result.is_critical})
+					vfx_command.emit("spawn_damage_number", {"position": t.global_position, "amount": dmg_result.damage, "is_critical": dmg_result.is_critical})
 					t.take_damage(dmg_result.damage, caster, dmg_result.is_critical)
 					result.effects.append({"target": t.character_name, "damage": dmg_result.damage, "critical": dmg_result.is_critical})
+					# Track stats
+					if caster in player_party:
+						battle_stats.damage_dealt += dmg_result.damage
 				else:
 					result.effects.append({"target": t.character_name, "miss": true})
+				await get_tree().create_timer(between_hits_delay).timeout
 
 		SkillData.SkillType.HEAL:
 			for t in targets:
 				var heal_result := damage_calculator.calculate_healing(caster, t, skill_data)
 				var actual_heal := t.heal(heal_result.heal_amount, caster)
+				vfx_command.emit("heal_effect", {"position": t.global_position})
+				vfx_command.emit("spawn_damage_number", {"position": t.global_position, "amount": actual_heal, "is_heal": true})
 				result.effects.append({"target": t.character_name, "heal": actual_heal})
 
 		SkillData.SkillType.BUFF, SkillData.SkillType.DEBUFF:
 			for t in targets:
 				_apply_skill_modifiers(t, skill_data, caster)
+				vfx_command.emit("buff_effect", {"position": t.global_position, "is_buff": skill_data.skill_type == SkillData.SkillType.BUFF})
 				result.effects.append({"target": t.character_name, "buffs_applied": true})
 
 		SkillData.SkillType.STATUS:
 			for t in targets:
 				_apply_skill_status_effects(t, skill_data, caster)
+				vfx_command.emit("status_apply", {"position": t.global_position})
 				result.effects.append({"target": t.character_name, "status_applied": true})
 
 		SkillData.SkillType.UTILITY:
@@ -381,6 +579,8 @@ func _apply_skill_status_effects(target: CharacterBase, skill_data: SkillData, s
 			var effect: Enums.StatusEffect = effect_data.effect
 			var duration: int = effect_data.get("duration", 3)
 			target.add_status_effect(effect, duration, source)
+		else:
+			ui_command.emit("show_message", {"text": "RESISTED!", "position": target.global_position})
 
 func _apply_skill_modifiers(target: CharacterBase, skill_data: SkillData, source: CharacterBase) -> void:
 	for mod_data in skill_data.stat_modifiers:
@@ -404,11 +604,22 @@ func _handle_special_effect(caster: CharacterBase, targets: Array[CharacterBase]
 			for t in targets:
 				if t.is_dead():
 					t.revive(0.5)
+					vfx_command.emit("revive_effect", {"position": t.global_position})
 		_:
 			EventBus.emit_debug("Unknown special effect: %s" % effect_id)
 
 func _execute_defend(character: CharacterBase) -> Dictionary:
 	character.set_defending(true)
+
+	vfx_command.emit("defend_effect", {"position": character.global_position})
+	audio_command.emit("play_sfx", {"sound": "defend"})
+
+	ui_command.emit("show_status_popup", {
+		"target": character,
+		"status": "DEFENDING",
+		"positive": true
+	})
+
 	EventBus.emit_debug("%s is defending" % character.character_name)
 	return {"success": true, "defense_boost": character.base_defense * 0.5}
 
@@ -418,14 +629,18 @@ func _execute_item(user: CharacterBase, target: CharacterBase, item_id: String) 
 	var result := InventorySystem.use_item(item_id, use_target)
 
 	if result.success:
+		audio_command.emit("play_sfx", {"sound": "item_use"})
 		EventBus.emit_debug("%s used %s on %s" % [user.character_name, item_id, use_target.character_name])
-		# Log effects
+		# Log effects with VFX
 		for effect in result.get("effects", []):
 			if effect.has("heal_hp"):
+				vfx_command.emit("heal_effect", {"position": use_target.global_position})
+				vfx_command.emit("spawn_damage_number", {"position": use_target.global_position, "amount": effect.heal_hp, "is_heal": true})
 				EventBus.emit_debug("  Restored %d HP" % effect.heal_hp)
 			if effect.has("heal_mp"):
 				EventBus.emit_debug("  Restored %d MP" % effect.heal_mp)
 			if effect.has("revive"):
+				vfx_command.emit("revive_effect", {"position": use_target.global_position})
 				EventBus.emit_debug("  Revived!")
 	else:
 		EventBus.emit_debug("Failed to use item: %s" % result.get("reason", "Unknown error"))
@@ -442,18 +657,81 @@ func _execute_purify(purifier: CharacterBase, target: CharacterBase) -> Dictiona
 		return {"success": false, "reason": "Monster cannot be purified"}
 
 	battle_state = Enums.BattleState.PURIFICATION
+	battle_stats.captures_attempted += 1
+	capture_attempt_started.emit(target)
 
-	# Attempt purification
+	# Calculate capture chance (enhanced with status modifiers)
+	var base_chance := 0.3
+	var hp_modifier := 1.0 - monster.get_hp_percent()
+	var status_modifier := 0.1 if monster.get_status_effect_count() > 0 else 0.0
 	var purifier_power := 1.0 + (purifier.get_stat(Enums.Stat.MAGIC) / 100.0)
-	var result := monster.attempt_purification(purifier_power)
+	var capture_chance := (base_chance + (hp_modifier * 0.5) + status_modifier) * purifier_power
 
-	if result.success:
+	# 1. THROW/CAST
+	camera_command.emit("focus", {"target": purifier, "duration": 0.2})
+	audio_command.emit("play_sfx", {"sound": "capture_throw"})
+
+	vfx_command.emit("capture_projectile", {
+		"from": purifier.global_position,
+		"to": monster.global_position,
+		"duration": capture_throw_time
+	})
+
+	await get_tree().create_timer(capture_throw_time).timeout
+
+	# 2. CAPTURE BEAM
+	camera_command.emit("focus", {"target": monster, "zoom": 1.3, "duration": 0.3})
+	vfx_command.emit("capture_beam", {"position": monster.global_position})
+	audio_command.emit("play_sfx", {"sound": "capture_beam"})
+
+	await get_tree().create_timer(0.5).timeout
+
+	# 3. STRUGGLE SEQUENCE - Build tension
+	var success := randf() < capture_chance
+
+	for i in range(capture_shake_count):
+		camera_command.emit("shake", {"intensity": 4.0, "duration": 0.3})
+		vfx_command.emit("capture_shake", {"position": monster.global_position, "shake_number": i + 1})
+		audio_command.emit("play_sfx", {"sound": "capture_struggle"})
+
+		await get_tree().create_timer(capture_shake_interval).timeout
+
+		# Early break on failure
+		if not success and randf() < 0.3:
+			break
+
+	await get_tree().create_timer(capture_result_delay).timeout
+
+	# 4. RESULT
+	if success:
+		battle_stats.captures_successful += 1
+
+		# Success VFX
+		vfx_command.emit("screen_flash", {"color": Color.WHITE, "duration": 0.15})
+		vfx_command.emit("capture_success", {"position": monster.global_position})
+		audio_command.emit("play_sfx", {"sound": "capture_success"})
+		audio_command.emit("play_jingle", {"jingle": "capture_fanfare"})
+
+		ui_command.emit("capture_announcement", {"monster_name": monster.character_name})
+
 		EventBus.emit_debug("%s was purified!" % monster.character_name)
 		_add_monster_to_rewards(monster)
-	else:
-		EventBus.emit_debug("Failed to purify %s (%.1f%% chance)" % [monster.character_name, result.chance * 100])
 
-	return result
+		capture_result.emit(target, true)
+		await get_tree().create_timer(2.0).timeout
+	else:
+		# Failure VFX
+		camera_command.emit("shake", {"intensity": 10.0, "duration": 0.3})
+		vfx_command.emit("capture_break", {"position": monster.global_position})
+		audio_command.emit("play_sfx", {"sound": "capture_fail"})
+
+		ui_command.emit("show_message", {"text": monster.character_name + " broke free!"})
+
+		EventBus.emit_debug("Failed to purify %s (%.1f%% chance)" % [monster.character_name, capture_chance * 100])
+		capture_result.emit(target, false)
+		await get_tree().create_timer(1.0).timeout
+
+	return {"success": success, "chance": capture_chance}
 
 func _execute_flee(character: CharacterBase) -> Dictionary:
 	var flee_chance := Constants.ESCAPE_BASE_CHANCE
@@ -480,22 +758,94 @@ func _execute_flee(character: CharacterBase) -> Dictionary:
 	flee_chance += (party_speed - enemy_speed) * 0.01
 	flee_chance = clampf(flee_chance, 0.1, 0.9)
 
-	# Check for boss (can't flee from bosses)
-	for enemy in enemy_party:
-		if enemy is Monster and enemy.is_boss():
-			flee_chance = 0.0
-			break
+	# Can't flee from bosses
+	if active_bosses.size() > 0:
+		ui_command.emit("show_message", {"text": "Can't escape from boss!"})
+		audio_command.emit("play_sfx", {"sound": "flee_fail"})
+		flee_chance = 0.0
+		return {"success": false, "chance": flee_chance}
 
 	if randf() <= flee_chance:
 		battle_state = Enums.BattleState.FLED
 		GameManager.flee_count += 1
+		ui_command.emit("show_message", {"text": "Got away safely!"})
+		audio_command.emit("play_sfx", {"sound": "flee_success"})
 		EventBus.emit_debug("Successfully fled from battle!")
 		battle_fled.emit()
 		EventBus.battle_ended.emit(false, {})
 		return {"success": true}
 
+	ui_command.emit("show_message", {"text": "Couldn't escape!"})
+	audio_command.emit("play_sfx", {"sound": "flee_fail"})
 	EventBus.emit_debug("Failed to flee! (%.1f%% chance)" % [flee_chance * 100])
 	return {"success": false, "chance": flee_chance}
+
+# =============================================================================
+# BOSS PHASE SYSTEM (from BattleSequencer)
+# =============================================================================
+
+func _check_boss_phase(boss: Node) -> void:
+	"""Check if boss should transition phases"""
+	if not boss.has_method("get_phase_thresholds"):
+		return
+
+	var current_phase: int = boss_phases.get(boss, 1)
+	var thresholds: Array = boss.get_phase_thresholds()  # e.g., [0.7, 0.4, 0.15]
+	var hp_percent: float = boss.get_hp_percent() if boss.has_method("get_hp_percent") else 1.0
+
+	var new_phase := 1
+	for i in range(thresholds.size()):
+		if hp_percent <= thresholds[i]:
+			new_phase = i + 2
+
+	if new_phase > current_phase:
+		await _trigger_boss_phase_transition(boss, new_phase)
+
+func _trigger_boss_phase_transition(boss: Node, new_phase: int) -> void:
+	"""Dramatic boss phase transition"""
+	boss_phases[boss] = new_phase
+
+	# Pause everything
+	ui_command.emit("hide_ui", {})
+
+	# Camera drama
+	camera_command.emit("boss_phase_transition", {
+		"target": boss,
+		"duration": boss_phase_transition_time
+	})
+
+	# Boss rage animation
+	if boss.has_method("play_phase_transition"):
+		boss.play_phase_transition(new_phase)
+
+	# Screen effects
+	vfx_command.emit("screen_flash", {"color": Color.RED, "duration": 0.3})
+	vfx_command.emit("boss_rage_aura", {"position": boss.global_position, "phase": new_phase})
+
+	# Shake
+	camera_command.emit("shake", {"intensity": 15.0, "duration": 1.0})
+
+	# Audio
+	audio_command.emit("play_sfx", {"sound": "boss_roar"})
+	audio_command.emit("intensify_music", {"phase": new_phase})
+
+	var boss_name: String = boss.character_name if boss is CharacterBase else "Boss"
+	var phase_name := "Phase " + str(new_phase)
+	if boss.has_method("get_phase_name"):
+		phase_name = boss.get_phase_name(new_phase)
+
+	# Phase announcement
+	ui_command.emit("phase_announcement", {
+		"boss_name": boss_name,
+		"phase": new_phase,
+		"phase_name": phase_name
+	})
+
+	phase_changed.emit(boss, new_phase)
+
+	await get_tree().create_timer(boss_phase_transition_time).timeout
+
+	ui_command.emit("show_ui", {})
 
 # =============================================================================
 # TURN MANAGEMENT
@@ -511,7 +861,7 @@ func _end_turn() -> void:
 	current_turn_index += 1
 
 	if not _check_battle_end():
-		await get_tree().create_timer(0.2).timeout
+		await get_tree().create_timer(turn_end_delay).timeout
 		_start_next_turn()
 
 func _end_round() -> void:
@@ -559,6 +909,19 @@ func _on_battle_victory() -> void:
 	battle_state = Enums.BattleState.VICTORY
 	EventBus.emit_debug("Battle Victory!")
 
+	ui_command.emit("hide_action_menu", {})
+
+	# Victory fanfare
+	audio_command.emit("play_jingle", {"jingle": "victory_fanfare"})
+
+	# Camera victory shot
+	camera_command.emit("victory_pan", {"targets": player_party})
+
+	# Player celebrations
+	for player in player_party:
+		if player.has_method("play_victory"):
+			player.play_victory()
+
 	# Collect rewards from defeated enemies
 	for enemy in enemy_party:
 		if enemy is Monster:
@@ -588,6 +951,14 @@ func _on_battle_victory() -> void:
 		EventBus.item_obtained.emit(item.item_id, item.quantity)
 
 	GameManager.victory_count += 1
+
+	# Victory UI
+	ui_command.emit("show_victory_screen", {
+		"exp_gained": total_rewards.experience,
+		"items_dropped": total_rewards.items,
+		"stats": battle_stats
+	})
+
 	battle_victory.emit(total_rewards)
 	EventBus.battle_ended.emit(true, total_rewards)
 
@@ -595,12 +966,44 @@ func _on_battle_defeat() -> void:
 	battle_state = Enums.BattleState.DEFEAT
 	GameManager.defeat_count += 1
 	EventBus.emit_debug("Battle Defeat!")
+
+	ui_command.emit("hide_action_menu", {})
+
+	# Somber audio
+	audio_command.emit("play_jingle", {"jingle": "defeat"})
+
+	# Camera defeat shot
+	camera_command.emit("defeat_pan", {"targets": player_party})
+
+	# Defeat UI
+	ui_command.emit("show_defeat_screen", {"stats": battle_stats})
+
 	battle_defeat.emit()
 	EventBus.battle_ended.emit(false, {})
 	GameManager.change_state(Enums.GameState.GAME_OVER)
 
 func _on_character_died(character: CharacterBase) -> void:
 	EventBus.emit_debug("%s has been defeated!" % character.character_name)
+
+	# Dramatic death sequence
+	await get_tree().create_timer(death_dramatic_pause * 0.3).timeout
+
+	# Camera focus on dying character
+	camera_command.emit("focus", {"target": character, "zoom": 1.1, "duration": 0.3})
+
+	# Death VFX
+	vfx_command.emit("death_effect", {"position": character.global_position})
+	audio_command.emit("play_sfx", {"sound": "death"})
+
+	# Extra drama for bosses
+	if character in active_bosses:
+		camera_command.emit("shake", {"intensity": 20.0, "duration": 1.5})
+		vfx_command.emit("boss_death_explosion", {"position": character.global_position})
+		await get_tree().create_timer(1.5).timeout
+
+	await get_tree().create_timer(death_dramatic_pause).timeout
+
+	camera_command.emit("return_to_battle", {"duration": camera_return_time})
 
 	# Remove from turn order
 	if character in turn_order:
@@ -717,5 +1120,6 @@ func get_battle_summary() -> Dictionary:
 		"state": Enums.BattleState.keys()[battle_state],
 		"player_party_alive": player_party.filter(func(p): return p.is_alive()).size(),
 		"enemy_party_alive": enemy_party.filter(func(e): return e.is_alive()).size(),
-		"current_character": get_current_character().character_name if get_current_character() else "None"
+		"current_character": get_current_character().character_name if get_current_character() else "None",
+		"stats": battle_stats
 	}
