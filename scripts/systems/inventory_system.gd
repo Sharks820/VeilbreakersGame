@@ -284,6 +284,21 @@ func get_key_items() -> Array[ItemData]:
 			result.append(data)
 	return result
 
+func get_battle_usable_items() -> Array[Dictionary]:
+	"""Get all items that can be used in battle"""
+	var result: Array[Dictionary] = []
+
+	for item_id in items:
+		var data := get_item_data(item_id)
+		if data and data.usable_in_battle and data.item_type == Enums.ItemType.CONSUMABLE:
+			result.append({
+				"item_id": item_id,
+				"quantity": items[item_id],
+				"data": data
+			})
+
+	return result
+
 # =============================================================================
 # SERIALIZATION
 # =============================================================================

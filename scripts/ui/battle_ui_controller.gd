@@ -331,15 +331,34 @@ func _populate_skill_list() -> void:
 		return
 
 	for skill_id in current_character.known_skills:
-		if current_character.can_use_skill(skill_id):
-			var button := Button.new()
-			button.text = _get_skill_display_name(skill_id)
+		var can_use := current_character.can_use_skill(skill_id)
+		var skill_name := _get_skill_display_name(skill_id)
+		var mp_cost := _get_skill_mp_cost(skill_id)
+
+		var button := Button.new()
+		if mp_cost > 0:
+			button.text = "%s (%d MP)" % [skill_name, mp_cost]
+		else:
+			button.text = skill_name
+
+		if can_use:
 			button.pressed.connect(_on_skill_selected.bind(skill_id))
-			skill_list.add_child(button)
+		else:
+			button.disabled = true
+			button.modulate = Color(0.5, 0.5, 0.5, 0.8)
+		skill_list.add_child(button)
 
 func _get_skill_display_name(skill_id: String) -> String:
-	# TODO: Load from skill database
+	var skill_data := DataManager.get_skill(skill_id)
+	if skill_data:
+		return skill_data.display_name
 	return skill_id.capitalize().replace("_", " ")
+
+func _get_skill_mp_cost(skill_id: String) -> int:
+	var skill_data := DataManager.get_skill(skill_id)
+	if skill_data:
+		return skill_data.mp_cost
+	return 0
 
 func _on_skill_selected(skill_id: String) -> void:
 	pending_action = Enums.BattleAction.SKILL
@@ -351,7 +370,14 @@ func _on_skill_selected(skill_id: String) -> void:
 	_start_target_selection(targets_allies)
 
 func _skill_targets_allies(skill_id: String) -> bool:
-	# TODO: Read from skill data
+	var skill_data := DataManager.get_skill(skill_id)
+	if skill_data:
+		match skill_data.target_type:
+			Enums.TargetType.SINGLE_ALLY, Enums.TargetType.ALL_ALLIES, Enums.TargetType.SELF:
+				return true
+			_:
+				return false
+	# Fallback
 	return skill_id.contains("heal") or skill_id.contains("buff")
 
 func _on_skill_back_pressed() -> void:
@@ -372,7 +398,28 @@ func _populate_item_list() -> void:
 	for child in item_list.get_children():
 		child.queue_free()
 
-	# TODO: Get usable items from inventory
+	# Get usable items from inventory
+	var battle_items := InventorySystem.get_battle_usable_items()
+
+	if battle_items.is_empty():
+		var label := Label.new()
+		label.text = "No usable items"
+		label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		item_list.add_child(label)
+		return
+
+	for item_info in battle_items:
+		var item_data: ItemData = item_info.data
+		var quantity: int = item_info.quantity
+		var item_id: String = item_info.item_id
+
+		var button := Button.new()
+		button.text = "%s x%d" % [item_data.display_name, quantity]
+		button.pressed.connect(_on_item_selected.bind(item_id))
+		item_list.add_child(button)
+
+func _populate_item_list_fallback() -> void:
+	"""Fallback for when inventory is empty (test purposes)"""
 	var items := ["Potion", "Ether", "Antidote"]
 
 	for item_name in items:
@@ -657,10 +704,72 @@ func _update_status_effects_display(character: CharacterBase) -> void:
 		child.queue_free()
 
 	for effect in character.status_effects.keys():
+		var icon_path := _get_status_effect_icon_path(effect)
+		if icon_path == "":
+			continue
+
 		var icon := TextureRect.new()
 		icon.custom_minimum_size = Vector2(24, 24)
-		# TODO: Load actual status effect icons
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+
+		var tex := load(icon_path)
+		if tex:
+			icon.texture = tex
+			icon.tooltip_text = _get_status_effect_name(effect)
 		status_effects_container.add_child(icon)
+
+func _get_status_effect_icon_path(effect: Enums.StatusEffect) -> String:
+	"""Map status effects to icon paths"""
+	match effect:
+		# Debuffs
+		Enums.StatusEffect.POISON:
+			return "res://assets/ui/icons/debuffs/poison.png"
+		Enums.StatusEffect.BURN:
+			return "res://assets/ui/icons/debuffs/burn.png"
+		Enums.StatusEffect.FREEZE:
+			return "res://assets/ui/icons/debuffs/freeze.png"
+		Enums.StatusEffect.PARALYSIS:
+			return "res://assets/ui/icons/debuffs/stun.png"
+		Enums.StatusEffect.SLEEP:
+			return "res://assets/ui/icons/debuffs/sleep.png"
+		Enums.StatusEffect.CONFUSION:
+			return "res://assets/ui/icons/debuffs/confuse.png"
+		Enums.StatusEffect.BLIND:
+			return "res://assets/ui/icons/debuffs/blind.png"
+		Enums.StatusEffect.SILENCE:
+			return "res://assets/ui/icons/debuffs/silence.png"
+		Enums.StatusEffect.BLEED:
+			return "res://assets/ui/icons/debuffs/bleed.png"
+		Enums.StatusEffect.CORRUPTED:
+			return "res://assets/ui/icons/debuffs/corruption.png"
+		Enums.StatusEffect.SORROW:
+			return "res://assets/ui/icons/debuffs/curse.png"
+		Enums.StatusEffect.ATTACK_DOWN:
+			return "res://assets/ui/icons/debuffs/attack_down.png"
+		Enums.StatusEffect.DEFENSE_DOWN:
+			return "res://assets/ui/icons/debuffs/defense_down.png"
+		Enums.StatusEffect.SPEED_DOWN:
+			return "res://assets/ui/icons/debuffs/speed_down.png"
+		# Buffs
+		Enums.StatusEffect.REGEN:
+			return "res://assets/ui/icons/buffs/regen.png"
+		Enums.StatusEffect.SHIELD:
+			return "res://assets/ui/icons/buffs/shield.png"
+		Enums.StatusEffect.ATTACK_UP:
+			return "res://assets/ui/icons/buffs/attack_up.png"
+		Enums.StatusEffect.DEFENSE_UP:
+			return "res://assets/ui/icons/buffs/defense_up.png"
+		Enums.StatusEffect.SPEED_UP:
+			return "res://assets/ui/icons/buffs/speed_up.png"
+		Enums.StatusEffect.PURIFYING:
+			return "res://assets/ui/icons/buffs/blessed.png"
+		_:
+			return ""
+
+func _get_status_effect_name(effect: Enums.StatusEffect) -> String:
+	"""Get display name for status effect tooltip"""
+	return Enums.StatusEffect.keys()[effect].capitalize().replace("_", " ")
 
 func update_turn_order(order: Array[CharacterBase]) -> void:
 	for child in turn_order_display.get_children():
