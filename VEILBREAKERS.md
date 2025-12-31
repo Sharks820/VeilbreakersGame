@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v3.3** | Last updated: 2025-12-30
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v3.4** | Last updated: 2025-12-31
 
 ---
 
@@ -58,20 +58,41 @@
 
 ## Battle System
 
-**Status: 60-70% complete**
+**Status: 75% complete**
 
 ### Architecture
 - BattleManager, TurnManager, DamageCalculator
 - StatusEffectManager, AIController
 - 17 status effects (POISON, BURN, FREEZE, etc.)
-- Speed-based turn order calculation
+- Lock-in turn order system (v2.8)
+
+### Turn Order System (Lock-in)
+```
+1. PARTY LOCK-IN: All allies select actions (protagonist + AI monsters)
+2. PARTY EXECUTION: All queued actions execute in order
+3. ENEMY PHASE: Enemies get attack phases = alive party count
+4. ROUND END: Return to step 1
+```
+
+**Key States:** PARTY_LOCK_IN, PARTY_EXECUTING, ENEMY_EXECUTING
 
 ### Damage Formula
 ```
 power * ATK/DEF * level * element * variance * crits
 ```
 
+### Battle UI (v2.8)
+| Element | Size | Details |
+|---------|------|---------|
+| Sidebar Panels | 150x48 | Party HP/MP bars |
+| Portraits | 32x32 | Character sprites |
+| Turn Order | 36x36 | Portrait panels with arrows |
+| HP/MP Bars | 95x14 | Custom ornate frames |
+
 ### Recent Fixes (Dec 2025)
+- Lock-in turn system: party selects all actions before execution
+- Turn order display with actual character portraits + arrows
+- Enemy attacks = alive party members count
 - Fixed stat modifier cleanup bug in StatusEffectManager
 - Created KnockbackAnimator with multiple types (normal, critical, heavy, flinch, shake, death)
 - AI healer targeting: +100 threat for healers, +30 for support
