@@ -75,6 +75,10 @@ var enemies: Array[CharacterBase] = []
 
 var battle_manager: BattleManager = null
 
+# Enemy tooltip state
+var enemy_tooltip: PanelContainer = null
+var tooltip_visible: bool = false
+
 # =============================================================================
 # INITIALIZATION
 # =============================================================================
@@ -741,6 +745,7 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	"""Create a panel for one enemy in the sidebar"""
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(190, 80)
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 
 	# Style the panel with red-tinted border for enemies
 	var panel_style := StyleBoxFlat.new()
@@ -749,6 +754,10 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	panel_style.set_border_width_all(1)
 	panel_style.set_corner_radius_all(4)
 	panel.add_theme_stylebox_override("panel", panel_style)
+
+	# Connect hover signals for tooltip
+	panel.mouse_entered.connect(_on_enemy_panel_hover.bind(enemy, panel))
+	panel.mouse_exited.connect(_on_enemy_panel_unhover)
 
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 6)
@@ -1234,3 +1243,167 @@ func _get_brand_color(brand: Enums.Brand) -> Color:
 			return Color(0.9, 0.8, 0.6)  # Bone/fang color - physical DPS
 		_:
 			return Color(0.5, 0.5, 0.5)  # Gray for none
+
+# =============================================================================
+# ENEMY HOVER TOOLTIP
+# =============================================================================
+
+func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
+	"""Show tooltip with enemy details on hover"""
+	_hide_enemy_tooltip()  # Hide any existing tooltip
+
+	# Create tooltip panel
+	enemy_tooltip = PanelContainer.new()
+	enemy_tooltip.name = "EnemyTooltip"
+	enemy_tooltip.custom_minimum_size = Vector2(280, 0)
+	enemy_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# Style the tooltip
+	var tooltip_style := StyleBoxFlat.new()
+	tooltip_style.bg_color = Color(0.08, 0.06, 0.1, 0.95)
+	tooltip_style.border_color = Color(0.6, 0.3, 0.4, 1.0)
+	tooltip_style.set_border_width_all(2)
+	tooltip_style.set_corner_radius_all(6)
+	tooltip_style.content_margin_left = 12
+	tooltip_style.content_margin_right = 12
+	tooltip_style.content_margin_top = 10
+	tooltip_style.content_margin_bottom = 10
+	enemy_tooltip.add_theme_stylebox_override("panel", tooltip_style)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	enemy_tooltip.add_child(vbox)
+
+	# Name header
+	var name_label := Label.new()
+	name_label.text = enemy.character_name
+	name_label.add_theme_font_size_override("font_size", 16)
+	name_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.7))
+	vbox.add_child(name_label)
+
+	# Level and tier
+	var level_label := Label.new()
+	if enemy is Monster:
+		var monster := enemy as Monster
+		var tier_name := Enums.MonsterTier.keys()[monster.monster_tier]
+		level_label.text = "Lv.%d %s" % [enemy.level, tier_name]
+	else:
+		level_label.text = "Level %d" % enemy.level
+	level_label.add_theme_font_size_override("font_size", 11)
+	level_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	vbox.add_child(level_label)
+
+	# Separator
+	var sep := HSeparator.new()
+	sep.add_theme_color_override("separator", Color(0.4, 0.3, 0.35))
+	vbox.add_child(sep)
+
+	# Stats section
+	var stats_grid := GridContainer.new()
+	stats_grid.columns = 2
+	stats_grid.add_theme_constant_override("h_separation", 16)
+	stats_grid.add_theme_constant_override("v_separation", 2)
+	vbox.add_child(stats_grid)
+
+	_add_stat_row(stats_grid, "ATK", enemy.base_attack, Color(1.0, 0.5, 0.4))
+	_add_stat_row(stats_grid, "DEF", enemy.base_defense, Color(0.5, 0.7, 1.0))
+	_add_stat_row(stats_grid, "MAG", enemy.base_magic, Color(0.8, 0.5, 1.0))
+	_add_stat_row(stats_grid, "SPD", enemy.base_speed, Color(0.5, 1.0, 0.7))
+
+	# Monster-specific info
+	if enemy is Monster:
+		var monster := enemy as Monster
+
+		# Brand info
+		var sep2 := HSeparator.new()
+		sep2.add_theme_color_override("separator", Color(0.4, 0.3, 0.35))
+		vbox.add_child(sep2)
+
+		var brand_info := HBoxContainer.new()
+		brand_info.add_theme_constant_override("separation", 8)
+		vbox.add_child(brand_info)
+
+		var brand_title := Label.new()
+		brand_title.text = "Brand:"
+		brand_title.add_theme_font_size_override("font_size", 10)
+		brand_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		brand_info.add_child(brand_title)
+
+		var brand_value := Label.new()
+		brand_value.text = _get_brand_name(monster.brand)
+		brand_value.add_theme_font_size_override("font_size", 10)
+		brand_value.add_theme_color_override("font_color", _get_brand_color(monster.brand))
+		brand_info.add_child(brand_value)
+
+		# Corruption info
+		var corruption_info := HBoxContainer.new()
+		corruption_info.add_theme_constant_override("separation", 8)
+		vbox.add_child(corruption_info)
+
+		var corruption_title := Label.new()
+		corruption_title.text = "Corruption:"
+		corruption_title.add_theme_font_size_override("font_size", 10)
+		corruption_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		corruption_info.add_child(corruption_title)
+
+		var corruption_percent := (monster.corruption_level / monster.max_corruption) * 100.0
+		var corruption_value := Label.new()
+		corruption_value.text = "%.0f%%" % corruption_percent
+		corruption_value.add_theme_font_size_override("font_size", 10)
+		corruption_value.add_theme_color_override("font_color", Color(0.6, 0.2, 0.7))
+		corruption_info.add_child(corruption_value)
+
+		# Description if available
+		if monster.description != "":
+			var sep3 := HSeparator.new()
+			sep3.add_theme_color_override("separator", Color(0.4, 0.3, 0.35))
+			vbox.add_child(sep3)
+
+			var desc_label := Label.new()
+			desc_label.text = monster.description
+			desc_label.add_theme_font_size_override("font_size", 10)
+			desc_label.add_theme_color_override("font_color", Color(0.7, 0.65, 0.6))
+			desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			desc_label.custom_minimum_size.x = 256
+			vbox.add_child(desc_label)
+
+	# Position tooltip to the left of the panel
+	add_child(enemy_tooltip)
+	await get_tree().process_frame
+
+	var panel_global := panel.global_position
+	var tooltip_pos := Vector2(panel_global.x - enemy_tooltip.size.x - 10, panel_global.y)
+
+	# Keep within screen bounds
+	if tooltip_pos.x < 10:
+		tooltip_pos.x = panel_global.x + panel.size.x + 10
+	if tooltip_pos.y + enemy_tooltip.size.y > size.y - 10:
+		tooltip_pos.y = size.y - enemy_tooltip.size.y - 10
+
+	enemy_tooltip.position = tooltip_pos
+	tooltip_visible = true
+
+func _add_stat_row(grid: GridContainer, stat_name: String, value: int, color: Color) -> void:
+	"""Helper to add a stat row to the tooltip grid"""
+	var name_label := Label.new()
+	name_label.text = stat_name + ":"
+	name_label.add_theme_font_size_override("font_size", 10)
+	name_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	grid.add_child(name_label)
+
+	var value_label := Label.new()
+	value_label.text = str(value)
+	value_label.add_theme_font_size_override("font_size", 10)
+	value_label.add_theme_color_override("font_color", color)
+	grid.add_child(value_label)
+
+func _on_enemy_panel_unhover() -> void:
+	"""Hide tooltip when mouse leaves enemy panel"""
+	_hide_enemy_tooltip()
+
+func _hide_enemy_tooltip() -> void:
+	"""Remove and destroy the tooltip"""
+	if enemy_tooltip and is_instance_valid(enemy_tooltip):
+		enemy_tooltip.queue_free()
+		enemy_tooltip = null
+	tooltip_visible = false
