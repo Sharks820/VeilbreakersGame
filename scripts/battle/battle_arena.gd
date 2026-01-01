@@ -67,6 +67,7 @@ func _connect_signals() -> void:
 	EventBus.battle_started.connect(_on_battle_started)
 	EventBus.damage_dealt.connect(_on_damage_dealt)
 	EventBus.healing_done.connect(_on_healing_done)
+	EventBus.action_executed.connect(_on_action_executed)
 
 	# Connect Battle Sequencer command signals to animation systems
 	if battle_sequencer:
@@ -251,21 +252,27 @@ func _create_party_slot(character: CharacterBase) -> PanelContainer:
 	# HP Bar
 	var hp_bar := ProgressBar.new()
 	hp_bar.custom_minimum_size = Vector2(90, 10)
-	hp_bar.max_value = character.get_max_hp()
+	hp_bar.max_value = maxf(character.get_max_hp(), 1.0)
 	hp_bar.value = character.current_hp
 	hp_bar.show_percentage = false
 	_style_hp_bar(hp_bar)
 	vbox.add_child(hp_bar)
 
+	# Store reference on character for updates
+	character.set_meta("sidebar_hp_bar", hp_bar)
+
 	# MP Bar (if character has MP)
 	if character.base_max_mp > 0:
 		var mp_bar := ProgressBar.new()
 		mp_bar.custom_minimum_size = Vector2(90, 6)
-		mp_bar.max_value = character.get_max_mp()
+		mp_bar.max_value = maxf(character.get_max_mp(), 1.0)
 		mp_bar.value = character.current_mp
 		mp_bar.show_percentage = false
 		_style_mp_bar(mp_bar)
 		vbox.add_child(mp_bar)
+
+		# Store reference on character for updates
+		character.set_meta("sidebar_mp_bar", mp_bar)
 
 	return slot
 
@@ -406,11 +413,14 @@ func _create_enemy_slot(character: CharacterBase) -> PanelContainer:
 	# HP Bar (red)
 	var hp_bar := ProgressBar.new()
 	hp_bar.custom_minimum_size = Vector2(90, 10)
-	hp_bar.max_value = character.get_max_hp()
+	hp_bar.max_value = maxf(character.get_max_hp(), 1.0)
 	hp_bar.value = character.current_hp
 	hp_bar.show_percentage = false
 	_style_enemy_hp_bar(hp_bar)
 	vbox.add_child(hp_bar)
+
+	# Store reference on character for updates
+	character.set_meta("sidebar_hp_bar", hp_bar)
 
 	return slot
 
@@ -731,10 +741,15 @@ func _on_damage_dealt(source: Node, target: Node, amount: int, is_critical: bool
 	if not sprite:
 		return
 
-	# Update HP bar
+	# Update HP bar on sprite
 	var hp_bar: ProgressBar = sprite.get_node_or_null("HPBar")
 	if hp_bar:
 		hp_bar.value = character.current_hp
+
+	# Update sidebar HP bar
+	var sidebar_hp_bar: ProgressBar = character.get_meta("sidebar_hp_bar", null)
+	if sidebar_hp_bar and is_instance_valid(sidebar_hp_bar):
+		sidebar_hp_bar.value = character.current_hp
 
 	# Update screen effects with health percent for vignette
 	if screen_effects and character in battle_manager.player_party:
@@ -796,10 +811,20 @@ func _on_healing_done(_source: Node, target: Node, amount: int) -> void:
 	if not sprite:
 		return
 
-	# Update HP bar
+	# Update HP bar on sprite
 	var hp_bar: ProgressBar = sprite.get_node_or_null("HPBar")
 	if hp_bar:
 		hp_bar.value = character.current_hp
+
+	# Update sidebar HP bar
+	var sidebar_hp_bar: ProgressBar = character.get_meta("sidebar_hp_bar", null)
+	if sidebar_hp_bar and is_instance_valid(sidebar_hp_bar):
+		sidebar_hp_bar.value = character.current_hp
+
+	# Update sidebar MP bar (if exists)
+	var sidebar_mp_bar: ProgressBar = character.get_meta("sidebar_mp_bar", null)
+	if sidebar_mp_bar and is_instance_valid(sidebar_mp_bar):
+		sidebar_mp_bar.value = character.current_mp
 
 	# Update screen effects with health percent for vignette
 	if screen_effects and character in battle_manager.player_party:
@@ -823,6 +848,23 @@ func _on_healing_done(_source: Node, target: Node, amount: int) -> void:
 
 	# Play heal animation
 	_play_heal_animation(sprite)
+
+func _on_action_executed(character: Node, action: int, _results: Dictionary) -> void:
+	"""Update sidebar bars after any action (especially for MP after skill use)"""
+	if not character is CharacterBase:
+		return
+
+	var char_base: CharacterBase = character
+
+	# Update sidebar MP bar (skills consume MP)
+	var sidebar_mp_bar: ProgressBar = char_base.get_meta("sidebar_mp_bar", null)
+	if sidebar_mp_bar and is_instance_valid(sidebar_mp_bar):
+		sidebar_mp_bar.value = char_base.current_mp
+
+	# Also update HP bar in case action affected HP (e.g., HP cost skills)
+	var sidebar_hp_bar: ProgressBar = char_base.get_meta("sidebar_hp_bar", null)
+	if sidebar_hp_bar and is_instance_valid(sidebar_hp_bar):
+		sidebar_hp_bar.value = char_base.current_hp
 
 func _on_battle_victory(rewards: Dictionary) -> void:
 	is_battle_active = false
