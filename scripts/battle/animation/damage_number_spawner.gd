@@ -86,14 +86,10 @@ func spawn_damage(
 	is_player_damage: bool = false
 ) -> void:
 	"""Spawn a damage number"""
-	var number = _get_from_pool()
-	if not number:
-		return
-	
 	var color = _get_brand_color(brand)
 	if is_critical:
 		color = crit_color
-	
+
 	var config = {
 		"value": amount,
 		"color": color,
@@ -102,15 +98,11 @@ func spawn_damage(
 		"prefix": "",
 		"suffix": "",
 	}
-	
+
 	_spawn_at(position, config)
 
 func spawn_heal(position: Vector2, amount: int, is_hot: bool = false) -> void:
 	"""Spawn a healing number"""
-	var number = _get_from_pool()
-	if not number:
-		return
-	
 	var config = {
 		"value": amount,
 		"color": heal_color,
@@ -120,7 +112,7 @@ func spawn_heal(position: Vector2, amount: int, is_hot: bool = false) -> void:
 		"suffix": "",
 		"scale_mult": 0.9 if is_hot else 1.0,
 	}
-	
+
 	_spawn_at(position, config)
 
 func spawn_miss(position: Vector2) -> void:

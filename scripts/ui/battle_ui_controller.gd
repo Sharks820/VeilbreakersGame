@@ -79,6 +79,12 @@ var battle_manager: BattleManager = null
 var enemy_tooltip: PanelContainer = null
 var tooltip_visible: bool = false
 
+# Combat log scroll state
+var user_scrolled_log: bool = false  # True if user manually scrolled
+
+# Turn order breathing tweens (stored to kill before recreating)
+var _turn_order_tweens: Array[Tween] = []
+
 # =============================================================================
 # INITIALIZATION
 # =============================================================================
@@ -100,8 +106,14 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_force_ui_layout()
 
+	# Connect combat log scroll bar for smart scrolling
+	if combat_log_scroll:
+		var scrollbar := combat_log_scroll.get_v_scroll_bar()
+		if scrollbar:
+			scrollbar.value_changed.connect(_on_combat_log_scrolled)
+
 func _force_ui_layout() -> void:
-	"""Force UI elements to correct positions for CanvasLayer rendering"""
+	"""Force UI elements to correct positions for CanvasLayer rendering - RESPONSIVE"""
 	var viewport_size := Vector2(1920, 1080)
 	var queried_size := get_viewport().get_visible_rect().size
 	if queried_size.x > 0 and queried_size.y > 0:
@@ -112,36 +124,47 @@ func _force_ui_layout() -> void:
 	size = viewport_size
 	visible = true
 
-	# TopBar - top of screen, full width, 50px height (reduced)
+	# TopBar - top of screen, full width, 50px height
 	if top_bar:
-		top_bar.position = Vector2(0, 0)
-		top_bar.size = Vector2(viewport_size.x, 50)
+		top_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
+		top_bar.offset_bottom = 50
 		top_bar.show()
 
-	# PartyPanel - bottom CENTER, action menu only (reduced height)
-	# Party info moved to left sidebar via party_status_container
+	# PartyPanel - bottom CENTER, use anchors for responsive positioning
 	if party_panel:
-		# Position at bottom center for action buttons
-		var panel_width := 800.0
-		party_panel.position = Vector2((viewport_size.x - panel_width) / 2, viewport_size.y - 100)
-		party_panel.size = Vector2(panel_width, 90)
+		# Use anchor preset for bottom-center
+		party_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+		party_panel.anchor_left = 0.5
+		party_panel.anchor_right = 0.5
+		party_panel.anchor_top = 1.0
+		party_panel.anchor_bottom = 1.0
+		# Scale panel width based on viewport (min 600, max 800)
+		var panel_width := clampf(viewport_size.x * 0.45, 600.0, 800.0)
+		party_panel.offset_left = -panel_width / 2
+		party_panel.offset_right = panel_width / 2
+		party_panel.offset_top = -85
+		party_panel.offset_bottom = -5
 		party_panel.show()
 
-		# Hide the party status container from main panel (we'll show a separate sidebar)
+		# Hide the party status container from main panel
 		if party_status_container:
 			party_status_container.hide()
 
-	# CombatLog - bottom-right corner, smaller
+	# CombatLog - bottom-right corner, responsive
 	if combat_log:
-		combat_log.position = Vector2(viewport_size.x - 250, viewport_size.y - 180)
-		combat_log.size = Vector2(240, 160)
+		combat_log.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+		combat_log.offset_left = -250
+		combat_log.offset_top = -200
+		combat_log.offset_right = -10
+		combat_log.offset_bottom = -90
 		combat_log.show()
+		# Ensure scroll bar is visible
+		if combat_log_scroll:
+			combat_log_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 
-	# EnemyPanel - right side, narrow vertical sidebar
+	# EnemyPanel - right side (handled by battle_arena sidebars now)
 	if enemy_panel:
-		enemy_panel.position = Vector2(viewport_size.x - 180, 60)
-		enemy_panel.size = Vector2(170, 400)
-		enemy_panel.show()
+		enemy_panel.hide()  # We use battle_arena sidebars instead
 
 	# Create left party sidebar if not exists
 	_create_left_party_sidebar(viewport_size)
@@ -262,19 +285,7 @@ func _input(event: InputEvent) -> void:
 # =============================================================================
 
 func setup_battle(player_party: Array, enemy_party: Array) -> void:
-	# FIRST LINE - unconditional debug
-	print("[BattleUI] setup_battle ENTERED!")
-
-	# DEBUG: Show player count visually - put this BEFORE anything else
-	var debug_label := Label.new()
-	debug_label.text = "SETUP_BATTLE: players=%d enemies=%d" % [player_party.size(), enemy_party.size()]
-	debug_label.add_theme_font_size_override("font_size", 24)
-	debug_label.add_theme_color_override("font_color", Color.YELLOW)
-	debug_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	debug_label.position = Vector2(10, 210)  # Different Y position
-	add_child(debug_label)
-
-	# Now assign to typed arrays
+	# Assign to typed arrays
 	party_members.clear()
 	for p in player_party:
 		if p is CharacterBase:
@@ -285,9 +296,6 @@ func setup_battle(player_party: Array, enemy_party: Array) -> void:
 		if e is CharacterBase:
 			enemies.append(e)
 
-	print("[BattleUI] party_members now has %d members" % party_members.size())
-	debug_label.text += " | assigned=%d" % party_members.size()
-
 	_update_party_display()
 	_update_enemy_sidebar()
 
@@ -296,9 +304,7 @@ func setup_battle(player_party: Array, enemy_party: Array) -> void:
 	var queried_size := get_viewport().get_visible_rect().size
 	if queried_size.x > 0 and queried_size.y > 0:
 		viewport_size = queried_size
-	print("[BattleUI] About to call _create_left_party_sidebar")
 	_create_left_party_sidebar(viewport_size)
-	print("[BattleUI] _create_left_party_sidebar returned")
 
 	# FORCE hide party_status_container - we use left sidebar instead
 	if party_status_container:
@@ -384,28 +390,34 @@ func _is_boss_battle() -> bool:
 # =============================================================================
 
 func _on_attack_pressed() -> void:
+	_reset_combat_log_scroll()  # Resume auto-scroll on user interaction
 	pending_action = Enums.BattleAction.ATTACK
 	pending_skill = ""
 	_start_target_selection(false)  # Target enemies
 
 func _on_skill_pressed() -> void:
+	_reset_combat_log_scroll()
 	_show_skill_menu()
 
 func _on_purify_pressed() -> void:
+	_reset_combat_log_scroll()
 	pending_action = Enums.BattleAction.PURIFY
 	pending_skill = ""
 	_start_target_selection(false, true)  # Target enemies (purifiable only)
 
 func _on_item_pressed() -> void:
+	_reset_combat_log_scroll()
 	_show_item_menu()
 
 func _on_defend_pressed() -> void:
+	_reset_combat_log_scroll()
 	pending_action = Enums.BattleAction.DEFEND
 	pending_skill = ""
 	action_selected.emit(pending_action, current_character, "")
 	set_ui_state(UIState.ANIMATING)
 
 func _on_flee_pressed() -> void:
+	_reset_combat_log_scroll()
 	pending_action = Enums.BattleAction.FLEE
 	pending_skill = ""
 	action_selected.emit(pending_action, null, "")
@@ -609,14 +621,22 @@ func _confirm_target() -> void:
 	if valid_targets.is_empty():
 		return
 
+	_reset_combat_log_scroll()  # Resume auto-scroll on target confirm
 	var target := valid_targets[current_target_index]
 	target_selector.hide()
+
+	# Clear all target highlights from sidebars
+	_clear_all_sidebar_highlights()
 
 	action_selected.emit(pending_action, target, pending_skill)
 	set_ui_state(UIState.ANIMATING)
 
 func _cancel_target_selection() -> void:
 	target_selector.hide()
+
+	# Clear all target highlights from sidebars
+	_clear_all_sidebar_highlights()
+
 	target_cancelled.emit()
 	set_ui_state(UIState.ACTION_SELECT)
 	attack_button.grab_focus()
@@ -958,6 +978,37 @@ func _highlight_ally_in_sidebar(target: CharacterBase) -> void:
 						style.border_color = Color(0.3, 0.25, 0.4, 1.0)
 						style.set_border_width_all(1)
 
+func _clear_all_sidebar_highlights() -> void:
+	"""Clear all target highlights from both enemy and party sidebars"""
+	# Reset enemy sidebar to normal state
+	for enemy in enemies:
+		if enemy.has_meta("ui_panel"):
+			var panel: PanelContainer = enemy.get_meta("ui_panel")
+			if is_instance_valid(panel):
+				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
+				if style:
+					style.border_color = Color(0.5, 0.25, 0.25, 1.0)
+					style.set_border_width_all(1)
+
+	# Reset party sidebar to normal state
+	for ally in party_members:
+		if ally.has_meta("ui_panel"):
+			var panel: PanelContainer = ally.get_meta("ui_panel")
+			if is_instance_valid(panel):
+				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
+				if style:
+					style.border_color = Color(0.3, 0.25, 0.4, 1.0)
+					style.set_border_width_all(1)
+
+		# Also check sidebar_panel (left sidebar)
+		if ally.has_meta("sidebar_panel"):
+			var panel: PanelContainer = ally.get_meta("sidebar_panel")
+			if is_instance_valid(panel):
+				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
+				if style:
+					style.border_color = Color(0.3, 0.5, 0.4, 1.0)
+					style.set_border_width_all(1)
+
 func update_enemy_hp(enemy: CharacterBase) -> void:
 	"""Update a single enemy's HP display in the sidebar"""
 	if enemy.has_meta("ui_panel"):
@@ -1023,12 +1074,28 @@ func _get_status_effect_name(effect: Enums.StatusEffect) -> String:
 	return Enums.StatusEffect.keys()[effect].capitalize().replace("_", " ")
 
 func update_turn_order(order: Array[CharacterBase]) -> void:
+	# Verify turn_order_display exists
+	if not turn_order_display:
+		push_error("[TURN ORDER] turn_order_display is NULL!")
+		return
+
+	# Kill existing breathing tweens to prevent memory leak
+	for tween in _turn_order_tweens:
+		if tween and tween.is_valid():
+			tween.kill()
+	_turn_order_tweens.clear()
+
+	# Clear existing children immediately (don't await - causes issues)
 	for child in turn_order_display.get_children():
-		child.queue_free()
+		child.free()
+
+	if order.is_empty():
+		return
 
 	for i in range(mini(8, order.size())):
 		var character := order[i]
-		var is_ally := character.is_protagonist or character in party_members
+		# Check if ally by checking protagonist flag OR if in player_party from battle_manager
+		var is_ally := character.is_protagonist or (battle_manager and character in battle_manager.player_party)
 
 		# Create portrait container - compact 36x36
 		var portrait_panel := PanelContainer.new()
@@ -1101,6 +1168,7 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 		var breathe_tween := create_tween().set_loops()
 		breathe_tween.tween_property(portrait_panel, "modulate", glow_color, 0.8).set_ease(Tween.EASE_IN_OUT)
 		breathe_tween.tween_property(portrait_panel, "modulate", base_color, 0.8).set_ease(Tween.EASE_IN_OUT)
+		_turn_order_tweens.append(breathe_tween)
 
 		# Add arrow between characters (except after last)
 		if i < mini(7, order.size() - 1):
@@ -1567,11 +1635,8 @@ var left_party_sidebar: PanelContainer = null
 
 func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	"""Create a vertical party sidebar on the left side of the screen"""
-	print("[BattleUI] _create_left_party_sidebar called with %d party members" % party_members.size())
-
 	# Don't create sidebar if no party members
 	if party_members.is_empty():
-		print("[BattleUI] Skipping sidebar - no party members yet")
 		return
 
 	# Remove existing sidebar if present
@@ -1609,22 +1674,10 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	for member in party_members:
 		var slot := _create_party_sidebar_slot(member)
 		vbox.add_child(slot)
-		print("[BattleUI] Added sidebar slot for: %s" % member.character_name)
 
 	add_child(left_party_sidebar)
-	left_party_sidebar.show()  # Force show
+	left_party_sidebar.show()
 	left_party_sidebar.visible = true
-	print("[BattleUI] Left party sidebar created and added to UI")
-
-	# DEBUG: Add a bright red test rectangle to confirm code execution
-	var debug_rect := ColorRect.new()
-	debug_rect.color = Color(1.0, 0.0, 0.0, 1.0)  # Bright red
-	debug_rect.custom_minimum_size = Vector2(100, 100)
-	debug_rect.size = Vector2(100, 100)
-	debug_rect.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	debug_rect.position = Vector2(200, 100)  # Different position to not overlap sidebar
-	add_child(debug_rect)
-	print("[BattleUI] DEBUG: Red test rectangle added")
 
 func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	"""Create a compact party member slot for the left sidebar"""
@@ -1754,10 +1807,25 @@ func update_party_sidebar() -> void:
 					mp_bar.value = member.current_mp
 
 func _auto_scroll_combat_log() -> void:
-	"""Auto-scroll combat log to bottom if user hasn't scrolled up"""
+	"""Auto-scroll combat log to bottom if user hasn't manually scrolled away"""
+	if not combat_log_scroll:
+		return
+	if user_scrolled_log:
+		return  # User scrolled manually, don't auto-scroll until they interact
+	var scrollbar := combat_log_scroll.get_v_scroll_bar()
+	combat_log_scroll.scroll_vertical = int(scrollbar.max_value)
+
+func _on_combat_log_scrolled(_value: float) -> void:
+	"""Called when user manually scrolls the combat log"""
 	if not combat_log_scroll:
 		return
 	var scrollbar := combat_log_scroll.get_v_scroll_bar()
+	# If user scrolled away from bottom, mark as manually scrolled
 	var at_bottom := scrollbar.value >= scrollbar.max_value - 30
-	if at_bottom:
-		combat_log_scroll.scroll_vertical = int(scrollbar.max_value)
+	if not at_bottom:
+		user_scrolled_log = true
+
+func _reset_combat_log_scroll() -> void:
+	"""Reset scroll state when user interacts with battle (button press, target select, etc.)"""
+	user_scrolled_log = false
+	_auto_scroll_combat_log()

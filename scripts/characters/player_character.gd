@@ -202,10 +202,8 @@ func get_equipped_item(slot: Enums.EquipmentSlot) -> String:
 			return equipped_accessory_2
 	return ""
 
-func _get_equipment_bonus(stat: Enums.Stat) -> float:
-	var total := 0.0
-	# TODO: Load equipment data and get stat bonuses
-	return total
+# Equipment bonus calculation is handled by parent class CharacterBase
+# which properly queries InventorySystem for equipment stats
 
 # =============================================================================
 # SKILL LEARNING

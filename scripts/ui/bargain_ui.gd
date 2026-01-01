@@ -152,7 +152,8 @@ func enter_mindscape(creature: Node, brand: String) -> void:
 
 	# Configure colors
 	if mindscape_overlay:
-		mindscape_overlay.color = Color(colors.void, 0.0)
+		var void_color: Color = colors.void
+		mindscape_overlay.color = Color(void_color.r, void_color.g, void_color.b, 0.0)
 
 	if void_background:
 		void_background.modulate = colors.void

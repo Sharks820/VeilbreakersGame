@@ -20,6 +20,7 @@ var _gravity: float = 0.0
 var _elapsed: float = 0.0
 var _is_critical: bool = false
 var _base_scale: Vector2 = Vector2.ONE
+var _original_font_size: int = 0
 
 func _ready() -> void:
 	_base_scale = scale
@@ -30,11 +31,19 @@ func _ready() -> void:
 	if not shadow_label and has_node("Shadow"):
 		shadow_label = get_node("Shadow")
 
+	# Store original font size for reset on reuse
+	if label:
+		_original_font_size = label.get_theme_font_size("font_size")
+
 func setup(config: Dictionary, velocity: Vector2, gravity: float) -> void:
 	_velocity = velocity
 	_gravity = gravity
 	_elapsed = 0.0
 	_is_critical = config.get("is_critical", false)
+
+	# Reset font size to original (prevents accumulation on pool reuse)
+	if label and _original_font_size > 0:
+		label.add_theme_font_size_override("font_size", _original_font_size)
 
 	# Set text
 	var text = ""

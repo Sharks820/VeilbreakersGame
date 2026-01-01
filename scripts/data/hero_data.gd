@@ -83,15 +83,8 @@ func create_instance(level: int = 1) -> PlayerCharacter:
 		for i in range(level - 1):
 			_apply_level_growth(hero)
 
-	# Set growth rates
-	hero.growth_hp = hp_growth
-	hero.growth_mp = mp_growth
-	hero.growth_attack = attack_growth
-	hero.growth_defense = defense_growth
-	hero.growth_magic = magic_growth
-	hero.growth_resistance = resistance_growth
-	hero.growth_speed = speed_growth
-	hero.growth_luck = luck_growth
+	# Note: Growth rates are stored in HeroData, not on the character instance
+	# They are used in _apply_level_growth() when the hero levels up
 
 	hero.initialize_stats()
 

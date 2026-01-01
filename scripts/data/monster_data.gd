@@ -123,6 +123,7 @@ func create_instance(level: int = 1) -> Monster:
 	monster.level = level
 	monster.brand = brand
 	monster.rarity = rarity
+	monster.monster_tier = tier  # Set tier from MonsterData
 	monster.elements = get_elements()
 
 	# Set stats at level

@@ -466,22 +466,77 @@ func _style_enemy_hp_bar(bar: ProgressBar) -> void:
 func _place_characters(characters: Array[CharacterBase], positions_node: Node2D, container: Node2D, sprite_array: Array[Node2D]) -> void:
 	sprite_array.clear()
 	var markers := positions_node.get_children()
+	var is_player_party := positions_node == player_positions
 
-	EventBus.emit_debug("Placing %d characters with %d markers" % [characters.size(), markers.size()])
+	EventBus.emit_debug("Placing %d characters with %d markers (is_player_party: %s)" % [characters.size(), markers.size(), is_player_party])
 
-	for i in range(mini(characters.size(), markers.size())):
+	# Get calculated positions based on party composition
+	var calculated_positions: Array[Vector2] = _calculate_formation_positions(characters, positions_node, is_player_party)
+
+	for i in range(characters.size()):
 		var character := characters[i]
-		var marker: Marker2D = markers[i]
+		var target_pos := calculated_positions[i] if i < calculated_positions.size() else positions_node.global_position
 
 		# Create visual representation
 		var sprite := _create_character_sprite(character)
 		container.add_child(sprite)
-		sprite.global_position = marker.global_position
+		sprite.global_position = target_pos
 		sprite_array.append(sprite)
 
 		# Store reference for animations
 		character.set_meta("battle_sprite", sprite)
-		character.battle_position = marker.global_position
+		character.battle_position = target_pos
+
+func _calculate_formation_positions(characters: Array[CharacterBase], positions_node: Node2D, is_player_party: bool) -> Array[Vector2]:
+	"""Calculate intelligent formation positions based on party size"""
+	var positions: Array[Vector2] = []
+	var base_pos := positions_node.global_position
+	var markers := positions_node.get_children()
+	var party_size := characters.size()
+
+	if not is_player_party:
+		# Enemies use standard marker positions (less formal formation)
+		for i in range(party_size):
+			if i < markers.size():
+				positions.append(markers[i].global_position)
+			else:
+				# Fallback position with offset
+				positions.append(base_pos + Vector2(i * 80, (i % 2) * 100 - 50))
+		return positions
+
+	# Player party - intelligent arrow formation
+	# Player FURTHER BACK behind point monster (same Y, much further back X)
+	# Point monster at front apex, wing monsters flanking
+
+	match party_size:
+		1:
+			# Player only - single position centered
+			positions.append(base_pos + Vector2(60, 0))
+		2:
+			# Player + 1 monster - player far behind monster
+			positions.append(base_pos + Vector2(-120, 0))  # Player far back (same Y as monster)
+			positions.append(base_pos + Vector2(140, 0))   # Monster in front
+		3:
+			# Player + 2 monsters - player far back, 2 monsters in line in front
+			positions.append(base_pos + Vector2(-120, 0))  # Player far back center
+			positions.append(base_pos + Vector2(140, -70)) # Monster 1 upper
+			positions.append(base_pos + Vector2(140, 70))  # Monster 2 lower
+		4:
+			# Player + 3 monsters - full arrow formation
+			# Player far behind point monster, wings flanking
+			positions.append(base_pos + Vector2(-120, 0))  # Player (far behind point, same Y)
+			positions.append(base_pos + Vector2(220, 0))   # Point monster (front apex)
+			positions.append(base_pos + Vector2(80, -90))  # Upper wing
+			positions.append(base_pos + Vector2(80, 90))   # Lower wing
+		_:
+			# Fallback for unexpected sizes
+			for i in range(party_size):
+				if i < markers.size():
+					positions.append(markers[i].global_position)
+				else:
+					positions.append(base_pos + Vector2(i * 60, 0))
+
+	return positions
 
 func _create_character_sprite(character: CharacterBase) -> Node2D:
 	var container := Node2D.new()

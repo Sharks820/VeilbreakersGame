@@ -29,14 +29,16 @@ SceneManager="*res://scripts/autoload/scene_manager.gd"
 SettingsManager="*res://scripts/autoload/settings_manager.gd"
 VERASystem="*res://scripts/systems/vera_system.gd"
 InventorySystem="*res://scripts/systems/inventory_system.gd"
+PathSystem="*res://scripts/autoload/path_system.gd"
+CrashHandler="*res://scripts/autoload/crash_handler.gd"
 
 [display]
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/size/mode=2
-window/stretch/mode="viewport"
-window/stretch/aspect="expand"
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
 
 [filesystem]
 

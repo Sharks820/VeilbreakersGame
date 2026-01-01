@@ -104,6 +104,14 @@ const NOTIFICATION_DURATION: float = 3.0
 # =============================================================================
 
 const BRAND_BONUSES: Dictionary = {
+	# New 6-Brand System (VEILBREAKERS v3.0)
+	"SAVAGE": {"atk_mult": 1.25},                                    # +25% ATK - raw damage
+	"IRON": {"hp_mult": 1.30},                                       # +30% HP - tank
+	"VENOM": {"mag_mult": 1.15, "res_mult": 0.9},                   # +15% MAG, -10% RES - debuffer
+	"SURGE": {"spd_mult": 1.20, "def_mult": 0.9},                   # +20% SPD, -10% DEF - speed
+	"DREAD": {"mag_mult": 1.20, "hp_mult": 0.9},                    # +20% MAG, -10% HP - fear/mental
+	"LEECH": {"mag_mult": 1.15, "hp_mult": 1.10},                   # +15% MAG, +10% HP - life drain
+	# Legacy Brands (for backwards compatibility)
 	"BULWARK": {"hp_mult": 1.3, "def_mult": 1.2, "spd_mult": 0.8},
 	"FANG": {"atk_mult": 1.3, "crit_mult": 1.2, "def_mult": 0.9},
 	"EMBER": {"mag_mult": 1.2, "spd_mult": 1.1, "res_mult": 0.9},
