@@ -211,52 +211,90 @@ func _create_party_sidebar(players: Array[CharacterBase]) -> void:
 	battle_ui.add_child(sidebar)
 
 func _create_party_slot(character: CharacterBase) -> PanelContainer:
-	"""Create individual party member slot with HP/MP bars"""
+	"""Create individual party member slot with portrait and HP/MP bars"""
 	var slot := PanelContainer.new()
-	slot.custom_minimum_size = Vector2(154, 58)
+	slot.custom_minimum_size = Vector2(154, 50)
 
 	var slot_style := StyleBoxFlat.new()
 	slot_style.bg_color = Color(0.12, 0.15, 0.18, 0.9)
 	slot_style.border_color = Color(0.3, 0.45, 0.4, 1.0)
 	slot_style.set_border_width_all(1)
 	slot_style.set_corner_radius_all(3)
-	slot_style.content_margin_left = 6
-	slot_style.content_margin_right = 6
+	slot_style.content_margin_left = 4
+	slot_style.content_margin_right = 4
 	slot_style.content_margin_top = 4
 	slot_style.content_margin_bottom = 4
 	slot.add_theme_stylebox_override("panel", slot_style)
 
-	var slot_vbox := VBoxContainer.new()
-	slot_vbox.add_theme_constant_override("separation", 2)
-	slot.add_child(slot_vbox)
+	# Horizontal layout: portrait | name+bars
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	slot.add_child(hbox)
+
+	# Portrait
+	var portrait := _create_portrait(character, 40)
+	hbox.add_child(portrait)
+
+	# Name and bars column
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(vbox)
 
 	# Name
 	var name_lbl := Label.new()
 	name_lbl.text = character.character_name
-	name_lbl.add_theme_font_size_override("font_size", 11)
+	name_lbl.add_theme_font_size_override("font_size", 10)
 	name_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.85, 1.0))
-	slot_vbox.add_child(name_lbl)
+	vbox.add_child(name_lbl)
 
 	# HP Bar
 	var hp_bar := ProgressBar.new()
-	hp_bar.custom_minimum_size = Vector2(140, 12)
+	hp_bar.custom_minimum_size = Vector2(90, 10)
 	hp_bar.max_value = character.get_max_hp()
 	hp_bar.value = character.current_hp
 	hp_bar.show_percentage = false
 	_style_hp_bar(hp_bar)
-	slot_vbox.add_child(hp_bar)
+	vbox.add_child(hp_bar)
 
 	# MP Bar (if character has MP)
 	if character.base_max_mp > 0:
 		var mp_bar := ProgressBar.new()
-		mp_bar.custom_minimum_size = Vector2(140, 8)
+		mp_bar.custom_minimum_size = Vector2(90, 6)
 		mp_bar.max_value = character.get_max_mp()
 		mp_bar.value = character.current_mp
 		mp_bar.show_percentage = false
 		_style_mp_bar(mp_bar)
-		slot_vbox.add_child(mp_bar)
+		vbox.add_child(mp_bar)
 
 	return slot
+
+func _create_portrait(character: CharacterBase, size: int) -> Control:
+	"""Create a portrait thumbnail for sidebar"""
+	var container := PanelContainer.new()
+	container.custom_minimum_size = Vector2(size, size)
+
+	# Portrait frame style
+	var frame_style := StyleBoxFlat.new()
+	frame_style.bg_color = Color(0.08, 0.08, 0.1, 1.0)
+	frame_style.border_color = Color(0.4, 0.5, 0.45, 1.0)
+	frame_style.set_border_width_all(1)
+	frame_style.set_corner_radius_all(2)
+	container.add_theme_stylebox_override("panel", frame_style)
+
+	# Load sprite texture
+	var sprite_path := _get_character_sprite_path(character)
+	if sprite_path != "" and ResourceLoader.exists(sprite_path):
+		var tex := load(sprite_path)
+		if tex:
+			var tex_rect := TextureRect.new()
+			tex_rect.texture = tex
+			tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex_rect.custom_minimum_size = Vector2(size - 4, size - 4)
+			container.add_child(tex_rect)
+
+	return container
 
 func _style_hp_bar(bar: ProgressBar) -> void:
 	"""Style HP bar with green fill"""
@@ -328,42 +366,80 @@ func _create_enemy_sidebar(enemies: Array[CharacterBase]) -> void:
 	battle_ui.add_child(sidebar)
 
 func _create_enemy_slot(character: CharacterBase) -> PanelContainer:
-	"""Create individual enemy slot with HP bar - RED style"""
+	"""Create individual enemy slot with portrait and HP bar - RED style"""
 	var slot := PanelContainer.new()
-	slot.custom_minimum_size = Vector2(154, 48)
+	slot.custom_minimum_size = Vector2(154, 50)
 
 	var slot_style := StyleBoxFlat.new()
 	slot_style.bg_color = Color(0.18, 0.12, 0.12, 0.9)
 	slot_style.border_color = Color(0.5, 0.3, 0.3, 1.0)
 	slot_style.set_border_width_all(1)
 	slot_style.set_corner_radius_all(3)
-	slot_style.content_margin_left = 6
-	slot_style.content_margin_right = 6
+	slot_style.content_margin_left = 4
+	slot_style.content_margin_right = 4
 	slot_style.content_margin_top = 4
 	slot_style.content_margin_bottom = 4
 	slot.add_theme_stylebox_override("panel", slot_style)
 
-	var slot_vbox := VBoxContainer.new()
-	slot_vbox.add_theme_constant_override("separation", 2)
-	slot.add_child(slot_vbox)
+	# Horizontal layout: portrait | name+bars
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	slot.add_child(hbox)
+
+	# Portrait with red frame
+	var portrait := _create_enemy_portrait(character, 40)
+	hbox.add_child(portrait)
+
+	# Name and bars column
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(vbox)
 
 	# Name
 	var name_lbl := Label.new()
 	name_lbl.text = character.character_name
-	name_lbl.add_theme_font_size_override("font_size", 11)
+	name_lbl.add_theme_font_size_override("font_size", 10)
 	name_lbl.add_theme_color_override("font_color", Color(0.95, 0.85, 0.85, 1.0))
-	slot_vbox.add_child(name_lbl)
+	vbox.add_child(name_lbl)
 
 	# HP Bar (red)
 	var hp_bar := ProgressBar.new()
-	hp_bar.custom_minimum_size = Vector2(140, 12)
+	hp_bar.custom_minimum_size = Vector2(90, 10)
 	hp_bar.max_value = character.get_max_hp()
 	hp_bar.value = character.current_hp
 	hp_bar.show_percentage = false
 	_style_enemy_hp_bar(hp_bar)
-	slot_vbox.add_child(hp_bar)
+	vbox.add_child(hp_bar)
 
 	return slot
+
+func _create_enemy_portrait(character: CharacterBase, size: int) -> Control:
+	"""Create a portrait thumbnail for enemy sidebar (red frame)"""
+	var container := PanelContainer.new()
+	container.custom_minimum_size = Vector2(size, size)
+
+	# Red portrait frame style
+	var frame_style := StyleBoxFlat.new()
+	frame_style.bg_color = Color(0.1, 0.06, 0.06, 1.0)
+	frame_style.border_color = Color(0.6, 0.3, 0.3, 1.0)
+	frame_style.set_border_width_all(1)
+	frame_style.set_corner_radius_all(2)
+	container.add_theme_stylebox_override("panel", frame_style)
+
+	# Load sprite texture
+	var sprite_path := _get_character_sprite_path(character)
+	if sprite_path != "" and ResourceLoader.exists(sprite_path):
+		var tex := load(sprite_path)
+		if tex:
+			var tex_rect := TextureRect.new()
+			tex_rect.texture = tex
+			tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex_rect.custom_minimum_size = Vector2(size - 4, size - 4)
+			container.add_child(tex_rect)
+
+	return container
 
 func _style_enemy_hp_bar(bar: ProgressBar) -> void:
 	"""Style enemy HP bar with red fill"""

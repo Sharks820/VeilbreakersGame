@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v3.8** | Last updated: 2025-12-31
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v4.0** | Last updated: 2025-12-31
 
 ---
 
@@ -81,13 +81,15 @@
 power * ATK/DEF * level * element * variance * crits
 ```
 
-### Battle UI (v2.8)
+### Battle UI (v4.0)
 | Element | Size | Details |
 |---------|------|---------|
-| Sidebar Panels | 150x48 | Party HP/MP bars |
-| Portraits | 32x32 | Character sprites |
-| Turn Order | 36x36 | Portrait panels with arrows |
-| HP/MP Bars | 95x14 | Custom ornate frames |
+| Party Sidebar | 170px wide | Left side, green HP/MP bars |
+| Enemy Sidebar | 170px wide | Right side, red HP bars |
+| Action Bar | 700px centered | Attack, Skills, Purify, Item, Defend, Flee |
+| Combat Log | 210x170 | Bottom-right corner |
+| Sprite Scale | 0.08 | Uniform for all characters |
+| Turn Order | Top bar | Shows character names |
 
 ### Recent Fixes (Dec 2025)
 - Lock-in turn system: party selects all actions before execution
