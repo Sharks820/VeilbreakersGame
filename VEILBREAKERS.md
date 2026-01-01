@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v5.1** | Last updated: 2026-01-01
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v5.3** | Last updated: 2026-01-01
 
 ---
 
@@ -349,6 +349,36 @@ battle, ui, art, audio, vera, monsters, critical
 | 2025-12-31 | v4.3: Critical fixes - DataManager innate_skills, status icon display on panels, CrashHandler init, SaveManager integration |
 | 2025-12-31 | v4.5: Target highlighting - RED for enemies, BLUE for allies with glow effects |
 | 2026-01-01 | v5.0: **MAJOR** - Brand System v5.0 LOCKED (12 brands, 3 tiers, evolution system) |
+| 2026-01-01 | v5.2: Removed deprecated Element system, modernized to Brand-only damage |
+| 2026-01-01 | v5.2.4: Fixed game_manager.gd to use new 4-Path system |
+| 2026-01-01 | v5.3: Fixed Variant type inference errors in player_character.gd, added AGENTS.md + opencode.json |
+
+---
+
+## Recent Changes (v5.2-v5.3)
+
+### Removed Systems
+- **Element System** - Completely removed (was deprecated)
+  - Deleted `Element_DEPRECATED` enum and `Element` alias from enums.gd
+  - Removed legacy Path values (SHADE, TWILIGHT, NEUTRAL, LIGHT, SERAPH)
+  - Removed `BRAND_BONUSES_DEPRECATED` dictionary from constants.gd
+  - Updated damage_calculator.gd for Brand-only effectiveness
+
+### Fixed Files
+- `game_manager.gd` - `get_current_path()` renamed to `get_dominant_path()`, uses PathSystem
+- `player_character.gd` - Fixed Variant type inference (line 167, 175)
+- `damage_calculator.gd` - Rewritten for Brand-only effectiveness
+- `character_base.gd` - Removed `elements` property
+- `monster.gd`, `monster_data.gd` - Removed element references
+- `skill_data.gd` - Removed deprecated `element` export
+- `item_data.gd` - Removed `element_affinity` export
+- `helpers.gd` - Removed `get_element_color()` function
+- `data_manager.gd` - Removed `get_skills_by_element()`
+- `status_effect_manager.gd` - Removed element-based immunities
+
+### New Files
+- `AGENTS.md` - Instructions for AI coding agents (OpenCode format)
+- `opencode.json` - MCP server configuration for OpenCode (15 servers)
 
 ---
 
