@@ -119,10 +119,9 @@ func _setup_battle_ui() -> void:
 		add_child(ui_layer)
 
 	# Configure UILayer for proper rendering
-	ui_layer.layer = 100  # WAY above everything else for testing
+	ui_layer.layer = 100
 	ui_layer.visible = true
-	ui_layer.follow_viewport_enabled = false  # Don't follow camera transforms
-	print("[BattleArena] UILayer configured: layer=%d, visible=%s" % [ui_layer.layer, ui_layer.visible])
+	ui_layer.follow_viewport_enabled = false
 
 	var ui_scene := load("res://scenes/battle/battle_ui.tscn")
 	if ui_scene:
@@ -158,18 +157,136 @@ func _setup_battle_manager() -> void:
 func initialize_battle(players: Array[CharacterBase], enemies: Array[CharacterBase]) -> void:
 	is_battle_active = true
 
+	# DEBUG: Check containers
+	print("[INIT] players_container: %s, enemies_container: %s" % [str(players_container), str(enemies_container)])
+	print("[INIT] enemy_positions: %s, global_pos: %s" % [str(enemy_positions), str(enemy_positions.global_position) if enemy_positions else "NULL"])
+
 	# Place characters on the battlefield
 	_place_characters(players, player_positions, players_container, player_sprites)
-	_place_characters(enemies, enemy_positions, enemies_container, enemy_sprites)
+	print("[INIT] After placing players, player_sprites count: %d" % player_sprites.size())
 
-	# Setup battle UI with party and enemy info
-	if battle_ui and battle_ui.has_method("setup_battle"):
-		battle_ui.setup_battle(players, enemies)
+	_place_characters(enemies, enemy_positions, enemies_container, enemy_sprites)
+	print("[INIT] After placing enemies, enemy_sprites count: %d" % enemy_sprites.size())
+
+	# Create party sidebar directly (bypasses broken setup_battle call chain)
+	_create_party_sidebar(players)
 
 	# Start battle logic
 	battle_manager.start_battle(players, enemies)
 
 	EventBus.emit_debug("Battle initialized with %d players vs %d enemies" % [players.size(), enemies.size()])
+
+func _create_party_sidebar(players: Array[CharacterBase]) -> void:
+	"""Create party sidebar with HP/MP bars on battle_ui"""
+	if not battle_ui:
+		return
+
+	var sidebar := PanelContainer.new()
+	sidebar.name = "PartySidebar"
+	sidebar.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	sidebar.position = Vector2(10, 70)
+	sidebar.custom_minimum_size = Vector2(170, 0)
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.1, 0.14, 0.92)
+	style.border_color = Color(0.25, 0.4, 0.35, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	sidebar.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	sidebar.add_child(vbox)
+
+	# Header
+	var header := Label.new()
+	header.text = "Party"
+	header.add_theme_font_size_override("font_size", 14)
+	header.add_theme_color_override("font_color", Color(0.5, 0.85, 0.65, 1.0))
+	vbox.add_child(header)
+
+	# Add each party member
+	for player in players:
+		var slot := _create_party_slot(player)
+		vbox.add_child(slot)
+
+	battle_ui.add_child(sidebar)
+
+func _create_party_slot(character: CharacterBase) -> PanelContainer:
+	"""Create individual party member slot with HP/MP bars"""
+	var slot := PanelContainer.new()
+	slot.custom_minimum_size = Vector2(154, 58)
+
+	var slot_style := StyleBoxFlat.new()
+	slot_style.bg_color = Color(0.12, 0.15, 0.18, 0.9)
+	slot_style.border_color = Color(0.3, 0.45, 0.4, 1.0)
+	slot_style.set_border_width_all(1)
+	slot_style.set_corner_radius_all(3)
+	slot_style.content_margin_left = 6
+	slot_style.content_margin_right = 6
+	slot_style.content_margin_top = 4
+	slot_style.content_margin_bottom = 4
+	slot.add_theme_stylebox_override("panel", slot_style)
+
+	var slot_vbox := VBoxContainer.new()
+	slot_vbox.add_theme_constant_override("separation", 2)
+	slot.add_child(slot_vbox)
+
+	# Name
+	var name_lbl := Label.new()
+	name_lbl.text = character.character_name
+	name_lbl.add_theme_font_size_override("font_size", 11)
+	name_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.85, 1.0))
+	slot_vbox.add_child(name_lbl)
+
+	# HP Bar
+	var hp_bar := ProgressBar.new()
+	hp_bar.custom_minimum_size = Vector2(140, 12)
+	hp_bar.max_value = character.get_max_hp()
+	hp_bar.value = character.current_hp
+	hp_bar.show_percentage = false
+	_style_hp_bar(hp_bar)
+	slot_vbox.add_child(hp_bar)
+
+	# MP Bar (if character has MP)
+	if character.base_max_mp > 0:
+		var mp_bar := ProgressBar.new()
+		mp_bar.custom_minimum_size = Vector2(140, 8)
+		mp_bar.max_value = character.get_max_mp()
+		mp_bar.value = character.current_mp
+		mp_bar.show_percentage = false
+		_style_mp_bar(mp_bar)
+		slot_vbox.add_child(mp_bar)
+
+	return slot
+
+func _style_hp_bar(bar: ProgressBar) -> void:
+	"""Style HP bar with green fill"""
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.15, 0.1, 0.1, 1.0)
+	bg.set_corner_radius_all(2)
+	bar.add_theme_stylebox_override("background", bg)
+
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(0.2, 0.75, 0.3, 1.0)
+	fill.set_corner_radius_all(2)
+	bar.add_theme_stylebox_override("fill", fill)
+
+func _style_mp_bar(bar: ProgressBar) -> void:
+	"""Style MP bar with blue fill"""
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.1, 0.1, 0.15, 1.0)
+	bg.set_corner_radius_all(2)
+	bar.add_theme_stylebox_override("background", bg)
+
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(0.3, 0.5, 0.9, 1.0)
+	fill.set_corner_radius_all(2)
+	bar.add_theme_stylebox_override("fill", fill)
 
 func _place_characters(characters: Array[CharacterBase], positions_node: Node2D, container: Node2D, sprite_array: Array[Node2D]) -> void:
 	sprite_array.clear()
@@ -181,17 +298,10 @@ func _place_characters(characters: Array[CharacterBase], positions_node: Node2D,
 		var character := characters[i]
 		var marker: Marker2D = markers[i]
 
-		EventBus.emit_debug("  Placing %s (type=%d, protagonist=%s) at %s" % [
-			character.character_name,
-			character.character_type,
-			str(character.is_protagonist),
-			str(marker.global_position)
-		])
-
 		# Create visual representation
 		var sprite := _create_character_sprite(character)
-		sprite.global_position = marker.global_position
 		container.add_child(sprite)
+		sprite.global_position = marker.global_position
 		sprite_array.append(sprite)
 
 		# Store reference for animations
@@ -201,8 +311,8 @@ func _place_characters(characters: Array[CharacterBase], positions_node: Node2D,
 func _create_character_sprite(character: CharacterBase) -> Node2D:
 	var container := Node2D.new()
 	container.name = character.character_name
+	container.z_index = 10
 
-	# Try to load actual sprite texture
 	var sprite_path := _get_character_sprite_path(character)
 	var sprite_loaded := false
 
@@ -216,31 +326,28 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 			# Scale and position based on character type
 			match character.character_type:
 				Enums.CharacterType.PLAYER:
-					sprite.scale = Vector2(0.12, 0.12)
-					sprite.position = Vector2(0, -90)
+					sprite.scale = Vector2(0.08, 0.08)
+					sprite.position = Vector2(0, -60)
 				Enums.CharacterType.MONSTER:
 					if character is Monster and character.is_corrupted:
-						# Enemy monsters
-						sprite.scale = Vector2(0.06, 0.06)
-						sprite.position = Vector2(0, -45)
+						# Enemy monsters - same size as players
+						sprite.scale = Vector2(0.08, 0.08)
+						sprite.position = Vector2(0, -60)
 					else:
 						# Allied monsters
 						sprite.scale = Vector2(0.08, 0.08)
-						sprite.position = Vector2(0, -55)
+						sprite.position = Vector2(0, -60)
 				Enums.CharacterType.BOSS:
-					sprite.scale = Vector2(0.1, 0.1)
-					sprite.position = Vector2(0, -70)
+					sprite.scale = Vector2(0.10, 0.10)
+					sprite.position = Vector2(0, -75)
 				_:
 					sprite.scale = Vector2(0.08, 0.08)
-					sprite.position = Vector2(0, -55)
+					sprite.position = Vector2(0, -60)
 
 			# Flip sprite to face enemies (allies face right, enemies face left)
-			# Monster sprites are drawn facing left by default
 			if character is Monster and character.is_corrupted:
-				# Enemy on right - keep facing left (toward allies)
 				sprite.flip_h = false
 			else:
-				# Ally/Player on left - flip to face right (toward enemies)
 				sprite.flip_h = true
 
 			container.add_child(sprite)
@@ -417,16 +524,12 @@ func _spawn_damage_number(pos: Vector2, amount: int, is_critical: bool, is_heal:
 # =============================================================================
 
 func _on_battle_started(enemy_data: Array) -> void:
-	EventBus.emit_debug("_on_battle_started called with %d enemy_data, is_battle_active=%s" % [enemy_data.size(), str(is_battle_active)])
-
 	# Guard against being called twice (battle_manager also emits this signal)
 	if is_battle_active:
-		EventBus.emit_debug("  -> Returning early, battle already active")
 		return
 
 	# Create enemy characters from data if provided
 	if enemy_data.is_empty():
-		EventBus.emit_debug("  -> Returning early, enemy_data is empty")
 		return
 
 	var enemies: Array[CharacterBase] = []
@@ -441,8 +544,6 @@ func _on_battle_started(enemy_data: Array) -> void:
 		if enemies.size() >= 2:
 			break
 
-	EventBus.emit_debug("  Created %d enemies from data" % [enemies.size()])
-
 	# Get full party (1 player + up to 3 allied monsters = 4 max)
 	var players: Array[CharacterBase] = []
 	for i in range(mini(4, GameManager.player_party.size())):
@@ -450,28 +551,19 @@ func _on_battle_started(enemy_data: Array) -> void:
 		if member is CharacterBase:
 			players.append(member)
 
-	EventBus.emit_debug("  Found %d players in party" % [players.size()])
-
 	if not players.is_empty() and not enemies.is_empty():
-		EventBus.emit_debug("  -> Calling initialize_battle(%d players, %d enemies)" % [players.size(), enemies.size()])
 		initialize_battle(players, enemies)
-	else:
-		EventBus.emit_debug("  -> NOT initializing: players=%d, enemies=%d" % [players.size(), enemies.size()])
 
 func _on_battle_initialized() -> void:
 	EventBus.emit_debug("Battle arena: Battle initialized")
 
 func _on_damage_dealt(source: Node, target: Node, amount: int, is_critical: bool) -> void:
-	print("[DAMAGE] _on_damage_dealt called: target=%s, amount=%d, critical=%s" % [str(target), amount, str(is_critical)])
 	if not target is CharacterBase:
-		print("[DAMAGE] Target is not CharacterBase, returning")
 		return
 
 	var character: CharacterBase = target
 	var sprite: Node2D = character.get_meta("battle_sprite", null)
-	print("[DAMAGE] Character=%s, sprite=%s" % [character.character_name, str(sprite)])
 	if not sprite:
-		print("[DAMAGE] No battle_sprite meta, returning")
 		return
 
 	# Update HP bar
@@ -809,17 +901,12 @@ func _spawn_advanced_damage_number(data: Dictionary) -> void:
 	var is_heal = data.get("is_heal", false)
 	var brand = data.get("brand", "")
 
-	print("[DAMAGE] _spawn_advanced_damage_number: pos=%s, amount=%d, spawner=%s" % [str(position), amount, str(damage_number_spawner)])
-
 	if damage_number_spawner:
-		print("[DAMAGE] Using DamageNumberSpawner")
 		if is_heal:
 			damage_number_spawner.spawn_heal(position, amount)
 		else:
 			damage_number_spawner.spawn_damage(position, amount, is_critical, brand)
 	else:
-		print("[DAMAGE] Using fallback _spawn_damage_number")
-		# Fallback to basic damage number
 		_spawn_damage_number(position, amount, is_critical, is_heal)
 
 # =============================================================================

@@ -53,7 +53,8 @@
       "Bash(grep:*)",
       "Bash(git restore:*)",
       "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --path \"C:/Users/Conner/Downloads/VeilbreakersGame\" \"res://scenes/test/test_battle.tscn\")",
-      "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --headless --quit --import \"C:/Users/Conner/Downloads/VeilbreakersGame\")"
+      "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --headless --quit --import \"C:/Users/Conner/Downloads/VeilbreakersGame\")",
+      "Bash(git reset:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

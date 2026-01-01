@@ -87,6 +87,15 @@ func _ready() -> void:
 	_connect_signals()
 	_hide_all_menus()
 
+	# IMMEDIATELY hide party_status_container and clear its placeholder children
+	# This must happen before the first frame renders to avoid showing placeholders
+	if party_status_container:
+		party_status_container.visible = false
+		party_status_container.hide()
+		# Immediately free placeholder children from scene
+		for child in party_status_container.get_children():
+			child.free()  # Immediate removal, not queue_free
+
 	# Force full-screen size and positioning for CanvasLayer compatibility
 	await get_tree().process_frame
 	_force_ui_layout()
@@ -103,29 +112,39 @@ func _force_ui_layout() -> void:
 	size = viewport_size
 	visible = true
 
-	# TopBar - top of screen, full width, 60px height
+	# TopBar - top of screen, full width, 50px height (reduced)
 	if top_bar:
 		top_bar.position = Vector2(0, 0)
-		top_bar.size = Vector2(viewport_size.x, 60)
+		top_bar.size = Vector2(viewport_size.x, 50)
 		top_bar.show()
 
-	# PartyPanel - bottom of screen, full width, 220px height
+	# PartyPanel - bottom CENTER, action menu only (reduced height)
+	# Party info moved to left sidebar via party_status_container
 	if party_panel:
-		party_panel.position = Vector2(0, viewport_size.y - 220)
-		party_panel.size = Vector2(viewport_size.x, 220)
+		# Position at bottom center for action buttons
+		var panel_width := 800.0
+		party_panel.position = Vector2((viewport_size.x - panel_width) / 2, viewport_size.y - 100)
+		party_panel.size = Vector2(panel_width, 90)
 		party_panel.show()
 
-	# CombatLog - bottom-right, above party panel
+		# Hide the party status container from main panel (we'll show a separate sidebar)
+		if party_status_container:
+			party_status_container.hide()
+
+	# CombatLog - bottom-right corner, smaller
 	if combat_log:
-		combat_log.position = Vector2(viewport_size.x - 290, viewport_size.y - 400)
-		combat_log.size = Vector2(280, 170)
+		combat_log.position = Vector2(viewport_size.x - 250, viewport_size.y - 180)
+		combat_log.size = Vector2(240, 160)
 		combat_log.show()
 
-	# EnemyPanel - right side, vertical sidebar
+	# EnemyPanel - right side, narrow vertical sidebar
 	if enemy_panel:
-		enemy_panel.position = Vector2(viewport_size.x - 220, 80)
-		enemy_panel.size = Vector2(210, viewport_size.y - 320)  # Leave space for top/bottom UI
+		enemy_panel.position = Vector2(viewport_size.x - 180, 60)
+		enemy_panel.size = Vector2(170, 400)
 		enemy_panel.show()
+
+	# Create left party sidebar if not exists
+	_create_left_party_sidebar(viewport_size)
 
 func set_battle_manager(manager: BattleManager) -> void:
 	battle_manager = manager
@@ -242,12 +261,52 @@ func _input(event: InputEvent) -> void:
 # BATTLE FLOW
 # =============================================================================
 
-func setup_battle(player_party: Array[CharacterBase], enemy_party: Array[CharacterBase]) -> void:
-	party_members = player_party
-	enemies = enemy_party
+func setup_battle(player_party: Array, enemy_party: Array) -> void:
+	# FIRST LINE - unconditional debug
+	print("[BattleUI] setup_battle ENTERED!")
+
+	# DEBUG: Show player count visually - put this BEFORE anything else
+	var debug_label := Label.new()
+	debug_label.text = "SETUP_BATTLE: players=%d enemies=%d" % [player_party.size(), enemy_party.size()]
+	debug_label.add_theme_font_size_override("font_size", 24)
+	debug_label.add_theme_color_override("font_color", Color.YELLOW)
+	debug_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	debug_label.position = Vector2(10, 210)  # Different Y position
+	add_child(debug_label)
+
+	# Now assign to typed arrays
+	party_members.clear()
+	for p in player_party:
+		if p is CharacterBase:
+			party_members.append(p)
+
+	enemies.clear()
+	for e in enemy_party:
+		if e is CharacterBase:
+			enemies.append(e)
+
+	print("[BattleUI] party_members now has %d members" % party_members.size())
+	debug_label.text += " | assigned=%d" % party_members.size()
 
 	_update_party_display()
 	_update_enemy_sidebar()
+
+	# Rebuild the left party sidebar now that we have party members
+	var viewport_size := Vector2(1920, 1080)
+	var queried_size := get_viewport().get_visible_rect().size
+	if queried_size.x > 0 and queried_size.y > 0:
+		viewport_size = queried_size
+	print("[BattleUI] About to call _create_left_party_sidebar")
+	_create_left_party_sidebar(viewport_size)
+	print("[BattleUI] _create_left_party_sidebar returned")
+
+	# FORCE hide party_status_container - we use left sidebar instead
+	if party_status_container:
+		party_status_container.hide()
+		party_status_container.visible = false
+		# Also collapse its size to prevent layout issues
+		party_status_container.custom_minimum_size = Vector2.ZERO
+		party_status_container.size = Vector2.ZERO
 
 func start_turn(character: CharacterBase) -> void:
 	current_character = character
@@ -1499,3 +1558,206 @@ func _hide_enemy_tooltip() -> void:
 		enemy_tooltip.queue_free()
 		enemy_tooltip = null
 	tooltip_visible = false
+
+# =============================================================================
+# LEFT PARTY SIDEBAR
+# =============================================================================
+
+var left_party_sidebar: PanelContainer = null
+
+func _create_left_party_sidebar(viewport_size: Vector2) -> void:
+	"""Create a vertical party sidebar on the left side of the screen"""
+	print("[BattleUI] _create_left_party_sidebar called with %d party members" % party_members.size())
+
+	# Don't create sidebar if no party members
+	if party_members.is_empty():
+		print("[BattleUI] Skipping sidebar - no party members yet")
+		return
+
+	# Remove existing sidebar if present
+	if left_party_sidebar and is_instance_valid(left_party_sidebar):
+		left_party_sidebar.queue_free()
+		left_party_sidebar = null
+
+	left_party_sidebar = PanelContainer.new()
+	left_party_sidebar.name = "LeftPartySidebar"
+	left_party_sidebar.custom_minimum_size = Vector2(160, 300)  # Force minimum height
+	left_party_sidebar.size = Vector2(160, 300)
+
+	# Force absolute positioning mode (required for children of anchor-based Controls)
+	left_party_sidebar.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	left_party_sidebar.position = Vector2(10, 70)  # Below top bar
+
+	# Style the sidebar with BRIGHT debug colors so we can see it
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.15, 0.2, 0.95)  # Dark blue-gray
+	style.border_color = Color(0.3, 0.8, 0.5, 1.0)  # Bright green border
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	left_party_sidebar.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	vbox.name = "PartyList"
+	vbox.add_theme_constant_override("separation", 8)
+	left_party_sidebar.add_child(vbox)
+
+	# Populate with party members
+	for member in party_members:
+		var slot := _create_party_sidebar_slot(member)
+		vbox.add_child(slot)
+		print("[BattleUI] Added sidebar slot for: %s" % member.character_name)
+
+	add_child(left_party_sidebar)
+	left_party_sidebar.show()  # Force show
+	left_party_sidebar.visible = true
+	print("[BattleUI] Left party sidebar created and added to UI")
+
+	# DEBUG: Add a bright red test rectangle to confirm code execution
+	var debug_rect := ColorRect.new()
+	debug_rect.color = Color(1.0, 0.0, 0.0, 1.0)  # Bright red
+	debug_rect.custom_minimum_size = Vector2(100, 100)
+	debug_rect.size = Vector2(100, 100)
+	debug_rect.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	debug_rect.position = Vector2(200, 100)  # Different position to not overlap sidebar
+	add_child(debug_rect)
+	print("[BattleUI] DEBUG: Red test rectangle added")
+
+func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
+	"""Create a compact party member slot for the left sidebar"""
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(144, 60)
+
+	# Style with ally colors
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.12, 0.15, 0.9)
+	style.border_color = Color(0.3, 0.5, 0.4, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 6
+	style.content_margin_right = 6
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	panel.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	panel.add_child(hbox)
+
+	# Portrait
+	var portrait_container := PanelContainer.new()
+	portrait_container.custom_minimum_size = Vector2(36, 36)
+	var portrait_style := StyleBoxFlat.new()
+	portrait_style.bg_color = Color(0.15, 0.18, 0.2, 1.0)
+	portrait_style.border_color = Color(0.4, 0.5, 0.45, 1.0)
+	portrait_style.set_border_width_all(1)
+	portrait_style.set_corner_radius_all(3)
+	portrait_container.add_theme_stylebox_override("panel", portrait_style)
+	hbox.add_child(portrait_container)
+
+	var portrait := TextureRect.new()
+	portrait.custom_minimum_size = Vector2(32, 32)
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	var portrait_path := _get_portrait_path(character)
+	if portrait_path != "":
+		var tex := load(portrait_path)
+		if tex:
+			portrait.texture = tex
+	portrait_container.add_child(portrait)
+
+	# Info container
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(vbox)
+
+	# Name
+	var name_label := Label.new()
+	name_label.text = character.character_name
+	name_label.add_theme_font_size_override("font_size", 11)
+	name_label.add_theme_color_override("font_color", Color(0.9, 0.95, 0.85))
+	vbox.add_child(name_label)
+
+	# HP Bar
+	var hp_bar := ProgressBar.new()
+	hp_bar.name = "HPBar"
+	hp_bar.max_value = maxi(1, character.get_max_hp())
+	hp_bar.value = character.current_hp
+	hp_bar.show_percentage = false
+	hp_bar.custom_minimum_size = Vector2(85, 12)
+
+	var hp_fill := StyleBoxFlat.new()
+	hp_fill.bg_color = Color(0.3, 0.8, 0.35, 1.0)
+	hp_fill.set_corner_radius_all(2)
+	hp_bar.add_theme_stylebox_override("fill", hp_fill)
+
+	var hp_bg := StyleBoxFlat.new()
+	hp_bg.bg_color = Color(0.2, 0.15, 0.15, 0.9)
+	hp_bg.set_corner_radius_all(2)
+	hp_bar.add_theme_stylebox_override("background", hp_bg)
+	vbox.add_child(hp_bar)
+
+	# HP Label
+	var hp_label := Label.new()
+	hp_label.name = "HPLabel"
+	hp_label.text = "%d/%d" % [character.current_hp, character.get_max_hp()]
+	hp_label.add_theme_font_size_override("font_size", 9)
+	hp_label.add_theme_color_override("font_color", Color(0.65, 0.7, 0.65))
+	vbox.add_child(hp_label)
+
+	# MP Bar (if character has MP)
+	if character.get_max_mp() > 0:
+		var mp_bar := ProgressBar.new()
+		mp_bar.name = "MPBar"
+		mp_bar.max_value = maxi(1, character.get_max_mp())
+		mp_bar.value = character.current_mp
+		mp_bar.show_percentage = false
+		mp_bar.custom_minimum_size = Vector2(85, 8)
+
+		var mp_fill := StyleBoxFlat.new()
+		mp_fill.bg_color = Color(0.3, 0.5, 0.9, 1.0)
+		mp_fill.set_corner_radius_all(2)
+		mp_bar.add_theme_stylebox_override("fill", mp_fill)
+
+		var mp_bg := StyleBoxFlat.new()
+		mp_bg.bg_color = Color(0.12, 0.12, 0.18, 0.9)
+		mp_bg.set_corner_radius_all(2)
+		mp_bar.add_theme_stylebox_override("background", mp_bg)
+		vbox.add_child(mp_bar)
+
+	# Store reference for updates
+	character.set_meta("sidebar_panel", panel)
+
+	return panel
+
+func update_party_sidebar() -> void:
+	"""Update HP/MP bars in the left party sidebar"""
+	for member in party_members:
+		if member.has_meta("sidebar_panel"):
+			var panel: PanelContainer = member.get_meta("sidebar_panel")
+			if is_instance_valid(panel):
+				var hp_bar := panel.find_child("HPBar", true, false) as ProgressBar
+				var hp_label := panel.find_child("HPLabel", true, false) as Label
+				var mp_bar := panel.find_child("MPBar", true, false) as ProgressBar
+
+				if hp_bar:
+					hp_bar.max_value = maxi(1, member.get_max_hp())
+					hp_bar.value = member.current_hp
+				if hp_label:
+					hp_label.text = "%d/%d" % [member.current_hp, member.get_max_hp()]
+				if mp_bar:
+					mp_bar.max_value = maxi(1, member.get_max_mp())
+					mp_bar.value = member.current_mp
+
+func _auto_scroll_combat_log() -> void:
+	"""Auto-scroll combat log to bottom if user hasn't scrolled up"""
+	if not combat_log_scroll:
+		return
+	var scrollbar := combat_log_scroll.get_v_scroll_bar()
+	var at_bottom := scrollbar.value >= scrollbar.max_value - 30
+	if at_bottom:
+		combat_log_scroll.scroll_vertical = int(scrollbar.max_value)

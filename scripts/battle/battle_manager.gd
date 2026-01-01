@@ -543,7 +543,7 @@ func _execute_next_party_action() -> void:
 		Enums.BattleAction.DEFEND:
 			result = _execute_defend(character)
 		Enums.BattleAction.ITEM:
-			result = _execute_item(character, queued.target, queued.skill)
+			result = await _execute_item(character, queued.target, queued.skill)
 		Enums.BattleAction.PURIFY:
 			result = await _execute_purify(character, queued.target)
 		Enums.BattleAction.FLEE:
@@ -729,7 +729,7 @@ func execute_action(character: CharacterBase, action: Enums.BattleAction, target
 		Enums.BattleAction.DEFEND:
 			result = _execute_defend(character)
 		Enums.BattleAction.ITEM:
-			result = _execute_item(character, target, skill)  # skill = item_id
+			result = await _execute_item(character, target, skill)  # skill = item_id
 		Enums.BattleAction.PURIFY:
 			result = await _execute_purify(character, target)
 		Enums.BattleAction.FLEE:
