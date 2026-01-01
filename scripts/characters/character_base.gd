@@ -161,7 +161,10 @@ func get_max_mp() -> int:
 	return int(get_stat(Enums.Stat.MAX_MP))
 
 func get_hp_percent() -> float:
-	return float(current_hp) / float(get_max_hp())
+	var max_hp := get_max_hp()
+	if max_hp == 0:
+		return 1.0
+	return float(current_hp) / float(max_hp)
 
 func get_mp_percent() -> float:
 	var max_mp := get_max_mp()

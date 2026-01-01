@@ -68,7 +68,13 @@ func _apply_brand_bonuses() -> void:
 	if current_brand == Enums.Brand.NONE:
 		return
 
-	var brand_key: String = Enums.Brand.keys()[current_brand]
+	# Validate enum index is within bounds
+	var brand_keys := Enums.Brand.keys()
+	if current_brand < 0 or current_brand >= brand_keys.size():
+		push_warning("Invalid brand enum value: %d" % current_brand)
+		return
+
+	var brand_key: String = brand_keys[current_brand]
 	if not Constants.BRAND_BONUSES.has(brand_key):
 		return
 

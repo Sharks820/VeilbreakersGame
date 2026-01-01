@@ -135,8 +135,9 @@ func _get_skill_purification_power(skill_id: String) -> float:
 
 func _check_corruption_breaks(monster: Monster, old_corruption: float) -> Dictionary:
 	## Check if purification crossed a corruption break threshold
-	var current := monster.corruption_level / monster.max_corruption
-	var old := old_corruption / monster.max_corruption
+	var max_corruption := maxf(monster.max_corruption, 1.0)
+	var current := monster.corruption_level / max_corruption
+	var old := old_corruption / max_corruption
 
 	for i in range(CORRUPTION_BREAK_THRESHOLDS.size()):
 		var threshold: float = CORRUPTION_BREAK_THRESHOLDS[i]
@@ -242,7 +243,7 @@ func apply_corruption_damage(monster: Monster) -> float:
 	if monster.corruption_level <= 0:
 		return 0.0
 
-	var corruption_percent := monster.corruption_level / monster.max_corruption
+	var corruption_percent := monster.corruption_level / maxf(monster.max_corruption, 1.0)
 
 	# Higher corruption = more self-damage
 	var damage_percent := corruption_percent * 0.05  # Up to 5% max HP per turn

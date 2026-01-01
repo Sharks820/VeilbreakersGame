@@ -420,7 +420,8 @@ func _request_hit_effect() -> void:
 	var effect_name = "hit_" + brand.to_lower()
 	var position = hit_spark_point.global_position if hit_spark_point else global_position
 	effect_spawn_requested.emit(effect_name, {"position": position, "brand": brand})
-	sound_requested.emit(BRAND_CONFIG[brand].hit_sound, {"position": position})
+	var brand_data: Dictionary = BRAND_CONFIG.get(brand, {"hit_sound": "hit_default"})
+	sound_requested.emit(brand_data.get("hit_sound", "hit_default"), {"position": position})
 
 func _request_special_effect() -> void:
 	var position = vfx_spawn_point.global_position if vfx_spawn_point else global_position

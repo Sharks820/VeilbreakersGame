@@ -145,6 +145,7 @@ func _create_test_character(char_name: String, level: int, brand: Enums.Brand) -
 	character.character_name = char_name
 	character.level = level
 	character.brand = brand
+	character.character_type = Enums.CharacterType.PLAYER  # Set as player for proper battle handling
 
 	# Base stats scaled by level
 	character.base_max_hp = 100 + (level * 15)
@@ -283,9 +284,8 @@ func _start_battle(party: Array[CharacterBase], enemies: Array[CharacterBase]) -
 
 	EventBus.emit_debug("Test battle started: %d party vs %d enemies" % [party.size(), enemies.size()])
 
-	# Auto-test damage numbers after 3 seconds (for debugging)
-	await get_tree().create_timer(3.0).timeout
-	_debug_auto_attack()
+	# DEBUG AUTO-ATTACK DISABLED - Waiting for player input now
+	# Use F11 to manually trigger auto-attack if needed
 
 # =============================================================================
 # DEBUG CONTROLS

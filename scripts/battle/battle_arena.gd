@@ -162,6 +162,10 @@ func initialize_battle(players: Array[CharacterBase], enemies: Array[CharacterBa
 	_place_characters(players, player_positions, players_container, player_sprites)
 	_place_characters(enemies, enemy_positions, enemies_container, enemy_sprites)
 
+	# Setup battle UI with party and enemy info (CRITICAL for button functionality!)
+	if battle_ui and battle_ui.has_method("setup_battle"):
+		battle_ui.setup_battle(players, enemies)
+
 	# Create sidebars
 	_create_party_sidebar(players)
 	_create_enemy_sidebar(enemies)

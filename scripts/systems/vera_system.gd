@@ -210,6 +210,8 @@ func _maybe_trigger_glitch() -> void:
 func _apply_emergence_effects() -> void:
 	# VERATH's power bleeds through — the player gets stronger
 	# (She needs them strong enough to breach the Veil)
+	if GameManager.player_party == null:
+		return
 	for character in GameManager.player_party:
 		if character is CharacterBase:
 			character.add_stat_modifier(Enums.Stat.ATTACK, 15.0, 999, "verath_blessing")
@@ -281,12 +283,16 @@ func get_available_abilities() -> Array[String]:
 	return abilities
 
 func _ability_ancient_power() -> Dictionary:
+	if GameManager.player_party == null:
+		return {"type": "power", "message": "The power fades..."}
 	for character in GameManager.player_party:
 		if character is CharacterBase:
 			character.add_stat_modifier(Enums.Stat.ATTACK, 30.0, 3, "ancient_power")
 	return {"type": "power", "message": "Take this power. You'll need it. We'll need it."}
 
 func _ability_dark_blessing() -> Dictionary:
+	if GameManager.player_party == null:
+		return {"type": "blessing", "message": "The blessing cannot reach you..."}
 	for character in GameManager.player_party:
 		if character is CharacterBase:
 			character.heal(int(character.get_max_hp() * 0.4))

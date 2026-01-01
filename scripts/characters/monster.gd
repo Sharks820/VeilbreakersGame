@@ -336,6 +336,10 @@ func _get_preferred_target(enemies: Array) -> CharacterBase:
 func _ai_aggressive(_allies: Array, enemies: Array) -> Dictionary:
 	var target := _get_preferred_target(enemies)
 
+	# Guard against no valid targets - defend if none found
+	if target == null:
+		return {"action": Enums.BattleAction.DEFEND, "target": self, "skill": ""}
+
 	# Use skill if available and enough turns have passed
 	if turns_since_last_skill >= 2 and known_skills.size() > 0:
 		var skill_id := known_skills[randi() % known_skills.size()]
@@ -394,6 +398,10 @@ func _ai_boss(allies: Array, enemies: Array) -> Dictionary:
 		var skill_id := known_skills[randi() % known_skills.size()]
 		if can_use_skill(skill_id):
 			var target := _get_preferred_target(enemies)
+			# Guard against no valid targets
+			if target == null:
+				return {"action": Enums.BattleAction.DEFEND, "target": self, "skill": ""}
+			turns_since_last_skill = 0
 			return {
 				"action": Enums.BattleAction.SKILL,
 				"target": target,

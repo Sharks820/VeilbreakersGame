@@ -88,6 +88,9 @@ func get_expected_damage(attacker: CharacterBase, defender: CharacterBase) -> in
 	else:
 		defense_stat = defender.get_stat(Enums.Stat.RESISTANCE)
 
+	# Guard against division by zero
+	defense_stat = maxf(defense_stat, 1.0)
+
 	var level_factor := (attacker.level / 10.0) + 1.0
 	var raw_damage := (base_power * (attack_stat / defense_stat) * scaling_ratio) * level_factor
 

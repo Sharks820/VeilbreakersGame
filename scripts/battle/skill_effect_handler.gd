@@ -46,7 +46,8 @@ func process_pre_skill_effects(caster: CharacterBase, target: CharacterBase, ski
 					return result
 
 			"trigger_at_10_hp":
-				var hp_percent := caster.current_hp / float(caster.get_stat(Enums.Stat.MAX_HP))
+				var max_hp := maxf(float(caster.get_stat(Enums.Stat.MAX_HP)), 1.0)
+				var hp_percent := caster.current_hp / max_hp
 				if hp_percent > 0.1:
 					result.can_execute = false
 					result.reason = "HP not low enough"

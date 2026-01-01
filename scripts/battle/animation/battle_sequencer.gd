@@ -236,18 +236,22 @@ func _process_next_turn() -> void:
 func _execute_ai_turn(entity: Node) -> void:
 	"""AI decides and executes action"""
 	var action = {}
-	
+
 	if entity.has_method("decide_action"):
 		action = entity.decide_action(player_party, enemy_party)
 	else:
 		# Default: basic attack on random player
+		# Guard against empty player_party
+		if player_party.is_empty():
+			push_warning("_execute_ai_turn: No player targets available")
+			return
 		action = {
 			"type": ActionType.ATTACK,
 			"source": entity,
 			"targets": [player_party.pick_random()],
 			"skill": null
 		}
-	
+
 	await execute_action(action)
 
 # -----------------------------------------------------------------------------
@@ -283,7 +287,10 @@ func execute_action(action: Dictionary) -> void:
 		ActionType.ITEM:
 			await _execute_item(source, targets, action)
 		ActionType.CAPTURE:
-			await _execute_capture(source, targets[0], action)
+			if targets.is_empty():
+				push_warning("CAPTURE action with no targets")
+			else:
+				await _execute_capture(source, targets[0], action)
 		ActionType.SWAP:
 			await _execute_swap(source, action.get("swap_target"))
 		ActionType.DEFEND:
@@ -310,9 +317,14 @@ func execute_action(action: Dictionary) -> void:
 # -----------------------------------------------------------------------------
 func _execute_attack(source: Node, targets: Array, action: Dictionary) -> void:
 	"""Standard attack with full choreography"""
+	# Guard against empty targets array
+	if targets.is_empty():
+		push_warning("_execute_attack called with empty targets array")
+		return
+
 	var brand = source.get_brand() if source.has_method("get_brand") else "NEUTRAL"
 	var is_critical = randf() < (source.get_crit_chance() if source.has_method("get_crit_chance") else 0.1)
-	
+
 	# 1. WINDUP - Attacker prepares
 	camera_command.emit("focus_between", {
 		"from": source,
