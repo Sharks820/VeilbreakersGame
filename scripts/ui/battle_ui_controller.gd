@@ -86,6 +86,9 @@ var party_tooltip: PanelContainer = null
 var user_scrolled_log: bool = false  # True if user manually scrolled
 var combat_log_expanded: bool = false  # False = small, True = expanded
 var combat_log_drag_handle: Button = null
+var _log_dragging: bool = false
+var _log_drag_start_y: float = 0.0
+var _log_start_top: float = 0.0
 
 # Turn order breathing tweens (stored to kill before recreating)
 var _turn_order_tweens: Array[Tween] = []
@@ -2421,21 +2424,22 @@ func _reset_combat_log_scroll() -> void:
 	_auto_scroll_combat_log()
 
 func _update_combat_log_size() -> void:
-	"""Update combat log size based on expanded state"""
+	"""Update combat log size - default 238x158px, draggable to expand"""
 	if not combat_log:
 		return
-	if combat_log_expanded:
-		combat_log.offset_left = -400
-		combat_log.offset_top = -500  # Full size
-	else:
-		combat_log.offset_left = -300
-		combat_log.offset_top = -250  # Compact size
-	# Update drag handle text
+	# Default size: 238x158 px (offset_left=-248 for width, offset_top=-248 for height)
+	# With offset_right=-10 and offset_bottom=-90, this gives 238x158
+	combat_log.offset_left = -248
+	if not _log_dragging:
+		# Only reset offset_top if not currently dragging
+		combat_log.offset_top = _log_start_top if _log_start_top != 0.0 else -248
+	# Update drag handle text based on current size
 	if combat_log_drag_handle:
-		combat_log_drag_handle.text = "▼ Expand" if not combat_log_expanded else "▲ Collapse"
+		var is_expanded := combat_log.offset_top < -300
+		combat_log_drag_handle.text = "━━ ▲ ━━" if is_expanded else "━━ ▼ ━━"
 
 func _add_combat_log_drag_handle() -> void:
-	"""Add a clickable handle to expand/collapse the combat log"""
+	"""Add a draggable handle to resize the combat log"""
 	if combat_log_drag_handle and is_instance_valid(combat_log_drag_handle):
 		return  # Already exists
 
@@ -2443,22 +2447,50 @@ func _add_combat_log_drag_handle() -> void:
 	if not vbox:
 		return
 
-	# Create drag handle button
+	# Create drag handle button (keeps Button type for stability)
 	combat_log_drag_handle = Button.new()
 	combat_log_drag_handle.name = "DragHandle"
-	combat_log_drag_handle.text = "▼ Expand"
+	combat_log_drag_handle.text = "━━ ▼ ━━"
 	combat_log_drag_handle.flat = true
 	combat_log_drag_handle.add_theme_font_size_override("font_size", 10)
 	combat_log_drag_handle.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7))
 	combat_log_drag_handle.add_theme_color_override("font_hover_color", Color(0.9, 0.9, 1.0))
-	combat_log_drag_handle.custom_minimum_size = Vector2(0, 18)
-	combat_log_drag_handle.pressed.connect(_on_combat_log_toggle)
+	combat_log_drag_handle.custom_minimum_size = Vector2(0, 20)
+	combat_log_drag_handle.mouse_default_cursor_shape = Control.CURSOR_VSIZE
+	# Connect gui_input for drag handling
+	combat_log_drag_handle.gui_input.connect(_on_combat_log_drag_input)
 
 	# Insert at the beginning (before title)
 	vbox.add_child(combat_log_drag_handle)
 	vbox.move_child(combat_log_drag_handle, 0)
 
-func _on_combat_log_toggle() -> void:
-	"""Toggle combat log expanded/collapsed state"""
-	combat_log_expanded = not combat_log_expanded
-	_update_combat_log_size()
+	# Initialize default position
+	_log_start_top = -248.0  # Default height: 158px
+
+func _on_combat_log_drag_input(event: InputEvent) -> void:
+	"""Handle drag input on combat log handle"""
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_LEFT:
+			if mb.pressed:
+				# Start dragging
+				_log_dragging = true
+				_log_drag_start_y = mb.global_position.y
+				_log_start_top = combat_log.offset_top
+			else:
+				# Stop dragging
+				_log_dragging = false
+	elif event is InputEventMouseMotion and _log_dragging:
+		var mm := event as InputEventMouseMotion
+		# Calculate new offset_top based on drag delta
+		var delta_y := mm.global_position.y - _log_drag_start_y
+		# Dragging UP (negative delta) = larger panel (more negative offset_top)
+		# Dragging DOWN (positive delta) = smaller panel (less negative offset_top)
+		var new_top := _log_start_top + delta_y
+		# Clamp between default size (-248) and max expansion (-500)
+		# -248 = default 158px height, -500 = max ~410px height
+		new_top = clampf(new_top, -500.0, -248.0)
+		combat_log.offset_top = new_top
+		# Update drag handle text
+		var is_expanded := new_top < -300
+		combat_log_drag_handle.text = "━━ ▲ ━━" if is_expanded else "━━ ▼ ━━"
