@@ -144,8 +144,8 @@ func rest() -> Dictionary:
 			result.debuffs_cleared += cleared
 		
 		# Clear Blood Tithe from BARGAIN
-		if character.has_method("remove_stat_modifier"):
-			character.remove_stat_modifier("blood_tithe")
+		if character.has_method("remove_stat_modifiers_by_source"):
+			character.remove_stat_modifiers_by_source("blood_tithe")
 	
 	shrine_rest_completed.emit(result.hp_restored, result.debuffs_cleared)
 	return result
