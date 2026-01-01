@@ -604,8 +604,32 @@ func _on_item_selected(item_id: String) -> void:
 	pending_skill = item_id  # Using skill field for item ID
 	item_menu.hide()
 
-	# Most items target allies
-	_start_target_selection(true)
+	# Get item data to determine target type
+	var item_data: ItemData = DataManager.get_item(item_id)
+	if item_data:
+		match item_data.target_type:
+			Enums.TargetType.SELF:
+				# Self-targeting - use current character directly
+				valid_targets.clear()
+				valid_targets.append(current_character)
+				current_target_index = 0
+				set_ui_state(UIState.TARGET_SELECT)
+				_highlight_all_valid_targets(true)
+				_update_target_display()
+			Enums.TargetType.SINGLE_ALLY, Enums.TargetType.ALL_ALLIES:
+				_start_target_selection(true)  # Target allies (BLUE)
+			Enums.TargetType.SINGLE_ENEMY, Enums.TargetType.ALL_ENEMIES, Enums.TargetType.RANDOM_ENEMY:
+				# Check if this is a capture/purify item
+				var is_purify := item_data.special_effect.begins_with("purify")
+				_start_target_selection(false, is_purify)  # Target enemies (RED)
+			Enums.TargetType.ALL:
+				# Target all - default to enemies for combat items
+				_start_target_selection(false)
+			_:
+				_start_target_selection(true)  # Default to allies
+	else:
+		# Fallback - most items target allies
+		_start_target_selection(true)
 
 func _on_item_back_pressed() -> void:
 	item_menu.hide()
@@ -638,6 +662,9 @@ func _start_target_selection(target_allies: bool, purify_only: bool = false) -> 
 		_cancel_target_selection()
 		return
 
+	# Highlight ALL valid targets with appropriate colors
+	_highlight_all_valid_targets(target_allies)
+
 	current_target_index = 0
 	_update_target_display()
 
@@ -661,7 +688,7 @@ func _update_target_display() -> void:
 
 	# Determine if target is ally or enemy
 	var is_ally := target in party_members
-	var highlight_color := Color(0.4, 1.0, 0.4) if is_ally else Color(1.0, 0.4, 0.4)  # Green for ally, red for enemy
+	var highlight_color := Color(0.4, 0.7, 1.0) if is_ally else Color(1.0, 0.4, 0.4)  # BLUE for ally, RED for enemy
 
 	# Update target name with appropriate color highlight
 	target_name_label.text = "► " + target.character_name + " ◄"
@@ -1034,8 +1061,21 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 
 	return panel
 
+func _highlight_all_valid_targets(target_allies: bool) -> void:
+	"""Highlight ALL valid targets - RED for enemies, BLUE for allies"""
+	if target_allies:
+		# Highlight all valid ally targets in BLUE
+		for ally in party_members:
+			if ally in valid_targets:
+				_set_panel_highlight(ally, "sidebar_panel", Color(0.3, 0.5, 1.0, 1.0), 2)  # Blue glow
+	else:
+		# Highlight all valid enemy targets in RED
+		for enemy in enemies:
+			if enemy in valid_targets:
+				_set_panel_highlight(enemy, "ui_panel", Color(1.0, 0.3, 0.3, 1.0), 2)  # Red glow
+
 func _highlight_enemy_in_sidebar(target: CharacterBase) -> void:
-	"""Highlight the targeted enemy in the sidebar"""
+	"""Highlight the SELECTED enemy target (brighter red), others stay dimmer red"""
 	for enemy in enemies:
 		if enemy.has_meta("ui_panel"):
 			var panel: PanelContainer = enemy.get_meta("ui_panel")
@@ -1043,30 +1083,61 @@ func _highlight_enemy_in_sidebar(target: CharacterBase) -> void:
 				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
 				if style:
 					if enemy == target:
-						# Highlight - bright red border for enemy target
-						style.border_color = Color(1.0, 0.3, 0.3, 1.0)
-						style.set_border_width_all(3)
+						# SELECTED - bright red border + glow effect
+						style.border_color = Color(1.0, 0.2, 0.2, 1.0)
+						style.set_border_width_all(4)
+						style.shadow_color = Color(1.0, 0.0, 0.0, 0.6)
+						style.shadow_size = 8
+					elif enemy in valid_targets:
+						# Valid but not selected - dimmer red
+						style.border_color = Color(0.8, 0.3, 0.3, 1.0)
+						style.set_border_width_all(2)
+						style.shadow_color = Color(1.0, 0.0, 0.0, 0.3)
+						style.shadow_size = 4
 					else:
-						# Normal - red-tinted border
+						# Not targetable - normal border
 						style.border_color = Color(0.5, 0.25, 0.25, 1.0)
 						style.set_border_width_all(1)
+						style.shadow_size = 0
 
 func _highlight_ally_in_sidebar(target: CharacterBase) -> void:
-	"""Highlight the targeted ally in the party sidebar"""
+	"""Highlight the SELECTED ally target (brighter blue), others stay dimmer blue"""
 	for ally in party_members:
-		if ally.has_meta("ui_panel"):
-			var panel: PanelContainer = ally.get_meta("ui_panel")
+		# Check sidebar_panel (left sidebar) - this is the main ally panel
+		if ally.has_meta("sidebar_panel"):
+			var panel: PanelContainer = ally.get_meta("sidebar_panel")
 			if is_instance_valid(panel):
 				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
 				if style:
 					if ally == target:
-						# Highlight - bright green border for ally target
-						style.border_color = Color(0.3, 1.0, 0.3, 1.0)
-						style.set_border_width_all(3)
+						# SELECTED - bright blue border + glow effect
+						style.border_color = Color(0.2, 0.6, 1.0, 1.0)
+						style.set_border_width_all(4)
+						style.shadow_color = Color(0.0, 0.5, 1.0, 0.6)
+						style.shadow_size = 8
+					elif ally in valid_targets:
+						# Valid but not selected - dimmer blue
+						style.border_color = Color(0.3, 0.5, 0.8, 1.0)
+						style.set_border_width_all(2)
+						style.shadow_color = Color(0.0, 0.4, 1.0, 0.3)
+						style.shadow_size = 4
 					else:
-						# Normal - purple-tinted border
-						style.border_color = Color(0.3, 0.25, 0.4, 1.0)
+						# Not targetable - normal border
+						style.border_color = Color(0.3, 0.5, 0.4, 1.0)
 						style.set_border_width_all(1)
+						style.shadow_size = 0
+
+func _set_panel_highlight(character: CharacterBase, meta_key: String, color: Color, width: int) -> void:
+	"""Helper to set panel highlight by meta key"""
+	if character.has_meta(meta_key):
+		var panel: PanelContainer = character.get_meta(meta_key)
+		if is_instance_valid(panel):
+			var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
+			if style:
+				style.border_color = color
+				style.set_border_width_all(width)
+				style.shadow_color = Color(color.r, color.g, color.b, 0.4)
+				style.shadow_size = 6
 
 func _clear_all_sidebar_highlights() -> void:
 	"""Clear all target highlights from both enemy and party sidebars"""
@@ -1079,6 +1150,7 @@ func _clear_all_sidebar_highlights() -> void:
 				if style:
 					style.border_color = Color(0.5, 0.25, 0.25, 1.0)
 					style.set_border_width_all(1)
+					style.shadow_size = 0  # Clear shadow
 
 	# Reset party sidebar to normal state
 	for ally in party_members:
@@ -1089,6 +1161,7 @@ func _clear_all_sidebar_highlights() -> void:
 				if style:
 					style.border_color = Color(0.3, 0.25, 0.4, 1.0)
 					style.set_border_width_all(1)
+					style.shadow_size = 0  # Clear shadow
 
 		# Also check sidebar_panel (left sidebar)
 		if ally.has_meta("sidebar_panel"):
@@ -1098,6 +1171,7 @@ func _clear_all_sidebar_highlights() -> void:
 				if style:
 					style.border_color = Color(0.3, 0.5, 0.4, 1.0)
 					style.set_border_width_all(1)
+					style.shadow_size = 0  # Clear shadow
 
 func update_enemy_hp(enemy: CharacterBase) -> void:
 	"""Update a single enemy's HP display in the sidebar"""
