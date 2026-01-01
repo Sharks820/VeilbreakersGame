@@ -246,8 +246,8 @@ func _create_test_enemy(monster_id: String, level: int) -> Monster:
 
 	monster.current_hp = monster.base_max_hp
 
-	# Corruption level for purification
-	monster.corruption_level = 40.0 + randf() * 30.0
+	# Corruption level for purification (wild monsters are 80%+ corrupted)
+	monster.corruption_level = 80.0 + randf() * 20.0
 	monster.corruption_resistance = level * 0.5
 
 	# Add enemy skills

@@ -84,6 +84,8 @@ var party_tooltip: PanelContainer = null
 
 # Combat log scroll state
 var user_scrolled_log: bool = false  # True if user manually scrolled
+var combat_log_expanded: bool = false  # False = small, True = expanded
+var combat_log_drag_handle: Button = null
 
 # Turn order breathing tweens (stored to kill before recreating)
 var _turn_order_tweens: Array[Tween] = []
@@ -163,32 +165,22 @@ func _force_ui_layout() -> void:
 		if party_status_container:
 			party_status_container.hide()
 
-	# CombatLog - bottom-right corner, responsive - 3x larger for visibility
+	# CombatLog - bottom-right corner, smaller by default (expandable)
 	if combat_log:
 		combat_log.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-		combat_log.offset_left = -400  # Wider
-		combat_log.offset_top = -500   # 3x taller (was -200)
 		combat_log.offset_right = -10
 		combat_log.offset_bottom = -90
+		_update_combat_log_size()
 		combat_log.show()
 		# Ensure scroll bar is visible
 		if combat_log_scroll:
 			combat_log_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
+		# Add drag handle if not exists
+		_add_combat_log_drag_handle()
 
-	# EnemyPanel - right side with enemy HP/status (styled to match party sidebar)
+	# Hide scene-based EnemyPanel - we use dynamic sidebar instead
 	if enemy_panel:
-		enemy_panel.show()
-		# Style to match party sidebar but with red theme
-		var enemy_style := StyleBoxFlat.new()
-		enemy_style.bg_color = Color(0.2, 0.1, 0.1, 0.95)  # Dark red-gray
-		enemy_style.border_color = Color(0.8, 0.3, 0.3, 1.0)  # Red border
-		enemy_style.set_border_width_all(1)
-		enemy_style.set_corner_radius_all(4)
-		enemy_style.content_margin_left = 8
-		enemy_style.content_margin_right = 8
-		enemy_style.content_margin_top = 8
-		enemy_style.content_margin_bottom = 8
-		enemy_panel.add_theme_stylebox_override("panel", enemy_style)
+		enemy_panel.hide()
 
 	# Create left party sidebar if not exists
 	_create_left_party_sidebar(viewport_size)
@@ -337,14 +329,16 @@ func setup_battle(player_party: Array, enemy_party: Array) -> void:
 			enemies.append(e)
 
 	_update_party_display()
-	_update_enemy_sidebar()
 
-	# Rebuild the left party sidebar now that we have party members
+	# Get viewport size for dynamic sidebars
 	var viewport_size := Vector2(1920, 1080)
 	var queried_size := get_viewport().get_visible_rect().size
 	if queried_size.x > 0 and queried_size.y > 0:
 		viewport_size = queried_size
+
+	# Create both dynamic sidebars with matching positions
 	_create_left_party_sidebar(viewport_size)
+	_create_right_enemy_sidebar(viewport_size)
 
 	# FORCE hide party_status_container - we use left sidebar instead
 	if party_status_container:
@@ -1620,16 +1614,45 @@ func _get_brand_color(brand: Enums.Brand) -> Color:
 			return Color(0.7, 0.5, 0.3)  # Earthy brown - tank
 		Enums.Brand.FANG:
 			return Color(0.9, 0.8, 0.6)  # Bone/fang color - physical DPS
+		Enums.Brand.EMBER:
+			return Color(1.0, 0.5, 0.1)  # Fire orange
+		Enums.Brand.FROST:
+			return Color(0.5, 0.8, 1.0)  # Ice blue
+		Enums.Brand.VOID:
+			return Color(0.4, 0.2, 0.6)  # Void purple
+		Enums.Brand.RADIANT:
+			return Color(1.0, 0.95, 0.6)  # Holy gold
 		_:
 			return Color(0.5, 0.5, 0.5)  # Gray for none
+
+func _create_brand_icon(brand: Enums.Brand) -> PanelContainer:
+	"""Create a colored icon indicator for the brand"""
+	var icon := PanelContainer.new()
+	icon.custom_minimum_size = Vector2(14, 14)
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = _get_brand_color(brand)
+	style.set_corner_radius_all(3)  # Slightly rounded
+	style.border_color = _get_brand_color(brand).lightened(0.3)
+	style.set_border_width_all(1)
+	icon.add_theme_stylebox_override("panel", style)
+
+	return icon
 
 # =============================================================================
 # ENEMY HOVER TOOLTIP
 # =============================================================================
 
 func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
-	"""Show tooltip with enemy details on hover"""
+	"""Show tooltip with enemy details on hover, also select as target if in TARGET_SELECT"""
 	_hide_enemy_tooltip()  # Hide any existing tooltip
+
+	# If in target selection mode, hovering selects this enemy
+	if current_state == UIState.TARGET_SELECT and enemy in valid_targets:
+		var idx := valid_targets.find(enemy)
+		if idx >= 0:
+			current_target_index = idx
+			_update_target_display()
 
 	# Create tooltip panel
 	enemy_tooltip = PanelContainer.new()
@@ -1699,7 +1722,7 @@ func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
 		vbox.add_child(sep2)
 
 		var brand_info := HBoxContainer.new()
-		brand_info.add_theme_constant_override("separation", 8)
+		brand_info.add_theme_constant_override("separation", 6)
 		vbox.add_child(brand_info)
 
 		var brand_title := Label.new()
@@ -1707,6 +1730,10 @@ func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
 		brand_title.add_theme_font_size_override("font_size", 10)
 		brand_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 		brand_info.add_child(brand_title)
+
+		# Brand icon (colored indicator)
+		var brand_icon := _create_brand_icon(monster.brand)
+		brand_info.add_child(brand_icon)
 
 		var brand_value := Label.new()
 		brand_value.text = _get_brand_name(monster.brand)
@@ -1779,6 +1806,25 @@ func _add_stat_row(grid: GridContainer, stat_name: String, value: int, color: Co
 func _on_enemy_panel_unhover() -> void:
 	"""Hide tooltip when mouse leaves enemy panel"""
 	_hide_enemy_tooltip()
+
+func _on_enemy_panel_clicked(event: InputEvent, enemy: CharacterBase) -> void:
+	"""Handle click on enemy panel - select and confirm target"""
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		# If in target selection mode, clicking confirms this target
+		if current_state == UIState.TARGET_SELECT and enemy in valid_targets:
+			var idx := valid_targets.find(enemy)
+			if idx >= 0:
+				current_target_index = idx
+				_confirm_target()
+		# If in action select, clicking enemy starts attack targeting that enemy
+		elif current_state == UIState.ACTION_SELECT:
+			pending_action = Enums.BattleAction.ATTACK
+			_start_target_selection(false)  # Start enemy target selection
+			# Select the clicked enemy
+			var idx := valid_targets.find(enemy)
+			if idx >= 0:
+				current_target_index = idx
+				_update_target_display()
 
 func _hide_enemy_tooltip() -> void:
 	"""Remove and destroy the tooltip"""
@@ -1888,6 +1934,32 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 	_add_stat_row(stats_grid, "MAG", character.base_magic, Color(0.8, 0.5, 1.0))
 	_add_stat_row(stats_grid, "SPD", character.base_speed, Color(0.5, 1.0, 0.7))
 
+	# Brand info (if character has a brand)
+	if "brand" in character and character.brand != Enums.Brand.NONE:
+		var sep3 := HSeparator.new()
+		sep3.add_theme_color_override("separator", Color(0.3, 0.4, 0.35))
+		vbox.add_child(sep3)
+
+		var brand_info := HBoxContainer.new()
+		brand_info.add_theme_constant_override("separation", 6)
+		vbox.add_child(brand_info)
+
+		var brand_title := Label.new()
+		brand_title.text = "Brand:"
+		brand_title.add_theme_font_size_override("font_size", 10)
+		brand_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		brand_info.add_child(brand_title)
+
+		# Brand icon (colored indicator)
+		var brand_icon := _create_brand_icon(character.brand)
+		brand_info.add_child(brand_icon)
+
+		var brand_value := Label.new()
+		brand_value.text = _get_brand_name(character.brand)
+		brand_value.add_theme_font_size_override("font_size", 10)
+		brand_value.add_theme_color_override("font_color", _get_brand_color(character.brand))
+		brand_info.add_child(brand_value)
+
 	# Position tooltip to the RIGHT of the panel (party is on left side)
 	add_child(party_tooltip)
 	await get_tree().process_frame
@@ -1918,6 +1990,12 @@ func _hide_party_tooltip() -> void:
 # =============================================================================
 
 var left_party_sidebar: PanelContainer = null
+
+# =============================================================================
+# RIGHT ENEMY SIDEBAR (Dynamic - mirrors party sidebar positioning)
+# =============================================================================
+
+var right_enemy_sidebar: PanelContainer = null
 
 func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	"""Create a vertical party sidebar on the left side of the screen"""
@@ -1955,6 +2033,14 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	vbox.name = "PartyList"
 	vbox.add_theme_constant_override("separation", 8)
 	left_party_sidebar.add_child(vbox)
+
+	# Add "Your Party" title to match enemy sidebar
+	var title_label := Label.new()
+	title_label.text = "Your Party"
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_font_size_override("font_size", 12)
+	title_label.add_theme_color_override("font_color", Color(0.7, 0.9, 0.75))
+	vbox.add_child(title_label)
 
 	# Populate with party members
 	for member in party_members:
@@ -2117,6 +2203,199 @@ func update_party_sidebar() -> void:
 					mp_bar.max_value = maxi(1, member.get_max_mp())
 					mp_bar.value = member.current_mp
 
+func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
+	"""Create a vertical enemy sidebar on the right side - mirrors party sidebar"""
+	print("[BATTLE_UI] _create_right_enemy_sidebar called, enemies: %d, viewport: %s" % [enemies.size(), str(viewport_size)])
+
+	# Don't create if no enemies
+	if enemies.is_empty():
+		print("[BATTLE_UI] No enemies, skipping enemy sidebar")
+		return
+
+	# Remove existing sidebar
+	if right_enemy_sidebar and is_instance_valid(right_enemy_sidebar):
+		right_enemy_sidebar.free()
+		right_enemy_sidebar = null
+
+	right_enemy_sidebar = PanelContainer.new()
+	right_enemy_sidebar.name = "RightEnemySidebar"
+	right_enemy_sidebar.custom_minimum_size = Vector2(160, 300)
+	right_enemy_sidebar.size = Vector2(160, 300)
+
+	# Use PRESET_TOP_LEFT (same as party sidebar) then set X position for right side
+	right_enemy_sidebar.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	right_enemy_sidebar.position = Vector2(viewport_size.x - 170, 70)  # Same Y=70 as party sidebar
+	print("[BATTLE_UI] Enemy sidebar position set to: %s" % str(right_enemy_sidebar.position))
+
+	# Style with red theme for enemies
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.1, 0.1, 0.95)  # Dark red-gray
+	style.border_color = Color(0.8, 0.3, 0.3, 1.0)  # Red border
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	right_enemy_sidebar.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	vbox.name = "EnemyList"
+	vbox.add_theme_constant_override("separation", 8)
+	right_enemy_sidebar.add_child(vbox)
+
+	# Add "Enemies" title
+	var title_label := Label.new()
+	title_label.text = "Enemies"
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_font_size_override("font_size", 12)
+	title_label.add_theme_color_override("font_color", Color(0.9, 0.7, 0.7))
+	vbox.add_child(title_label)
+
+	# Populate with enemies
+	for enemy in enemies:
+		var slot := _create_enemy_sidebar_slot(enemy)
+		vbox.add_child(slot)
+
+	add_child(right_enemy_sidebar)
+	right_enemy_sidebar.show()
+	right_enemy_sidebar.z_index = 100  # Ensure it's on top
+	print("[BATTLE_UI] Enemy sidebar added to tree, visible: %s, position: %s" % [right_enemy_sidebar.visible, str(right_enemy_sidebar.global_position)])
+
+func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
+	"""Create a compact enemy slot for the right sidebar"""
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(144, 70)
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	# Style with enemy colors
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.1, 0.1, 0.9)
+	style.border_color = Color(0.5, 0.3, 0.3, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 6
+	style.content_margin_right = 6
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	panel.add_theme_stylebox_override("panel", style)
+
+	# Connect hover signals
+	panel.mouse_entered.connect(_on_enemy_panel_hover.bind(enemy, panel))
+	panel.mouse_exited.connect(_on_enemy_panel_unhover)
+
+	# Connect click signal for target selection
+	panel.gui_input.connect(_on_enemy_panel_clicked.bind(enemy))
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	hbox.mouse_filter = Control.MOUSE_FILTER_PASS
+	panel.add_child(hbox)
+
+	# Portrait
+	var portrait_container := PanelContainer.new()
+	portrait_container.custom_minimum_size = Vector2(36, 36)
+	portrait_container.mouse_filter = Control.MOUSE_FILTER_PASS
+	var portrait_style := StyleBoxFlat.new()
+	portrait_style.bg_color = Color(0.2, 0.12, 0.12, 1.0)
+	portrait_style.border_color = Color(0.6, 0.35, 0.35, 1.0)
+	portrait_style.set_border_width_all(1)
+	portrait_style.set_corner_radius_all(3)
+	portrait_container.add_theme_stylebox_override("panel", portrait_style)
+	hbox.add_child(portrait_container)
+
+	var portrait := TextureRect.new()
+	portrait.custom_minimum_size = Vector2(32, 32)
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.mouse_filter = Control.MOUSE_FILTER_PASS
+	var portrait_path := _get_portrait_path(enemy)
+	if portrait_path != "":
+		var tex := load(portrait_path)
+		if tex:
+			portrait.texture = tex
+	portrait_container.add_child(portrait)
+
+	# Info container
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.mouse_filter = Control.MOUSE_FILTER_PASS
+	hbox.add_child(vbox)
+
+	# Name
+	var name_label := Label.new()
+	name_label.text = enemy.character_name
+	name_label.add_theme_font_size_override("font_size", 10)
+	name_label.add_theme_color_override("font_color", Color(0.95, 0.85, 0.8))
+	name_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	vbox.add_child(name_label)
+
+	# HP Bar - red themed
+	var hp_bar := ProgressBar.new()
+	hp_bar.name = "HPBar"
+	hp_bar.max_value = maxi(1, enemy.get_max_hp())
+	hp_bar.value = enemy.current_hp
+	hp_bar.show_percentage = false
+	hp_bar.custom_minimum_size = Vector2(85, 10)
+	hp_bar.mouse_filter = Control.MOUSE_FILTER_PASS
+
+	var hp_fill := StyleBoxFlat.new()
+	hp_fill.bg_color = Color(0.8, 0.25, 0.25, 1.0)  # Red for enemies
+	hp_fill.set_corner_radius_all(2)
+	hp_bar.add_theme_stylebox_override("fill", hp_fill)
+
+	var hp_bg := StyleBoxFlat.new()
+	hp_bg.bg_color = Color(0.2, 0.12, 0.12, 0.9)
+	hp_bg.set_corner_radius_all(2)
+	hp_bar.add_theme_stylebox_override("background", hp_bg)
+	vbox.add_child(hp_bar)
+
+	# Corruption bar for monsters
+	if enemy is Monster:
+		var monster := enemy as Monster
+		var corruption_bar := ProgressBar.new()
+		corruption_bar.name = "CorruptionBar"
+		corruption_bar.max_value = 100.0
+		var corruption_percent := (monster.corruption_level / monster.max_corruption) * 100.0
+		corruption_bar.value = corruption_percent
+		corruption_bar.show_percentage = false
+		corruption_bar.custom_minimum_size = Vector2(85, 6)
+		corruption_bar.mouse_filter = Control.MOUSE_FILTER_PASS
+
+		var corr_fill := StyleBoxFlat.new()
+		corr_fill.bg_color = Color(0.6, 0.2, 0.7, 1.0)  # Purple for corruption
+		corr_fill.set_corner_radius_all(2)
+		corruption_bar.add_theme_stylebox_override("fill", corr_fill)
+
+		var corr_bg := StyleBoxFlat.new()
+		corr_bg.bg_color = Color(0.15, 0.1, 0.15, 0.9)
+		corr_bg.set_corner_radius_all(2)
+		corruption_bar.add_theme_stylebox_override("background", corr_bg)
+		vbox.add_child(corruption_bar)
+
+	# Store reference for updates
+	enemy.set_meta("enemy_sidebar_panel", panel)
+
+	return panel
+
+func update_enemy_sidebar() -> void:
+	"""Update HP/corruption bars in the right enemy sidebar"""
+	for enemy in enemies:
+		if enemy.has_meta("enemy_sidebar_panel"):
+			var panel: PanelContainer = enemy.get_meta("enemy_sidebar_panel")
+			if is_instance_valid(panel):
+				var hp_bar := panel.find_child("HPBar", true, false) as ProgressBar
+				var corruption_bar := panel.find_child("CorruptionBar", true, false) as ProgressBar
+
+				if hp_bar:
+					hp_bar.max_value = maxi(1, enemy.get_max_hp())
+					hp_bar.value = enemy.current_hp
+				if corruption_bar and enemy is Monster:
+					var monster := enemy as Monster
+					var corruption_percent := (monster.corruption_level / monster.max_corruption) * 100.0
+					corruption_bar.value = corruption_percent
+
 func _auto_scroll_combat_log() -> void:
 	"""Auto-scroll combat log to bottom if user hasn't manually scrolled away"""
 	if not combat_log_scroll:
@@ -2140,3 +2419,46 @@ func _reset_combat_log_scroll() -> void:
 	"""Reset scroll state when user interacts with battle (button press, target select, etc.)"""
 	user_scrolled_log = false
 	_auto_scroll_combat_log()
+
+func _update_combat_log_size() -> void:
+	"""Update combat log size based on expanded state"""
+	if not combat_log:
+		return
+	if combat_log_expanded:
+		combat_log.offset_left = -400
+		combat_log.offset_top = -500  # Full size
+	else:
+		combat_log.offset_left = -300
+		combat_log.offset_top = -250  # Compact size
+	# Update drag handle text
+	if combat_log_drag_handle:
+		combat_log_drag_handle.text = "▼ Expand" if not combat_log_expanded else "▲ Collapse"
+
+func _add_combat_log_drag_handle() -> void:
+	"""Add a clickable handle to expand/collapse the combat log"""
+	if combat_log_drag_handle and is_instance_valid(combat_log_drag_handle):
+		return  # Already exists
+
+	var vbox := combat_log.get_node_or_null("VBoxContainer")
+	if not vbox:
+		return
+
+	# Create drag handle button
+	combat_log_drag_handle = Button.new()
+	combat_log_drag_handle.name = "DragHandle"
+	combat_log_drag_handle.text = "▼ Expand"
+	combat_log_drag_handle.flat = true
+	combat_log_drag_handle.add_theme_font_size_override("font_size", 10)
+	combat_log_drag_handle.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7))
+	combat_log_drag_handle.add_theme_color_override("font_hover_color", Color(0.9, 0.9, 1.0))
+	combat_log_drag_handle.custom_minimum_size = Vector2(0, 18)
+	combat_log_drag_handle.pressed.connect(_on_combat_log_toggle)
+
+	# Insert at the beginning (before title)
+	vbox.add_child(combat_log_drag_handle)
+	vbox.move_child(combat_log_drag_handle, 0)
+
+func _on_combat_log_toggle() -> void:
+	"""Toggle combat log expanded/collapsed state"""
+	combat_log_expanded = not combat_log_expanded
+	_update_combat_log_size()

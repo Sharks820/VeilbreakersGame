@@ -141,7 +141,7 @@ func _create_monster(monster_id: String, level: int) -> Monster:
 	monster.base_magic = 5 + level
 	monster.base_speed = 8 + level
 	monster.current_hp = monster.base_max_hp
-	monster.corruption_level = 40.0 + randf() * 30.0
+	monster.corruption_level = 80.0 + randf() * 20.0  # Wild monsters are 80%+ corrupted
 	return monster
 
 # =============================================================================
