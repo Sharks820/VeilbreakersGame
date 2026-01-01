@@ -223,31 +223,27 @@ func modify_path_alignment(amount: float, source: String = "") -> void:
 		EventBus.path_alignment_changed.emit(old_value, path_alignment)
 		EventBus.emit_debug("Path alignment: %.1f -> %.1f (source: %s)" % [old_value, path_alignment, source])
 
-func get_current_path() -> Enums.Path:
-	if path_alignment <= -51:
-		return Enums.Path.SHADE
-	elif path_alignment <= -26:
-		return Enums.Path.TWILIGHT
-	elif path_alignment <= 25:
-		return Enums.Path.NEUTRAL
-	elif path_alignment <= 50:
-		return Enums.Path.LIGHT
-	else:
-		return Enums.Path.SERAPH
+func get_dominant_path() -> Enums.Path:
+	## Returns the path with highest affinity, or NONE if no path is above threshold
+	## Uses PathSystem for the new 4-path system
+	if has_node("/root/PathSystem"):
+		var path_system = get_node("/root/PathSystem")
+		if path_system.has_method("get_dominant_path"):
+			return path_system.get_dominant_path()
+	return Enums.Path.NONE
 
 func get_path_name() -> String:
-	match get_current_path():
-		Enums.Path.SHADE:
-			return "Shade"
-		Enums.Path.TWILIGHT:
-			return "Twilight"
-		Enums.Path.NEUTRAL:
-			return "Neutral"
-		Enums.Path.LIGHT:
-			return "Light"
-		Enums.Path.SERAPH:
-			return "Seraph"
-	return "Unknown"
+	var path := get_dominant_path()
+	match path:
+		Enums.Path.IRONBOUND:
+			return "Ironbound"
+		Enums.Path.FANGBORN:
+			return "Fangborn"
+		Enums.Path.VOIDTOUCHED:
+			return "Voidtouched"
+		Enums.Path.UNCHAINED:
+			return "Unchained"
+	return "Unaligned"
 
 func set_story_flag(flag: String, value: Variant = true) -> void:
 	story_flags[flag] = value
