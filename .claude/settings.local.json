@@ -56,7 +56,9 @@
       "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --headless --quit --import \"C:/Users/Conner/Downloads/VeilbreakersGame\")",
       "Bash(git reset:*)",
       "Bash(findstr:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "mcp__godot-editor__launch_editor",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\Conner\\\\Desktop\\\\Godot Editor.lnk.ps1\")"
     ]
   },
   "enableAllProjectMcpServers": true,

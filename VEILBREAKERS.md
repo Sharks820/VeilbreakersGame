@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v4.5** | Last updated: 2025-12-31
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v4.6** | Last updated: 2026-01-01
 
 ---
 
@@ -271,6 +271,43 @@ battle, ui, art, audio, vera, monsters, critical
 | 2025-12-31 | v4.1: Sidebar HP/MP bars now update on damage/heal/skill use via metadata references |
 | 2025-12-31 | v4.2: Bug fixes - debug code removal, tween memory leaks, BargainUI Color fix, EventBus.skill_used signal |
 | 2025-12-31 | v4.3: Critical fixes - DataManager innate_skills, status icon display on panels, CrashHandler init, SaveManager integration |
+| 2025-12-31 | v4.5: Target highlighting - RED for enemies, BLUE for allies with glow effects |
+| 2026-01-01 | v4.6: Planning Brand overhaul (Option C - remove Elements, Brands become only type system) |
+
+---
+
+## PLANNED: Brand System Overhaul (Option C)
+
+**Goal:** Remove Element enum entirely. Brands become the ONLY type system.
+
+### Brand Effectiveness Matrix (Rock-Paper-Scissors)
+```
+SAVAGE → IRON → VENOM → SURGE → DREAD → LEECH → SAVAGE
+       ↑_______________________________________|
+```
+
+| Attacker | Strong vs | Weak vs |
+|----------|-----------|---------|
+| SAVAGE | IRON | LEECH |
+| IRON | VENOM | SAVAGE |
+| VENOM | SURGE | IRON |
+| SURGE | DREAD | VENOM |
+| DREAD | LEECH | SURGE |
+| LEECH | SAVAGE | DREAD |
+
+**Damage Multipliers:**
+- Strong vs target: 1.5x
+- Weak vs target: 0.67x
+- Neutral: 1.0x
+
+**Files to Update:**
+- enums.gd: Remove Element enum
+- constants.gd: Add BRAND_EFFECTIVENESS matrix
+- skill_data.gd: Change `element` to `brand_type`
+- monster_data.gd: Remove `elements` array, use `brand` only
+- damage_calculator.gd: Use brand effectiveness
+- All 98 skill JSON files
+- All 9 monster JSON files
 
 ---
 

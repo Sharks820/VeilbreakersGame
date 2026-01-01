@@ -13,6 +13,10 @@ NUL
 # Debug screenshots (captured by Claude Code)
 screenshots/
 
+# Temporary processing folders
+temp_eye_frames/
+temp_*/
+
 # Godot 4+ specific ignores
 .godot/
 
