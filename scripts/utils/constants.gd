@@ -31,6 +31,11 @@ const PURIFICATION_BASE_CHANCE: float = 0.3
 const PURIFICATION_CORRUPTION_PENALTY: float = 0.01  # Per corruption point
 const MAX_CORRUPTION: float = 100.0
 
+# Monster Control (Party Monsters)
+const MONSTER_AUTO_ATTACK_CORRUPTION_THRESHOLD: float = 70.0  # If corruption >= this, monster attacks on its own
+const MONSTER_CAN_USE_ITEMS: bool = false  # Monsters cannot use items in battle
+const MONSTER_CAN_CAPTURE: bool = false    # Monsters cannot capture other monsters
+
 # Timed Defense System
 const TIMED_DEFENSE_POPUP_DELAY_MIN: float = 0.3   # Random delay before popup appears (min)
 const TIMED_DEFENSE_POPUP_DELAY_MAX: float = 0.7   # Random delay before popup appears (max)

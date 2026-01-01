@@ -36,6 +36,7 @@ var enemy_sprites: Array[Node2D] = []
 var battle_ui: Control = null
 var is_battle_active: bool = false
 var _currently_highlighted_sprite: Node2D = null  # For target hover highlighting
+var _highlight_breathing_tween: Tween = null  # Breathing animation for highlighted sprite
 
 # =============================================================================
 # LIFECYCLE
@@ -1160,28 +1161,64 @@ func _on_camera_focus_completed() -> void:
 	pass  # Camera focus transition done
 
 func _on_target_highlight_changed(target: CharacterBase) -> void:
-	"""Highlight/unhighlight character sprite when hovering targets in UI"""
-	# Clear previous highlight
+	"""Highlight/unhighlight character sprite when hovering targets in UI with breathing animation"""
+	# Kill existing breathing tween
+	if _highlight_breathing_tween and _highlight_breathing_tween.is_valid():
+		_highlight_breathing_tween.kill()
+		_highlight_breathing_tween = null
+
+	# Clear previous highlight - reset to normal
 	if _currently_highlighted_sprite and is_instance_valid(_currently_highlighted_sprite):
 		_currently_highlighted_sprite.modulate = Color.WHITE
+		_currently_highlighted_sprite.scale = _currently_highlighted_sprite.get_meta("original_scale", Vector2.ONE)
 		_currently_highlighted_sprite = null
 
 	# Apply new highlight if target exists
 	if target and is_instance_valid(target):
 		var sprite: Node2D = target.get_meta("battle_sprite", null) as Node2D
 		if sprite and is_instance_valid(sprite):
+			# Store original scale for restoration
+			if not sprite.has_meta("original_scale"):
+				sprite.set_meta("original_scale", sprite.scale)
+			var original_scale: Vector2 = sprite.get_meta("original_scale")
+
 			# Determine highlight color based on ally/enemy
 			var is_ally := target in GameManager.player_party
+			var base_color: Color
+			var glow_color: Color
 			if is_ally:
-				sprite.modulate = Color(0.6, 1.0, 0.6, 1.0)  # Green tint for ally
+				base_color = Color(0.7, 1.2, 0.7, 1.0)  # Blue-green tint for ally
+				glow_color = Color(0.5, 1.4, 0.5, 1.0)  # Brighter glow
 			else:
-				sprite.modulate = Color(1.0, 0.6, 0.6, 1.0)  # Red tint for enemy
+				base_color = Color(1.2, 0.6, 0.6, 1.0)  # Red tint for enemy
+				glow_color = Color(1.4, 0.4, 0.4, 1.0)  # Brighter red glow
+
+			sprite.modulate = base_color
 			_currently_highlighted_sprite = sprite
 
+			# Create breathing animation - scale pulse + color pulse
+			_highlight_breathing_tween = create_tween()
+			_highlight_breathing_tween.set_loops()  # Infinite loop
+
+			# Scale up slightly while intensifying color
+			_highlight_breathing_tween.tween_property(sprite, "scale", original_scale * 1.08, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+			_highlight_breathing_tween.parallel().tween_property(sprite, "modulate", glow_color, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+			# Scale back down
+			_highlight_breathing_tween.tween_property(sprite, "scale", original_scale, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+			_highlight_breathing_tween.parallel().tween_property(sprite, "modulate", base_color, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
 func clear_target_highlight() -> void:
-	"""Clear any existing target highlight"""
+	"""Clear any existing target highlight and breathing animation"""
+	# Stop breathing tween
+	if _highlight_breathing_tween and _highlight_breathing_tween.is_valid():
+		_highlight_breathing_tween.kill()
+		_highlight_breathing_tween = null
+
+	# Reset sprite to normal state
 	if _currently_highlighted_sprite and is_instance_valid(_currently_highlighted_sprite):
 		_currently_highlighted_sprite.modulate = Color.WHITE
+		_currently_highlighted_sprite.scale = _currently_highlighted_sprite.get_meta("original_scale", Vector2.ONE)
 		_currently_highlighted_sprite = null
 
 # =============================================================================

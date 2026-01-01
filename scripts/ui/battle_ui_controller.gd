@@ -305,15 +305,20 @@ func _hide_all_menus() -> void:
 # =============================================================================
 
 func _input(event: InputEvent) -> void:
+	# Handle target selection with arrow keys - MUST consume input to prevent focus stealing
 	if current_state == UIState.TARGET_SELECT:
 		if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_up"):
 			_select_previous_target()
+			get_viewport().set_input_as_handled()  # Prevent focus from moving
 		elif event.is_action_pressed("ui_right") or event.is_action_pressed("ui_down"):
 			_select_next_target()
+			get_viewport().set_input_as_handled()  # Prevent focus from moving
 		elif event.is_action_pressed("ui_accept"):
 			_confirm_target()
+			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("ui_cancel"):
 			_cancel_target_selection()
+			get_viewport().set_input_as_handled()
 
 # =============================================================================
 # BATTLE FLOW
@@ -403,20 +408,30 @@ func _update_action_buttons() -> void:
 	if current_character == null:
 		return
 
+	# Check if current character is a monster (party monster, not protagonist)
+	var is_monster := current_character is Monster
+
 	# Disable skill if silenced
 	skill_button.disabled = current_character.has_status_effect(Enums.StatusEffect.SILENCE)
 
-	# Disable purify if no valid targets
-	var has_purifiable_targets := false
-	for enemy in enemies:
-		if enemy is Monster and enemy.can_be_purified():
-			has_purifiable_targets = true
-			break
-	purify_button.disabled = not has_purifiable_targets
+	# Disable purify/capture for monsters - only player characters can capture
+	# Also disable if no valid targets
+	if is_monster and not Constants.MONSTER_CAN_CAPTURE:
+		purify_button.disabled = true
+	else:
+		var has_purifiable_targets := false
+		for enemy in enemies:
+			if enemy is Monster and enemy.can_be_purified():
+				has_purifiable_targets = true
+				break
+		purify_button.disabled = not has_purifiable_targets
 
-	# Disable item if no usable items
-	# TODO: Check inventory
-	item_button.disabled = false
+	# Disable item for monsters - only player characters can use items
+	if is_monster and not Constants.MONSTER_CAN_USE_ITEMS:
+		item_button.disabled = true
+	else:
+		# TODO: Check inventory for usable items
+		item_button.disabled = false
 
 	# Flee might be disabled in boss battles
 	flee_button.disabled = _is_boss_battle()

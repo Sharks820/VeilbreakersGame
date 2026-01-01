@@ -453,17 +453,39 @@ func _prompt_next_party_member() -> void:
 		# Camera: Focus on character selecting
 		camera_command.emit("focus", {"target": character, "duration": camera_focus_time})
 
-		# Show action menu based on character type
-		print("[BATTLE_MANAGER] _prompt_next_party_member: character=%s, is_protagonist=%s" % [character.character_name, character.is_protagonist])
-		if character.is_protagonist:
-			# Player selects action
+		# Determine if player controls this character
+		# - Protagonist: always player controlled
+		# - Party monsters: player controlled UNLESS corruption >= threshold
+		var is_player_controlled := character.is_protagonist
+		var corruption_auto_attack := false
+
+		if not is_player_controlled and character in player_party:
+			# Check if monster has high corruption (auto-attacks on its own)
+			if character is Monster:
+				var monster: Monster = character as Monster
+				if monster.corruption_level >= Constants.MONSTER_AUTO_ATTACK_CORRUPTION_THRESHOLD:
+					corruption_auto_attack = true
+					EventBus.emit_debug("[CORRUPTION] %s's corruption (%.0f%%) is too high - attacks on its own!" % [character.character_name, monster.corruption_level])
+				else:
+					# Player controls this party monster
+					is_player_controlled = true
+			else:
+				# Non-monster party member (shouldn't happen but handle gracefully)
+				is_player_controlled = true
+
+		print("[BATTLE_MANAGER] _prompt_next_party_member: character=%s, is_protagonist=%s, is_player_controlled=%s" % [character.character_name, character.is_protagonist, is_player_controlled])
+
+		if is_player_controlled:
+			# Player selects action (protagonist OR party monster with low corruption)
 			battle_state = Enums.BattleState.SELECTING_ACTION
-			ui_command.emit("show_action_menu", {"entity": character})
+			ui_command.emit("show_action_menu", {"entity": character, "is_monster": character is Monster})
 			print("[BATTLE_MANAGER] Emitting waiting_for_player_input for %s" % character.character_name)
 			waiting_for_player_input.emit(character)
 		else:
-			# AI-controlled ally monster
-			print("[BATTLE_MANAGER] Character is AI ally - queueing AI action")
+			# AI-controlled: high corruption monster attacks on its own
+			if corruption_auto_attack:
+				ui_command.emit("show_message", {"text": "%s is consumed by corruption!" % character.character_name, "duration": 1.0})
+			print("[BATTLE_MANAGER] Character is AI ally (corruption auto-attack) - queueing AI action")
 			await get_tree().create_timer(0.3).timeout
 			_queue_ally_ai_action(character)
 		return
