@@ -10,11 +10,9 @@ extends Resource
 
 @export_group("Classification")
 @export var skill_type: SkillType = SkillType.DAMAGE
-## @deprecated Use brand_type instead. Kept for save compatibility.
-@export var element: Enums.Element = Enums.Element.PHYSICAL
 @export var damage_type: Enums.DamageType = Enums.DamageType.PHYSICAL
 @export var target_type: Enums.TargetType = Enums.TargetType.SINGLE_ENEMY
-## v5.0: Brand type determines effectiveness and visual effects
+## Brand type determines effectiveness and visual effects
 @export var brand_type: Enums.Brand = Enums.Brand.NONE
 ## Brand requirement to learn/use this skill
 @export var brand_requirement: Enums.Brand = Enums.Brand.NONE
@@ -117,11 +115,8 @@ func get_tooltip() -> String:
 	if hp_cost > 0:
 		tooltip += "HP Cost: %d\n" % hp_cost
 
-	# v5.0: Show Brand type if set, otherwise fall back to deprecated Element
 	if brand_type != Enums.Brand.NONE:
 		tooltip += "Brand: %s\n" % Enums.Brand.keys()[brand_type]
-	elif element != Enums.Element.PHYSICAL and element != Enums.Element.NONE:
-		tooltip += "Element: %s (legacy)\n" % Enums.Element.keys()[element]
 	
 	tooltip += "Target: %s\n" % Enums.TargetType.keys()[target_type]
 

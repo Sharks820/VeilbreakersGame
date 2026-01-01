@@ -176,33 +176,7 @@ static func get_rarity_color(rarity: Enums.Rarity) -> Color:
 			return Color.GOLD
 	return Color.WHITE
 
-## @deprecated Use get_brand_color() instead - Element system replaced by Brand system in v5.0
-static func get_element_color(element: Enums.Element) -> Color:
-	push_warning("get_element_color() is deprecated. Use get_brand_color() instead.")
-	match element:
-		Enums.Element.FIRE:
-			return Color.ORANGE_RED
-		Enums.Element.ICE:
-			return Color.DEEP_SKY_BLUE
-		Enums.Element.LIGHTNING:
-			return Color.YELLOW
-		Enums.Element.EARTH:
-			return Color.SADDLE_BROWN
-		Enums.Element.WIND:
-			return Color.PALE_GREEN
-		Enums.Element.WATER:
-			return Color.ROYAL_BLUE
-		Enums.Element.LIGHT:
-			return Color.GOLD
-		Enums.Element.DARK:
-			return Color.DARK_SLATE_GRAY
-		Enums.Element.HOLY:
-			return Color.WHITE
-		Enums.Element.VOID:
-			return Color.PURPLE
-	return Color.WHITE
-
-## Get color for a Brand (v5.0 Brand system)
+## Get color for a Brand
 ## Returns the brand's primary color for UI and effects
 static func get_brand_color(brand: Enums.Brand) -> Color:
 	match brand:

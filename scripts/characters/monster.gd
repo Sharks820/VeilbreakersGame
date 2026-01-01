@@ -885,7 +885,6 @@ static func create_from_data(data: Dictionary) -> Monster:
 	monster.monster_tier = data.get("tier", Enums.MonsterTier.COMMON)
 	monster.brand = data.get("brand", Enums.Brand.NONE)
 	monster.rarity = data.get("rarity", Enums.Rarity.COMMON)
-	monster.elements = data.get("elements", [])
 
 	# Stats
 	monster.base_max_hp = data.get("hp", 100)

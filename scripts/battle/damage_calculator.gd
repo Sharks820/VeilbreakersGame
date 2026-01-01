@@ -1,27 +1,10 @@
 class_name DamageCalculator
 extends Node
 ## DamageCalculator: Handles all damage, healing, and combat calculations.
-## Updated v5.0: Brand effectiveness system replaces elements.
+## Uses Brand effectiveness system for type advantages.
 
 # =============================================================================
-# DEPRECATED: Element weakness chart (Use Brand effectiveness instead)
-# =============================================================================
-
-const ELEMENT_WEAKNESSES := {
-	Enums.Element.FIRE: [Enums.Element.ICE, Enums.Element.WIND],
-	Enums.Element.ICE: [Enums.Element.LIGHTNING, Enums.Element.EARTH],
-	Enums.Element.LIGHTNING: [Enums.Element.WATER],
-	Enums.Element.EARTH: [Enums.Element.LIGHTNING],
-	Enums.Element.WATER: [Enums.Element.FIRE],
-	Enums.Element.WIND: [Enums.Element.EARTH],
-	Enums.Element.LIGHT: [Enums.Element.DARK, Enums.Element.VOID],
-	Enums.Element.DARK: [Enums.Element.LIGHT],
-	Enums.Element.HOLY: [Enums.Element.VOID, Enums.Element.DARK],
-	Enums.Element.VOID: [Enums.Element.HOLY, Enums.Element.LIGHT]
-}
-
-# =============================================================================
-# BRAND EFFECTIVENESS (v5.0 - LOCKED)
+# BRAND EFFECTIVENESS
 # Wheel: SAVAGE → IRON → VENOM → SURGE → DREAD → LEECH → SAVAGE
 # =============================================================================
 
@@ -49,7 +32,7 @@ static func _get_primary_brand(brand: Enums.Brand) -> String:
 		return Constants.HYBRID_BRAND_COMPONENTS[brand_name]["primary"]
 	return brand_name
 
-## Calculate brand effectiveness multiplier (v5.0)
+## Calculate brand effectiveness multiplier
 func get_brand_effectiveness(attacker_brand: Enums.Brand, defender_brand: Enums.Brand) -> float:
 	if attacker_brand == Enums.Brand.NONE or defender_brand == Enums.Brand.NONE:
 		return Constants.BRAND_NEUTRAL
@@ -65,7 +48,7 @@ func get_brand_effectiveness(attacker_brand: Enums.Brand, defender_brand: Enums.
 
 	return Constants.BRAND_NEUTRAL
 
-## Check path-brand effectiveness for heroes (v5.0)
+## Check path-brand effectiveness for heroes
 func get_path_brand_modifier(hero_path: Enums.Path, monster_brand: Enums.Brand) -> float:
 	if hero_path == Enums.Path.NONE:
 		return 1.0
@@ -94,9 +77,7 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 		"damage": 0,
 		"is_critical": false,
 		"is_miss": false,
-		"element_effectiveness": 1.0,  # @deprecated - use brand_effectiveness
-		"brand_effectiveness": 1.0,    # v5.0: Brand-based effectiveness
-		"element": Enums.Element.PHYSICAL,
+		"brand_effectiveness": 1.0,
 		"damage_type": Enums.DamageType.PHYSICAL,
 		"attacker_brand": Enums.Brand.NONE,
 		"defender_brand": Enums.Brand.NONE
@@ -116,18 +97,14 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	var power := 10.0
 	var scaling_stat := Enums.Stat.ATTACK
 	var defense_stat := Enums.Stat.DEFENSE
-	var element := Enums.Element.PHYSICAL
 	var damage_type := Enums.DamageType.PHYSICAL
-	var accuracy_mod := 0.0
 	var crit_mod := 0.0
 	var hit_count := 1
 
 	if skill != null and skill is SkillData:
 		power = float(skill.base_power)
 		scaling_stat = skill.scaling_stat
-		element = skill.element
 		damage_type = skill.damage_type
-		accuracy_mod = skill.accuracy_modifier
 		crit_mod = skill.crit_modifier
 		hit_count = skill.hit_count
 
@@ -145,13 +122,13 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	# Base formula: (Power * Attack / Defense) * LevelFactor
 	var raw_damage := (power * (attack / maxf(1.0, defense))) * level_factor
 
-	# v5.0: Brand effectiveness (replaces elemental modifier)
+	# Brand effectiveness
 	var brand_mod := 1.0
-	var attacker_brand := attacker.brand if attacker.has_method("get") or "brand" in attacker else Enums.Brand.NONE
-	var defender_brand := defender.brand if defender.has_method("get") or "brand" in defender else Enums.Brand.NONE
+	var attacker_brand: Enums.Brand = attacker.brand if "brand" in attacker else Enums.Brand.NONE
+	var defender_brand: Enums.Brand = defender.brand if "brand" in defender else Enums.Brand.NONE
 
 	# Get brand from skill if available (skills can have brand_type)
-	if skill != null and skill is SkillData and skill.has_method("get") or (skill != null and "brand_type" in skill):
+	if skill != null and skill is SkillData and "brand_type" in skill:
 		if skill.brand_type != Enums.Brand.NONE:
 			attacker_brand = skill.brand_type
 
@@ -159,22 +136,14 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	brand_mod = get_brand_effectiveness(attacker_brand, defender_brand)
 
 	# Path-Brand modifier (for heroes attacking monsters)
-	if attacker.has_method("get") or "path" in attacker:
+	if "path" in attacker:
 		var path_mod := get_path_brand_modifier(attacker.path, defender_brand)
 		brand_mod *= path_mod
 
 	result.brand_effectiveness = brand_mod
 	result.attacker_brand = attacker_brand
 	result.defender_brand = defender_brand
-
-	# Legacy: Element modifier (deprecated, kept for compatibility)
-	var element_mod := _get_element_modifier(element, defender.elements)
-	result.element_effectiveness = element_mod
-	result.element = element
 	result.damage_type = damage_type
-
-	# Use BRAND effectiveness as primary modifier (v5.0)
-	var type_modifier := brand_mod if brand_mod != 1.0 else element_mod
 
 	# Critical hit check (skill can modify crit chance)
 	var crit_chance := attacker.get_stat(Enums.Stat.CRIT_CHANCE) + crit_mod
@@ -195,13 +164,8 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 		defender_mod *= 1.25
 	if defender.has_status_effect(Enums.StatusEffect.DEFENSE_UP):
 		defender_mod *= 0.75
-
-	# TODO: Implement SHIELD status effect - should absorb damage before applying to HP
-	# Shield should track remaining absorption amount and break when depleted
-	# if defender.has_status_effect(Enums.StatusEffect.SHIELD):
-	#     var shield_data = defender.status_effects[Enums.StatusEffect.SHIELD]
-	#     var shield_amount = shield_data.get("shield_amount", 0)
-	#     # Absorb damage, reduce shield, break if depleted
+	if defender.has_status_effect(Enums.StatusEffect.SORROW):
+		defender_mod *= 1.15  # DREAD brand debuff - +15% damage taken
 
 	# Attacker status effects
 	var attacker_mod := 1.0
@@ -210,8 +174,8 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	if attacker.has_status_effect(Enums.StatusEffect.ATTACK_DOWN):
 		attacker_mod *= 0.75
 
-	# Final damage (minimum 1) - uses brand effectiveness (v5.0)
-	result.damage = maxi(1, int(raw_damage * type_modifier * variance * defender_mod * attacker_mod))
+	# Final damage (minimum 1)
+	result.damage = maxi(1, int(raw_damage * brand_mod * variance * defender_mod * attacker_mod))
 
 	return result
 
@@ -231,58 +195,22 @@ func calculate_hit_chance(attacker: CharacterBase, defender: CharacterBase) -> f
 	return clampf(hit_chance, 0.1, 0.99)
 
 # =============================================================================
-# ELEMENTAL SYSTEM
+# BRAND EFFECTIVENESS TEXT
 # =============================================================================
 
-func _get_element_modifier(attack_element: Enums.Element, defender_elements: Array) -> float:
-	if defender_elements.is_empty():
-		return 1.0
-
-	var modifier := 1.0
-
-	for def_element in defender_elements:
-		if _is_strong_against(attack_element, def_element):
-			modifier *= Constants.ELEMENTAL_WEAKNESS_MULTIPLIER
-		elif _is_weak_against(attack_element, def_element):
-			modifier *= Constants.ELEMENTAL_RESISTANCE_MULTIPLIER
-		elif _is_immune_to(attack_element, def_element):
-			modifier *= 0.0
-
-	return modifier
-
-func _is_strong_against(attacker: Enums.Element, defender: Enums.Element) -> bool:
-	## Returns true if attacker element is strong against defender element
-	if ELEMENT_WEAKNESSES.has(attacker):
-		return defender in ELEMENT_WEAKNESSES[attacker]
-	return false
-
-func _is_weak_against(attacker: Enums.Element, defender: Enums.Element) -> bool:
-	## Reverse of strong against
-	return _is_strong_against(defender, attacker)
-
-func _is_immune_to(attack_element: Enums.Element, defender_element: Enums.Element) -> bool:
-	## Check for immunities (same element typically)
-	if attack_element == defender_element:
-		match attack_element:
-			Enums.Element.FIRE, Enums.Element.ICE, Enums.Element.LIGHTNING:
-				return false  # Not immune, just resistant
-	return false
-
-func get_element_name(element: Enums.Element) -> String:
-	return Enums.Element.keys()[element]
-
 func get_effectiveness_text(modifier: float) -> String:
-	if modifier >= 2.0:
+	if modifier >= Constants.BRAND_STRONG:
 		return "Super Effective!"
 	elif modifier > 1.0:
 		return "Effective!"
-	elif modifier < 0.5:
+	elif modifier <= Constants.BRAND_WEAK:
 		return "Resisted..."
-	elif modifier == 0.0:
-		return "Immune!"
 	elif modifier < 1.0:
 		return "Not Very Effective..."
 	return ""
+
+func get_brand_name(brand: Enums.Brand) -> String:
+	return _get_brand_name(brand)
 
 # =============================================================================
 # HEALING CALCULATION
@@ -342,13 +270,11 @@ func preview_damage(attacker: CharacterBase, defender: CharacterBase, skill: Res
 	var power := 10.0
 	var scaling_stat := Enums.Stat.ATTACK
 	var defense_stat := Enums.Stat.DEFENSE
-	var element := Enums.Element.PHYSICAL
 	var hit_count := 1
 
 	if skill != null and skill is SkillData:
 		power = float(skill.base_power)
 		scaling_stat = skill.scaling_stat
-		element = skill.element
 		hit_count = skill.hit_count
 		if skill.damage_type == Enums.DamageType.MAGICAL:
 			defense_stat = Enums.Stat.RESISTANCE
@@ -358,19 +284,28 @@ func preview_damage(attacker: CharacterBase, defender: CharacterBase, skill: Res
 	var level_factor := (float(attacker.level) / 10.0) + 1.0
 
 	var base_damage := (power * (attack / maxf(1.0, defense))) * level_factor
-	var element_mod := _get_element_modifier(element, defender.elements)
+
+	# Get brand effectiveness
+	var attacker_brand: Enums.Brand = attacker.brand if "brand" in attacker else Enums.Brand.NONE
+	var defender_brand: Enums.Brand = defender.brand if "brand" in defender else Enums.Brand.NONE
+	
+	if skill != null and skill is SkillData and "brand_type" in skill:
+		if skill.brand_type != Enums.Brand.NONE:
+			attacker_brand = skill.brand_type
+	
+	var brand_mod := get_brand_effectiveness(attacker_brand, defender_brand)
 
 	# Apply hit_count multiplier
 	base_damage *= hit_count
 
-	var min_damage := int(base_damage * element_mod * (1.0 - Constants.DAMAGE_VARIANCE))
-	var max_damage := int(base_damage * element_mod * (1.0 + Constants.DAMAGE_VARIANCE))
+	var min_damage := int(base_damage * brand_mod * (1.0 - Constants.DAMAGE_VARIANCE))
+	var max_damage := int(base_damage * brand_mod * (1.0 + Constants.DAMAGE_VARIANCE))
 	var crit_damage := int(max_damage * attacker.get_stat(Enums.Stat.CRIT_DAMAGE))
 
 	return {
 		"min": maxi(1, min_damage),
 		"max": maxi(1, max_damage),
 		"crit_max": maxi(1, crit_damage),
-		"element_effectiveness": element_mod,
+		"brand_effectiveness": brand_mod,
 		"hit_chance": calculate_hit_chance(attacker, defender)
 	}

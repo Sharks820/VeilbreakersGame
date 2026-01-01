@@ -25,16 +25,6 @@ extends Resource
 @export var portrait_path: String = ""
 @export var color_palette: Color = Color.WHITE
 
-@export_group("Elements (DEPRECATED - Use Brand)")
-## @deprecated Use brand system instead. Kept for save compatibility.
-@export var primary_element: Enums.Element = Enums.Element.NONE
-## @deprecated Use brand system instead.
-@export var secondary_element: Enums.Element = Enums.Element.NONE
-## @deprecated Brand effectiveness wheel replaces this.
-@export var weaknesses: Array[Enums.Element] = []
-## @deprecated Brand effectiveness wheel replaces this.
-@export var resistances: Array[Enums.Element] = []
-
 @export_group("Base Stats")
 @export var base_hp: int = 50
 @export var base_mp: int = 20
@@ -196,14 +186,6 @@ func get_next_evolution_stage(current_stage: Enums.EvolutionStage) -> Enums.Evol
 				_:
 					return current_stage  # Already at max
 
-func get_elements() -> Array[Enums.Element]:
-	var elements: Array[Enums.Element] = []
-	if primary_element != Enums.Element.NONE:
-		elements.append(primary_element)
-	if secondary_element != Enums.Element.NONE:
-		elements.append(secondary_element)
-	return elements
-
 func get_skills_at_level(level: int) -> Array[String]:
 	var skills: Array[String] = innate_skills.duplicate()
 
@@ -222,9 +204,8 @@ func create_instance(level: int = 1, evo_stage: Enums.EvolutionStage = Enums.Evo
 	monster.brand = brand
 	monster.rarity = rarity
 	monster.monster_tier = tier  # Set tier from MonsterData
-	monster.elements = get_elements()  # @deprecated - kept for compatibility
 
-	# v5.0 Brand System
+	# Brand System
 	monster.brand_tier = brand_tier
 	monster.secondary_brand = secondary_brand
 	monster.evolution_stage = evo_stage

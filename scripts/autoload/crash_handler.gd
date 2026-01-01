@@ -22,9 +22,8 @@ func _ready() -> void:
 	# Check for previous crash on startup
 	_check_for_crash_recovery()
 
-	# Connect to error signals
-	if has_node("/root/ErrorLogger"):
-		ErrorLogger.crash_detected.connect(_on_crash_detected)
+	# Connect to error signals - use call_deferred to ensure ErrorLogger is ready
+	call_deferred("_connect_error_logger")
 
 	# Periodic state snapshots for recovery
 	var timer := Timer.new()
@@ -32,6 +31,13 @@ func _ready() -> void:
 	timer.timeout.connect(_save_state_snapshot)
 	timer.autostart = true
 	add_child(timer)
+
+
+func _connect_error_logger() -> void:
+	# Deferred connection to ErrorLogger to handle autoload order
+	if has_node("/root/ErrorLogger"):
+		if not ErrorLogger.crash_detected.is_connected(_on_crash_detected):
+			ErrorLogger.crash_detected.connect(_on_crash_detected)
 
 
 func _notification(what: int) -> void:

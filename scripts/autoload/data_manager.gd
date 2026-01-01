@@ -35,9 +35,15 @@ func load_all_data() -> void:
 
 	_is_loaded = true
 	data_loaded.emit()
-	ErrorLogger.log_info("[DataManager] All data loaded: %d monsters, %d heroes, %d skills, %d items" % [
-		monsters.size(), heroes.size(), skills.size(), items.size()
-	])
+	# Safety check for ErrorLogger autoload order
+	if has_node("/root/ErrorLogger"):
+		ErrorLogger.log_info("[DataManager] All data loaded: %d monsters, %d heroes, %d skills, %d items" % [
+			monsters.size(), heroes.size(), skills.size(), items.size()
+		])
+	else:
+		print("[DataManager] All data loaded: %d monsters, %d heroes, %d skills, %d items" % [
+			monsters.size(), heroes.size(), skills.size(), items.size()
+		])
 
 
 func _load_monsters() -> void:
@@ -182,10 +188,10 @@ func get_monsters_by_tier(tier: int) -> Array:
 	return result
 
 
-func get_skills_by_element(element: int) -> Array:
+func get_skills_by_brand(brand: int) -> Array:
 	var result: Array = []
 	for skill in skills.values():
-		if skill.element == element:
+		if "brand_type" in skill and skill.brand_type == brand:
 			result.append(skill)
 	return result
 

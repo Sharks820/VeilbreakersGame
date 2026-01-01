@@ -21,7 +21,6 @@ signal revived()
 @export var character_name: String = "Character"
 @export var character_type: Enums.CharacterType = Enums.CharacterType.PLAYER
 @export var level: int = 1
-@export var elements: Array[Enums.Element] = []
 @export var brand: Enums.Brand = Enums.Brand.NONE
 @export var is_protagonist: bool = false
 
@@ -418,13 +417,15 @@ func can_use_skill(skill_id: String) -> bool:
 	if has_status_effect(Enums.StatusEffect.SILENCE):
 		return false
 
-	# Check MP cost from skill data
-	var skill_data: SkillData = DataManager.get_skill(skill_id) if DataManager else null
-	if skill_data:
-		if current_mp < skill_data.mp_cost:
-			return false
-		if current_hp <= skill_data.hp_cost:
-			return false
+	# Check MP cost from skill data - safely check for DataManager autoload
+	var data_manager := get_node_or_null("/root/DataManager")
+	if data_manager and data_manager.has_method("get_skill"):
+		var skill_data: SkillData = data_manager.get_skill(skill_id)
+		if skill_data:
+			if current_mp < skill_data.mp_cost:
+				return false
+			if current_hp <= skill_data.hp_cost:
+				return false
 
 	return true
 
@@ -573,7 +574,6 @@ func get_save_data() -> Dictionary:
 		"name": character_name,
 		"type": character_type,
 		"level": level,
-		"elements": elements,
 		"brand": brand,
 		"is_protagonist": is_protagonist,
 		"current_hp": current_hp,
@@ -599,7 +599,6 @@ func load_save_data(data: Dictionary) -> void:
 	character_name = data.get("name", "Character")
 	character_type = data.get("type", Enums.CharacterType.PLAYER)
 	level = data.get("level", 1)
-	elements = data.get("elements", [])
 	brand = data.get("brand", Enums.Brand.NONE)
 	is_protagonist = data.get("is_protagonist", false)
 	current_hp = data.get("current_hp", 100)

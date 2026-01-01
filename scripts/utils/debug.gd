@@ -65,7 +65,7 @@ static func _cmd_help(_args: Array) -> String:
   level [amount] - Add levels (default: 1)
   setpath [value] - Set path alignment (-100 to 100)
   vera [state] - Set VERA state (0-3)
-  unlock [brand] - Unlock brand (bulwark/fang/ember/frost/void/radiant)
+  unlock [brand] - Unlock brand (savage/iron/venom/surge/dread/leech)
   tp [area] - Teleport to area
   spawn [monster] - Spawn monster in next battle
   setflag [flag] [value] - Set story flag
@@ -116,15 +116,23 @@ static func _cmd_vera_state(args: Array) -> String:
 
 static func _cmd_unlock_brand(args: Array) -> String:
 	if args.is_empty():
-		return "Usage: unlock [brand] (bulwark/fang/ember/frost/void/radiant)"
+		return "Usage: unlock [brand] (savage/iron/venom/surge/dread/leech/bloodiron/corrosive/venomstrike/terrorflux/nightleech/ravenous)"
 	var brand_name := args[0].to_upper()
 	var brand_map := {
-		"BULWARK": Enums.Brand.BULWARK,
-		"FANG": Enums.Brand.FANG,
-		"EMBER": Enums.Brand.EMBER,
-		"FROST": Enums.Brand.FROST,
-		"VOID": Enums.Brand.VOID,
-		"RADIANT": Enums.Brand.RADIANT
+		# Pure Brands
+		"SAVAGE": Enums.Brand.SAVAGE,
+		"IRON": Enums.Brand.IRON,
+		"VENOM": Enums.Brand.VENOM,
+		"SURGE": Enums.Brand.SURGE,
+		"DREAD": Enums.Brand.DREAD,
+		"LEECH": Enums.Brand.LEECH,
+		# Hybrid Brands
+		"BLOODIRON": Enums.Brand.BLOODIRON,
+		"CORROSIVE": Enums.Brand.CORROSIVE,
+		"VENOMSTRIKE": Enums.Brand.VENOMSTRIKE,
+		"TERRORFLUX": Enums.Brand.TERRORFLUX,
+		"NIGHTLEECH": Enums.Brand.NIGHTLEECH,
+		"RAVENOUS": Enums.Brand.RAVENOUS
 	}
 	if not brand_map.has(brand_name):
 		return "Unknown brand: %s" % args[0]

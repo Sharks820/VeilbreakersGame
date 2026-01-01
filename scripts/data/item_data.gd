@@ -50,9 +50,7 @@ extends Resource
 @export_group("Equipment Stats")  # Only for equipment
 @export var equipment_slot: Enums.EquipmentSlot = Enums.EquipmentSlot.WEAPON
 @export var stat_bonuses: Dictionary = {}  # {Stat: amount}
-## @deprecated Use brand_affinity instead. Kept for save compatibility.
-@export var element_affinity: Enums.Element = Enums.Element.NONE
-## v5.0: Brand affinity - determines brand bonuses and visual effects
+## Brand affinity - determines brand bonuses and visual effects
 @export var brand_affinity: Enums.Brand = Enums.Brand.NONE
 ## Brand requirement to equip this item (uses Constants.BRAND_EQUIPMENT_THRESHOLD)
 @export var brand_requirement: Enums.Brand = Enums.Brand.NONE

@@ -242,18 +242,6 @@ func _check_immunity(target: CharacterBase, effect: Enums.StatusEffect) -> bool:
 	# VENOM brand is immune to poison (precision poison masters)
 	if effect == Enums.StatusEffect.POISON and target_brand == Enums.Brand.VENOM:
 		return true
-	
-	# Legacy: Element-based immunities (deprecated, kept for backwards compatibility)
-	if "elements" in target and target.elements is Array:
-		# Fire immunity prevents burn
-		if effect == Enums.StatusEffect.BURN and Enums.Element.FIRE in target.elements:
-			return true
-		# Ice immunity prevents freeze
-		if effect == Enums.StatusEffect.FREEZE and Enums.Element.ICE in target.elements:
-			return true
-		# Light immunity prevents certain debuffs
-		if effect == Enums.StatusEffect.CORRUPTED and Enums.Element.HOLY in target.elements:
-			return true
 
 	return false
 

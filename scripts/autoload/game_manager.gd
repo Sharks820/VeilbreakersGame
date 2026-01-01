@@ -382,11 +382,12 @@ func _on_purification_failed(_monster: Node) -> void:
 	purification_attempts += 1
 
 func _on_path_alignment_changed(_old: float, _new: float) -> void:
-	# Check for brand unlocks based on alignment
-	if path_alignment >= 50 and not has_brand(Enums.Brand.RADIANT):
-		unlock_brand(Enums.Brand.RADIANT)
-	if path_alignment <= -50 and not has_brand(Enums.Brand.VOID):
-		unlock_brand(Enums.Brand.VOID)
+	# Brand unlocks based on alignment
+	# Note: RADIANT and VOID were removed as they don't exist in the Brand enum
+	# The new Brand system uses: SAVAGE, IRON, VENOM, SURGE, DREAD, LEECH (Pure)
+	# and hybrid brands: BLOODIRON, CORROSIVE, VENOMSTRIKE, TERRORFLUX, NIGHTLEECH, RAVENOUS
+	# Path-based brand unlocks should be handled through the PathSystem instead
+	pass
 
 # =============================================================================
 # SERIALIZATION

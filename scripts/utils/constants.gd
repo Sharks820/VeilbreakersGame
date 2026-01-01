@@ -336,13 +336,6 @@ const EVO3_BRAND_BONUS_MULTIPLIER: float = 1.20  # 120% instead of 100%
 # PRIMAL dual brand scaling (both brands count as primary)
 const PRIMAL_BRAND_SCALE: float = 0.50  # 50% of each brand (total 100%)
 
-# Legacy - kept for backwards compatibility
-const LOYALTY_MIN: float = 0.0
-const LOYALTY_MAX: float = 100.0
-const LOYALTY_AWAKENED_THRESHOLD: float = 25.0   # @deprecated
-const LOYALTY_ASCENDED_THRESHOLD: float = 60.0   # @deprecated
-const LOYALTY_PURIFIED_THRESHOLD: float = 90.0   # @deprecated
-
 # VERA / VERATH - Memory Awakening Thresholds
 const VERA_CORRUPTION_DECAY_RATE: float = 0.1  # Per minute
 const VERA_INTERFACE_THRESHOLD: float = 0.0    # The lie
@@ -452,16 +445,6 @@ const BRAND_BONUSES: Dictionary = {
 # PRIMAL brand bonuses (50% Primary + 50% Secondary, calculated dynamically)
 # PRIMAL monsters get their brands assigned at evolution based on behavior
 const PRIMAL_BRAND_BONUS_SCALE: float = 0.50  # Each brand at 50%
-
-# Legacy Brands (deprecated - kept for save file compatibility)
-const BRAND_BONUSES_DEPRECATED: Dictionary = {
-	"BULWARK": {"hp_mult": 1.3, "def_mult": 1.2, "spd_mult": 0.8},
-	"FANG": {"atk_mult": 1.3, "crit_mult": 1.2, "def_mult": 0.9},
-	"EMBER": {"mag_mult": 1.2, "spd_mult": 1.1, "res_mult": 0.9},
-	"FROST": {"mag_mult": 1.2, "def_mult": 1.1, "spd_mult": 0.9},
-	"VOID": {"mag_mult": 1.3, "spd_mult": 1.1, "hp_mult": 0.9},
-	"RADIANT": {"mag_mult": 1.2, "hp_mult": 1.1, "atk_mult": 0.9}
-}
 
 # =============================================================================
 # EXPERIENCE CURVE

@@ -49,27 +49,6 @@ enum Stat {
 	MP_REGEN
 }
 
-# =============================================================================
-# DEPRECATED: Element enum - USE Brand INSTEAD (v5.0)
-# Kept for backwards compatibility only. Will be removed in future version.
-# =============================================================================
-enum Element_DEPRECATED {
-	NONE,
-	PHYSICAL,
-	FIRE,
-	ICE,
-	LIGHTNING,
-	EARTH,
-	WIND,
-	WATER,
-	LIGHT,
-	DARK,
-	HOLY,
-	VOID
-}
-## @deprecated Use Brand enum instead
-const Element = Element_DEPRECATED
-
 enum DamageType {
 	PHYSICAL,
 	MAGICAL,
@@ -179,19 +158,13 @@ enum MonsterBrandTier {
 	PRIMAL = 2   # Any 2 brands (assigned at evo), 2 stages (Birth→Evolved), max level 120
 }
 
-## The 4 Paths - Player skill trees (0-100% affinity each) (NEW SYSTEM)
+## The 4 Paths - Player skill trees (0-100% affinity each)
 enum Path {
 	NONE = -1,
 	IRONBOUND = 0,    # Protection, order, sacrifice, duty (Tank/Defense)
 	FANGBORN = 1,     # Strength, dominance, survival (Attack/DPS)
 	VOIDTOUCHED = 2,  # Knowledge, truth, patience, secrets (Utility/Special)
-	UNCHAINED = 3,    # Freedom, chaos, adaptability (Hybrid/Disruptor)
-	# Legacy path alignment system (backwards compatibility)
-	SHADE = 4,        # -100 to -51 (legacy)
-	TWILIGHT = 5,     # -50 to -26 (legacy)
-	NEUTRAL = 6,      # -25 to +25 (legacy)
-	LIGHT = 7,        # +26 to +50 (legacy)
-	SERAPH = 8        # +51 to +100 (legacy)
+	UNCHAINED = 3     # Freedom, chaos, adaptability (Hybrid/Disruptor)
 }
 
 ## Skill Tree unlock states
@@ -279,19 +252,14 @@ enum MonsterTier {
 	BOSS         # Boss monsters
 }
 
-## Monster evolution stages (v5.0 - LOCKED)
+## Monster evolution stages
 ## Pure/Hybrid: Birth → Evo2 → Evo3 (3 stages, max level 100)
 ## PRIMAL: Birth → Evolved (2 stages, max level 120)
 enum EvolutionStage {
 	BIRTH = 0,      # Starting stage - all monsters
 	EVO_2 = 1,      # Second stage - Pure/Hybrid only (level 26+)
 	EVO_3 = 2,      # Third stage - Pure/Hybrid only (level 51+), 120% brand bonus
-	EVOLVED = 3,    # Final stage - PRIMAL only (level 36+), overflow stats at 110+
-	# === DEPRECATED STAGES (backwards compatibility) ===
-	CORRUPTED = 10,  # @deprecated Use BIRTH
-	AWAKENED = 11,   # @deprecated Use EVO_2
-	ASCENDED = 12,   # @deprecated Use EVO_3
-	PURIFIED = 13    # @deprecated Use EVO_3 or EVOLVED
+	EVOLVED = 3     # Final stage - PRIMAL only (level 36+), overflow stats at 110+
 }
 
 ## Monster combat roles

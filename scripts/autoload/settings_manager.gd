@@ -152,15 +152,19 @@ func _apply_all_settings() -> void:
 
 func _apply_setting(key: String, value: Variant) -> void:
 	match key:
-		# Audio
+		# Audio - check AudioManager exists before calling (autoload order safety)
 		"audio/master_volume":
-			AudioManager.set_bus_volume("Master", value)
+			if has_node("/root/AudioManager"):
+				AudioManager.set_bus_volume("Master", value)
 		"audio/music_volume":
-			AudioManager.set_bus_volume("Music", value)
+			if has_node("/root/AudioManager"):
+				AudioManager.set_bus_volume("Music", value)
 		"audio/sfx_volume":
-			AudioManager.set_bus_volume("SFX", value)
+			if has_node("/root/AudioManager"):
+				AudioManager.set_bus_volume("SFX", value)
 		"audio/voice_volume":
-			AudioManager.set_bus_volume("Voice", value)
+			if has_node("/root/AudioManager"):
+				AudioManager.set_bus_volume("Voice", value)
 
 		# Display
 		"display/fullscreen":

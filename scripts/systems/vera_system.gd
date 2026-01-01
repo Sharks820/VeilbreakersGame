@@ -225,7 +225,9 @@ func _maybe_trigger_glitch() -> void:
 func _apply_emergence_effects() -> void:
 	# VERATH's power bleeds through — the player gets stronger
 	# (She needs them strong enough to breach the Veil)
-	if GameManager.player_party == null:
+	if not is_instance_valid(GameManager):
+		return
+	if GameManager.player_party == null or GameManager.player_party.is_empty():
 		return
 	for character in GameManager.player_party:
 		if character is CharacterBase:
@@ -298,7 +300,7 @@ func get_available_abilities() -> Array[String]:
 	return abilities
 
 func _ability_ancient_power() -> Dictionary:
-	if GameManager.player_party == null:
+	if not is_instance_valid(GameManager) or GameManager.player_party == null or GameManager.player_party.is_empty():
 		return {"type": "power", "message": "The power fades..."}
 	for character in GameManager.player_party:
 		if character is CharacterBase:
