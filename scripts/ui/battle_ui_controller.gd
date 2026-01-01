@@ -160,17 +160,19 @@ func _force_ui_layout() -> void:
 		if party_status_container:
 			party_status_container.hide()
 
-	# CombatLog - bottom-right corner, responsive - 3x larger for visibility
+	# CombatLog - bottom-right corner, lowered by 1/4 (350px instead of 500px)
 	if combat_log:
 		combat_log.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-		combat_log.offset_left = -400  # Wider
-		combat_log.offset_top = -500   # 3x taller (was -200)
+		combat_log.offset_left = -350  # Slightly narrower
+		combat_log.offset_top = -350   # Lowered by 1/4 (was -500)
 		combat_log.offset_right = -10
-		combat_log.offset_bottom = -90
+		combat_log.offset_bottom = -100
 		combat_log.show()
 		# Ensure scroll bar is visible
 		if combat_log_scroll:
 			combat_log_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
+		# Add resize handle
+		_setup_combat_log_resize_handle()
 
 	# EnemyPanel - right side (handled by battle_arena sidebars now)
 	if enemy_panel:
@@ -1762,6 +1764,58 @@ func _hide_enemy_tooltip() -> void:
 		enemy_tooltip.queue_free()
 		enemy_tooltip = null
 	tooltip_visible = false
+
+# =============================================================================
+# COMBAT LOG RESIZE
+# =============================================================================
+
+var _combat_log_resize_handle: Control = null
+var _combat_log_dragging: bool = false
+var _combat_log_min_height: float = 150.0
+var _combat_log_max_height: float = 600.0
+
+func _setup_combat_log_resize_handle() -> void:
+	"""Add a drag handle to the top of the combat log for resizing"""
+	if not combat_log or _combat_log_resize_handle:
+		return
+
+	# Create resize handle bar at top of combat log
+	_combat_log_resize_handle = Control.new()
+	_combat_log_resize_handle.name = "ResizeHandle"
+	_combat_log_resize_handle.custom_minimum_size = Vector2(0, 16)
+	_combat_log_resize_handle.mouse_filter = Control.MOUSE_FILTER_STOP
+	_combat_log_resize_handle.mouse_default_cursor_shape = Control.CURSOR_VSIZE
+
+	# Position at top of combat log
+	_combat_log_resize_handle.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_combat_log_resize_handle.offset_bottom = 16
+
+	# Visual indicator - arrow icon using label
+	var handle_visual := Label.new()
+	handle_visual.text = "═══ ▲ ═══"
+	handle_visual.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	handle_visual.add_theme_font_size_override("font_size", 10)
+	handle_visual.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 0.8))
+	handle_visual.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_combat_log_resize_handle.add_child(handle_visual)
+
+	# Connect drag signals
+	_combat_log_resize_handle.gui_input.connect(_on_combat_log_resize_input)
+
+	combat_log.add_child(_combat_log_resize_handle)
+	combat_log.move_child(_combat_log_resize_handle, 0)  # Move to top
+
+func _on_combat_log_resize_input(event: InputEvent) -> void:
+	"""Handle drag input on the combat log resize handle"""
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			_combat_log_dragging = event.pressed
+	elif event is InputEventMouseMotion and _combat_log_dragging:
+		# Adjust combat log height based on drag
+		var new_top := combat_log.offset_top - event.relative.y
+		# Clamp to min/max height (offset_top is negative from bottom)
+		new_top = clampf(new_top, -_combat_log_max_height, -_combat_log_min_height)
+		combat_log.offset_top = new_top
 
 # =============================================================================
 # LEFT PARTY SIDEBAR
