@@ -46,9 +46,9 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -400.0
-offset_top = -80.0
-offset_right = 400.0
+offset_left = -450.0
+offset_top = -100.0
+offset_right = 450.0
 offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 0
@@ -192,33 +192,45 @@ alignment = 1
 theme_override_constants/separation = 15
 
 [node name="AttackButton" type="Button" parent="PartyPanel/VBoxContainer/ActionMenu"]
-custom_minimum_size = Vector2(120, 50)
+custom_minimum_size = Vector2(130, 60)
 layout_mode = 2
+focus_mode = 2
+mouse_filter = 0
 text = "Attack"
 
 [node name="SkillButton" type="Button" parent="PartyPanel/VBoxContainer/ActionMenu"]
-custom_minimum_size = Vector2(120, 50)
+custom_minimum_size = Vector2(130, 60)
 layout_mode = 2
+focus_mode = 2
+mouse_filter = 0
 text = "Skills"
 
 [node name="PurifyButton" type="Button" parent="PartyPanel/VBoxContainer/ActionMenu"]
-custom_minimum_size = Vector2(120, 50)
+custom_minimum_size = Vector2(130, 60)
 layout_mode = 2
+focus_mode = 2
+mouse_filter = 0
 text = "Purify"
 
 [node name="ItemButton" type="Button" parent="PartyPanel/VBoxContainer/ActionMenu"]
-custom_minimum_size = Vector2(120, 50)
+custom_minimum_size = Vector2(130, 60)
 layout_mode = 2
+focus_mode = 2
+mouse_filter = 0
 text = "Item"
 
 [node name="DefendButton" type="Button" parent="PartyPanel/VBoxContainer/ActionMenu"]
-custom_minimum_size = Vector2(120, 50)
+custom_minimum_size = Vector2(130, 60)
 layout_mode = 2
+focus_mode = 2
+mouse_filter = 0
 text = "Defend"
 
 [node name="FleeButton" type="Button" parent="PartyPanel/VBoxContainer/ActionMenu"]
-custom_minimum_size = Vector2(120, 50)
+custom_minimum_size = Vector2(130, 60)
 layout_mode = 2
+focus_mode = 2
+mouse_filter = 0
 text = "Flee"
 
 [node name="CombatLog" type="PanelContainer" parent="."]

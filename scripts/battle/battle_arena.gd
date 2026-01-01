@@ -170,9 +170,9 @@ func initialize_battle(players: Array[CharacterBase], enemies: Array[CharacterBa
 	if battle_ui and battle_ui.has_method("setup_battle"):
 		battle_ui.setup_battle(players, enemies)
 
-	# Create sidebars
-	_create_party_sidebar(players)
-	_create_enemy_sidebar(enemies)
+	# Sidebars are created by battle_ui_controller.gd - do NOT duplicate here
+	# _create_party_sidebar(players)  # DISABLED - battle_ui_controller creates left_party_sidebar
+	# _create_enemy_sidebar(enemies)   # DISABLED - battle_ui_controller creates enemy sidebar
 
 	# Start battle logic
 	battle_manager.start_battle(players, enemies)

@@ -145,13 +145,16 @@ func _force_ui_layout() -> void:
 		party_panel.anchor_right = 0.5
 		party_panel.anchor_top = 1.0
 		party_panel.anchor_bottom = 1.0
-		# Scale panel width based on viewport (min 600, max 800)
-		var panel_width := clampf(viewport_size.x * 0.45, 600.0, 800.0)
+		# Scale panel width based on viewport (min 600, max 900 for 6 buttons)
+		var panel_width := clampf(viewport_size.x * 0.55, 750.0, 900.0)
 		party_panel.offset_left = -panel_width / 2
 		party_panel.offset_right = panel_width / 2
-		party_panel.offset_top = -85
+		# Taller panel to properly contain 50px buttons with padding
+		party_panel.offset_top = -100
 		party_panel.offset_bottom = -5
 		party_panel.show()
+		party_panel.visible = true
+		print("[BATTLE_UI] PartyPanel positioned: size=%s, visible=%s" % [party_panel.size, party_panel.visible])
 
 		# Hide the party status container from main panel
 		if party_status_container:
@@ -261,6 +264,13 @@ func _connect_signals() -> void:
 	item_button.pressed.connect(_on_item_pressed)
 	defend_button.pressed.connect(_on_defend_pressed)
 	flee_button.pressed.connect(_on_flee_pressed)
+
+	# Connect hover effects for action buttons
+	for button in [attack_button, skill_button, purify_button, item_button, defend_button, flee_button]:
+		button.mouse_entered.connect(_on_action_button_hover.bind(button))
+		button.mouse_exited.connect(_on_action_button_unhover.bind(button))
+		button.focus_entered.connect(_on_action_button_hover.bind(button))
+		button.focus_exited.connect(_on_action_button_unhover.bind(button))
 
 	skill_back_button.pressed.connect(_on_skill_back_pressed)
 	item_back_button.pressed.connect(_on_item_back_pressed)
@@ -443,6 +453,26 @@ func _on_flee_pressed() -> void:
 	pending_skill = ""
 	action_selected.emit(pending_action, null, "")
 	set_ui_state(UIState.ANIMATING)
+
+# =============================================================================
+# BUTTON HOVER EFFECTS
+# =============================================================================
+
+func _on_action_button_hover(button: Button) -> void:
+	"""Highlight button on hover/focus with scale and color tween"""
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(button, "scale", Vector2(1.08, 1.08), 0.12)
+	tween.tween_property(button, "modulate", Color(1.3, 1.1, 0.9, 1.0), 0.12)
+	# Ensure pivot is centered for proper scaling
+	button.pivot_offset = button.size / 2
+
+func _on_action_button_unhover(button: Button) -> void:
+	"""Reset button on unhover/unfocus"""
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(button, "scale", Vector2(1.0, 1.0), 0.1)
+	tween.tween_property(button, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.1)
 
 # =============================================================================
 # SKILL MENU
