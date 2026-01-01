@@ -35,6 +35,7 @@ var player_sprites: Array[Node2D] = []
 var enemy_sprites: Array[Node2D] = []
 var battle_ui: Control = null
 var is_battle_active: bool = false
+var _currently_highlighted_sprite: Node2D = null  # For target hover highlighting
 
 # =============================================================================
 # LIFECYCLE
@@ -135,6 +136,9 @@ func _setup_battle_ui() -> void:
 		battle_ui.visible = true
 
 		battle_ui.set_battle_manager(battle_manager)
+		# Connect target highlight signal for hover effects on sprites
+		if battle_ui.has_signal("target_highlight_changed"):
+			battle_ui.target_highlight_changed.connect(_on_target_highlight_changed)
 		EventBus.emit_debug("Battle UI loaded and added to layer %d, size: %s" % [ui_layer.layer, battle_ui.size])
 	else:
 		push_error("Failed to load battle_ui.tscn!")
@@ -1154,6 +1158,31 @@ func _on_camera_shake_completed() -> void:
 
 func _on_camera_focus_completed() -> void:
 	pass  # Camera focus transition done
+
+func _on_target_highlight_changed(target: CharacterBase) -> void:
+	"""Highlight/unhighlight character sprite when hovering targets in UI"""
+	# Clear previous highlight
+	if _currently_highlighted_sprite and is_instance_valid(_currently_highlighted_sprite):
+		_currently_highlighted_sprite.modulate = Color.WHITE
+		_currently_highlighted_sprite = null
+
+	# Apply new highlight if target exists
+	if target and is_instance_valid(target):
+		var sprite: Node2D = target.get_meta("battle_sprite", null) as Node2D
+		if sprite and is_instance_valid(sprite):
+			# Determine highlight color based on ally/enemy
+			var is_ally := target in GameManager.player_party
+			if is_ally:
+				sprite.modulate = Color(0.6, 1.0, 0.6, 1.0)  # Green tint for ally
+			else:
+				sprite.modulate = Color(1.0, 0.6, 0.6, 1.0)  # Red tint for enemy
+			_currently_highlighted_sprite = sprite
+
+func clear_target_highlight() -> void:
+	"""Clear any existing target highlight"""
+	if _currently_highlighted_sprite and is_instance_valid(_currently_highlighted_sprite):
+		_currently_highlighted_sprite.modulate = Color.WHITE
+		_currently_highlighted_sprite = null
 
 # =============================================================================
 # ADVANCED DAMAGE NUMBERS

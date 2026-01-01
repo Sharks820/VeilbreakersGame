@@ -307,6 +307,7 @@ func _start_round() -> void:
 	# UI: Show turn order bar
 	ui_command.emit("show_turn_order", {"order": turn_order})
 
+	print("[BATTLE_MANAGER] Emitting round_started signal for round %d with %d characters in turn_order" % [current_round, turn_order.size()])
 	round_started.emit(current_round)
 	EventBus.emit_debug("Round %d started - Lock-in Phase" % current_round)
 
@@ -453,13 +454,16 @@ func _prompt_next_party_member() -> void:
 		camera_command.emit("focus", {"target": character, "duration": camera_focus_time})
 
 		# Show action menu based on character type
+		print("[BATTLE_MANAGER] _prompt_next_party_member: character=%s, is_protagonist=%s" % [character.character_name, character.is_protagonist])
 		if character.is_protagonist:
 			# Player selects action
 			battle_state = Enums.BattleState.SELECTING_ACTION
 			ui_command.emit("show_action_menu", {"entity": character})
+			print("[BATTLE_MANAGER] Emitting waiting_for_player_input for %s" % character.character_name)
 			waiting_for_player_input.emit(character)
 		else:
 			# AI-controlled ally monster
+			print("[BATTLE_MANAGER] Character is AI ally - queueing AI action")
 			await get_tree().create_timer(0.3).timeout
 			_queue_ally_ai_action(character)
 		return

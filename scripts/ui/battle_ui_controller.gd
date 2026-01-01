@@ -106,11 +106,18 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_force_ui_layout()
 
+	# Connect to viewport size changes for responsive UI in windowed mode
+	get_viewport().size_changed.connect(_on_viewport_size_changed)
+
 	# Connect combat log scroll bar for smart scrolling
 	if combat_log_scroll:
 		var scrollbar := combat_log_scroll.get_v_scroll_bar()
 		if scrollbar:
 			scrollbar.value_changed.connect(_on_combat_log_scrolled)
+
+func _on_viewport_size_changed() -> void:
+	"""Called when viewport size changes (windowed mode resize) - reposition all UI elements"""
+	_force_ui_layout()
 
 func _force_ui_layout() -> void:
 	"""Force UI elements to correct positions for CanvasLayer rendering - RESPONSIVE"""
@@ -150,11 +157,11 @@ func _force_ui_layout() -> void:
 		if party_status_container:
 			party_status_container.hide()
 
-	# CombatLog - bottom-right corner, responsive
+	# CombatLog - bottom-right corner, responsive - 3x larger for visibility
 	if combat_log:
 		combat_log.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-		combat_log.offset_left = -250
-		combat_log.offset_top = -200
+		combat_log.offset_left = -400  # Wider
+		combat_log.offset_top = -500   # 3x taller (was -200)
 		combat_log.offset_right = -10
 		combat_log.offset_bottom = -90
 		combat_log.show()
@@ -171,10 +178,12 @@ func _force_ui_layout() -> void:
 
 func set_battle_manager(manager: BattleManager) -> void:
 	battle_manager = manager
+	print("[BATTLE_UI] set_battle_manager called - manager: %s" % str(manager))
 
 	# Connect battle manager signals
 	battle_manager.waiting_for_player_input.connect(_on_waiting_for_input)
 	battle_manager.round_started.connect(_on_round_started)
+	print("[BATTLE_UI] Signals connected to battle_manager")
 	battle_manager.battle_victory.connect(_on_victory)
 	battle_manager.battle_defeat.connect(_on_defeat)
 	battle_manager.action_animation_started.connect(_on_action_started)
@@ -225,12 +234,15 @@ func _on_action_selected(action: Enums.BattleAction, target: CharacterBase, skil
 		battle_manager.submit_player_action(action, target, skill_id)
 
 func _on_waiting_for_input(character: CharacterBase) -> void:
+	print("[BATTLE_UI] _on_waiting_for_input - character: %s, is_protagonist: %s" % [character.character_name, character.is_protagonist])
 	start_turn(character)
 
 func _on_round_started(round_number: int) -> void:
+	print("[BATTLE_UI] _on_round_started - round: %d" % round_number)
 	update_round_display(round_number)
 	log_round_start(round_number)
 	if battle_manager:
+		print("[BATTLE_UI] Updating turn order with %d characters" % battle_manager.turn_order.size())
 		update_turn_order(battle_manager.turn_order)
 
 func _on_victory(rewards: Dictionary) -> void:
@@ -320,6 +332,7 @@ func setup_battle(player_party: Array, enemy_party: Array) -> void:
 
 func start_turn(character: CharacterBase) -> void:
 	current_character = character
+	print("[BATTLE_UI] start_turn called for: %s, is_protagonist: %s" % [character.character_name, character.is_protagonist])
 
 	# Log turn start
 	var is_ally := character.is_protagonist or character in party_members
@@ -327,13 +340,17 @@ func start_turn(character: CharacterBase) -> void:
 
 	# Show action menu for protagonist (the player character)
 	if character.is_protagonist:
+		print("[BATTLE_UI] Character IS protagonist - showing action menu")
 		show_action_menu()
 	else:
+		print("[BATTLE_UI] Character is NOT protagonist - setting ANIMATING state")
 		set_ui_state(UIState.ANIMATING)
 
 func show_action_menu() -> void:
+	print("[BATTLE_UI] show_action_menu called")
 	set_ui_state(UIState.ACTION_SELECT)
 	action_menu.show()
+	print("[BATTLE_UI] action_menu.visible = %s, party_panel.visible = %s" % [action_menu.visible, party_panel.visible if party_panel else "null"])
 	_update_action_buttons()
 	attack_button.grab_focus()
 
@@ -629,8 +646,9 @@ func _confirm_target() -> void:
 	var target := valid_targets[current_target_index]
 	target_selector.hide()
 
-	# Clear all target highlights from sidebars
+	# Clear all target highlights from sidebars and sprites
 	_clear_all_sidebar_highlights()
+	target_highlight_changed.emit(null)  # Clear sprite highlight
 
 	action_selected.emit(pending_action, target, pending_skill)
 	set_ui_state(UIState.ANIMATING)
@@ -638,8 +656,9 @@ func _confirm_target() -> void:
 func _cancel_target_selection() -> void:
 	target_selector.hide()
 
-	# Clear all target highlights from sidebars
+	# Clear all target highlights from sidebars and sprites
 	_clear_all_sidebar_highlights()
+	target_highlight_changed.emit(null)  # Clear sprite highlight
 
 	target_cancelled.emit()
 	set_ui_state(UIState.ACTION_SELECT)
@@ -1591,7 +1610,7 @@ func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
 	var level_label := Label.new()
 	if enemy is Monster:
 		var monster := enemy as Monster
-		var tier_name := Enums.MonsterTier.keys()[monster.monster_tier]
+		var tier_name: String = str(Enums.MonsterTier.keys()[monster.monster_tier])
 		level_label.text = "Lv.%d %s" % [enemy.level, tier_name]
 	else:
 		level_label.text = "Level %d" % enemy.level
@@ -1726,9 +1745,9 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	if party_members.is_empty():
 		return
 
-	# Remove existing sidebar if present
+	# Remove existing sidebar if present (use .free() for immediate removal to prevent duplication)
 	if left_party_sidebar and is_instance_valid(left_party_sidebar):
-		left_party_sidebar.queue_free()
+		left_party_sidebar.free()
 		left_party_sidebar = null
 
 	left_party_sidebar = PanelContainer.new()
