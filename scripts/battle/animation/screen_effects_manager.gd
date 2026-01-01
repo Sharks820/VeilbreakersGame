@@ -213,7 +213,10 @@ func chromatic_crit() -> void:
 # -----------------------------------------------------------------------------
 func fade_out(color: Color = Color.BLACK, duration: float = 0.5) -> Signal:
 	if not fade_rect:
-		return Signal()
+		# Return a signal that completes immediately to prevent await deadlock
+		var dummy_tween = create_tween()
+		dummy_tween.tween_callback(func(): pass)
+		return dummy_tween.finished
 	
 	_cancel_effect("fade")
 	
@@ -229,7 +232,10 @@ func fade_out(color: Color = Color.BLACK, duration: float = 0.5) -> Signal:
 
 func fade_in(duration: float = 0.5) -> Signal:
 	if not fade_rect:
-		return Signal()
+		# Return a signal that completes immediately to prevent await deadlock
+		var dummy_tween = create_tween()
+		dummy_tween.tween_callback(func(): pass)
+		return dummy_tween.finished
 	
 	_cancel_effect("fade")
 	

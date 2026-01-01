@@ -1118,27 +1118,55 @@ func _handle_defeat() -> void:
 # UTILITY
 # -----------------------------------------------------------------------------
 func _apply_brand_modifier(damage: int, attacker_brand: String, target: Node) -> int:
-	"""Apply brand effectiveness"""
+	"""Apply brand effectiveness using the Brand Wheel (v5.0)
+	
+	Brand Effectiveness Wheel: SAVAGE → IRON → VENOM → SURGE → DREAD → LEECH → SAVAGE
+	Each brand is STRONG (1.5x) against the next, WEAK (0.67x) against the previous.
+	Hybrid brands use their PRIMARY brand for effectiveness calculations.
+	"""
 	if not target.has_method("get_brand"):
 		return damage
 	
 	var target_brand = target.get_brand()
 	var modifier = 1.0
 	
-	# Brand effectiveness chart
+	# Resolve hybrid brands to their primary brand for effectiveness
+	var resolved_attacker = _resolve_hybrid_brand(attacker_brand)
+	var resolved_target = _resolve_hybrid_brand(target_brand)
+	
+	# Brand effectiveness chart (v5.0 - matches Constants.BRAND_EFFECTIVENESS)
+	# Wheel: SAVAGE → IRON → VENOM → SURGE → DREAD → LEECH → SAVAGE
+	# Strong = 1.5x (Constants.BRAND_STRONG), Weak = 0.67x (Constants.BRAND_WEAK)
 	var effectiveness = {
-		"SAVAGE": {"IRON": 0.75, "VENOM": 1.25},
-		"IRON": {"SAVAGE": 1.25, "SURGE": 0.75},
-		"VENOM": {"SAVAGE": 0.75, "DREAD": 1.25},
-		"SURGE": {"IRON": 1.25, "LEECH": 0.75},
-		"DREAD": {"VENOM": 0.75, "LEECH": 1.25},
-		"LEECH": {"DREAD": 0.75, "SURGE": 1.25},
+		"SAVAGE": {"IRON": 1.5, "LEECH": 0.67},    # Strong vs IRON, Weak vs LEECH
+		"IRON": {"VENOM": 1.5, "SAVAGE": 0.67},    # Strong vs VENOM, Weak vs SAVAGE
+		"VENOM": {"SURGE": 1.5, "IRON": 0.67},     # Strong vs SURGE, Weak vs IRON
+		"SURGE": {"DREAD": 1.5, "VENOM": 0.67},    # Strong vs DREAD, Weak vs VENOM
+		"DREAD": {"LEECH": 1.5, "SURGE": 0.67},    # Strong vs LEECH, Weak vs SURGE
+		"LEECH": {"SAVAGE": 1.5, "DREAD": 0.67},   # Strong vs SAVAGE, Weak vs DREAD
 	}
 	
-	if attacker_brand in effectiveness and target_brand in effectiveness[attacker_brand]:
-		modifier = effectiveness[attacker_brand][target_brand]
+	if resolved_attacker in effectiveness and resolved_target in effectiveness[resolved_attacker]:
+		modifier = effectiveness[resolved_attacker][resolved_target]
 	
 	return int(damage * modifier)
+
+func _resolve_hybrid_brand(brand: String) -> String:
+	"""Resolve hybrid brands to their primary brand for effectiveness calculations"""
+	# Hybrid brand -> Primary brand mapping (70% primary, 30% secondary)
+	var hybrid_to_primary = {
+		"BLOODIRON": "SAVAGE",     # SAVAGE(70%) + IRON(30%)
+		"CORROSIVE": "IRON",       # IRON(70%) + VENOM(30%)
+		"VENOMSTRIKE": "VENOM",    # VENOM(70%) + SURGE(30%)
+		"TERRORFLUX": "SURGE",     # SURGE(70%) + DREAD(30%)
+		"NIGHTLEECH": "DREAD",     # DREAD(70%) + LEECH(30%)
+		"RAVENOUS": "LEECH",       # LEECH(70%) + SAVAGE(30%)
+	}
+	
+	var upper_brand = brand.to_upper()
+	if upper_brand in hybrid_to_primary:
+		return hybrid_to_primary[upper_brand]
+	return upper_brand
 
 func _get_brand_color(brand: String) -> Color:
 	match brand.to_upper():

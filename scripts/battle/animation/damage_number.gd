@@ -42,8 +42,13 @@ func setup(config: Dictionary, velocity: Vector2, gravity: float) -> void:
 	_is_critical = config.get("is_critical", false)
 
 	# Reset font size to original (prevents accumulation on pool reuse)
-	if label and _original_font_size > 0:
-		label.add_theme_font_size_override("font_size", _original_font_size)
+	# Handle edge case where original font size is 0 (no override set)
+	if label:
+		if _original_font_size > 0:
+			label.add_theme_font_size_override("font_size", _original_font_size)
+		else:
+			# Remove any override to use theme default
+			label.remove_theme_font_size_override("font_size")
 
 	# Set text
 	var text = ""

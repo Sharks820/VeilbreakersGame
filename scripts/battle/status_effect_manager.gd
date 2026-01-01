@@ -227,15 +227,33 @@ func remove_effect(target: CharacterBase, effect: Enums.StatusEffect) -> void:
 		target.remove_status_effect(effect)
 
 func _check_immunity(target: CharacterBase, effect: Enums.StatusEffect) -> bool:
-	# Fire immunity prevents burn
-	if effect == Enums.StatusEffect.BURN and Enums.Element.FIRE in target.elements:
+	# v5.0 Brand-based immunities
+	var target_brand: Enums.Brand = target.brand if "brand" in target else Enums.Brand.NONE
+	
+	# SURGE brand resists electric/burn effects (lightning speed)
+	if effect == Enums.StatusEffect.BURN and target_brand == Enums.Brand.SURGE:
 		return true
-	# Ice immunity prevents freeze
-	if effect == Enums.StatusEffect.FREEZE and Enums.Element.ICE in target.elements:
+	# IRON brand resists freeze (unyielding defense)
+	if effect == Enums.StatusEffect.FREEZE and target_brand == Enums.Brand.IRON:
 		return true
-	# Light immunity prevents certain debuffs
-	if effect == Enums.StatusEffect.CORRUPTED and Enums.Element.HOLY in target.elements:
+	# LEECH brand is immune to corruption (life drain sustains)
+	if effect == Enums.StatusEffect.CORRUPTED and target_brand == Enums.Brand.LEECH:
 		return true
+	# VENOM brand is immune to poison (precision poison masters)
+	if effect == Enums.StatusEffect.POISON and target_brand == Enums.Brand.VENOM:
+		return true
+	
+	# Legacy: Element-based immunities (deprecated, kept for backwards compatibility)
+	if "elements" in target and target.elements is Array:
+		# Fire immunity prevents burn
+		if effect == Enums.StatusEffect.BURN and Enums.Element.FIRE in target.elements:
+			return true
+		# Ice immunity prevents freeze
+		if effect == Enums.StatusEffect.FREEZE and Enums.Element.ICE in target.elements:
+			return true
+		# Light immunity prevents certain debuffs
+		if effect == Enums.StatusEffect.CORRUPTED and Enums.Element.HOLY in target.elements:
+			return true
 
 	return false
 

@@ -91,14 +91,16 @@ func _create_test_party() -> Array[CharacterBase]:
 	var party: Array[CharacterBase] = []
 
 	# Create protagonist (the player character) - "Rend" matches hero sprite
-	var protagonist := _create_test_character("Rend", party_level, Enums.Brand.FANG)
+	# Using SAVAGE brand for attack-focused protagonist (v5.0 Brand system)
+	var protagonist := _create_test_character("Rend", party_level, Enums.Brand.SAVAGE)
 	protagonist.is_protagonist = true
 	party.append(protagonist)
 
 	# Create allied monsters (recruited/captured monsters that fight with the player)
+	# Using valid v5.0 Brand system values: SAVAGE, IRON, VENOM, SURGE, DREAD, LEECH
 	var ally_monster_templates := [
 		{"name": "Mawling", "id": "mawling", "brand": Enums.Brand.SAVAGE},
-		{"name": "Hollow", "id": "hollow", "brand": Enums.Brand.VOID},
+		{"name": "Hollow", "id": "hollow", "brand": Enums.Brand.DREAD},  # Dark/void creature
 		{"name": "Flicker", "id": "flicker", "brand": Enums.Brand.SURGE}
 	]
 
@@ -169,50 +171,87 @@ func _create_test_character(char_name: String, level: int, brand: Enums.Brand) -
 	return character
 
 func _apply_brand_bonuses(character: CharacterBase, brand: Enums.Brand) -> void:
+	# v5.0 Brand system bonuses - matches Constants.BRAND_BONUSES
 	match brand:
-		Enums.Brand.FANG:
+		Enums.Brand.SAVAGE:
+			# +25% ATK - Raw destruction
 			character.base_attack += 5
 			character.base_speed += 3
-		Enums.Brand.RADIANT:
-			character.base_magic += 5
-			character.base_resistance += 3
-		Enums.Brand.BULWARK:
+		Enums.Brand.IRON:
+			# +30% HP - Unyielding defense
 			character.base_max_hp += 30
 			character.base_defense += 5
-		Enums.Brand.VOID:
-			character.base_max_mp += 15
-			character.base_magic += 3
-		Enums.Brand.EMBER:
-			character.base_magic += 5
+		Enums.Brand.VENOM:
+			# +20% Crit, +15% Status - Precision poison
+			character.base_attack += 3
+			character.base_speed += 2
+		Enums.Brand.SURGE:
+			# +25% SPD - Lightning speed
+			character.base_speed += 5
 			character.base_attack += 2
-		Enums.Brand.FROST:
+		Enums.Brand.DREAD:
+			# +20% Evasion, +15% Fear - Terror incarnate
+			character.base_speed += 4
 			character.base_magic += 3
+		Enums.Brand.LEECH:
+			# +20% Lifesteal - Life drain
+			character.base_magic += 5
+			character.base_resistance += 3
+		# Hybrid brands use primary brand bonuses at 70%
+		Enums.Brand.BLOODIRON:  # SAVAGE(70%) + IRON(30%)
+			character.base_attack += 4
+			character.base_max_hp += 10
+		Enums.Brand.CORROSIVE:  # IRON(70%) + VENOM(30%)
+			character.base_max_hp += 20
 			character.base_defense += 3
+		Enums.Brand.VENOMSTRIKE:  # VENOM(70%) + SURGE(30%)
+			character.base_attack += 3
+			character.base_speed += 3
+		Enums.Brand.TERRORFLUX:  # SURGE(70%) + DREAD(30%)
+			character.base_speed += 4
+			character.base_magic += 2
+		Enums.Brand.NIGHTLEECH:  # DREAD(70%) + LEECH(30%)
+			character.base_speed += 3
+			character.base_magic += 3
+		Enums.Brand.RAVENOUS:  # LEECH(70%) + SAVAGE(30%)
+			character.base_magic += 4
+			character.base_attack += 2
 
 func _add_test_skills(character: CharacterBase) -> void:
 	# Add basic attack skill
 	character.known_skills.append("basic_attack")
 
-	# Add brand-specific skill
+	# Add brand-specific skill (v5.0 Brand system)
 	match character.brand:
-		Enums.Brand.FANG:
-			character.known_skills.append("fury_strike")
-		Enums.Brand.RADIANT:
-			character.known_skills.append("prismatic_ray")
-		Enums.Brand.BULWARK:
-			character.known_skills.append("stone_wall")
-		Enums.Brand.VOID:
-			character.known_skills.append("drain_essence")
-		Enums.Brand.EMBER:
-			character.known_skills.append("fire_blast")
-		Enums.Brand.FROST:
-			character.known_skills.append("ice_shard")
+		Enums.Brand.SAVAGE:
+			character.known_skills.append("fury_strike")  # Raw destruction
+		Enums.Brand.IRON:
+			character.known_skills.append("stone_wall")  # Unyielding defense
+		Enums.Brand.VENOM:
+			character.known_skills.append("poison_fang")  # Precision poison
+		Enums.Brand.SURGE:
+			character.known_skills.append("lightning_dash")  # Lightning speed
+		Enums.Brand.DREAD:
+			character.known_skills.append("terror_shriek")  # Terror incarnate
+		Enums.Brand.LEECH:
+			character.known_skills.append("drain_essence")  # Life drain
+		# Hybrid brands get primary brand skill
+		Enums.Brand.BLOODIRON, Enums.Brand.RAVENOUS:
+			character.known_skills.append("fury_strike")  # SAVAGE-based
+		Enums.Brand.CORROSIVE:
+			character.known_skills.append("stone_wall")  # IRON-based
+		Enums.Brand.VENOMSTRIKE:
+			character.known_skills.append("poison_fang")  # VENOM-based
+		Enums.Brand.TERRORFLUX:
+			character.known_skills.append("lightning_dash")  # SURGE-based
+		Enums.Brand.NIGHTLEECH:
+			character.known_skills.append("terror_shriek")  # DREAD-based
 		_:
 			character.known_skills.append("power_strike")
 
-	# Add healing skill to support character
-	if character.brand == Enums.Brand.RADIANT:
-		character.known_skills.append("healing_light")
+	# Add lifesteal skill to LEECH brand characters
+	if character.brand == Enums.Brand.LEECH or character.brand == Enums.Brand.NIGHTLEECH or character.brand == Enums.Brand.RAVENOUS:
+		character.known_skills.append("life_siphon")
 
 # =============================================================================
 # ENEMY CREATION

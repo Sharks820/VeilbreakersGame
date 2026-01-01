@@ -318,8 +318,8 @@ func _calculate_chances() -> void:
 	dominate_chance = 0.1  # Very low base
 	
 	# Low HP boosts dominate
-	if creature_hp_percent < DOMINATE_CONDITIONS.low_hp.threshold:
-		dominate_chance += DOMINATE_CONDITIONS.low_hp.effectiveness * 0.5
+	if creature_hp_percent < DOMINATE_CONDITIONS["low_hp"]["threshold"]:
+		dominate_chance += DOMINATE_CONDITIONS["low_hp"]["effectiveness"] * 0.5
 	
 	# Status effects boost dominate
 	if "stunned" in creature_statuses:
@@ -469,7 +469,7 @@ func _play_promise_sequence(chance: float) -> void:
 	await get_tree().create_timer(dialogue_display_time).timeout
 	
 	# Creature considers the vow
-	var brand_data = BRAND_PROMISES.get(creature_brand, BRAND_PROMISES.SAVAGE)
+	var brand_data = BRAND_PROMISES.get(creature_brand, BRAND_PROMISES["SAVAGE"])
 	
 	if chance > 0.5:
 		creature_response.emit("CREATURE_CONSIDER", "You would swear this? Truly?")
@@ -563,7 +563,7 @@ func _handle_failure(approach: Approach, roll: float) -> void:
 		
 		Approach.PROMISE:
 			# Failed promise - creature doesn't trust you
-			failure_dialogue = BRAND_PROMISES.get(creature_brand, BRAND_PROMISES.SAVAGE).rejection
+			failure_dialogue = BRAND_PROMISES.get(creature_brand, BRAND_PROMISES["SAVAGE"]).rejection
 		
 		Approach.BREAK:
 			# Failed break - creature sees through manipulation
@@ -617,12 +617,12 @@ func _get_dominate_description() -> String:
 
 func _get_promise_description() -> String:
 	"""Description of what promise means for this creature"""
-	var brand_data = BRAND_PROMISES.get(creature_brand, BRAND_PROMISES.SAVAGE)
+	var brand_data = BRAND_PROMISES.get(creature_brand, BRAND_PROMISES["SAVAGE"])
 	return "This creature desires " + brand_data.desire + "."
 
 func _get_promise_vow() -> String:
 	"""Get a specific vow for this creature's brand"""
-	var brand_data = BRAND_PROMISES.get(creature_brand, BRAND_PROMISES.SAVAGE)
+	var brand_data = BRAND_PROMISES.get(creature_brand, BRAND_PROMISES["SAVAGE"])
 	return brand_data.vows.pick_random()
 
 func _get_break_description() -> String:

@@ -176,7 +176,9 @@ static func get_rarity_color(rarity: Enums.Rarity) -> Color:
 			return Color.GOLD
 	return Color.WHITE
 
+## @deprecated Use get_brand_color() instead - Element system replaced by Brand system in v5.0
 static func get_element_color(element: Enums.Element) -> Color:
+	push_warning("get_element_color() is deprecated. Use get_brand_color() instead.")
 	match element:
 		Enums.Element.FIRE:
 			return Color.ORANGE_RED
@@ -199,6 +201,73 @@ static func get_element_color(element: Enums.Element) -> Color:
 		Enums.Element.VOID:
 			return Color.PURPLE
 	return Color.WHITE
+
+## Get color for a Brand (v5.0 Brand system)
+## Returns the brand's primary color for UI and effects
+static func get_brand_color(brand: Enums.Brand) -> Color:
+	match brand:
+		# Pure Brands
+		Enums.Brand.SAVAGE:
+			return Color("c73e3e")  # Red - Raw destruction
+		Enums.Brand.IRON:
+			return Color("7b8794")  # Steel gray - Unyielding defense
+		Enums.Brand.VENOM:
+			return Color("6b9b37")  # Green - Precision poison
+		Enums.Brand.SURGE:
+			return Color("4a90d9")  # Blue - Lightning speed
+		Enums.Brand.DREAD:
+			return Color("5d3e8c")  # Purple - Terror incarnate
+		Enums.Brand.LEECH:
+			return Color("c75b8a")  # Pink - Life drain
+		# Hybrid Brands - use primary brand color
+		Enums.Brand.BLOODIRON:
+			return Color("c73e3e")  # SAVAGE primary (70%)
+		Enums.Brand.CORROSIVE:
+			return Color("7b8794")  # IRON primary (70%)
+		Enums.Brand.VENOMSTRIKE:
+			return Color("6b9b37")  # VENOM primary (70%)
+		Enums.Brand.TERRORFLUX:
+			return Color("4a90d9")  # SURGE primary (70%)
+		Enums.Brand.NIGHTLEECH:
+			return Color("5d3e8c")  # DREAD primary (70%)
+		Enums.Brand.RAVENOUS:
+			return Color("c75b8a")  # LEECH primary (70%)
+		Enums.Brand.NONE, _:
+			return Color.WHITE
+
+## Get brand color from string name (convenience method)
+static func get_brand_color_by_name(brand_name: String) -> Color:
+	match brand_name.to_upper():
+		"SAVAGE": return Color("c73e3e")
+		"IRON": return Color("7b8794")
+		"VENOM": return Color("6b9b37")
+		"SURGE": return Color("4a90d9")
+		"DREAD": return Color("5d3e8c")
+		"LEECH": return Color("c75b8a")
+		"BLOODIRON", "RAVENOUS": return Color("c73e3e")  # SAVAGE-based
+		"CORROSIVE": return Color("7b8794")  # IRON-based
+		"VENOMSTRIKE": return Color("6b9b37")  # VENOM-based
+		"TERRORFLUX": return Color("4a90d9")  # SURGE-based
+		"NIGHTLEECH": return Color("5d3e8c")  # DREAD-based
+		_: return Color.WHITE
+
+## Get brand glow color (secondary/highlight color for effects)
+static func get_brand_glow_color(brand: Enums.Brand) -> Color:
+	match brand:
+		Enums.Brand.SAVAGE, Enums.Brand.BLOODIRON, Enums.Brand.RAVENOUS:
+			return Color("ff6b6b")
+		Enums.Brand.IRON, Enums.Brand.CORROSIVE:
+			return Color("a8b5c4")
+		Enums.Brand.VENOM, Enums.Brand.VENOMSTRIKE:
+			return Color("9acd32")
+		Enums.Brand.SURGE, Enums.Brand.TERRORFLUX:
+			return Color("87ceeb")
+		Enums.Brand.DREAD, Enums.Brand.NIGHTLEECH:
+			return Color("9370db")
+		Enums.Brand.LEECH:
+			return Color("ff91af")
+		_:
+			return Color.GRAY
 
 # =============================================================================
 # VECTOR HELPERS
