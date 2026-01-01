@@ -20,23 +20,61 @@ signal error_logged(message: String, severity: String)
 signal crash_detected(error: String)
 
 
+func _init() -> void:
+	# Run window setup as early as possible (before _ready)
+	call_deferred("_setup_window_size")
+
 func _ready() -> void:
+
 	_session_id = _generate_session_id()
 	_ensure_log_directory()
 	_cleanup_old_logs()
 	_open_log_file()
 
+	# Log session start after log file is ready
+	_log_session_start()
+
 	# Connect to Godot's error output
 	if OS.is_debug_build():
 		push_warning("[ErrorLogger] Running in debug mode - verbose logging enabled")
 
+func _setup_window_size() -> void:
+	"""Configure window to fit screen with taskbar - runs FIRST"""
+	# Only adjust in windowed mode
+	if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN:
+		return
+
+	# Get usable screen area (excludes taskbar)
+	var screen_id := DisplayServer.window_get_current_screen()
+	var usable_rect := DisplayServer.screen_get_usable_rect(screen_id)
+
+	# Target 90% of usable area to leave margin
+	var target_width := int(usable_rect.size.x * 0.9)
+	var target_height := int(usable_rect.size.y * 0.9)
+
+	# Maintain 16:9 aspect ratio
+	var aspect := 16.0 / 9.0
+	if float(target_width) / float(target_height) > aspect:
+		target_width = int(target_height * aspect)
+	else:
+		target_height = int(target_width / aspect)
+
+	# Set window size
+	DisplayServer.window_set_size(Vector2i(target_width, target_height))
+
+	# Center in usable area
+	var center_x := usable_rect.position.x + (usable_rect.size.x - target_width) / 2
+	var center_y := usable_rect.position.y + (usable_rect.size.y - target_height) / 2
+	DisplayServer.window_set_position(Vector2i(center_x, center_y))
+	print("[Window] Sized to %dx%d at (%d, %d)" % [target_width, target_height, center_x, center_y])
+
+func _log_session_start() -> void:
 	_log("INFO", "=== SESSION START ===")
 	_log("INFO", "Session ID: %s" % _session_id)
 	_log("INFO", "Game Version: %s" % ProjectSettings.get_setting("application/config/version", "0.0.0"))
 	_log("INFO", "Platform: %s" % OS.get_name())
 	_log("INFO", "Godot Version: %s" % Engine.get_version_info().string)
 	_log("INFO", "========================")
-
 
 func _exit_tree() -> void:
 	_log("INFO", "=== SESSION END ===")
