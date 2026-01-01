@@ -164,7 +164,7 @@ func get_brand_alignment(brand_key: String) -> float:
 
 func set_brand_alignment(brand_key: String, value: float) -> void:
 	## Set alignment with a specific Brand
-	var old := brand_alignment.get(brand_key, 0.0)
+	var old: float = brand_alignment.get(brand_key, 0.0)
 	brand_alignment[brand_key] = clampf(value, 0.0, 100.0)
 	if brand_alignment[brand_key] != old:
 		var brand_enum := _brand_key_to_enum(brand_key)
@@ -172,7 +172,7 @@ func set_brand_alignment(brand_key: String, value: float) -> void:
 
 func modify_brand_alignment(brand_key: String, amount: float) -> void:
 	## Add or subtract from Brand alignment
-	var current := brand_alignment.get(brand_key, 0.0)
+	var current: float = brand_alignment.get(brand_key, 0.0)
 	set_brand_alignment(brand_key, current + amount)
 
 func apply_story_choice_alignment(choice_effects: Dictionary) -> void:
