@@ -26,10 +26,204 @@ const ELEMENTAL_WEAKNESS_MULTIPLIER: float = 1.5
 const ELEMENTAL_RESISTANCE_MULTIPLIER: float = 0.5
 const DAMAGE_VARIANCE: float = 0.1  # +/-10%
 
-# Purification
+# Purification (Legacy - see CORRUPTION SYSTEM below)
 const PURIFICATION_BASE_CHANCE: float = 0.3
 const PURIFICATION_CORRUPTION_PENALTY: float = 0.01  # Per corruption point
 const MAX_CORRUPTION: float = 100.0
+
+# =============================================================================
+# CORRUPTION & ASCENSION SYSTEM (v5.0 - Soulbind System)
+# =============================================================================
+
+# Corruption State Thresholds (0-100 scale)
+# CORE PHILOSOPHY: Lower corruption = STRONGER monster (goal is ASCENSION)
+const CORRUPTION_ASCENDED_MAX: float = 10.0    # 0-10%: ASCENDED (TRUE form, +25% stats)
+const CORRUPTION_PURIFIED_MAX: float = 25.0    # 11-25%: Purified (+10% stats)
+const CORRUPTION_UNSTABLE_MAX: float = 50.0    # 26-50%: Unstable (normal stats)
+const CORRUPTION_CORRUPTED_MAX: float = 75.0   # 51-75%: Corrupted (-10% stats, 10% Instability)
+# 76-100%: Abyssal (-20% stats, 20% Instability, dark abilities)
+
+# Stat Multipliers by Corruption State
+const STAT_MULT_ASCENDED: float = 1.25      # +25% all stats at ASCENDED
+const STAT_MULT_PURIFIED: float = 1.10      # +10% all stats at Purified
+const STAT_MULT_UNSTABLE: float = 1.0       # Normal stats at Unstable
+const STAT_MULT_CORRUPTED: float = 0.90     # -10% all stats at Corrupted
+const STAT_MULT_ABYSSAL: float = 0.80       # -20% all stats at Abyssal
+
+# Instability by Corruption State (% chance to ignore commands per turn)
+const INSTABILITY_ASCENDED: float = 0.0     # Perfect loyalty
+const INSTABILITY_PURIFIED: float = 0.0     # Stable
+const INSTABILITY_UNSTABLE: float = 0.05    # 5% minor instability
+const INSTABILITY_CORRUPTED: float = 0.10   # 10% Instability
+const INSTABILITY_ABYSSAL: float = 0.20     # 20% Instability
+
+# Brand Power Multiplier by Corruption State
+const BRAND_MULT_ASCENDED: float = 1.30     # 130% brand bonus + Ascended ability
+const BRAND_MULT_PURIFIED: float = 1.10     # 110% brand bonus
+const BRAND_MULT_UNSTABLE: float = 1.0      # 100% brand bonus
+const BRAND_MULT_CORRUPTED: float = 0.90    # 90% brand bonus + dark ability access
+const BRAND_MULT_ABYSSAL: float = 0.80      # 80% brand bonus + enhanced dark ability
+
+# Corruption Drift (In-Battle)
+const CORRUPTION_DRIFT_ATTACK: float = 5.0      # +5 when attacking monster
+const CORRUPTION_DRIFT_WAIT: float = -5.0       # -5 when waiting/defending
+const CORRUPTION_DRIFT_HEAL_ENEMY: float = -10.0 # -10 when healing enemy
+const CORRUPTION_DRIFT_PURIFY: float = -15.0    # -15 when using PURIFY (even on fail)
+const CORRUPTION_DRIFT_DOMINATE: float = 10.0   # +10 when using DOMINATE
+
+# =============================================================================
+# SOULBIND CAPTURE SYSTEM (v5.0)
+# =============================================================================
+
+# Base Capture Chances by Rarity
+const CAPTURE_BASE_COMMON: float = 0.50        # 50%
+const CAPTURE_BASE_UNCOMMON: float = 0.40      # 40%
+const CAPTURE_BASE_RARE: float = 0.30          # 30%
+const CAPTURE_BASE_EPIC: float = 0.15          # 15%
+const CAPTURE_BASE_LEGENDARY: float = 0.05     # 5%
+
+# Health Modifier: +1% per 2% HP missing (max +40%)
+const CAPTURE_HP_BONUS_PER_MISSING: float = 0.005  # 0.5% per 1% HP missing
+const CAPTURE_HP_BONUS_MAX: float = 0.40           # Max +40% bonus
+
+# Soul Vessel Bonuses
+const SOUL_VESSEL_CRACKED_BONUS: float = 0.10      # +10%
+const SOUL_VESSEL_STANDARD_BONUS: float = 0.20     # +20%
+const SOUL_VESSEL_PRISTINE_BONUS: float = 0.35     # +35%
+const SOUL_VESSEL_COVENANT_BONUS: float = 0.50     # +50%
+
+# Capture Passes Required (Corruption Battle animation)
+const CAPTURE_PASSES_COMMON: int = 1
+const CAPTURE_PASSES_UNCOMMON: int = 2
+const CAPTURE_PASSES_RARE: int = 3
+const CAPTURE_PASSES_EPIC: int = 4
+const CAPTURE_PASSES_LEGENDARY: int = 5
+const CAPTURE_PASS_TIME_SHORT: float = 1.5         # Common/Uncommon
+const CAPTURE_PASS_TIME_MEDIUM: float = 2.0        # Rare/Epic
+const CAPTURE_PASS_TIME_LONG: float = 2.5          # Legendary
+
+# Pass Reduction Factors
+const CAPTURE_PASS_REDUCTION_LOW_HP: int = 1       # -1 pass if <25% HP
+const CAPTURE_PASS_REDUCTION_LOW_CORRUPTION: int = 1  # -1 pass if <25 corruption
+const CAPTURE_PASS_REDUCTION_PURIFY: int = 1       # -1 pass for PURIFY method
+const CAPTURE_PASS_REDUCTION_PRISTINE: int = 1     # -1 pass for Pristine Vessel
+const CAPTURE_PASS_REDUCTION_COVENANT: int = 2     # -2 passes for Covenant Vessel
+
+# SOULBIND Method (Item-Based) - No special modifiers
+
+# PURIFY Method (Sanctum Energy Cost)
+const PURIFY_ENERGY_BASE: float = 10.0             # Base energy cost
+const PURIFY_ENERGY_CORRUPTION_MULT: float = 0.5   # +0.5 per corruption point
+const PURIFY_LOW_CORRUPTION_BONUS: float = 0.20    # +20% if corruption <25
+const PURIFY_HIGH_CORRUPTION_PENALTY: float = 0.30 # -30% if corruption >75
+const PURIFY_CORRUPTION_REDUCTION_ON_FAIL: float = 15.0  # -15 corruption even on fail
+
+# DOMINATE Method (HP Cost)
+const DOMINATE_HP_COST_PERCENT: float = 0.25       # 25% of current HP
+const DOMINATE_HIGH_CORRUPTION_BONUS: float = 0.20 # +20% if corruption >75
+const DOMINATE_MIN_CORRUPTION: float = 26.0        # Unavailable if corruption <26
+const DOMINATE_FAIL_CORRUPTION_GAIN: float = 15.0  # Monster gains +15 corruption on fail
+const DOMINATE_FAIL_DEFIANT_DURATION: int = 3      # Defiant buff lasts 3 turns
+const DOMINATE_FAIL_DEFIANT_DAMAGE_BONUS: float = 0.20  # +20% damage during Defiant
+
+# BARGAIN Method (Immediate Price)
+const BARGAIN_CAPTURE_BONUS: float = 0.25          # +25% capture chance
+
+# =============================================================================
+# SANCTUM SHRINE SYSTEM
+# =============================================================================
+
+# Shrine Tiers
+const SHRINE_MINOR_COOLDOWN: int = 3               # 3 battles
+const SHRINE_MAJOR_USES: int = 1                   # 1 use per visit
+const SHRINE_SACRED_COOLDOWN: int = 0              # No cooldown
+
+# Corruption Reduction per Tier
+const SHRINE_MINOR_CORRUPTION_REDUCTION: float = 10.0
+const SHRINE_MAJOR_CORRUPTION_REDUCTION: float = 15.0
+const SHRINE_SACRED_CORRUPTION_REDUCTION: float = 20.0
+
+# Shrine Cleansing Cost
+const SHRINE_CLEANSE_ENERGY_COST: float = 10.0     # Per monster
+
+# =============================================================================
+# BRAND ALIGNMENT SYSTEM (Player)
+# =============================================================================
+
+# Equipment Alignment Requirements
+const BRAND_EQUIPMENT_THRESHOLD: float = 55.0      # 55%+ to wield
+const BRAND_HYBRID_EQUIPMENT_THRESHOLD: float = 40.0  # 40%+ in BOTH parent brands
+
+# Equipment Decay Stages (battles below threshold)
+const EQUIPMENT_RESISTANCE_BATTLES: int = 3        # 0-3: Resistance stage
+const EQUIPMENT_REJECTION_BATTLES: int = 6         # 4-6: Rejection stage
+const EQUIPMENT_CORRUPTION_BATTLES: int = 10       # 7-10: Corruption stage
+const EQUIPMENT_SHATTER_BATTLES: int = 11          # 11+: Shatter
+
+# Equipment Decay Penalties
+const EQUIPMENT_RESISTANCE_SPEED_PENALTY: float = 0.05   # -5% SPD
+const EQUIPMENT_REJECTION_SPEED_PENALTY: float = 0.10    # -10% SPD
+const EQUIPMENT_REJECTION_BONUS_PENALTY: float = 0.10    # -10% weapon bonus
+const EQUIPMENT_CORRUPTION_SPEED_PENALTY: float = 0.20   # -20% SPD
+const EQUIPMENT_SHATTER_HP_DAMAGE: float = 0.25          # 25% max HP damage
+
+# Alignment Change (Story Choices - Major Impact)
+const ALIGNMENT_MAJOR_POSITIVE: float = 15.0       # Large positive shift
+const ALIGNMENT_MAJOR_NEGATIVE: float = -10.0      # Large negative shift
+const ALIGNMENT_STORY_MAXIMUM: float = 30.0        # Max from single story choice
+
+# Alignment Change (Battle Actions - Minor Impact)
+const ALIGNMENT_BATTLE_DOMINATE_DREAD: float = 3.0
+const ALIGNMENT_BATTLE_DOMINATE_LEECH: float = 2.0
+const ALIGNMENT_BATTLE_PURIFY_IRON: float = 2.0
+const ALIGNMENT_BATTLE_PURIFY_VENOM: float = -1.0
+const ALIGNMENT_BATTLE_EXECUTE_SAVAGE: float = 3.0
+
+# Passive Drift (Party Composition)
+const ALIGNMENT_PASSIVE_DRIFT_RATE: float = 1.0    # +1% per 10 battles toward dominant
+
+# =============================================================================
+# MORALE SYSTEM
+# =============================================================================
+
+const MORALE_INSPIRED_THRESHOLD: int = 3           # 3+ approved choices
+const MORALE_CONFLICTED_THRESHOLD: int = 2         # 2+ disapproved choices
+const MORALE_REBELLIOUS_THRESHOLD: int = 4         # 4+ disapproved choices
+const MORALE_DECAY_BATTLES: int = 5                # 1 choice fades per 5 battles
+
+const MORALE_INSPIRED_STAT_BONUS: float = 0.10     # +10% stats
+const MORALE_CONFLICTED_STAT_PENALTY: float = 0.05 # -5% stats
+const MORALE_REBELLIOUS_INSTABILITY_BONUS: float = 0.10  # +10% Instability
+
+# =============================================================================
+# PATH-BRAND SYNERGY SYSTEM
+# =============================================================================
+
+const SYNERGY_TIER_1_MONSTERS: int = 1             # Half bonus (+5%)
+const SYNERGY_TIER_2_MONSTERS: int = 2             # Full bonus (+10%)
+const SYNERGY_TIER_3_MONSTERS: int = 3             # Full + 5% secondary
+
+const SYNERGY_TIER_1_BONUS: float = 0.05           # +5%
+const SYNERGY_TIER_2_BONUS: float = 0.10           # +10%
+const SYNERGY_TIER_3_SECONDARY_BONUS: float = 0.05 # Additional +5%
+
+const SYNERGY_ASCENDED_COUNT_MULTIPLIER: int = 2   # Ascended = 2 for synergy
+const SYNERGY_PLAYER_ALIGNMENT_BONUS: float = 0.15 # +15% if player 55%+ aligned
+
+# Path-Brand Synergy Mapping
+const PATH_SYNERGY_BRANDS: Dictionary = {
+	"IRONBOUND": ["IRON", "BLOODIRON", "CORROSIVE"],
+	"FANGBORN": ["SAVAGE", "RAVENOUS", "BLOODIRON"],
+	"VOIDTOUCHED": ["LEECH", "NIGHTLEECH", "DREAD"],
+	"UNCHAINED": ["SURGE", "TERRORFLUX", "VENOMSTRIKE"]
+}
+
+const PATH_SYNERGY_BONUSES: Dictionary = {
+	"IRONBOUND": {"def_mult": 1.10, "hp_mult": 1.05},
+	"FANGBORN": {"atk_mult": 1.10, "crit_mult": 1.05},
+	"VOIDTOUCHED": {"lifesteal_mult": 1.10, "sp_regen_mult": 1.05},
+	"UNCHAINED": {"eva_mult": 1.10, "spd_mult": 1.05}
+}
 
 # Monster Control (Party Monsters)
 const MONSTER_AUTO_ATTACK_CORRUPTION_THRESHOLD: float = 70.0  # If corruption >= this, monster attacks on its own

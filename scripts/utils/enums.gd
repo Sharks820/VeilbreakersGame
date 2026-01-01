@@ -303,6 +303,62 @@ enum MonsterRole {
 }
 
 # =============================================================================
+# CORRUPTION SYSTEM (v5.0 - Soulbind System)
+# =============================================================================
+
+## Corruption State - determines monster power and behavior
+## CORE PHILOSOPHY: Lower corruption = STRONGER monster (goal is ASCENSION)
+enum CorruptionState {
+	ASCENDED = 0,   # 0-10%: TRUE form, freed from Veil, +25% all stats, perfect loyalty
+	PURIFIED = 1,   # 11-25%: Stable, healthy, +10% stats
+	UNSTABLE = 2,   # 26-50%: Flickering, confused, normal stats
+	CORRUPTED = 3,  # 51-75%: Aggressive, in pain, -10% stats, 10% Instability
+	ABYSSAL = 4     # 76-100%: Lost to darkness, -20% stats, 20% Instability, dark abilities
+}
+
+## Capture Method - how the monster was captured
+enum CaptureMethod {
+	NONE = -1,
+	SOULBIND = 0,   # Standard: Soul Vessel item, no drawbacks
+	PURIFY = 1,     # Righteous: Sanctum Energy cost, best for low corruption
+	DOMINATE = 2,   # Dark: 25% HP cost, best for high corruption, causes Instability
+	BARGAIN = 3     # Gamble: Immediate random price, +25% capture bonus
+}
+
+## Capture State - the state at which monster was captured (affects long-term)
+enum CaptureState {
+	WILD = 0,       # Not captured yet
+	ASCENDED = 1,   # Captured at 0-10% corruption: perfect loyalty
+	PURIFIED = 2,   # Captured at 11-25%: stable, "Inner Light" immunity
+	SOULBOUND = 3,  # Captured at 26-50%: standard
+	CORRUPTED = 4,  # Captured at 51-75%: 10% Instability (reducible)
+	DOMINATED = 5   # Captured at 76-100%: 20% Instability (reducible), dark abilities
+}
+
+## Soul Vessel Tier - capture item quality
+enum SoulVesselTier {
+	CRACKED = 0,    # +10% capture, 100g, common shops
+	STANDARD = 1,   # +20% capture, 400g, mid-game shops
+	PRISTINE = 2,   # +35% capture, -1 pass, 1000g, late-game/crafting
+	COVENANT = 3    # +50% capture, -2 passes, boss drops only
+}
+
+## Shrine Tier - rest point quality
+enum ShrineTier {
+	MINOR = 0,      # 3 battle cooldown, -10 corruption
+	MAJOR = 1,      # Instant (1x per visit), -15 corruption
+	SACRED = 2      # No cooldown, -20 corruption
+}
+
+## Morale Level - monster approval based on player actions
+enum MoraleLevel {
+	REBELLIOUS = 0, # 4+ disapproved choices: +10% Instability, may refuse Ascension
+	CONFLICTED = 1, # 2+ disapproved choices: -5% stats, hesitant animations
+	CONTENT = 2,    # Neutral: normal performance
+	INSPIRED = 3    # 3+ approved choices: +10% stats, unique dialogue
+}
+
+# =============================================================================
 # STORY CHAPTERS
 # =============================================================================
 
