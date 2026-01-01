@@ -79,6 +79,9 @@ var battle_manager: BattleManager = null
 var enemy_tooltip: PanelContainer = null
 var tooltip_visible: bool = false
 
+# Party tooltip state
+var party_tooltip: PanelContainer = null
+
 # Combat log scroll state
 var user_scrolled_log: bool = false  # True if user manually scrolled
 
@@ -172,9 +175,20 @@ func _force_ui_layout() -> void:
 		if combat_log_scroll:
 			combat_log_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 
-	# EnemyPanel - right side (handled by battle_arena sidebars now)
+	# EnemyPanel - right side with enemy HP/status (styled to match party sidebar)
 	if enemy_panel:
-		enemy_panel.hide()  # We use battle_arena sidebars instead
+		enemy_panel.show()
+		# Style to match party sidebar but with red theme
+		var enemy_style := StyleBoxFlat.new()
+		enemy_style.bg_color = Color(0.2, 0.1, 0.1, 0.95)  # Dark red-gray
+		enemy_style.border_color = Color(0.8, 0.3, 0.3, 1.0)  # Red border
+		enemy_style.set_border_width_all(1)
+		enemy_style.set_corner_radius_all(4)
+		enemy_style.content_margin_left = 8
+		enemy_style.content_margin_right = 8
+		enemy_style.content_margin_top = 8
+		enemy_style.content_margin_bottom = 8
+		enemy_panel.add_theme_stylebox_override("panel", enemy_style)
 
 	# Create left party sidebar if not exists
 	_create_left_party_sidebar(viewport_size)
@@ -903,11 +917,13 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 6)
+	hbox.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	panel.add_child(hbox)
 
 	# Portrait container
 	var portrait_container := PanelContainer.new()
 	portrait_container.custom_minimum_size = Vector2(45, 45)
+	portrait_container.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	var portrait_style := StyleBoxFlat.new()
 	portrait_style.bg_color = Color(0.2, 0.1, 0.1, 1.0)
 	portrait_style.border_color = Color(0.6, 0.3, 0.3, 1.0)
@@ -921,6 +937,7 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	portrait.custom_minimum_size = Vector2(41, 41)
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 
 	var portrait_path := _get_portrait_path(enemy)
 	if portrait_path != "":
@@ -933,10 +950,12 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 2)
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	hbox.add_child(vbox)
 
 	var name_label := Label.new()
 	name_label.text = enemy.character_name
+	name_label.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	name_label.add_theme_font_size_override("font_size", 11)
 	name_label.add_theme_color_override("font_color", Color(0.95, 0.85, 0.8, 1.0))
 	vbox.add_child(name_label)
@@ -948,6 +967,7 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	hp_bar.show_percentage = false
 	hp_bar.custom_minimum_size = Vector2(120, 12)
 	hp_bar.name = "HPBar"
+	hp_bar.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 
 	var hp_fill := StyleBoxFlat.new()
 	hp_fill.bg_color = Color(0.8, 0.2, 0.2, 1.0)  # Red for enemies
@@ -965,6 +985,7 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	hp_label.add_theme_font_size_override("font_size", 9)
 	hp_label.add_theme_color_override("font_color", Color(0.7, 0.6, 0.6, 1.0))
 	hp_label.name = "HPLabel"
+	hp_label.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	vbox.add_child(hp_label)
 
 	# Corruption bar for monsters
@@ -977,6 +998,7 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 		corruption_bar.show_percentage = false
 		corruption_bar.custom_minimum_size = Vector2(120, 8)
 		corruption_bar.name = "CorruptionBar"
+		corruption_bar.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 
 		var corruption_fill := StyleBoxFlat.new()
 		corruption_fill.bg_color = Color(0.5, 0.1, 0.6, 1.0)  # Purple for corruption
@@ -993,6 +1015,7 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 		var brand_label := Label.new()
 		brand_label.name = "BrandLabel"
 		brand_label.add_theme_font_size_override("font_size", 9)
+		brand_label.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 
 		var brand_name := _get_brand_name(monster.brand)
 		var brand_color := _get_brand_color(monster.brand)
@@ -1005,6 +1028,7 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	status_icons.name = "StatusIcons"
 	status_icons.add_theme_constant_override("separation", 2)
 	status_icons.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	status_icons.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	vbox.add_child(status_icons)
 
 	# Store reference for updates
@@ -1764,6 +1788,132 @@ func _hide_enemy_tooltip() -> void:
 	tooltip_visible = false
 
 # =============================================================================
+# PARTY HOVER TOOLTIP
+# =============================================================================
+
+func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> void:
+	"""Show tooltip with party member details on hover"""
+	_hide_party_tooltip()  # Hide any existing tooltip
+
+	# Create tooltip panel
+	party_tooltip = PanelContainer.new()
+	party_tooltip.name = "PartyTooltip"
+	party_tooltip.custom_minimum_size = Vector2(280, 0)
+	party_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# Style the tooltip with green/ally theme
+	var tooltip_style := StyleBoxFlat.new()
+	tooltip_style.bg_color = Color(0.06, 0.1, 0.08, 0.95)
+	tooltip_style.border_color = Color(0.3, 0.6, 0.4, 1.0)
+	tooltip_style.set_border_width_all(2)
+	tooltip_style.set_corner_radius_all(6)
+	tooltip_style.content_margin_left = 12
+	tooltip_style.content_margin_right = 12
+	tooltip_style.content_margin_top = 10
+	tooltip_style.content_margin_bottom = 10
+	party_tooltip.add_theme_stylebox_override("panel", tooltip_style)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	party_tooltip.add_child(vbox)
+
+	# Name header
+	var name_label := Label.new()
+	name_label.text = character.character_name
+	name_label.add_theme_font_size_override("font_size", 16)
+	name_label.add_theme_color_override("font_color", Color(0.85, 1.0, 0.9))
+	vbox.add_child(name_label)
+
+	# Level info
+	var level_label := Label.new()
+	level_label.text = "Level %d" % character.level
+	level_label.add_theme_font_size_override("font_size", 11)
+	level_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	vbox.add_child(level_label)
+
+	# Separator
+	var sep := HSeparator.new()
+	sep.add_theme_color_override("separator", Color(0.3, 0.4, 0.35))
+	vbox.add_child(sep)
+
+	# HP/MP section
+	var hp_info := HBoxContainer.new()
+	hp_info.add_theme_constant_override("separation", 8)
+	vbox.add_child(hp_info)
+
+	var hp_title := Label.new()
+	hp_title.text = "HP:"
+	hp_title.add_theme_font_size_override("font_size", 11)
+	hp_title.add_theme_color_override("font_color", Color(0.6, 0.8, 0.6))
+	hp_info.add_child(hp_title)
+
+	var hp_value := Label.new()
+	hp_value.text = "%d / %d" % [character.current_hp, character.get_max_hp()]
+	hp_value.add_theme_font_size_override("font_size", 11)
+	hp_value.add_theme_color_override("font_color", Color(0.4, 0.9, 0.4))
+	hp_info.add_child(hp_value)
+
+	# MP info if character has MP
+	if character.get_max_mp() > 0:
+		var mp_info := HBoxContainer.new()
+		mp_info.add_theme_constant_override("separation", 8)
+		vbox.add_child(mp_info)
+
+		var mp_title := Label.new()
+		mp_title.text = "MP:"
+		mp_title.add_theme_font_size_override("font_size", 11)
+		mp_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.8))
+		mp_info.add_child(mp_title)
+
+		var mp_value := Label.new()
+		mp_value.text = "%d / %d" % [character.current_mp, character.get_max_mp()]
+		mp_value.add_theme_font_size_override("font_size", 11)
+		mp_value.add_theme_color_override("font_color", Color(0.4, 0.6, 1.0))
+		mp_info.add_child(mp_value)
+
+	# Separator
+	var sep2 := HSeparator.new()
+	sep2.add_theme_color_override("separator", Color(0.3, 0.4, 0.35))
+	vbox.add_child(sep2)
+
+	# Stats section
+	var stats_grid := GridContainer.new()
+	stats_grid.columns = 2
+	stats_grid.add_theme_constant_override("h_separation", 16)
+	stats_grid.add_theme_constant_override("v_separation", 2)
+	vbox.add_child(stats_grid)
+
+	_add_stat_row(stats_grid, "ATK", character.base_attack, Color(1.0, 0.5, 0.4))
+	_add_stat_row(stats_grid, "DEF", character.base_defense, Color(0.5, 0.7, 1.0))
+	_add_stat_row(stats_grid, "MAG", character.base_magic, Color(0.8, 0.5, 1.0))
+	_add_stat_row(stats_grid, "SPD", character.base_speed, Color(0.5, 1.0, 0.7))
+
+	# Position tooltip to the RIGHT of the panel (party is on left side)
+	add_child(party_tooltip)
+	await get_tree().process_frame
+
+	var panel_global := panel.global_position
+	var tooltip_pos := Vector2(panel_global.x + panel.size.x + 10, panel_global.y)
+
+	# Keep within screen bounds
+	if tooltip_pos.x + party_tooltip.size.x > size.x - 10:
+		tooltip_pos.x = panel_global.x - party_tooltip.size.x - 10
+	if tooltip_pos.y + party_tooltip.size.y > size.y - 10:
+		tooltip_pos.y = size.y - party_tooltip.size.y - 10
+
+	party_tooltip.position = tooltip_pos
+
+func _on_party_panel_unhover() -> void:
+	"""Hide tooltip when mouse leaves party panel"""
+	_hide_party_tooltip()
+
+func _hide_party_tooltip() -> void:
+	"""Remove and destroy the party tooltip"""
+	if party_tooltip and is_instance_valid(party_tooltip):
+		party_tooltip.queue_free()
+		party_tooltip = null
+
+# =============================================================================
 # LEFT PARTY SIDEBAR
 # =============================================================================
 
@@ -1822,6 +1972,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	"""Create a compact party member slot for the left sidebar"""
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(144, 60)
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 
 	# Style with ally colors
 	var style := StyleBoxFlat.new()
@@ -1835,13 +1986,19 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	style.content_margin_bottom = 4
 	panel.add_theme_stylebox_override("panel", style)
 
+	# Connect hover signals for tooltip
+	panel.mouse_entered.connect(_on_party_panel_hover.bind(character, panel))
+	panel.mouse_exited.connect(_on_party_panel_unhover)
+
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 6)
+	hbox.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	panel.add_child(hbox)
 
 	# Portrait
 	var portrait_container := PanelContainer.new()
 	portrait_container.custom_minimum_size = Vector2(36, 36)
+	portrait_container.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	var portrait_style := StyleBoxFlat.new()
 	portrait_style.bg_color = Color(0.15, 0.18, 0.2, 1.0)
 	portrait_style.border_color = Color(0.4, 0.5, 0.45, 1.0)
@@ -1854,6 +2011,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	portrait.custom_minimum_size = Vector2(32, 32)
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	var portrait_path := _get_portrait_path(character)
 	if portrait_path != "":
 		var tex := load(portrait_path)
@@ -1865,6 +2023,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 2)
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	hbox.add_child(vbox)
 
 	# Name
@@ -1872,6 +2031,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	name_label.text = character.character_name
 	name_label.add_theme_font_size_override("font_size", 11)
 	name_label.add_theme_color_override("font_color", Color(0.9, 0.95, 0.85))
+	name_label.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	vbox.add_child(name_label)
 
 	# HP Bar
@@ -1881,6 +2041,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	hp_bar.value = character.current_hp
 	hp_bar.show_percentage = false
 	hp_bar.custom_minimum_size = Vector2(85, 12)
+	hp_bar.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 
 	var hp_fill := StyleBoxFlat.new()
 	hp_fill.bg_color = Color(0.3, 0.8, 0.35, 1.0)
@@ -1899,6 +2060,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	hp_label.text = "%d/%d" % [character.current_hp, character.get_max_hp()]
 	hp_label.add_theme_font_size_override("font_size", 9)
 	hp_label.add_theme_color_override("font_color", Color(0.65, 0.7, 0.65))
+	hp_label.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	vbox.add_child(hp_label)
 
 	# MP Bar (if character has MP)
@@ -1909,6 +2071,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 		mp_bar.value = character.current_mp
 		mp_bar.show_percentage = false
 		mp_bar.custom_minimum_size = Vector2(85, 8)
+		mp_bar.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 
 		var mp_fill := StyleBoxFlat.new()
 		mp_fill.bg_color = Color(0.3, 0.5, 0.9, 1.0)
@@ -1926,6 +2089,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	status_icons.name = "StatusIcons"
 	status_icons.add_theme_constant_override("separation", 2)
 	status_icons.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	status_icons.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	vbox.add_child(status_icons)
 
 	# Store reference for updates
