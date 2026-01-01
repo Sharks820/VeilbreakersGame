@@ -102,6 +102,13 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	if defender.has_status_effect(Enums.StatusEffect.DEFENSE_UP):
 		defender_mod *= 0.75
 
+	# TODO: Implement SHIELD status effect - should absorb damage before applying to HP
+	# Shield should track remaining absorption amount and break when depleted
+	# if defender.has_status_effect(Enums.StatusEffect.SHIELD):
+	#     var shield_data = defender.status_effects[Enums.StatusEffect.SHIELD]
+	#     var shield_amount = shield_data.get("shield_amount", 0)
+	#     # Absorb damage, reduce shield, break if depleted
+
 	# Attacker status effects
 	var attacker_mod := 1.0
 	if attacker.has_status_effect(Enums.StatusEffect.ATTACK_UP):

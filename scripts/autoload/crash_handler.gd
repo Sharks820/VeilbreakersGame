@@ -16,6 +16,9 @@ signal crash_recovered(error: String)
 
 
 func _ready() -> void:
+	# Load crash count from previous sessions
+	_load_crash_count()
+
 	# Check for previous crash on startup
 	_check_for_crash_recovery()
 

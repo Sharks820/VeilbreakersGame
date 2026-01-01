@@ -140,14 +140,24 @@ func _get_vera_save_data() -> Dictionary:
 	}
 
 func _get_inventory_save_data() -> Dictionary:
-	# Will be implemented when InventorySystem exists
+	# TODO: Connect to InventorySystem when party/inventory integration is complete
+	if has_node("/root/InventorySystem"):
+		var inv = get_node("/root/InventorySystem")
+		if inv.has_method("get_save_data"):
+			return inv.get_save_data()
+	# Fallback empty structure
 	return {
 		"items": {},
 		"equipment": {}
 	}
 
 func _get_party_save_data() -> Array:
-	# Will be implemented when party system is complete
+	# TODO: Connect to GameManager party system when party management is complete
+	if has_node("/root/GameManager"):
+		var gm = get_node("/root/GameManager")
+		if gm.has_method("get_party_save_data"):
+			return gm.get_party_save_data()
+	# Fallback empty array
 	return []
 
 func _write_save_file(slot: int, data: Dictionary) -> bool:

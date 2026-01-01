@@ -257,6 +257,10 @@ func _connect_signals() -> void:
 	retry_button.pressed.connect(_on_retry_pressed)
 	title_button.pressed.connect(_on_title_pressed)
 
+	# Status effect signals for icon updates
+	EventBus.status_effect_applied.connect(_on_status_effect_changed)
+	EventBus.status_effect_removed.connect(_on_status_effect_changed)
+
 func _hide_all_menus() -> void:
 	skill_menu.hide()
 	item_menu.hide()
@@ -791,8 +795,16 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 		brand_label.add_theme_color_override("font_color", brand_color)
 		vbox.add_child(brand_label)
 
+	# Status icons container - displays active buffs/debuffs
+	var status_icons := HBoxContainer.new()
+	status_icons.name = "StatusIcons"
+	status_icons.add_theme_constant_override("separation", 2)
+	status_icons.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	vbox.add_child(status_icons)
+
 	# Store reference for updates
 	character.set_meta("ui_panel", panel)
+	character.set_meta("status_icons", status_icons)
 
 	return panel
 
@@ -939,8 +951,16 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 		brand_label.add_theme_color_override("font_color", brand_color)
 		vbox.add_child(brand_label)
 
+	# Status icons container - displays active buffs/debuffs
+	var status_icons := HBoxContainer.new()
+	status_icons.name = "StatusIcons"
+	status_icons.add_theme_constant_override("separation", 2)
+	status_icons.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	vbox.add_child(status_icons)
+
 	# Store reference for updates
 	enemy.set_meta("ui_panel", panel)
+	enemy.set_meta("status_icons", status_icons)
 
 	return panel
 
@@ -1072,6 +1092,73 @@ func _get_status_effect_icon_path(effect: Enums.StatusEffect) -> String:
 func _get_status_effect_name(effect: Enums.StatusEffect) -> String:
 	"""Get display name for status effect tooltip"""
 	return Enums.StatusEffect.keys()[effect].capitalize().replace("_", " ")
+
+
+# =============================================================================
+# STATUS ICON DISPLAY
+# =============================================================================
+
+func _on_status_effect_changed(target: Node, _effect: int, _extra: int = 0) -> void:
+	"""Called when a status effect is applied or removed - update icons"""
+	if target is CharacterBase:
+		_update_character_status_icons(target as CharacterBase)
+
+
+func _update_character_status_icons(character: CharacterBase) -> void:
+	"""Update the status icon display for a character's panel"""
+	if not character.has_meta("status_icons"):
+		return
+
+	var status_icons: HBoxContainer = character.get_meta("status_icons")
+	if not is_instance_valid(status_icons):
+		return
+
+	# Clear existing icons
+	for child in status_icons.get_children():
+		child.queue_free()
+
+	# Add icons for each active status effect (max 6 to prevent overflow)
+	var icon_count := 0
+	var max_icons := 6
+
+	for effect_key in character.status_effects.keys():
+		if icon_count >= max_icons:
+			break
+
+		var effect: Enums.StatusEffect = effect_key as Enums.StatusEffect
+		var icon_path := _get_status_effect_icon_path(effect)
+
+		if icon_path == "" or not ResourceLoader.exists(icon_path):
+			continue
+
+		var icon := TextureRect.new()
+		icon.custom_minimum_size = Vector2(16, 16)
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.texture = load(icon_path)
+
+		# Add tooltip with effect name and remaining duration
+		var effect_data: Dictionary = character.status_effects[effect_key]
+		var duration: int = effect_data.get("duration", 0)
+		var stacks: int = effect_data.get("stacks", 1)
+		var tooltip := _get_status_effect_name(effect)
+		if duration > 0:
+			tooltip += " (%d turns)" % duration
+		if stacks > 1:
+			tooltip += " x%d" % stacks
+		icon.tooltip_text = tooltip
+
+		status_icons.add_child(icon)
+		icon_count += 1
+
+
+func _refresh_all_status_icons() -> void:
+	"""Refresh status icons for all party members and enemies"""
+	for member in party_members:
+		_update_character_status_icons(member)
+	for enemy in enemies:
+		_update_character_status_icons(enemy)
+
 
 func update_turn_order(order: Array[CharacterBase]) -> void:
 	# Verify turn_order_display exists
@@ -1679,6 +1766,9 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	left_party_sidebar.show()
 	left_party_sidebar.visible = true
 
+	# Refresh status icons for all characters
+	_refresh_all_status_icons()
+
 func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	"""Create a compact party member slot for the left sidebar"""
 	var panel := PanelContainer.new()
@@ -1782,8 +1872,16 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 		mp_bar.add_theme_stylebox_override("background", mp_bg)
 		vbox.add_child(mp_bar)
 
+	# Status icons container - displays active buffs/debuffs
+	var status_icons := HBoxContainer.new()
+	status_icons.name = "StatusIcons"
+	status_icons.add_theme_constant_override("separation", 2)
+	status_icons.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	vbox.add_child(status_icons)
+
 	# Store reference for updates
 	character.set_meta("sidebar_panel", panel)
+	character.set_meta("status_icons", status_icons)
 
 	return panel
 

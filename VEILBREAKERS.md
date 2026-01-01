@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v4.2** | Last updated: 2025-12-31
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v4.3** | Last updated: 2025-12-31
 
 ---
 
@@ -269,6 +269,8 @@ battle, ui, art, audio, vera, monsters, critical
 | 2025-12-31 | v3.8: Battle animation interface in CharacterBase, victory->overworld transition for dev testing |
 | 2025-12-31 | v4.0: Battle UI overhaul - party/enemy sidebars with portraits, centered action bar, combat log with scroll |
 | 2025-12-31 | v4.1: Sidebar HP/MP bars now update on damage/heal/skill use via metadata references |
+| 2025-12-31 | v4.2: Bug fixes - debug code removal, tween memory leaks, BargainUI Color fix, EventBus.skill_used signal |
+| 2025-12-31 | v4.3: Critical fixes - DataManager innate_skills, status icon display on panels, CrashHandler init, SaveManager integration |
 
 ---
 

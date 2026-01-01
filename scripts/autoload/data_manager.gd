@@ -196,7 +196,13 @@ func get_skills_for_monster(monster_id: String) -> Array:
 		return []
 
 	var result: Array = []
-	for skill_id in monster.learnable_skills:
+	# Include innate skills
+	for skill_id in monster.innate_skills:
+		var skill := get_skill(skill_id)
+		if skill:
+			result.append(skill)
+	# Include learnable skills (Dictionary {level: skill_id} - iterate values)
+	for skill_id in monster.learnable_skills.values():
 		var skill := get_skill(skill_id)
 		if skill:
 			result.append(skill)
@@ -209,7 +215,13 @@ func get_skills_for_hero(hero_id: String) -> Array:
 		return []
 
 	var result: Array = []
-	for skill_id in hero.starting_skills:
+	# Include innate skills (was incorrectly referencing starting_skills)
+	for skill_id in hero.innate_skills:
+		var skill := get_skill(skill_id)
+		if skill:
+			result.append(skill)
+	# Include learnable skills (Dictionary {level: skill_id} - iterate values)
+	for skill_id in hero.learnable_skills.values():
 		var skill := get_skill(skill_id)
 		if skill:
 			result.append(skill)
