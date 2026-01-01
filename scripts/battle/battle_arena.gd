@@ -157,19 +157,13 @@ func _setup_battle_manager() -> void:
 func initialize_battle(players: Array[CharacterBase], enemies: Array[CharacterBase]) -> void:
 	is_battle_active = true
 
-	# DEBUG: Check containers
-	print("[INIT] players_container: %s, enemies_container: %s" % [str(players_container), str(enemies_container)])
-	print("[INIT] enemy_positions: %s, global_pos: %s" % [str(enemy_positions), str(enemy_positions.global_position) if enemy_positions else "NULL"])
-
 	# Place characters on the battlefield
 	_place_characters(players, player_positions, players_container, player_sprites)
-	print("[INIT] After placing players, player_sprites count: %d" % player_sprites.size())
-
 	_place_characters(enemies, enemy_positions, enemies_container, enemy_sprites)
-	print("[INIT] After placing enemies, enemy_sprites count: %d" % enemy_sprites.size())
 
-	# Create party sidebar directly (bypasses broken setup_battle call chain)
+	# Create sidebars
 	_create_party_sidebar(players)
+	_create_enemy_sidebar(enemies)
 
 	# Start battle logic
 	battle_manager.start_battle(players, enemies)
@@ -285,6 +279,101 @@ func _style_mp_bar(bar: ProgressBar) -> void:
 
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = Color(0.3, 0.5, 0.9, 1.0)
+	fill.set_corner_radius_all(2)
+	bar.add_theme_stylebox_override("fill", fill)
+
+func _create_enemy_sidebar(enemies: Array[CharacterBase]) -> void:
+	"""Create enemy sidebar with HP bars - matches party sidebar but RED"""
+	if not battle_ui:
+		return
+
+	var sidebar := PanelContainer.new()
+	sidebar.name = "EnemySidebar"
+	sidebar.anchor_left = 1.0
+	sidebar.anchor_right = 1.0
+	sidebar.anchor_top = 0.0
+	sidebar.anchor_bottom = 0.0
+	sidebar.offset_left = -180.0
+	sidebar.offset_right = -10.0
+	sidebar.offset_top = 70.0
+	sidebar.custom_minimum_size = Vector2(170, 0)
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.14, 0.08, 0.08, 0.92)
+	style.border_color = Color(0.5, 0.25, 0.25, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	sidebar.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	sidebar.add_child(vbox)
+
+	# Header
+	var header := Label.new()
+	header.text = "Enemies"
+	header.add_theme_font_size_override("font_size", 14)
+	header.add_theme_color_override("font_color", Color(0.9, 0.4, 0.4, 1.0))
+	vbox.add_child(header)
+
+	# Add each enemy
+	for enemy in enemies:
+		var slot := _create_enemy_slot(enemy)
+		vbox.add_child(slot)
+
+	battle_ui.add_child(sidebar)
+
+func _create_enemy_slot(character: CharacterBase) -> PanelContainer:
+	"""Create individual enemy slot with HP bar - RED style"""
+	var slot := PanelContainer.new()
+	slot.custom_minimum_size = Vector2(154, 48)
+
+	var slot_style := StyleBoxFlat.new()
+	slot_style.bg_color = Color(0.18, 0.12, 0.12, 0.9)
+	slot_style.border_color = Color(0.5, 0.3, 0.3, 1.0)
+	slot_style.set_border_width_all(1)
+	slot_style.set_corner_radius_all(3)
+	slot_style.content_margin_left = 6
+	slot_style.content_margin_right = 6
+	slot_style.content_margin_top = 4
+	slot_style.content_margin_bottom = 4
+	slot.add_theme_stylebox_override("panel", slot_style)
+
+	var slot_vbox := VBoxContainer.new()
+	slot_vbox.add_theme_constant_override("separation", 2)
+	slot.add_child(slot_vbox)
+
+	# Name
+	var name_lbl := Label.new()
+	name_lbl.text = character.character_name
+	name_lbl.add_theme_font_size_override("font_size", 11)
+	name_lbl.add_theme_color_override("font_color", Color(0.95, 0.85, 0.85, 1.0))
+	slot_vbox.add_child(name_lbl)
+
+	# HP Bar (red)
+	var hp_bar := ProgressBar.new()
+	hp_bar.custom_minimum_size = Vector2(140, 12)
+	hp_bar.max_value = character.get_max_hp()
+	hp_bar.value = character.current_hp
+	hp_bar.show_percentage = false
+	_style_enemy_hp_bar(hp_bar)
+	slot_vbox.add_child(hp_bar)
+
+	return slot
+
+func _style_enemy_hp_bar(bar: ProgressBar) -> void:
+	"""Style enemy HP bar with red fill"""
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.1, 0.08, 0.08, 1.0)
+	bg.set_corner_radius_all(2)
+	bar.add_theme_stylebox_override("background", bg)
+
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(0.85, 0.25, 0.2, 1.0)
 	fill.set_corner_radius_all(2)
 	bar.add_theme_stylebox_override("fill", fill)
 
