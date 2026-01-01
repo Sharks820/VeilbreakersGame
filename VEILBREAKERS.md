@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v4.6** | Last updated: 2026-01-01
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v5.0** | Last updated: 2026-01-01
 
 ---
 
@@ -18,7 +18,8 @@
 - Monster hunting/purification mechanics
 - VERA/VERATH demon-in-disguise system
 - 4 Path system (IRONBOUND, FANGBORN, VOIDTOUCHED, UNCHAINED)
-- 6 Brand system (SAVAGE, IRON, VENOM, SURGE, DREAD, LEECH)
+- 12 Brand system (6 Pure + 6 Hybrid) + PRIMAL tier
+- 3-stage evolution (Pure/Hybrid) vs 2-stage (PRIMAL)
 
 ---
 
@@ -105,41 +106,123 @@ power * ATK/DEF * level * element * variance * crits
 
 ---
 
-## Heroes
+## Heroes (Path-Based, No Brands)
 
-| Hero | Path | Brand | Role | Signature Skills |
-|------|------|-------|------|------------------|
-| Bastion | IRONBOUND | IRON | Tank | shield_bash, taunt, iron_wall, fortress_stance |
-| Rend | FANGBORN | SAVAGE | DPS | rending_strike, bloodletting, execute, frenzy |
-| Marrow | VOIDTOUCHED | LEECH | Healer | life_tap, siphon_heal, essence_transfer, life_link |
-| Mirage | UNCHAINED | DREAD | Illusionist | minor_illusion, fear_touch, mirror_image, mass_confusion |
+| Hero | Path | Role | Signature Skills |
+|------|------|------|------------------|
+| Bastion | IRONBOUND | Tank | shield_bash, taunt, iron_wall, fortress_stance |
+| Rend | FANGBORN | DPS | rending_strike, bloodletting, execute, frenzy |
+| Marrow | VOIDTOUCHED | Healer | life_tap, siphon_heal, essence_transfer, life_link |
+| Mirage | UNCHAINED | Illusionist | minor_illusion, fear_touch, mirror_image, mass_confusion |
 
-- 4 paths: IRONBOUND, FANGBORN, VOIDTOUCHED, UNCHAINED
+### Path-Brand Synergy
+| Path | Strong vs Brand | Weak vs Brand | Best Monster Brands |
+|------|-----------------|---------------|---------------------|
+| IRONBOUND | SAVAGE (1.35x) | VENOM (0.70x) | IRON, BLOODIRON, CORROSIVE |
+| FANGBORN | LEECH (1.35x) | IRON (0.70x) | SAVAGE, RAVENOUS, BLOODIRON |
+| VOIDTOUCHED | SURGE (1.35x) | DREAD (0.70x) | LEECH, DREAD, NIGHTLEECH |
+| UNCHAINED | DREAD (1.35x) | LEECH (0.70x) | SURGE, DREAD, TERRORFLUX |
+
+- Heroes get Paths (not Brands) - synergize with multiple monster brands
 - 15 stats per character with growth rates
 - Equipment: weapon, armor, 2 accessories
 
 ---
 
-## Monsters
+## Monster Brand System (v5.0 - LOCKED)
 
-| Monster | Brand | Skills |
-|---------|-------|--------|
-| Mawling | SAVAGE | gnaw, desperate_lunge, devour_scraps |
-| Hollow | DREAD | empty_grasp, hollow_wail, mimic_stance |
-| Flicker | SURGE | blur_strike, too_fast, quicksilver_blitz |
-| The Vessel | LEECH/HEALER | stolen_grace, merciful_light, sanctuary |
+### Brand Tiers
 
-### Brand Bonuses
-| Brand | Bonus |
-|-------|-------|
-| SAVAGE | +25% ATK |
-| IRON | +30% HP |
-| VENOM | - |
-| SURGE | - |
-| DREAD | - |
-| LEECH | - |
+| Tier | Brands | Bonus Power | Max Stages | Max Level |
+|------|--------|-------------|------------|-----------|
+| **PURE** | SAVAGE, IRON, VENOM, SURGE, DREAD, LEECH | 100% (120% at Evo 3) | 3 | 100 |
+| **HYBRID** | BLOODIRON, CORROSIVE, VENOMSTRIKE, TERRORFLUX, NIGHTLEECH, RAVENOUS | 70% Primary + 30% Secondary | 3 | 100 |
+| **PRIMAL** | Any 2 brands (assigned at Evo) | 50% Primary + 50% Secondary | 2 | 120 |
 
-### Capture System (v3.0)
+### Pure Brand Bonuses (100%)
+
+| Brand | Bonus | Theme |
+|-------|-------|-------|
+| SAVAGE | +25% ATK | Raw destruction |
+| IRON | +30% HP | Unyielding defense |
+| VENOM | +20% Crit, +15% Status proc | Precision poison |
+| SURGE | +25% SPD | Lightning speed |
+| DREAD | +20% Evasion, +15% Fear proc | Terror incarnate |
+| LEECH | +20% Lifesteal | Life drain |
+
+### Hybrid Brand Bonuses (70% + 30%)
+
+| Hybrid | Primary | Secondary | Effective Bonus |
+|--------|---------|-----------|-----------------|
+| BLOODIRON | SAVAGE | IRON | +17.5% ATK, +9% HP |
+| CORROSIVE | IRON | VENOM | +21% HP, +6% Crit, +4.5% Status |
+| VENOMSTRIKE | VENOM | SURGE | +14% Crit, +10.5% Status, +7.5% SPD |
+| TERRORFLUX | SURGE | DREAD | +17.5% SPD, +6% Eva, +4.5% Fear |
+| NIGHTLEECH | DREAD | LEECH | +14% Eva, +10.5% Fear, +6% Lifesteal |
+| RAVENOUS | LEECH | SAVAGE | +14% Lifesteal, +7.5% ATK |
+
+### Brand Effectiveness Wheel
+
+```
+SAVAGE ──► IRON ──► VENOM ──► SURGE ──► DREAD ──► LEECH ──┐
+   ▲                                                       │
+   └───────────────────────────────────────────────────────┘
+```
+
+| Attacker | 1.5x vs | 0.67x vs |
+|----------|---------|----------|
+| SAVAGE | IRON | LEECH |
+| IRON | VENOM | SAVAGE |
+| VENOM | SURGE | IRON |
+| SURGE | DREAD | VENOM |
+| DREAD | LEECH | SURGE |
+| LEECH | SAVAGE | DREAD |
+
+**Hybrids:** Use PRIMARY brand for effectiveness calculations
+
+---
+
+## Evolution & Leveling System (v5.0 - LOCKED)
+
+### Pure/Hybrid Monsters (3 Stages)
+
+| Stage | Level Range | XP Multiplier | Stat Growth/Level |
+|-------|-------------|---------------|-------------------|
+| Birth | 1-25 | 1.0x | Normal |
+| Evo 2 | 26-50 | 1.5x (slower) | +15% bonus |
+| **Evo 3** | 51-100 | **2.5x (much slower)** | **+30% bonus** |
+
+**Evo 3 Pure Brand Bonus:**
+- Brand bonus increases to 120% (was 100%)
+- Unlocks ultimate skill
+- Visual transformation (aura, size, effects)
+
+### PRIMAL Monsters (2 Stages)
+
+| Stage | Level Range | XP Multiplier | Stat Growth/Level |
+|-------|-------------|---------------|-------------------|
+| Birth | 1-35 | **0.6x (very fast)** | Normal |
+| **Evolved** | 36-109 | **0.8x (fast)** | +10% bonus |
+| **Overflow** | 110-120 | 1.0x | **+5% ALL stats/level** |
+
+**PRIMAL Bonuses:**
+- Level cap: 120 (vs 100 for Pure/Hybrid)
+- No Path weakness (neutral to all paths)
+- Both brands count as PRIMARY for skill scaling (50%+50%)
+- Overflow stats Lv110-120: +50% all stats total
+- Brands assigned at Evolution based on monster behavior
+
+### Endgame Power Comparison (~150 hours)
+
+| Monster Type | Likely Level | Strength |
+|--------------|--------------|----------|
+| Pure Evo 3 | ~85 | MASSIVE stats, ultimate skills, specialist |
+| Hybrid Evo 3 | ~88 | Strong stats, versatile coverage |
+| PRIMAL Evolved | ~115 | Highest level, no weakness, flexible |
+
+---
+
+## Capture System (v3.0 - PENDING OVERHAUL)
 
 **4 Capture Methods:**
 | Method | Rate | Conditions |
@@ -157,14 +240,7 @@ power * ATK/DEF * level * element * variance * crits
 | Master | 50-70% | Shop (800g) + Craftable |
 | Legendary | 80% flat | Chest drop (5-10%) + Craftable |
 
-**Monster Corruption:**
-- All monsters start at 80%+ corruption
-- Corruption drops slower based on rarity (Common 1.0x → Legendary 0.4x)
-- Lower HP = faster corruption drop + higher capture chance
-- Bosses (tier 3+, rarity 4+) cannot be captured
-
-**Force Debuff:**
-- -15% to one random stat until 15% purification progress
+*Note: User overhauling this system soon*
 
 ---
 
@@ -272,42 +348,7 @@ battle, ui, art, audio, vera, monsters, critical
 | 2025-12-31 | v4.2: Bug fixes - debug code removal, tween memory leaks, BargainUI Color fix, EventBus.skill_used signal |
 | 2025-12-31 | v4.3: Critical fixes - DataManager innate_skills, status icon display on panels, CrashHandler init, SaveManager integration |
 | 2025-12-31 | v4.5: Target highlighting - RED for enemies, BLUE for allies with glow effects |
-| 2026-01-01 | v4.6: Planning Brand overhaul (Option C - remove Elements, Brands become only type system) |
-
----
-
-## PLANNED: Brand System Overhaul (Option C)
-
-**Goal:** Remove Element enum entirely. Brands become the ONLY type system.
-
-### Brand Effectiveness Matrix (Rock-Paper-Scissors)
-```
-SAVAGE → IRON → VENOM → SURGE → DREAD → LEECH → SAVAGE
-       ↑_______________________________________|
-```
-
-| Attacker | Strong vs | Weak vs |
-|----------|-----------|---------|
-| SAVAGE | IRON | LEECH |
-| IRON | VENOM | SAVAGE |
-| VENOM | SURGE | IRON |
-| SURGE | DREAD | VENOM |
-| DREAD | LEECH | SURGE |
-| LEECH | SAVAGE | DREAD |
-
-**Damage Multipliers:**
-- Strong vs target: 1.5x
-- Weak vs target: 0.67x
-- Neutral: 1.0x
-
-**Files to Update:**
-- enums.gd: Remove Element enum
-- constants.gd: Add BRAND_EFFECTIVENESS matrix
-- skill_data.gd: Change `element` to `brand_type`
-- monster_data.gd: Remove `elements` array, use `brand` only
-- damage_calculator.gd: Use brand effectiveness
-- All 98 skill JSON files
-- All 9 monster JSON files
+| 2026-01-01 | v5.0: **MAJOR** - Brand System v5.0 LOCKED (12 brands, 3 tiers, evolution system) |
 
 ---
 

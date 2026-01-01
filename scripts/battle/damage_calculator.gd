@@ -1,9 +1,10 @@
 class_name DamageCalculator
 extends Node
 ## DamageCalculator: Handles all damage, healing, and combat calculations.
+## Updated v5.0: Brand effectiveness system replaces elements.
 
 # =============================================================================
-# CONSTANTS (Element weakness chart - computed once at compile time)
+# DEPRECATED: Element weakness chart (Use Brand effectiveness instead)
 # =============================================================================
 
 const ELEMENT_WEAKNESSES := {
@@ -20,6 +21,71 @@ const ELEMENT_WEAKNESSES := {
 }
 
 # =============================================================================
+# BRAND EFFECTIVENESS (v5.0 - LOCKED)
+# Wheel: SAVAGE → IRON → VENOM → SURGE → DREAD → LEECH → SAVAGE
+# =============================================================================
+
+## Get brand name from enum value
+static func _get_brand_name(brand: Enums.Brand) -> String:
+	match brand:
+		Enums.Brand.SAVAGE: return "SAVAGE"
+		Enums.Brand.IRON: return "IRON"
+		Enums.Brand.VENOM: return "VENOM"
+		Enums.Brand.SURGE: return "SURGE"
+		Enums.Brand.DREAD: return "DREAD"
+		Enums.Brand.LEECH: return "LEECH"
+		Enums.Brand.BLOODIRON: return "BLOODIRON"
+		Enums.Brand.CORROSIVE: return "CORROSIVE"
+		Enums.Brand.VENOMSTRIKE: return "VENOMSTRIKE"
+		Enums.Brand.TERRORFLUX: return "TERRORFLUX"
+		Enums.Brand.NIGHTLEECH: return "NIGHTLEECH"
+		Enums.Brand.RAVENOUS: return "RAVENOUS"
+		_: return "NONE"
+
+## Get the PRIMARY brand for effectiveness calculations (hybrids use their primary)
+static func _get_primary_brand(brand: Enums.Brand) -> String:
+	var brand_name := _get_brand_name(brand)
+	if Constants.HYBRID_BRAND_COMPONENTS.has(brand_name):
+		return Constants.HYBRID_BRAND_COMPONENTS[brand_name]["primary"]
+	return brand_name
+
+## Calculate brand effectiveness multiplier (v5.0)
+func get_brand_effectiveness(attacker_brand: Enums.Brand, defender_brand: Enums.Brand) -> float:
+	if attacker_brand == Enums.Brand.NONE or defender_brand == Enums.Brand.NONE:
+		return Constants.BRAND_NEUTRAL
+
+	var attacker_primary := _get_primary_brand(attacker_brand)
+	var defender_primary := _get_primary_brand(defender_brand)
+
+	# Check effectiveness matrix
+	if Constants.BRAND_EFFECTIVENESS.has(attacker_primary):
+		var matchups: Dictionary = Constants.BRAND_EFFECTIVENESS[attacker_primary]
+		if matchups.has(defender_primary):
+			return matchups[defender_primary]
+
+	return Constants.BRAND_NEUTRAL
+
+## Check path-brand effectiveness for heroes (v5.0)
+func get_path_brand_modifier(hero_path: Enums.Path, monster_brand: Enums.Brand) -> float:
+	if hero_path == Enums.Path.NONE:
+		return 1.0
+
+	var path_name := Enums.Path.keys()[hero_path]
+	var brand_name := _get_primary_brand(monster_brand)
+
+	# Check if hero's path is strong against this brand
+	if Constants.PATH_BRAND_STRENGTH.has(path_name):
+		if Constants.PATH_BRAND_STRENGTH[path_name] == brand_name:
+			return Constants.PATH_STRONG_MULTIPLIER  # 1.35x
+
+	# Check if hero's path is weak against this brand
+	if Constants.PATH_BRAND_WEAKNESS.has(path_name):
+		if Constants.PATH_BRAND_WEAKNESS[path_name] == brand_name:
+			return Constants.PATH_WEAK_MULTIPLIER  # 0.70x
+
+	return 1.0
+
+# =============================================================================
 # DAMAGE CALCULATION
 # =============================================================================
 
@@ -28,9 +94,12 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 		"damage": 0,
 		"is_critical": false,
 		"is_miss": false,
-		"element_effectiveness": 1.0,
+		"element_effectiveness": 1.0,  # @deprecated - use brand_effectiveness
+		"brand_effectiveness": 1.0,    # v5.0: Brand-based effectiveness
 		"element": Enums.Element.PHYSICAL,
-		"damage_type": Enums.DamageType.PHYSICAL
+		"damage_type": Enums.DamageType.PHYSICAL,
+		"attacker_brand": Enums.Brand.NONE,
+		"defender_brand": Enums.Brand.NONE
 	}
 
 	# Check for miss (skill accuracy modifier applied after)
@@ -76,11 +145,36 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	# Base formula: (Power * Attack / Defense) * LevelFactor
 	var raw_damage := (power * (attack / maxf(1.0, defense))) * level_factor
 
-	# Elemental modifier
+	# v5.0: Brand effectiveness (replaces elemental modifier)
+	var brand_mod := 1.0
+	var attacker_brand := attacker.brand if attacker.has_method("get") or "brand" in attacker else Enums.Brand.NONE
+	var defender_brand := defender.brand if defender.has_method("get") or "brand" in defender else Enums.Brand.NONE
+
+	# Get brand from skill if available (skills can have brand_type)
+	if skill != null and skill is SkillData and skill.has_method("get") or (skill != null and "brand_type" in skill):
+		if skill.brand_type != Enums.Brand.NONE:
+			attacker_brand = skill.brand_type
+
+	# Calculate brand effectiveness
+	brand_mod = get_brand_effectiveness(attacker_brand, defender_brand)
+
+	# Path-Brand modifier (for heroes attacking monsters)
+	if attacker.has_method("get") or "path" in attacker:
+		var path_mod := get_path_brand_modifier(attacker.path, defender_brand)
+		brand_mod *= path_mod
+
+	result.brand_effectiveness = brand_mod
+	result.attacker_brand = attacker_brand
+	result.defender_brand = defender_brand
+
+	# Legacy: Element modifier (deprecated, kept for compatibility)
 	var element_mod := _get_element_modifier(element, defender.elements)
 	result.element_effectiveness = element_mod
 	result.element = element
 	result.damage_type = damage_type
+
+	# Use BRAND effectiveness as primary modifier (v5.0)
+	var type_modifier := brand_mod if brand_mod != 1.0 else element_mod
 
 	# Critical hit check (skill can modify crit chance)
 	var crit_chance := attacker.get_stat(Enums.Stat.CRIT_CHANCE) + crit_mod
@@ -116,8 +210,8 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	if attacker.has_status_effect(Enums.StatusEffect.ATTACK_DOWN):
 		attacker_mod *= 0.75
 
-	# Final damage (minimum 1)
-	result.damage = maxi(1, int(raw_damage * element_mod * variance * defender_mod * attacker_mod))
+	# Final damage (minimum 1) - uses brand effectiveness (v5.0)
+	result.damage = maxi(1, int(raw_damage * type_modifier * variance * defender_mod * attacker_mod))
 
 	return result
 
