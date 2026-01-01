@@ -1,0 +1,207 @@
+# VEILBREAKERS - Agent Instructions
+
+> Godot 4.5 | GDScript | Turn-Based Monster-Capturing RPG
+
+## Build & Run Commands
+
+```bash
+# Godot executable path
+GODOT="C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe"
+
+# Check for script errors (headless)
+"$GODOT" --path . --check-only --headless
+
+# Run the game
+"$GODOT" --path .
+
+# Open in editor
+"$GODOT" --path . --editor
+```
+
+No separate build step - Godot compiles GDScript on load.
+
+## Project Structure
+
+```
+scripts/
+├── autoload/          # Singletons (ErrorLogger, EventBus, GameManager, etc.)
+├── battle/            # Battle system (BattleManager, CaptureSystem, DamageCalculator)
+├── characters/        # CharacterBase, Monster, PlayerCharacter
+├── data/              # Resource classes (MonsterData, SkillData, ItemData)
+├── systems/           # Game systems (VERASystem, PathSystem, InventorySystem)
+├── ui/                # UI controllers
+├── utils/             # Enums, Constants, Helpers
+└── test/              # Test scenes (test_battle.gd)
+```
+
+## Code Style
+
+### File Structure
+```gdscript
+class_name ClassName
+extends ParentClass
+## Brief description of the class.
+
+# =============================================================================
+# SIGNALS
+# =============================================================================
+
+signal something_happened(param: Type)
+
+# =============================================================================
+# CONSTANTS
+# =============================================================================
+
+const MY_CONSTANT := 10
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+@export var my_var: int = 0
+@export_group("Group Name")
+@export var grouped_var: float = 1.0
+
+# =============================================================================
+# STATE
+# =============================================================================
+
+var internal_state: Dictionary = {}
+```
+
+### Naming Conventions
+- **Classes:** PascalCase (`BattleManager`, `CharacterBase`)
+- **Functions:** snake_case (`calculate_damage`, `get_stat`)
+- **Variables:** snake_case (`current_hp`, `turn_order`)
+- **Constants:** SCREAMING_SNAKE_CASE (`MAX_PARTY_SIZE`, `BRAND_STRONG`)
+- **Signals:** snake_case past tense (`damage_dealt`, `turn_ended`)
+- **Enums:** PascalCase enum, SCREAMING_SNAKE values (`enum BattleState { INITIALIZING, TURN_START }`)
+- **Private functions:** prefix with `_` (`_on_button_pressed`, `_calculate_internal`)
+
+### Type Hints (REQUIRED)
+```gdscript
+# Always use explicit types - Godot treats Variant inference as warning/error
+var value: float = some_dict.get("key", 0.0)  # Correct
+var value := some_dict.get("key", 0.0)        # ERROR - infers Variant
+
+# Function signatures
+func calculate_damage(attacker: CharacterBase, defender: CharacterBase) -> int:
+    
+# Arrays with types
+var party: Array[CharacterBase] = []
+var thresholds: Array[float] = [75.0, 50.0, 25.0, 10.0]
+```
+
+### Null Safety
+```gdscript
+# Always check before accessing
+var node := get_node_or_null("/root/GameManager")
+if node and node.has_method("some_method"):
+    node.some_method()
+
+# Safe dictionary access
+var value: float = data.get("key", default_value)
+```
+
+### Error Handling
+```gdscript
+# Use push_warning for recoverable issues
+if not is_valid:
+    push_warning("Invalid state: %s" % state)
+    return default_value
+
+# Use push_error for serious problems
+if critical_resource == null:
+    push_error("Failed to load critical resource")
+    return
+```
+
+## Key Systems (DO NOT BREAK)
+
+### Autoload Order (project.godot)
+1. ErrorLogger
+2. EventBus
+3. DataManager
+4. GameManager
+5. SaveManager
+6. AudioManager
+7. SceneManager
+8. SettingsManager
+9. VERASystem
+10. InventorySystem
+11. PathSystem
+12. CrashHandler
+
+### Brand System (12 Brands - LOCKED)
+**Pure:** SAVAGE, IRON, VENOM, SURGE, DREAD, LEECH
+**Hybrid:** BLOODIRON, CORROSIVE, VENOMSTRIKE, TERRORFLUX, NIGHTLEECH, RAVENOUS
+
+Effectiveness wheel: SAVAGE > IRON > VENOM > SURGE > DREAD > LEECH > SAVAGE
+
+### Path System (4 Paths)
+IRONBOUND, FANGBORN, VOIDTOUCHED, UNCHAINED, NONE
+
+### Corruption System
+- 0-10%: ASCENDED (+25% stats)
+- 11-25%: Purified (+10% stats)
+- 26-50%: Unstable (normal)
+- 51-75%: Corrupted (-10% stats)
+- 76-100%: Abyssal (-20% stats)
+
+**Core philosophy:** Lower corruption = STRONGER monster. Goal is ASCENSION.
+
+## Common Patterns
+
+### Signals via EventBus
+```gdscript
+# Emit
+EventBus.damage_dealt.emit(source, target, amount, is_critical)
+
+# Connect
+EventBus.damage_dealt.connect(_on_damage_dealt)
+```
+
+### Using Constants
+```gdscript
+# Access via class name
+var max_hp := Constants.MAX_PARTY_SIZE
+var threshold := Constants.CORRUPTION_ASCENDED_MAX
+
+# DON'T use Constants in const declarations (load order issues)
+const BAD := [Constants.SOME_VALUE]  # Parse error!
+const GOOD: Array[float] = [75.0, 50.0, 25.0]  # Hardcode instead
+```
+
+### Using Enums
+```gdscript
+var state: Enums.BattleState = Enums.BattleState.INITIALIZING
+var brand: Enums.Brand = Enums.Brand.SAVAGE
+```
+
+## Documentation Files
+
+- `AGENT_SYSTEMS.md` - Complete game systems design (corruption, capture, brands, paths)
+- `CLAUDE.md` - Session protocols, MCP servers, art style
+- `VEILBREAKERS.md` - Current state, version history, UI values
+
+## Git Workflow
+
+```bash
+# Check status
+git status
+
+# Commit with version
+git add -A && git commit -m "v0.X.Y: Brief description"
+git push origin master
+```
+
+**Commit often** - every 15 minutes of work or after significant changes.
+
+## Testing
+
+Run `test_battle.tscn` scene for battle system testing. Debug commands available via backtick (`) key.
+
+## Known Issues
+
+- Missing font: `res://assets/fonts/main_font.tres` (non-blocking)
+- Some `.uid` files untracked (Godot-generated, can ignore)
