@@ -53,6 +53,11 @@ var corruption_level: float = 0.0  # How much she remembers (0-100)
 var glitch_intensity: float = 0.0
 var is_active: bool = true
 
+## VEIL INTEGRITY: Hidden meter tracking player's dark choices (100 → 0)
+## Lower = more Vera glitches, worse endings available
+## Affected by capture methods, story choices, and ascensions
+var veil_integrity: float = 100.0
+
 # Glitch system
 var glitch_cooldown: float = 0.0
 var is_glitching: bool = false
@@ -61,6 +66,12 @@ var is_glitching: bool = false
 var dialogue_history: Array[String] = []
 var relationship_points: int = 0  # How much the player trusts her
 var memories_unlocked: Array[String] = []
+
+# Capture method tracking (for glitch triggers)
+var dominate_count: int = 0
+var bargain_count: int = 0
+var purify_count: int = 0
+var ascension_count: int = 0
 
 # Abilities per state
 var unlocked_abilities: Dictionary = {
@@ -99,6 +110,10 @@ func _connect_signals() -> void:
 	EventBus.dialogue_choice_made.connect(_on_dialogue_choice)
 	EventBus.path_alignment_changed.connect(_on_path_changed)
 	EventBus.story_flag_set.connect(_on_story_flag_set)
+	EventBus.monster_ascended.connect(_on_monster_ascended)
+	# Connect to capture events if available
+	if EventBus.has_signal("monster_captured_method"):
+		EventBus.monster_captured_method.connect(_on_monster_captured)
 
 # =============================================================================
 # CORRUPTION (MEMORY) MANAGEMENT
@@ -400,6 +415,99 @@ func _on_story_flag_set(flag: String, _value: Variant) -> void:
 	if flag in MEMORY_TRIGGERS:
 		trigger_memory(flag)
 
+func _on_monster_ascended(_monster: Node) -> void:
+	## Called when a monster reaches ASCENDED state
+	ascension_count += 1
+	add_veil_integrity(3)  # Ascensions strengthen the Veil
+	
+	# Vera is uncomfortable with Ascensions
+	if ascension_count >= 3:
+		trigger_dialogue("ascension_discomfort")
+
+func _on_monster_captured(monster: Node, method: int) -> void:
+	## Called when a monster is captured - tracks method for glitch triggers
+	match method:
+		Enums.CaptureMethod.DOMINATE:
+			dominate_count += 1
+			add_veil_integrity(-3)
+			_trigger_dominate_glitch()
+		Enums.CaptureMethod.BARGAIN:
+			bargain_count += 1
+			add_veil_integrity(-5)
+			_trigger_bargain_glitch()
+		Enums.CaptureMethod.PURIFY:
+			purify_count += 1
+			add_veil_integrity(1)
+
+# =============================================================================
+# VEIL INTEGRITY SYSTEM
+# =============================================================================
+
+func add_veil_integrity(amount: float) -> void:
+	## Modify Veil Integrity (positive = player doing good, negative = dark path)
+	var old := veil_integrity
+	veil_integrity = clampf(veil_integrity + amount, 0.0, 100.0)
+	
+	if veil_integrity != old:
+		_evaluate_veil_state()
+		EventBus.veil_integrity_changed.emit(old, veil_integrity)
+
+func get_veil_integrity() -> float:
+	return veil_integrity
+
+func get_veil_integrity_percent() -> float:
+	return veil_integrity / 100.0
+
+func _evaluate_veil_state() -> void:
+	## Check Veil Integrity thresholds for state changes
+	# At low Veil Integrity, Vera glitches more and speaks in plural
+	if veil_integrity < 25:
+		# "We think..." dialogue, affects ending
+		if current_state < Enums.VERAState.EMERGENCE:
+			_modify_corruption(10.0, "veil_weakening")
+
+func is_veil_critical() -> bool:
+	## Returns true if Veil Integrity is critically low
+	return veil_integrity < 25
+
+func get_veil_state_description() -> String:
+	if veil_integrity >= 75:
+		return "The Veil holds strong."
+	elif veil_integrity >= 50:
+		return "The Veil shows strain."
+	elif veil_integrity >= 25:
+		return "The Veil is cracking."
+	else:
+		return "The Veil is failing..."
+
+# =============================================================================
+# CAPTURE METHOD GLITCH TRIGGERS
+# =============================================================================
+
+func _trigger_dominate_glitch() -> void:
+	## Trigger glitch after DOMINATE capture
+	# Red pixel scatter (0.3s) - very subtle
+	if randf() < 0.3 + (dominate_count * 0.1):
+		is_glitching = true
+		EventBus.vera_glitch_triggered.emit(0.3, 0.3)
+		await get_tree().create_timer(0.3).timeout
+		is_glitching = false
+	
+	# At high dominate count, bass undertone in voice
+	if dominate_count >= 3:
+		EventBus.vera_voice_effect.emit("bass_undertone")
+
+func _trigger_bargain_glitch() -> void:
+	## Trigger glitch after BARGAIN capture
+	# Eyes wrong in next cutscene - noticeable
+	if randf() < 0.5:
+		set_meta("eyes_glitch_next_cutscene", true)
+		EventBus.vera_glitch_triggered.emit(0.5, 0.5)
+	
+	# Vera freezes and speaks cryptically
+	if bargain_count >= 2:
+		trigger_dialogue("bargain_warning")
+
 # =============================================================================
 # QUERIES
 # =============================================================================
@@ -424,18 +532,28 @@ func get_save_data() -> Dictionary:
 	return {
 		"current_state": current_state,
 		"corruption_level": corruption_level,
+		"veil_integrity": veil_integrity,
 		"dialogue_history": dialogue_history,
 		"relationship_points": relationship_points,
 		"memories_unlocked": memories_unlocked,
-		"is_active": is_active
+		"is_active": is_active,
+		"dominate_count": dominate_count,
+		"bargain_count": bargain_count,
+		"purify_count": purify_count,
+		"ascension_count": ascension_count
 	}
 
 func load_save_data(data: Dictionary) -> void:
 	current_state = data.get("current_state", Enums.VERAState.INTERFACE)
 	corruption_level = data.get("corruption_level", 0.0)
+	veil_integrity = data.get("veil_integrity", 100.0)
 	dialogue_history = data.get("dialogue_history", [])
 	relationship_points = data.get("relationship_points", 0)
 	memories_unlocked = data.get("memories_unlocked", [])
 	is_active = data.get("is_active", true)
+	dominate_count = data.get("dominate_count", 0)
+	bargain_count = data.get("bargain_count", 0)
+	purify_count = data.get("purify_count", 0)
+	ascension_count = data.get("ascension_count", 0)
 
 	_update_glitch_intensity()

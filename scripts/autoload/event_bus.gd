@@ -52,6 +52,44 @@ signal vera_state_changed(old_state: int, new_state: int)
 signal vera_dialogue_triggered(dialogue_id: String)
 signal vera_glitch_triggered(intensity: float, duration: float)
 signal vera_ability_used(ability: String)
+signal vera_voice_effect(effect: String)
+signal veil_integrity_changed(old_value: float, new_value: float)
+
+# =============================================================================
+# CORRUPTION & CAPTURE SIGNALS (v5.2 Soulbind System)
+# =============================================================================
+
+signal monster_corruption_state_changed(monster: Node, old_state: int, new_state: int)
+signal monster_ascended(monster: Node)
+signal monster_captured_method(monster: Node, method: int)
+signal capture_method_selected(method: int)
+signal corruption_battle_started(monster: Node, passes: int)
+signal corruption_battle_pass_completed(monster: Node, current: int, total: int)
+
+# =============================================================================
+# SANCTUM SHRINE SIGNALS
+# =============================================================================
+
+signal shrine_activated(tier: int)
+signal shrine_rest_completed(hp_restored: int, debuffs_cleared: int)
+signal monster_purified_at_shrine(monster: Node, corruption_reduced: float)
+signal sanctum_energy_changed(old_value: float, new_value: float)
+
+# =============================================================================
+# BRAND ALIGNMENT SIGNALS
+# =============================================================================
+
+signal brand_alignment_changed(brand: int, old_value: float, new_value: float)
+signal equipment_alignment_warning(slot: int, item_id: String, battles: int)
+signal equipment_shattered(slot: int, item_id: String)
+
+# =============================================================================
+# MORALE SIGNALS
+# =============================================================================
+
+signal monster_morale_changed(monster: Node, old_level: int, new_level: int)
+signal monster_morale_approval(monster: Node, action: String)
+signal monster_morale_disapproval(monster: Node, action: String)
 
 # =============================================================================
 # PROGRESSION SIGNALS
