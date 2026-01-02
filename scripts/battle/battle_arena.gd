@@ -749,8 +749,43 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 	var sprite_loaded := false
 	var hitbox_size := Vector2(80, 120)  # Default hitbox size
 	var hitbox_offset := Vector2(0, -60)  # Default hitbox offset
+	
+	# Check if this monster has sprite sheet animations
+	var is_enemy := character is Monster and character.is_corrupted
+	if character is Monster:
+		var monster: Monster = character as Monster
+		if MonsterSpriteConfig.has_sprite_sheets(monster.monster_id):
+			# Use the new BattleMonsterSprite with full animation support
+			var battle_sprite := BattleMonsterSprite.new()
+			battle_sprite.name = "BattleMonsterSprite"
+			container.add_child(battle_sprite)
+			
+			# Create the main sprite for the battle sprite to use
+			var main_sprite := Sprite2D.new()
+			main_sprite.name = "MainSprite"
+			battle_sprite.add_child(main_sprite)
+			battle_sprite.main_sprite = main_sprite
+			
+			# Setup with monster config
+			battle_sprite.setup(monster.monster_id, is_enemy)
+			
+			# Position adjustment
+			battle_sprite.position = Vector2(0, -80)
+			
+			# Set hitbox based on monster type
+			if character.character_type == Enums.CharacterType.BOSS:
+				hitbox_size = Vector2(200, 300)
+				hitbox_offset = Vector2(0, -150)
+			else:
+				hitbox_size = Vector2(150, 220)
+				hitbox_offset = Vector2(0, -110)
+			
+			sprite_loaded = true
+			
+			# Store battle sprite reference for animations
+			character.set_meta("animated_battle_sprite", battle_sprite)
 
-	if sprite_path != "" and ResourceLoader.exists(sprite_path):
+	if not sprite_loaded and sprite_path != "" and ResourceLoader.exists(sprite_path):
 		var tex := load(sprite_path)
 		if tex:
 			var sprite := Sprite2D.new()
@@ -929,32 +964,57 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 	if character is Monster and character.monster_data:
 		brand = character.monster_data.brand
 	
-	# Use the new CharacterBattleAnimator for rich animations
-	match action:
-		Enums.BattleAction.ATTACK:
-			# Check if this is a heavy attack (high power skill used as basic attack)
-			CharacterBattleAnimator.play_attack(sprite, brand, is_enemy)
-		
-		Enums.BattleAction.SKILL:
-			# Get the skill being used for unique animation
-			var current_skill: SkillData = character.get_meta("current_skill", null)
-			if current_skill:
-				CharacterBattleAnimator.play_skill_with_data(sprite, current_skill, brand, Vector2.ZERO, is_enemy)
-			else:
-				# Fallback to generic skill animation
-				CharacterBattleAnimator.play_skill(sprite, SkillData.SkillType.DAMAGE, brand, is_enemy)
-		
-		Enums.BattleAction.DEFEND:
-			CharacterBattleAnimator.play_defend(sprite)
-		
-		Enums.BattleAction.PURIFY:
-			CharacterBattleAnimator.play_purify(sprite)
-		
-		Enums.BattleAction.ITEM:
-			CharacterBattleAnimator.play_item(sprite)
-		
-		Enums.BattleAction.FLEE:
-			CharacterBattleAnimator.play_flee(sprite)
+	# Check if character has animated battle sprite (new system)
+	var animated_sprite: BattleMonsterSprite = character.get_meta("animated_battle_sprite", null)
+	
+	if animated_sprite:
+		# Use the new sprite sheet animation system
+		match action:
+			Enums.BattleAction.ATTACK:
+				animated_sprite.play_attack()
+			
+			Enums.BattleAction.SKILL:
+				var current_skill: SkillData = character.get_meta("current_skill", null)
+				if current_skill:
+					animated_sprite.play_skill(current_skill.skill_id)
+				else:
+					animated_sprite.play_attack()
+			
+			Enums.BattleAction.DEFEND:
+				animated_sprite.play_idle()  # Defend uses idle with effect
+			
+			Enums.BattleAction.PURIFY:
+				animated_sprite.play_skill("purify")
+			
+			Enums.BattleAction.ITEM:
+				animated_sprite.play_idle()
+			
+			Enums.BattleAction.FLEE:
+				animated_sprite.play_idle()
+	else:
+		# Fallback to CharacterBattleAnimator for non-sprite-sheet characters
+		match action:
+			Enums.BattleAction.ATTACK:
+				CharacterBattleAnimator.play_attack(sprite, brand, is_enemy)
+			
+			Enums.BattleAction.SKILL:
+				var current_skill: SkillData = character.get_meta("current_skill", null)
+				if current_skill:
+					CharacterBattleAnimator.play_skill_with_data(sprite, current_skill, brand, Vector2.ZERO, is_enemy)
+				else:
+					CharacterBattleAnimator.play_skill(sprite, SkillData.SkillType.DAMAGE, brand, is_enemy)
+			
+			Enums.BattleAction.DEFEND:
+				CharacterBattleAnimator.play_defend(sprite)
+			
+			Enums.BattleAction.PURIFY:
+				CharacterBattleAnimator.play_purify(sprite)
+			
+			Enums.BattleAction.ITEM:
+				CharacterBattleAnimator.play_item(sprite)
+			
+			Enums.BattleAction.FLEE:
+				CharacterBattleAnimator.play_flee(sprite)
 
 func _play_hit_animation(sprite: Node2D, is_critical: bool = false) -> void:
 	# Use the new CharacterBattleAnimator for hurt animations

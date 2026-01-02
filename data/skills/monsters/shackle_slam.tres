@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "shackle_slam"
+display_name = "Shackle Slam"
+description = "Slams a massive chain-wrapped fist into the target, dealing heavy damage with a chance to stun."
+icon_path = "res://assets/ui/skills/monsters/shackle_slam.png"
+
+skill_type = 0
+element = 2
+damage_type = 0
+target_type = 3
+brand_requirement = 1
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 24
+scaling_stat = 4
+scaling_ratio = 1.2
+hit_count = 1
+accuracy_modifier = -0.05
+crit_modifier = 0.1
+
+status_effects = [{"effect": 3, "chance": 0.4, "duration": 1}]
+stat_modifiers = []
+special_effects = []
+
+animation_id = "heavy_slam"
+sound_effect = "sfx_chain_slam"
+particle_effect = "impact_dust"
+screen_shake = true
+
+level_requirement = 6
+path_requirement = 0.0
+prerequisite_skills = []

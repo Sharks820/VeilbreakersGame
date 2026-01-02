@@ -28,6 +28,13 @@ var tutorial_step: int = 0
 var tutorial_dialogue_shown: bool = false
 var vera_tutorial_panel: Control = null
 
+# Tutorial progress tracking
+var _tutorial_shown_turn_start: bool = false
+var _tutorial_shown_action_selected: bool = false
+var _tutorial_shown_first_attack: bool = false
+var _tutorial_shown_enemy_low_hp: bool = false
+var _tutorial_first_round: bool = true
+
 const TUTORIAL_DIALOGUES: Array[Dictionary] = [
 	{
 		"trigger": "battle_start",
@@ -124,6 +131,8 @@ func _ready() -> void:
 	
 	# Start tutorial if applicable
 	if is_tutorial:
+		# Connect to battle events for tutorial triggers
+		_connect_tutorial_signals()
 		await get_tree().create_timer(0.5).timeout
 		_show_tutorial_step("battle_start")
 
@@ -579,6 +588,75 @@ func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 		EventBus.emit_debug("Test battle FLED!")
 	else:
 		EventBus.emit_debug("Test battle LOST!")
+
+# =============================================================================
+# TUTORIAL SIGNAL CONNECTIONS
+# =============================================================================
+
+func _connect_tutorial_signals() -> void:
+	"""Connect to battle events to trigger tutorial steps at the right moments"""
+	if not is_tutorial:
+		return
+	
+	# Connect to EventBus signals for tutorial triggers
+	if not EventBus.action_selected.is_connected(_on_tutorial_action_selected):
+		EventBus.action_selected.connect(_on_tutorial_action_selected)
+	if not EventBus.damage_dealt.is_connected(_on_tutorial_damage_dealt):
+		EventBus.damage_dealt.connect(_on_tutorial_damage_dealt)
+	if not EventBus.turn_started.is_connected(_on_tutorial_turn_started):
+		EventBus.turn_started.connect(_on_tutorial_turn_started)
+	
+	# Get battle manager reference for round tracking
+	if battle_arena:
+		var bm: BattleManager = battle_arena.get_node_or_null("BattleManager")
+		if bm and bm.has_signal("waiting_for_player_input"):
+			if not bm.waiting_for_player_input.is_connected(_on_tutorial_waiting_for_input):
+				bm.waiting_for_player_input.connect(_on_tutorial_waiting_for_input)
+
+func _on_tutorial_waiting_for_input() -> void:
+	"""Called when battle is waiting for player input - show turn_start tutorial"""
+	if not is_tutorial or _tutorial_shown_turn_start:
+		return
+	_tutorial_shown_turn_start = true
+	# Small delay so player sees the battle state first
+	await get_tree().create_timer(0.3).timeout
+	_show_tutorial_step("turn_start")
+
+func _on_tutorial_action_selected(_character: Node, action: int, _target: Node) -> void:
+	"""Called when player selects an action - show targeting tutorial"""
+	if not is_tutorial or _tutorial_shown_action_selected:
+		return
+	# Only trigger on first action selection (Attack)
+	if action == Enums.BattleAction.ATTACK:
+		_tutorial_shown_action_selected = true
+		await get_tree().create_timer(0.2).timeout
+		_show_tutorial_step("action_selected")
+
+func _on_tutorial_turn_started(character: Node) -> void:
+	"""Called when a turn starts - track for first attack tutorial"""
+	pass  # Reserved for future use
+
+func _on_tutorial_damage_dealt(_source: Node, target: Node, amount: int, _is_critical: bool) -> void:
+	"""Called when damage is dealt - show brand effectiveness or low HP tutorial"""
+	if not is_tutorial:
+		return
+	
+	# Show first attack tutorial after first damage
+	if not _tutorial_shown_first_attack and _tutorial_first_round:
+		_tutorial_shown_first_attack = true
+		_tutorial_first_round = false
+		await get_tree().create_timer(0.5).timeout
+		_show_tutorial_step("first_attack")
+		return
+	
+	# Check if enemy is low HP for purify tutorial
+	if not _tutorial_shown_enemy_low_hp and target is CharacterBase:
+		var char_target: CharacterBase = target as CharacterBase
+		var hp_percent: float = float(char_target.current_hp) / float(char_target.get_max_hp())
+		if hp_percent <= 0.35 and hp_percent > 0:  # Below 35% HP but not dead
+			_tutorial_shown_enemy_low_hp = true
+			await get_tree().create_timer(0.3).timeout
+			_show_tutorial_step("enemy_low_hp")
 
 # =============================================================================
 # TUTORIAL SYSTEM

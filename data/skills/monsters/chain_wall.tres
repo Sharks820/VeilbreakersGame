@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "chain_wall"
+display_name = "Chain Wall"
+description = "Creates a defensive barrier of interlocking chains, greatly increasing defense for all allies."
+icon_path = "res://assets/ui/skills/monsters/chain_wall.png"
+
+skill_type = 2
+element = 2
+damage_type = 0
+target_type = 1
+brand_requirement = 1
+
+mp_cost = 0
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 0
+scaling_stat = 5
+scaling_ratio = 0.0
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = [{"stat": 5, "amount": 0.5, "duration": 3}, {"stat": 6, "amount": 0.3, "duration": 3}]
+special_effects = []
+
+animation_id = "barrier"
+sound_effect = "sfx_chains_rattle"
+particle_effect = "chain_barrier"
+screen_shake = false
+
+level_requirement = 12
+path_requirement = 0.0
+prerequisite_skills = []
