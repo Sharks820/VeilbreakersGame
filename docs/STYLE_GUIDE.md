@@ -7,9 +7,9 @@
 ## Visual Identity Summary
 
 **Genre:** Dark Fantasy Horror RPG
-**Style:** AI-generated digital painting (NOT comic, NOT pixel art)
+**Style:** Dark silhouette creatures with glowing focal points, atmospheric painterly backgrounds
 **Mood:** Ominous, dramatic, supernatural, unsettling
-**Inspiration:** Battle Chasers aesthetic diverged toward painted horror
+**Inspiration:** Ethereal horror, shadow creatures, atmospheric darkness (NOT comic book)
 
 ---
 
@@ -20,10 +20,10 @@
 | Pillar | Description |
 |--------|-------------|
 | **Dark Fantasy** | Corrupted worlds, demonic influence, fallen creatures |
-| **Horror Elements** | Unsettling details, too-many-eyes, body horror acceptable |
-| **Painterly Rendering** | Soft edges, rich textures, no hard pixel edges |
+| **Horror Elements** | Unsettling details, glowing eyes, body horror acceptable |
+| **High Quality Painterly** | Maximum detail, professional game quality |
 | **Dramatic Lighting** | Glowing elements against deep shadows |
-| **Saturated Fantasy** | Bold colors, not washed out or muted |
+| **Atmospheric** | Dark, ominous mood throughout |
 
 ### Trained Models (Scenario.gg)
 
@@ -136,14 +136,15 @@ Hybrids blend their parent brand visuals 70/30:
 
 ### DON'Ts
 
-- No comic book ink outlines
-- No halftone/Ben-Day dot patterns
-- No pixel art aesthetic
-- No clean/bright fantasy look
-- No cartoony proportions
-- No flat comic colors
-- No speed lines or motion blur (comic style)
-- No checker pattern fake transparency
+- ❌ NO "Battle Chasers" or "Joe Madureira" style references
+- ❌ NO comic book ink outlines or thick linework
+- ❌ NO halftone/Ben-Day dot patterns
+- ❌ NO pixel art aesthetic
+- ❌ NO clean/bright fantasy look
+- ❌ NO cartoony proportions
+- ❌ NO flat comic colors
+- ❌ NO speed lines or motion blur
+- ❌ NO checker pattern fake transparency
 
 ---
 
@@ -153,9 +154,11 @@ Hybrids blend their parent brand visuals 70/30:
 ```
 [monster name], dark fantasy horror creature, [brand] brand,
 glowing [color] eyes, dramatic shadows, ominous atmosphere,
-[brand-specific elements], game sprite, transparent background,
-high detail, painterly texture, 2D game asset
+[brand-specific elements], high detail, painterly quality,
+2D game sprite, transparent background
 ```
+
+**IMPORTANT:** Always reference existing canon art in `assets/sprites/monsters/` before generating.
 
 ### Environment Generation
 ```

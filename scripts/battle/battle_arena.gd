@@ -75,6 +75,9 @@ func _check_arena_sprite_hover(mouse_pos: Vector2) -> void:
 	var hovered: CharacterBase = null
 	
 	for character in _sprite_hitboxes:
+		# Skip dead characters - they can't be hovered
+		if character.is_dead():
+			continue
 		var hitbox: Rect2 = _sprite_hitboxes[character]
 		if hitbox.has_point(mouse_pos):
 			hovered = character
@@ -86,12 +89,14 @@ func _check_arena_sprite_hover(mouse_pos: Vector2) -> void:
 		if _arena_hovered_character:
 			var old_sprite: Node2D = _arena_hovered_character.get_meta("battle_sprite", null)
 			if old_sprite:
-				old_sprite.modulate = Color.WHITE
+				# Don't reset dead sprites - they should stay faded
+				if not old_sprite.get_meta("is_dead_sprite", false):
+					old_sprite.modulate = Color.WHITE
 			EventBus.character_unhovered.emit(_arena_hovered_character)
 		
-		# Hover new
+		# Hover new - skip dead characters
 		_arena_hovered_character = hovered
-		if _arena_hovered_character:
+		if _arena_hovered_character and not _arena_hovered_character.is_dead():
 			var sprite: Node2D = _arena_hovered_character.get_meta("battle_sprite", null)
 			if sprite:
 				sprite.modulate = Color(1.3, 1.3, 1.3, 1.0)  # Brighten on hover
@@ -113,6 +118,9 @@ func _check_sprite_hover(mouse_pos: Vector2) -> void:
 	
 	# Check all character sprites
 	for character in _sprite_hitboxes:
+		# Skip dead characters - they can't be hovered
+		if character.is_dead():
+			continue
 		var hitbox: Rect2 = _sprite_hitboxes[character]
 		if hitbox.has_point(mouse_pos):
 			hovered = character
@@ -134,6 +142,9 @@ func _check_sprite_hover(mouse_pos: Vector2) -> void:
 func _check_sprite_click(mouse_pos: Vector2) -> void:
 	"""Check if mouse clicked on a character sprite"""
 	for character in _sprite_hitboxes:
+		# Skip dead characters - they can't be clicked
+		if character.is_dead():
+			continue
 		var hitbox: Rect2 = _sprite_hitboxes[character]
 		if hitbox.has_point(mouse_pos):
 			_on_character_sprite_clicked(character)
@@ -854,10 +865,12 @@ func _on_character_sprite_mouse_entered(character: CharacterBase, sprite_contain
 	EventBus.character_hovered.emit(character)
 
 func _on_character_sprite_mouse_exited(character: CharacterBase, sprite_container: Node2D) -> void:
-	# Remove highlight
+	# Remove highlight - but don't reset dead sprites
 	var sprite_node: Node = sprite_container.get_node_or_null("CharacterSprite")
 	if sprite_node and sprite_node is Sprite2D:
-		sprite_node.modulate = Color.WHITE
+		# Don't reset dead sprites - they should stay faded
+		if not sprite_container.get_meta("is_dead_sprite", false):
+			sprite_node.modulate = Color.WHITE
 	
 	# Emit signal to hide character info
 	EventBus.character_unhovered.emit(character)
@@ -911,9 +924,15 @@ func _play_heal_animation(sprite: Node2D) -> void:
 	tween.tween_property(sprite, "modulate", Color.WHITE, 0.3)
 
 func _play_death_animation(sprite: Node2D) -> void:
+	# Mark sprite as dead so hover/highlight code doesn't reset it
+	sprite.set_meta("is_dead_sprite", true)
+	
 	var tween := create_tween()
-	tween.tween_property(sprite, "modulate:a", 0.3, 0.5)
-	tween.parallel().tween_property(sprite, "position:y", sprite.position.y + 20, 0.5)
+	# Fade out completely and sink down
+	tween.tween_property(sprite, "modulate:a", 0.0, 0.8).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(sprite, "position:y", sprite.position.y + 30, 0.8).set_ease(Tween.EASE_IN)
+	# Hide sprite after animation completes
+	tween.tween_callback(func(): sprite.visible = false)
 
 # =============================================================================
 # DAMAGE NUMBERS
@@ -1376,9 +1395,11 @@ func _on_target_highlight_changed(target: CharacterBase) -> void:
 		_highlight_breathing_tween.kill()
 		_highlight_breathing_tween = null
 
-	# Clear previous highlight - reset to normal
+	# Clear previous highlight - reset to normal (but not dead sprites)
 	if _currently_highlighted_sprite and is_instance_valid(_currently_highlighted_sprite):
-		_currently_highlighted_sprite.modulate = Color.WHITE
+		# Don't reset dead sprites - they should stay faded
+		if not _currently_highlighted_sprite.get_meta("is_dead_sprite", false):
+			_currently_highlighted_sprite.modulate = Color.WHITE
 		_currently_highlighted_sprite.scale = _currently_highlighted_sprite.get_meta("original_scale", Vector2.ONE)
 		_currently_highlighted_sprite = null
 
@@ -1424,9 +1445,11 @@ func clear_target_highlight() -> void:
 		_highlight_breathing_tween.kill()
 		_highlight_breathing_tween = null
 
-	# Reset sprite to normal state
+	# Reset sprite to normal state (but not dead sprites)
 	if _currently_highlighted_sprite and is_instance_valid(_currently_highlighted_sprite):
-		_currently_highlighted_sprite.modulate = Color.WHITE
+		# Don't reset dead sprites - they should stay faded
+		if not _currently_highlighted_sprite.get_meta("is_dead_sprite", false):
+			_currently_highlighted_sprite.modulate = Color.WHITE
 		_currently_highlighted_sprite.scale = _currently_highlighted_sprite.get_meta("original_scale", Vector2.ONE)
 		_currently_highlighted_sprite = null
 

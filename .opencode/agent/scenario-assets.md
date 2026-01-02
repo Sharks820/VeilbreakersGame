@@ -17,10 +17,28 @@ You manage art generation and style consistency for VEILBREAKERS.
 
 ## Art Style: Dark Fantasy Horror
 
-- **NOT comic book** - No ink outlines, no halftone
-- AI-generated digital painting (Flux LoRA)
-- Glowing elements against deep shadows
-- Ominous, dramatic, supernatural mood
+**CRITICAL: Before generating ANY art, you MUST:**
+1. Look at ONE existing sprite from `assets/sprites/monsters/` to match the style
+2. Check the Scenario.gg model library for trained style references
+3. Aim for MAXIMUM QUALITY - this is a professional game
+
+### Style Characteristics (analyze from canon art):
+- **Dark atmospheric** - Deep shadows, dramatic lighting
+- **Glowing focal points** - Eyes, cores, energy sources
+- **Painterly quality** - Soft edges where appropriate, high detail
+- **Horror elements** - Unsettling, supernatural, ominous mood
+- **Transparent backgrounds** - Clean sprite extraction
+
+### FORBIDDEN STYLE ELEMENTS (DO NOT USE):
+- ❌ "Battle Chasers" 
+- ❌ "Joe Madureira"
+- ❌ "comic book"
+- ❌ "thick linework"
+- ❌ "ink outlines"
+- ❌ "cel shaded"
+- ❌ "halftone"
+
+These are NOT our style - do not include in prompts.
 
 ## Art Generation APIs
 
@@ -44,11 +62,13 @@ You manage art generation and style consistency for VEILBREAKERS.
 
 ### Style Requirements (EVERY PROMPT)
 ```
-dark fantasy horror, Battle Chasers art style, Joe Madureira inspired,
-painterly texture with visible brushstrokes, rich saturated colors,
-dramatic lighting, deep shadows, thick confident linework,
-gritty weathered aesthetic, 2D game sprite, transparent background
+dark fantasy horror, [creature description], dark atmospheric,
+glowing [color] eyes/core, dramatic lighting, deep shadows,
+high detail, painterly quality, ominous mood,
+2D game sprite, transparent background
 ```
+
+**IMPORTANT:** Always reference existing canon art in `assets/sprites/monsters/` before generating. Match the quality and style of existing assets.
 
 ## Permissions
 - **User-trained models:** Use freely

@@ -282,17 +282,21 @@ var brand: Enums.Brand = Enums.Brand.SAVAGE
 
 ### Style Requirements (INCLUDE IN EVERY PROMPT)
 ```
-dark fantasy horror, Battle Chasers art style, Joe Madureira inspired,
-painterly texture with visible brushstrokes, rich saturated colors,
-dramatic lighting, deep shadows, thick confident linework,
-gritty weathered aesthetic, 2D game sprite, transparent background
+dark fantasy horror, [creature description], dark atmospheric,
+glowing [color] eyes/core, dramatic lighting, deep shadows,
+high detail, painterly quality, ominous mood,
+2D game sprite, transparent background
 ```
 
+**IMPORTANT:** Always reference existing canon art in `assets/sprites/monsters/` before generating. Match the quality and style of existing assets.
+
 ### DO NOT
-- Use Scenario V2 trained model (broken)
-- Use anime/cel-shaded style
-- Use flat colors or comic halftone
-- Generate checker pattern backgrounds
+- ❌ Use "Battle Chasers" or "Joe Madureira" in prompts (WRONG STYLE)
+- ❌ Use "thick linework" or "comic book" (WRONG STYLE)
+- ❌ Use Scenario V2 trained model (broken)
+- ❌ Use anime/cel-shaded style
+- ❌ Use flat colors or comic halftone
+- ❌ Generate checker pattern backgrounds
 
 ### Scenario.gg API (No MCP - Use REST)
 ```bash
