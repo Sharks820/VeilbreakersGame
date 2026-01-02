@@ -896,9 +896,11 @@ func _start_breathing_animation() -> void:
 	if _breathing_tween and _breathing_tween.is_valid():
 		_breathing_tween.kill()
 	
+	# Smoother breathing animation with larger scale range to reduce visual jitter
+	# Using 1.0 to 1.03 with slower timing for more natural feel
 	_breathing_tween = create_tween().set_loops()
-	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.015, 1.015), 2.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.0, 1.0), 2.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.025, 1.025), 3.0).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.0, 1.0), 3.0).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 # =============================================================================
 # INPUT HANDLING
@@ -940,9 +942,116 @@ func _input(event: InputEvent) -> void:
 # BUTTON HANDLERS
 # =============================================================================
 
+var _confirmation_popup: PanelContainer = null
+
 func _on_confirm_pressed() -> void:
 	var hero_id := HERO_IDS[selected_hero_index]
-	print("[CHARACTER_SELECT] Selected hero: %s" % hero_id)
+	var data: HeroData = hero_data_cache.get(hero_id)
+	var hero_name := data.display_name if data else hero_id.capitalize()
+	
+	# Show confirmation popup
+	_show_confirmation_popup(hero_name, hero_id)
+
+func _show_confirmation_popup(hero_name: String, hero_id: String) -> void:
+	"""Show confirmation dialog before starting the game"""
+	# Remove existing popup if any
+	if _confirmation_popup and is_instance_valid(_confirmation_popup):
+		_confirmation_popup.queue_free()
+	
+	# Create popup overlay
+	var overlay := ColorRect.new()
+	overlay.name = "ConfirmOverlay"
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0, 0, 0, 0.6)
+	add_child(overlay)
+	
+	# Create popup panel
+	_confirmation_popup = PanelContainer.new()
+	_confirmation_popup.name = "ConfirmationPopup"
+	_confirmation_popup.set_anchors_preset(Control.PRESET_CENTER)
+	_confirmation_popup.offset_left = -250
+	_confirmation_popup.offset_right = 250
+	_confirmation_popup.offset_top = -120
+	_confirmation_popup.offset_bottom = 120
+	
+	var popup_style := StyleBoxFlat.new()
+	popup_style.bg_color = Color(0.06, 0.06, 0.09, 0.98)
+	popup_style.border_color = Color(0.5, 0.4, 0.6, 0.9)
+	popup_style.set_border_width_all(3)
+	popup_style.set_corner_radius_all(12)
+	popup_style.shadow_color = Color(0.3, 0.2, 0.4, 0.6)
+	popup_style.shadow_size = 20
+	popup_style.content_margin_left = 30
+	popup_style.content_margin_right = 30
+	popup_style.content_margin_top = 25
+	popup_style.content_margin_bottom = 25
+	_confirmation_popup.add_theme_stylebox_override("panel", popup_style)
+	overlay.add_child(_confirmation_popup)
+	
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 20)
+	_confirmation_popup.add_child(vbox)
+	
+	# Title
+	var title := Label.new()
+	title.text = "CONFIRM SELECTION"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", Color(0.9, 0.8, 0.6))
+	vbox.add_child(title)
+	
+	# Message
+	var message := Label.new()
+	message.text = "Are you sure you want to choose\n%s as your champion?" % hero_name
+	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	message.add_theme_font_size_override("font_size", 16)
+	message.add_theme_color_override("font_color", Color(0.8, 0.75, 0.7))
+	vbox.add_child(message)
+	
+	# Button container
+	var button_hbox := HBoxContainer.new()
+	button_hbox.add_theme_constant_override("separation", 30)
+	button_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_child(button_hbox)
+	
+	# Cancel button
+	var cancel_btn := _create_styled_button("CANCEL", Color(0.5, 0.35, 0.35), 140)
+	cancel_btn.pressed.connect(_on_confirmation_cancel.bind(overlay))
+	button_hbox.add_child(cancel_btn)
+	
+	# Confirm button
+	var confirm_btn := _create_styled_button("CONFIRM", Color(0.35, 0.5, 0.4), 140)
+	confirm_btn.pressed.connect(_on_confirmation_confirm.bind(hero_id, overlay))
+	button_hbox.add_child(confirm_btn)
+	
+	# Focus confirm button
+	confirm_btn.grab_focus()
+	
+	# Animate popup entrance
+	_confirmation_popup.modulate.a = 0.0
+	_confirmation_popup.scale = Vector2(0.8, 0.8)
+	_confirmation_popup.pivot_offset = _confirmation_popup.size / 2
+	
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(_confirmation_popup, "modulate:a", 1.0, 0.2)
+	tween.tween_property(_confirmation_popup, "scale", Vector2(1.0, 1.0), 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
+func _on_confirmation_cancel(overlay: Control) -> void:
+	"""Cancel the confirmation and close popup"""
+	if overlay and is_instance_valid(overlay):
+		overlay.queue_free()
+	_confirmation_popup = null
+	confirm_button.grab_focus()
+
+func _on_confirmation_confirm(hero_id: String, overlay: Control) -> void:
+	"""Confirm selection and start the game"""
+	print("[CHARACTER_SELECT] Confirmed hero: %s" % hero_id)
+	
+	# Close popup
+	if overlay and is_instance_valid(overlay):
+		overlay.queue_free()
+	_confirmation_popup = null
 	
 	# Store selection
 	GameManager.set_selected_hero(hero_id)

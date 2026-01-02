@@ -175,6 +175,9 @@ func _force_ui_layout() -> void:
 		# Taller panel to properly contain 50px buttons with padding
 		party_panel.offset_top = -100
 		party_panel.offset_bottom = -5
+		# Make PartyPanel background fully transparent (remove black box)
+		var transparent_style := StyleBoxEmpty.new()
+		party_panel.add_theme_stylebox_override("panel", transparent_style)
 		party_panel.show()
 		party_panel.visible = true
 		print("[BATTLE_UI] PartyPanel positioned: size=%s, visible=%s" % [party_panel.size, party_panel.visible])
@@ -183,16 +186,21 @@ func _force_ui_layout() -> void:
 		if party_status_container:
 			party_status_container.hide()
 
-	# CombatLog - bottom-right corner, smaller by default (expandable)
+	# CombatLog - bottom-right corner, LARGER default size (expandable)
 	if combat_log:
 		combat_log.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 		combat_log.offset_right = -10
-		combat_log.offset_bottom = -90
+		combat_log.offset_bottom = -110  # More space above action buttons
 		_update_combat_log_size()
 		combat_log.show()
-		# Ensure scroll bar is visible
+		# Fix dual scrollbar: disable RichTextLabel's built-in scroll, use only ScrollContainer
 		if combat_log_scroll:
 			combat_log_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
+			combat_log_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		if combat_log_text:
+			# Disable RichTextLabel's internal scrolling to prevent dual scrollbar
+			combat_log_text.scroll_active = false
+			combat_log_text.scroll_following = false
 		# Add drag handle if not exists
 		_add_combat_log_drag_handle()
 
@@ -1740,13 +1748,21 @@ func hide_message() -> void:
 # COMBAT LOG
 # =============================================================================
 
-func log_action(attacker_name: String, action_name: String, target_name: String = "") -> void:
+func log_action(attacker_name: String, action_name: String, target_name: String = "", skill_name: String = "") -> void:
 	var entry := ""
+	# If skill_name is provided, use it; otherwise use action_name
+	var display_action := skill_name if skill_name != "" else action_name
+	
 	if target_name.is_empty():
-		entry = "[color=white]%s[/color] uses [color=cyan]%s[/color]" % [attacker_name, action_name]
+		entry = "[color=#e0d8c8]%s[/color] uses [color=#66ccff]'%s'[/color]" % [attacker_name, display_action]
 	else:
-		entry = "[color=white]%s[/color] uses [color=cyan]%s[/color] on [color=yellow]%s[/color]" % [attacker_name, action_name, target_name]
+		entry = "[color=#e0d8c8]%s[/color] uses [color=#66ccff]'%s'[/color] on [color=#ffcc66]%s[/color]" % [attacker_name, display_action, target_name]
 	_append_to_log(entry)
+
+func log_skill_use(attacker_name: String, skill_id: String, target_name: String = "") -> void:
+	"""Log a skill use with proper skill display name"""
+	var skill_display_name := _get_skill_display_name(skill_id)
+	log_action(attacker_name, "Skill", target_name, skill_display_name)
 
 func log_damage(target_name: String, amount: int, is_critical: bool = false) -> void:
 	var color := "red" if not is_critical else "orange"
@@ -1797,7 +1813,9 @@ func _schedule_auto_scroll() -> void:
 
 func clear_combat_log() -> void:
 	combat_log_text.clear()
-	combat_log_text.append_text("[color=gray]Battle started...[/color]")
+	combat_log_text.append_text("[color=#cc9933]╔══════════════════════════════╗[/color]")
+	combat_log_text.append_text("\n[color=#cc9933]║[/color]      [color=#ffcc66]⚔ BATTLE START ⚔[/color]      [color=#cc9933]║[/color]")
+	combat_log_text.append_text("\n[color=#cc9933]╚══════════════════════════════╝[/color]")
 
 # =============================================================================
 # BATTLE END SCREENS
@@ -3668,6 +3686,12 @@ func update_party_sidebar() -> void:
 				if mp_bar:
 					mp_bar.max_value = maxi(1, member.get_max_mp())
 					mp_bar.value = member.current_mp
+				
+				# Handle death state - fade out dead party members
+				if member.is_dead():
+					_mark_sidebar_panel_dead(panel)
+				else:
+					panel.modulate.a = 1.0  # Ensure alive members are fully visible
 
 func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
 	"""Create a vertical enemy sidebar on the right side - mirrors party sidebar"""
@@ -3884,6 +3908,12 @@ func update_enemy_sidebar() -> void:
 					var monster := enemy as Monster
 					var corruption_percent := (monster.corruption_level / monster.max_corruption) * 100.0
 					corruption_bar.value = corruption_percent
+				
+				# Handle death state - fade out dead enemies
+				if enemy.is_dead():
+					_mark_sidebar_panel_dead(panel)
+				else:
+					panel.modulate.a = 1.0  # Ensure alive enemies are fully visible
 
 func _auto_scroll_combat_log() -> void:
 	"""Auto-scroll combat log to bottom if user hasn't manually scrolled away"""
@@ -3911,19 +3941,48 @@ func _reset_combat_log_scroll() -> void:
 	user_scrolled_log = false
 	_auto_scroll_combat_log()
 
+func _mark_sidebar_panel_dead(panel: PanelContainer) -> void:
+	"""Mark a sidebar panel as dead with visual feedback"""
+	if not is_instance_valid(panel):
+		return
+	
+	# Skip if already marked dead
+	if panel.has_meta("is_dead_panel") and panel.get_meta("is_dead_panel"):
+		return
+	
+	panel.set_meta("is_dead_panel", true)
+	
+	# Animate fade out
+	var tween := create_tween()
+	tween.tween_property(panel, "modulate:a", 0.35, 0.5)
+	
+	# Add "DEAD" overlay text
+	var dead_label := Label.new()
+	dead_label.name = "DeadOverlay"
+	dead_label.text = "DEAD"
+	dead_label.add_theme_font_size_override("font_size", 14)
+	dead_label.add_theme_color_override("font_color", Color(0.8, 0.2, 0.2, 0.9))
+	dead_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	dead_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	dead_label.set_anchors_preset(Control.PRESET_CENTER)
+	dead_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	dead_label.grow_vertical = Control.GROW_DIRECTION_BOTH
+	panel.add_child(dead_label)
+
 func _update_combat_log_size() -> void:
-	"""Update combat log size - default 238x158px, draggable to expand"""
+	"""Update combat log size - LARGER default 300x220px, draggable to expand"""
 	if not combat_log:
 		return
-	# Default size: 238x158 px (offset_left=-248 for width, offset_top=-248 for height)
-	# With offset_right=-10 and offset_bottom=-90, this gives 238x158
-	combat_log.offset_left = -248
+	# LARGER default size: 300x220 px
+	# offset_left = -(width + offset_right) = -(300 + 10) = -310
+	# offset_top = -(height + offset_bottom) = -(220 + 110) = -330
+	combat_log.offset_left = -310
 	if not _log_dragging:
 		# Only reset offset_top if not currently dragging
-		combat_log.offset_top = _log_start_top if _log_start_top != 0.0 else -248
+		combat_log.offset_top = _log_start_top if _log_start_top != 0.0 else -330
 	# Update drag handle text based on current size
 	if combat_log_drag_handle:
-		var is_expanded := combat_log.offset_top < -300
+		var is_expanded := combat_log.offset_top < -380
 		combat_log_drag_handle.text = "━━ ▲ ━━" if is_expanded else "━━ ▼ ━━"
 
 func _add_combat_log_drag_handle() -> void:
@@ -3952,8 +4011,8 @@ func _add_combat_log_drag_handle() -> void:
 	vbox.add_child(combat_log_drag_handle)
 	vbox.move_child(combat_log_drag_handle, 0)
 
-	# Initialize default position
-	_log_start_top = -248.0  # Default height: 158px
+	# Initialize default position (LARGER default)
+	_log_start_top = -330.0  # Default height: 220px
 
 func _on_combat_log_drag_input(event: InputEvent) -> void:
 	"""Handle drag input on combat log handle"""
@@ -3975,12 +4034,12 @@ func _on_combat_log_drag_input(event: InputEvent) -> void:
 		# Dragging UP (negative delta) = larger panel (more negative offset_top)
 		# Dragging DOWN (positive delta) = smaller panel (less negative offset_top)
 		var new_top := _log_start_top + delta_y
-		# Clamp between default size (-248) and max expansion (-500)
-		# -248 = default 158px height, -500 = max ~410px height
-		new_top = clampf(new_top, -500.0, -248.0)
+		# Clamp between LARGER default size (-330) and max expansion (-600)
+		# -330 = default 220px height, -600 = max ~490px height
+		new_top = clampf(new_top, -600.0, -330.0)
 		combat_log.offset_top = new_top
 		# Update drag handle text
-		var is_expanded := new_top < -300
+		var is_expanded := new_top < -380
 		combat_log_drag_handle.text = "━━ ▲ ━━" if is_expanded else "━━ ▼ ━━"
 
 # =============================================================================

@@ -758,33 +758,34 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 			sprite.name = "CharacterSprite"
 
 			# Scale and position based on character type
+			# INCREASED SIZES for better visibility (was 0.08, now 0.14-0.18)
 			match character.character_type:
 				Enums.CharacterType.PLAYER:
-					sprite.scale = Vector2(0.08, 0.08)
-					sprite.position = Vector2(0, -60)
-					hitbox_size = Vector2(100, 150)
-					hitbox_offset = Vector2(0, -75)
+					sprite.scale = Vector2(0.16, 0.16)  # Larger player sprite
+					sprite.position = Vector2(0, -100)
+					hitbox_size = Vector2(160, 240)
+					hitbox_offset = Vector2(0, -120)
 				Enums.CharacterType.MONSTER:
 					if character is Monster and character.is_corrupted:
-						# Enemy monsters - same size as players
-						sprite.scale = Vector2(0.08, 0.08)
-						sprite.position = Vector2(0, -60)
-						hitbox_size = Vector2(100, 150)
-						hitbox_offset = Vector2(0, -75)
+						# Enemy monsters - LARGER for visibility
+						sprite.scale = Vector2(0.15, 0.15)
+						sprite.position = Vector2(0, -90)
+						hitbox_size = Vector2(150, 220)
+						hitbox_offset = Vector2(0, -110)
 					else:
-						# Allied monsters
-						sprite.scale = Vector2(0.08, 0.08)
-						sprite.position = Vector2(0, -60)
-						hitbox_size = Vector2(80, 120)
-						hitbox_offset = Vector2(0, -60)
+						# Allied monsters - slightly smaller than enemies
+						sprite.scale = Vector2(0.14, 0.14)
+						sprite.position = Vector2(0, -85)
+						hitbox_size = Vector2(140, 200)
+						hitbox_offset = Vector2(0, -100)
 				Enums.CharacterType.BOSS:
-					sprite.scale = Vector2(0.10, 0.10)
-					sprite.position = Vector2(0, -75)
-					hitbox_size = Vector2(120, 180)
-					hitbox_offset = Vector2(0, -90)
+					sprite.scale = Vector2(0.22, 0.22)  # Bosses are BIG
+					sprite.position = Vector2(0, -130)
+					hitbox_size = Vector2(200, 300)
+					hitbox_offset = Vector2(0, -150)
 				_:
-					sprite.scale = Vector2(0.08, 0.08)
-					sprite.position = Vector2(0, -60)
+					sprite.scale = Vector2(0.14, 0.14)
+					sprite.position = Vector2(0, -85)
 
 			# Flip sprite to face enemies (allies face right, enemies face left)
 			if character is Monster and character.is_corrupted:

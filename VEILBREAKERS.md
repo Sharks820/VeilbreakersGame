@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v0.60** | Last updated: 2026-01-02
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v0.61** | Last updated: 2026-01-02
 
 ---
 
@@ -82,14 +82,17 @@
 power * ATK/DEF * level * element * variance * crits
 ```
 
-### Battle UI (v4.0)
+### Battle UI (v4.1)
 | Element | Size | Details |
 |---------|------|---------|
-| Party Sidebar | 170px wide | Left side, green HP/MP bars |
-| Enemy Sidebar | 170px wide | Right side, red HP bars |
-| Action Bar | 700px centered | Attack, Skills, Purify, Item, Defend, Flee |
-| Combat Log | 210x170 | Bottom-right corner |
-| Sprite Scale | 0.08 | Uniform for all characters |
+| Party Sidebar | 170px wide | Left side, green HP/MP bars, death state fading |
+| Enemy Sidebar | 170px wide | Right side, red HP bars, death state fading |
+| Action Bar | 700px centered | Attack, Skills, Purify, Item, Defend, Flee (transparent bg) |
+| Combat Log | 300x220 | Bottom-right corner, draggable, skill names shown |
+| Player Sprite | 0.16 scale | Protagonist |
+| Enemy Sprite | 0.15 scale | Regular monsters |
+| Allied Monster | 0.14 scale | Captured monsters |
+| Boss Sprite | 0.22 scale | Boss encounters |
 | Turn Order | Top bar | Shows character names |
 
 ### Recent Fixes (Dec 2025)
@@ -353,6 +356,7 @@ battle, ui, art, audio, vera, monsters, critical
 | 2026-01-01 | v5.2.4: Fixed game_manager.gd to use new 4-Path system |
 | 2026-01-01 | v0.53: Fixed Variant type inference errors in player_character.gd, added AGENTS.md + opencode.json |
 | 2026-01-02 | **v0.60: MAJOR** - Agent architecture (6 agents), documentation system, style guide, version format change |
+| 2026-01-02 | v0.61: Battle UI polish - VERA tutorial panel repositioned with continue button, combat log skill names + battle header, damage rebalanced (15-35 dmg), larger monster sprites, transparent action bar, sidebar death state handling |
 
 ---
 

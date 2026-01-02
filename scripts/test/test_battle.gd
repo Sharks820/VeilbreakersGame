@@ -32,38 +32,44 @@ const TUTORIAL_DIALOGUES: Array[Dictionary] = [
 	{
 		"trigger": "battle_start",
 		"speaker": "V.E.R.A.",
-		"text": "Welcome to your first battle, Hunter. I'll guide you through the basics. The corrupted creatures before you must be defeated... or [color=#88ff88]purified[/color] and recruited to your cause.",
-		"highlight": ""
+		"text": "Welcome to your first battle, Hunter. I'll guide you through the basics.\n\nThe corrupted creatures before you must be defeated... or [color=#88ff88]purified[/color] and recruited to your cause.",
+		"highlight": "",
+		"arrow_target": ""
 	},
 	{
 		"trigger": "turn_start",
 		"speaker": "V.E.R.A.",
-		"text": "Each round, you'll select actions for your entire party before they execute. Choose [color=#ffaa88]ATTACK[/color] to deal damage, or [color=#88aaff]SKILLS[/color] for special abilities.",
-		"highlight": "action_bar"
+		"text": "Each round, you'll select actions for your entire party before they execute.\n\n[color=#ffaa88]ATTACK[/color] - Deal physical damage\n[color=#88aaff]SKILLS[/color] - Use special abilities\n[color=#88ff88]PURIFY[/color] - Attempt to capture weakened monsters",
+		"highlight": "action_bar",
+		"arrow_target": "action_buttons"
 	},
 	{
 		"trigger": "action_selected",
 		"speaker": "V.E.R.A.",
-		"text": "Excellent. Now select a [color=#ff8888]target[/color] for your attack. Enemies are highlighted in red. Click on one to confirm your action.",
-		"highlight": "enemies"
+		"text": "Excellent. Now select a [color=#ff8888]target[/color] for your attack.\n\nEnemies are highlighted in [color=#ff6666]RED[/color]. Click on one to confirm your action.",
+		"highlight": "enemies",
+		"arrow_target": "enemy_sidebar"
 	},
 	{
 		"trigger": "first_attack",
 		"speaker": "V.E.R.A.",
-		"text": "Well done! Notice the [color=#ffff88]Brand effectiveness[/color] - your attacks deal bonus damage against certain Brand types. The wheel is: SAVAGE > IRON > VENOM > SURGE > DREAD > LEECH > SAVAGE.",
-		"highlight": ""
+		"text": "Well done! Notice the [color=#ffff88]Brand effectiveness[/color] system:\n\nSAVAGE → IRON → VENOM → SURGE → DREAD → LEECH → SAVAGE\n\nAttacking a Brand you're strong against deals [color=#88ff88]1.5x damage[/color]!",
+		"highlight": "",
+		"arrow_target": ""
 	},
 	{
 		"trigger": "enemy_low_hp",
 		"speaker": "V.E.R.A.",
-		"text": "That creature is weakened! You can now attempt to [color=#88ff88]PURIFY[/color] it. Purified monsters can join your party. Lower corruption means a stronger ally.",
-		"highlight": "purify_button"
+		"text": "That creature is weakened! You can now attempt to [color=#88ff88]PURIFY[/color] it.\n\n[color=#cc88ff]PURIFY[/color] reduces a monster's corruption. When corruption is low enough, the monster can be captured and join your party!\n\n[color=#aaaaaa]Lower corruption = Stronger ally when captured[/color]",
+		"highlight": "purify_button",
+		"arrow_target": "purify_button"
 	},
 	{
 		"trigger": "battle_end",
 		"speaker": "V.E.R.A.",
-		"text": "Victory! You've completed your first battle. Remember: the monsters you capture will synergize with your Path. Choose wisely, Hunter.",
-		"highlight": ""
+		"text": "Victory! You've completed your first battle.\n\nRemember: the monsters you capture will synergize with your [color=#ffcc88]Path[/color]. Choose wisely, Hunter.",
+		"highlight": "",
+		"arrow_target": ""
 	}
 ]
 
@@ -597,125 +603,218 @@ func _display_vera_tutorial(dialogue: Dictionary) -> void:
 	
 	vera_tutorial_panel.visible = true
 	
-	# Update content
-	var speaker_label: Label = vera_tutorial_panel.get_node("HBox/VBox/SpeakerLabel")
-	var text_label: RichTextLabel = vera_tutorial_panel.get_node("HBox/VBox/TextLabel")
-	var portrait: TextureRect = vera_tutorial_panel.get_node("HBox/Portrait")
+	# Update content - use new node paths
+	var speaker_label: Label = vera_tutorial_panel.get_node("MainVBox/HBox/VBox/SpeakerLabel")
+	var text_label: RichTextLabel = vera_tutorial_panel.get_node("MainVBox/HBox/VBox/TextLabel")
+	var portrait: TextureRect = vera_tutorial_panel.get_node("MainVBox/HBox/PortraitFrame/Portrait")
+	var continue_button: Button = vera_tutorial_panel.get_node("MainVBox/ButtonContainer/ContinueButton")
+	var hint_label: Label = vera_tutorial_panel.get_node("MainVBox/HintLabel")
 	
 	speaker_label.text = dialogue.speaker
 	text_label.text = ""
+	continue_button.visible = false
+	hint_label.visible = false
 	
-	# Typewriter effect
+	# Load VERA portrait immediately
+	if ResourceLoader.exists("res://assets/characters/vera/vera_interface.png"):
+		portrait.texture = load("res://assets/characters/vera/vera_interface.png")
+	
+	# Typewriter effect (faster for better UX)
 	var full_text: String = dialogue.text
 	for i in range(full_text.length()):
 		text_label.text = full_text.substr(0, i + 1)
-		await get_tree().create_timer(0.02).timeout
-	
-	# Load VERA portrait
-	if ResourceLoader.exists("res://assets/characters/vera/vera_interface.png"):
-		portrait.texture = load("res://assets/characters/vera/vera_interface.png")
+		await get_tree().create_timer(0.015).timeout
 	
 	# Highlight relevant UI element if specified
 	if dialogue.highlight != "":
 		_highlight_ui_element(dialogue.highlight)
 	
-	# Wait for player to dismiss
-	await get_tree().create_timer(0.5).timeout
+	# Show arrow indicator if specified
+	if dialogue.has("arrow_target") and dialogue.arrow_target != "":
+		_show_tutorial_arrow(dialogue.arrow_target)
 	
-	# Add continue prompt
-	var continue_label: Label = vera_tutorial_panel.get_node("ContinueLabel")
-	continue_label.visible = true
+	# Wait briefly then show continue button
+	await get_tree().create_timer(0.3).timeout
 	
-	# Wait for input
+	# Show continue button and hint
+	continue_button.visible = true
+	hint_label.visible = true
+	continue_button.grab_focus()
+	
+	# Connect button signal (disconnect first to avoid duplicates)
+	if continue_button.pressed.is_connected(_on_tutorial_continue_pressed):
+		continue_button.pressed.disconnect(_on_tutorial_continue_pressed)
+	continue_button.pressed.connect(_on_tutorial_continue_pressed)
+	
+	# Wait for input (button click OR keyboard)
 	await _wait_for_tutorial_continue()
 	
-	continue_label.visible = false
+	# Hide and cleanup
+	continue_button.visible = false
+	hint_label.visible = false
 	vera_tutorial_panel.visible = false
 	_clear_highlights()
+	_hide_tutorial_arrow()
+
+var _tutorial_continue_pressed: bool = false
+
+func _on_tutorial_continue_pressed() -> void:
+	"""Called when continue button is clicked"""
+	_tutorial_continue_pressed = true
 
 func _create_vera_tutorial_panel() -> void:
-	"""Create the VERA tutorial panel UI"""
+	"""Create the VERA tutorial panel UI - positioned ABOVE action buttons"""
 	vera_tutorial_panel = PanelContainer.new()
 	vera_tutorial_panel.name = "VERATutorialPanel"
 	
-	# Position at bottom of screen
-	vera_tutorial_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	vera_tutorial_panel.offset_top = -180
-	vera_tutorial_panel.offset_left = 100
-	vera_tutorial_panel.offset_right = -100
+	# Position ABOVE the action buttons (center-bottom, but higher up)
+	# Action buttons are at bottom ~100px, so we position this at ~220px from bottom
+	vera_tutorial_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	vera_tutorial_panel.anchor_left = 0.5
+	vera_tutorial_panel.anchor_right = 0.5
+	vera_tutorial_panel.anchor_top = 1.0
+	vera_tutorial_panel.anchor_bottom = 1.0
+	vera_tutorial_panel.offset_left = -450
+	vera_tutorial_panel.offset_right = 450
+	vera_tutorial_panel.offset_top = -320  # Above action buttons
+	vera_tutorial_panel.offset_bottom = -130  # Leave space for action buttons below
 	
-	# Style
+	# Style - dark fantasy horror theme
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.05, 0.08, 0.95)
-	style.border_color = Color(0.4, 0.3, 0.5, 0.8)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(10)
-	style.content_margin_left = 20
-	style.content_margin_right = 20
-	style.content_margin_top = 15
-	style.content_margin_bottom = 15
+	style.bg_color = Color(0.04, 0.04, 0.06, 0.98)
+	style.border_color = Color(0.5, 0.35, 0.6, 0.9)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(12)
+	style.shadow_color = Color(0.3, 0.2, 0.4, 0.5)
+	style.shadow_size = 15
+	style.content_margin_left = 25
+	style.content_margin_right = 25
+	style.content_margin_top = 18
+	style.content_margin_bottom = 18
 	vera_tutorial_panel.add_theme_stylebox_override("panel", style)
 	
-	# Content
+	# Main content container
+	var main_vbox := VBoxContainer.new()
+	main_vbox.name = "MainVBox"
+	main_vbox.add_theme_constant_override("separation", 12)
+	vera_tutorial_panel.add_child(main_vbox)
+	
+	# Content row (portrait + text)
 	var hbox := HBoxContainer.new()
 	hbox.name = "HBox"
 	hbox.add_theme_constant_override("separation", 20)
-	vera_tutorial_panel.add_child(hbox)
+	main_vbox.add_child(hbox)
 	
-	# Portrait
+	# Portrait with circular frame
+	var portrait_frame := PanelContainer.new()
+	portrait_frame.name = "PortraitFrame"
+	portrait_frame.custom_minimum_size = Vector2(90, 90)
+	var frame_style := StyleBoxFlat.new()
+	frame_style.bg_color = Color(0.08, 0.06, 0.1, 1.0)
+	frame_style.border_color = Color(0.5, 0.4, 0.6, 1.0)
+	frame_style.set_border_width_all(3)
+	frame_style.set_corner_radius_all(45)  # Circular frame
+	portrait_frame.add_theme_stylebox_override("panel", frame_style)
+	hbox.add_child(portrait_frame)
+	
 	var portrait := TextureRect.new()
 	portrait.name = "Portrait"
-	portrait.custom_minimum_size = Vector2(100, 100)
+	portrait.custom_minimum_size = Vector2(84, 84)
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	hbox.add_child(portrait)
+	portrait_frame.add_child(portrait)
 	
 	# Text content
 	var vbox := VBoxContainer.new()
 	vbox.name = "VBox"
-	vbox.add_theme_constant_override("separation", 8)
+	vbox.add_theme_constant_override("separation", 6)
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(vbox)
 	
 	var speaker := Label.new()
 	speaker.name = "SpeakerLabel"
-	speaker.add_theme_font_size_override("font_size", 18)
-	speaker.add_theme_color_override("font_color", Color(0.6, 0.5, 0.7))
+	speaker.add_theme_font_size_override("font_size", 20)
+	speaker.add_theme_color_override("font_color", Color(0.7, 0.55, 0.8))
 	vbox.add_child(speaker)
 	
 	var text := RichTextLabel.new()
 	text.name = "TextLabel"
 	text.bbcode_enabled = true
 	text.fit_content = true
+	text.custom_minimum_size.y = 80
 	text.add_theme_font_size_override("normal_font_size", 15)
-	text.add_theme_color_override("default_color", Color(0.85, 0.8, 0.75))
+	text.add_theme_color_override("default_color", Color(0.88, 0.83, 0.78))
 	vbox.add_child(text)
 	
-	# Continue prompt
-	var continue_label := Label.new()
-	continue_label.name = "ContinueLabel"
-	continue_label.text = "Press SPACE or ENTER to continue..."
-	continue_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	continue_label.add_theme_font_size_override("font_size", 12)
-	continue_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
-	continue_label.visible = false
-	vera_tutorial_panel.add_child(continue_label)
-	continue_label.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	continue_label.offset_top = -25
-	continue_label.offset_left = -250
+	# Continue button (replaces keyboard prompt)
+	var continue_button := Button.new()
+	continue_button.name = "ContinueButton"
+	continue_button.text = "▶ CONTINUE"
+	continue_button.custom_minimum_size = Vector2(180, 40)
+	continue_button.visible = false
 	
-	# Add to scene
+	# Style the continue button
+	var btn_normal := StyleBoxFlat.new()
+	btn_normal.bg_color = Color(0.15, 0.12, 0.2, 0.95)
+	btn_normal.border_color = Color(0.5, 0.4, 0.6, 0.8)
+	btn_normal.set_border_width_all(2)
+	btn_normal.set_corner_radius_all(6)
+	
+	var btn_hover := StyleBoxFlat.new()
+	btn_hover.bg_color = Color(0.25, 0.2, 0.35, 0.98)
+	btn_hover.border_color = Color(0.7, 0.55, 0.8, 1.0)
+	btn_hover.set_border_width_all(2)
+	btn_hover.set_corner_radius_all(6)
+	btn_hover.shadow_color = Color(0.5, 0.3, 0.6, 0.4)
+	btn_hover.shadow_size = 6
+	
+	var btn_pressed := StyleBoxFlat.new()
+	btn_pressed.bg_color = Color(0.35, 0.28, 0.45, 1.0)
+	btn_pressed.border_color = Color(0.8, 0.65, 0.9, 1.0)
+	btn_pressed.set_border_width_all(2)
+	btn_pressed.set_corner_radius_all(6)
+	
+	continue_button.add_theme_stylebox_override("normal", btn_normal)
+	continue_button.add_theme_stylebox_override("hover", btn_hover)
+	continue_button.add_theme_stylebox_override("pressed", btn_pressed)
+	continue_button.add_theme_font_size_override("font_size", 14)
+	continue_button.add_theme_color_override("font_color", Color(0.9, 0.85, 0.95))
+	continue_button.add_theme_color_override("font_hover_color", Color(1.0, 0.95, 1.0))
+	
+	# Center the button
+	var button_container := CenterContainer.new()
+	button_container.name = "ButtonContainer"
+	button_container.add_child(continue_button)
+	main_vbox.add_child(button_container)
+	
+	# Also keep keyboard hint as secondary option
+	var hint_label := Label.new()
+	hint_label.name = "HintLabel"
+	hint_label.text = "(or press SPACE/ENTER)"
+	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint_label.add_theme_font_size_override("font_size", 11)
+	hint_label.add_theme_color_override("font_color", Color(0.45, 0.4, 0.5))
+	hint_label.visible = false
+	main_vbox.add_child(hint_label)
+	
+	# Add to scene on high layer
 	var canvas := CanvasLayer.new()
 	canvas.layer = 100
 	add_child(canvas)
 	canvas.add_child(vera_tutorial_panel)
 
 func _wait_for_tutorial_continue() -> void:
-	"""Wait for player to press continue"""
+	"""Wait for player to press continue (button click OR keyboard)"""
+	_tutorial_continue_pressed = false
 	while true:
 		await get_tree().process_frame
+		# Check for button click OR keyboard input
+		if _tutorial_continue_pressed:
+			break
 		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("ui_select"):
 			break
+
+var _tutorial_arrow: Control = null
 
 func _highlight_ui_element(element_name: String) -> void:
 	"""Highlight a UI element for the tutorial"""
@@ -726,3 +825,60 @@ func _highlight_ui_element(element_name: String) -> void:
 func _clear_highlights() -> void:
 	"""Clear all tutorial highlights"""
 	pass
+
+func _show_tutorial_arrow(target: String) -> void:
+	"""Show an animated arrow pointing to a UI element"""
+	_hide_tutorial_arrow()  # Clear any existing arrow
+	
+	# Create arrow indicator
+	_tutorial_arrow = Control.new()
+	_tutorial_arrow.name = "TutorialArrow"
+	_tutorial_arrow.z_index = 101
+	
+	var arrow_label := Label.new()
+	arrow_label.name = "ArrowLabel"
+	arrow_label.add_theme_font_size_override("font_size", 36)
+	arrow_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
+	_tutorial_arrow.add_child(arrow_label)
+	
+	# Position based on target
+	var viewport_size := get_viewport().get_visible_rect().size
+	match target:
+		"action_buttons":
+			# Point down at action buttons (bottom center)
+			arrow_label.text = "▼"
+			_tutorial_arrow.position = Vector2(viewport_size.x / 2 - 20, viewport_size.y - 140)
+		"enemy_sidebar":
+			# Point right at enemy sidebar
+			arrow_label.text = "▶"
+			_tutorial_arrow.position = Vector2(viewport_size.x - 200, viewport_size.y / 2)
+		"purify_button":
+			# Point down at purify button (third button from left)
+			arrow_label.text = "▼"
+			_tutorial_arrow.position = Vector2(viewport_size.x / 2 - 50, viewport_size.y - 140)
+		_:
+			# Default - center arrow pointing down
+			arrow_label.text = "▼"
+			_tutorial_arrow.position = Vector2(viewport_size.x / 2 - 20, viewport_size.y / 2)
+	
+	# Add to high layer canvas
+	var canvas := CanvasLayer.new()
+	canvas.name = "ArrowCanvas"
+	canvas.layer = 99
+	add_child(canvas)
+	canvas.add_child(_tutorial_arrow)
+	
+	# Animate the arrow (bobbing motion)
+	var tween := create_tween().set_loops()
+	var start_pos := _tutorial_arrow.position
+	tween.tween_property(_tutorial_arrow, "position:y", start_pos.y + 15, 0.4).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(_tutorial_arrow, "position:y", start_pos.y, 0.4).set_ease(Tween.EASE_IN_OUT)
+
+func _hide_tutorial_arrow() -> void:
+	"""Hide and cleanup tutorial arrow"""
+	if _tutorial_arrow and is_instance_valid(_tutorial_arrow):
+		var canvas := _tutorial_arrow.get_parent()
+		_tutorial_arrow.queue_free()
+		if canvas and canvas.name == "ArrowCanvas":
+			canvas.queue_free()
+		_tutorial_arrow = null

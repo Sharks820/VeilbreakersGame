@@ -116,19 +116,19 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	var attack := attacker.get_stat(scaling_stat)
 	var defense := defender.get_stat(defense_stat)
 
-	# Level scaling - SIGNIFICANTLY REDUCED for balanced combat
-	# Target: ~10-20 damage per hit, battles last 5-8 rounds
-	# Old formula was dealing 40-60+ damage, killing allies in 2 hits
-	# New: Level barely matters (0.9 to 1.1 range)
-	var level_factor := 0.9 + (float(attacker.level) / 100.0)  # Level 10 = 1.0x
+	# Level scaling - BALANCED for challenging but fair combat
+	# Target: ~15-35 damage per hit, battles last 4-6 rounds
+	# Previous settings were TOO defensive (enemies dealt almost no damage)
+	# New: Level matters moderately (0.95 to 1.15 range at level 10)
+	var level_factor := 0.95 + (float(attacker.level) / 50.0)  # Level 10 = 1.15x
 
-	# Base formula with HEAVY defense scaling
-	# Defense now reduces damage significantly more
-	var defense_multiplier := 2.0  # Defense counts double
-	var effective_defense := maxf(10.0, defense * defense_multiplier)
+	# Base formula with MODERATE defense scaling
+	# Defense reduces damage but doesn't negate it
+	var defense_multiplier := 1.3  # Defense counts 1.3x (was 2.0 - too high)
+	var effective_defense := maxf(8.0, defense * defense_multiplier)
 	
-	# Damage = Power * (Attack / (Defense * 2)) * LevelFactor * GlobalScale
-	var global_damage_scale := 0.4  # 40% of original damage output
+	# Damage = Power * (Attack / Defense) * LevelFactor * GlobalScale
+	var global_damage_scale := 0.65  # 65% of original (was 0.4 - too low)
 	var raw_damage := power * (attack / effective_defense) * level_factor * global_damage_scale
 
 	# Brand effectiveness
@@ -290,12 +290,12 @@ func preview_damage(attacker: CharacterBase, defender: CharacterBase, skill: Res
 
 	var attack := attacker.get_stat(scaling_stat)
 	var defense := defender.get_stat(defense_stat)
-	# Match the SIGNIFICANTLY reduced scaling from calculate_damage
-	var level_factor := 0.9 + (float(attacker.level) / 100.0)
+	# Match the BALANCED scaling from calculate_damage
+	var level_factor := 0.95 + (float(attacker.level) / 50.0)
 	
-	var defense_multiplier := 2.0
-	var effective_defense := maxf(10.0, defense * defense_multiplier)
-	var global_damage_scale := 0.4
+	var defense_multiplier := 1.3
+	var effective_defense := maxf(8.0, defense * defense_multiplier)
+	var global_damage_scale := 0.65
 	var base_damage := power * (attack / effective_defense) * level_factor * global_damage_scale
 
 	# Get brand effectiveness
