@@ -748,6 +748,17 @@ func execute_action(character: CharacterBase, action: Enums.BattleAction, target
 
 	is_executing_action = true
 	battle_state = Enums.BattleState.EXECUTING_ACTION
+	
+	# Set current skill metadata for animation system (if using a skill)
+	if action == Enums.BattleAction.SKILL and skill != "":
+		var skill_data: SkillData = DataManager.get_skill(skill)
+		if skill_data:
+			character.set_meta("current_skill", skill_data)
+	else:
+		# Clear skill metadata for non-skill actions
+		if character.has_meta("current_skill"):
+			character.remove_meta("current_skill")
+	
 	action_animation_started.emit(character, action)
 
 	var result: Dictionary = {}

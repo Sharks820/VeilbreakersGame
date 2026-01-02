@@ -919,56 +919,66 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 	var sprite: Node2D = character.get_meta("battle_sprite", null)
 	if not sprite:
 		return
-
-	var original_pos := sprite.position
-	var tween := create_tween()
-
+	
+	# Determine if this is an enemy (for animation direction)
+	var is_enemy := character not in battle_manager.player_party
+	
+	# Get character's brand for glow effects
+	var brand: Enums.Brand = Enums.Brand.NONE
+	if character is Monster and character.monster_data:
+		brand = character.monster_data.brand
+	
+	# Use the new CharacterBattleAnimator for rich animations
 	match action:
 		Enums.BattleAction.ATTACK:
-			var direction := 1.0 if character in battle_manager.player_party else -1.0
-			tween.tween_property(sprite, "position:x", original_pos.x + (80 * direction), 0.15)
-			tween.tween_property(sprite, "position:x", original_pos.x, 0.15)
-
+			# Check if this is a heavy attack (high power skill used as basic attack)
+			CharacterBattleAnimator.play_attack(sprite, brand, is_enemy)
+		
 		Enums.BattleAction.SKILL:
-			# Glow effect for skills
-			tween.tween_property(sprite, "modulate", Color(1.2, 1.2, 1.5), 0.2)
-			tween.tween_property(sprite, "modulate", Color.WHITE, 0.3)
-
+			# Get the skill being used for unique animation
+			var current_skill: SkillData = character.get_meta("current_skill", null)
+			if current_skill:
+				CharacterBattleAnimator.play_skill_with_data(sprite, current_skill, brand, Vector2.ZERO, is_enemy)
+			else:
+				# Fallback to generic skill animation
+				CharacterBattleAnimator.play_skill(sprite, SkillData.SkillType.DAMAGE, brand, is_enemy)
+		
 		Enums.BattleAction.DEFEND:
-			tween.tween_property(sprite, "modulate", Color(0.5, 0.7, 1.0), 0.1)
-			tween.tween_property(sprite, "modulate", Color.WHITE, 0.4)
-
+			CharacterBattleAnimator.play_defend(sprite)
+		
 		Enums.BattleAction.PURIFY:
-			# Holy light effect
-			tween.tween_property(sprite, "modulate", Color(1.5, 1.5, 0.8), 0.3)
-			tween.tween_property(sprite, "modulate", Color.WHITE, 0.5)
+			CharacterBattleAnimator.play_purify(sprite)
+		
+		Enums.BattleAction.ITEM:
+			CharacterBattleAnimator.play_item(sprite)
+		
+		Enums.BattleAction.FLEE:
+			CharacterBattleAnimator.play_flee(sprite)
 
-func _play_hit_animation(sprite: Node2D) -> void:
-	var tween := create_tween()
-	tween.tween_property(sprite, "modulate", Color(1, 0.3, 0.3), 0.05)
-	tween.tween_property(sprite, "modulate", Color.WHITE, 0.2)
-
-	# Shake effect
-	var original_pos := sprite.position
-	tween.parallel().tween_property(sprite, "position:x", original_pos.x + 5, 0.02)
-	tween.tween_property(sprite, "position:x", original_pos.x - 5, 0.04)
-	tween.tween_property(sprite, "position:x", original_pos.x, 0.04)
+func _play_hit_animation(sprite: Node2D, is_critical: bool = false) -> void:
+	# Use the new CharacterBattleAnimator for hurt animations
+	CharacterBattleAnimator.play_hurt(sprite, is_critical)
 
 func _play_heal_animation(sprite: Node2D) -> void:
 	var tween := create_tween()
 	tween.tween_property(sprite, "modulate", Color(0.5, 1.5, 0.5), 0.2)
 	tween.tween_property(sprite, "modulate", Color.WHITE, 0.3)
 
-func _play_death_animation(sprite: Node2D) -> void:
+func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> void:
 	# Mark sprite as dead so hover/highlight code doesn't reset it
 	sprite.set_meta("is_dead_sprite", true)
 	
-	var tween := create_tween()
-	# Fade out completely and sink down
-	tween.tween_property(sprite, "modulate:a", 0.0, 0.8).set_ease(Tween.EASE_IN)
-	tween.parallel().tween_property(sprite, "position:y", sprite.position.y + 30, 0.8).set_ease(Tween.EASE_IN)
-	# Hide sprite after animation completes
-	tween.tween_callback(func(): sprite.visible = false)
+	# Get brand for death effect color
+	var brand: Enums.Brand = Enums.Brand.NONE
+	if character and character is Monster and character.monster_data:
+		brand = character.monster_data.brand
+	
+	# Use the new CharacterBattleAnimator for dramatic death
+	CharacterBattleAnimator.play_death(sprite, brand)
+	
+	# Hide sprite after animation completes (animator handles the fade)
+	await get_tree().create_timer(1.2).timeout
+	sprite.visible = false
 
 # =============================================================================
 # DAMAGE NUMBERS
@@ -1097,8 +1107,8 @@ func _on_damage_dealt(source: Node, target: Node, amount: int, is_critical: bool
 		"brand": brand
 	})
 
-	# Play hit animation
-	_play_hit_animation(sprite)
+	# Play hit animation (with critical flag)
+	_play_hit_animation(sprite, is_critical)
 	
 	# Spawn hit particle effect
 	var source_brand: Enums.Brand = Enums.Brand.NONE
@@ -1134,7 +1144,7 @@ func _on_damage_dealt(source: Node, target: Node, amount: int, is_critical: bool
 
 	# Check for death
 	if character.is_dead():
-		_play_death_animation(sprite)
+		_play_death_animation(sprite, character)
 		# Spawn death particle effect
 		var death_brand: Enums.Brand = Enums.Brand.NONE
 		if character.has_method("get_brand"):
