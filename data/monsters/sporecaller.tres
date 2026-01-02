@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "sporecaller"
+display_name = "Sporecaller"
+description = "What was once a deer now shambles forward on broken legs, mushrooms erupting from every wound. Bioluminescent spores drift from the fungal masses growing through its skull. It doesn't know it died seasons ago."
+tier = 0
+brand = 2
+rarity = 0
+
+brand_tier = 0
+secondary_brand = 13
+evolution_stage = 0
+
+sprite_path = "res://assets/sprites/monsters/sporecaller.png"
+portrait_path = "res://assets/characters/monsters/sporecaller_portrait.png"
+color_palette = Color(0.4, 0.5, 0.2, 1)
+
+base_hp = 32
+base_mp = 18
+base_attack = 6
+base_defense = 6
+base_magic = 14
+base_resistance = 10
+base_speed = 8
+base_luck = 7
+
+hp_growth = 1.12
+mp_growth = 1.18
+attack_growth = 1.05
+defense_growth = 1.08
+magic_growth = 1.2
+resistance_growth = 1.15
+speed_growth = 1.06
+
+innate_skills = ["spore_cloud", "fungal_touch"]
+learnable_skills = {7: "decomposer", 14: "bloom_of_rot", 21: "mycelium_network", 30: "the_rot_sovereign"}
+
+ai_pattern = "debuffer"
+skill_weights = {"spore_cloud": 50, "fungal_touch": 30, "decomposer": 20}
+
+base_corruption = 70.0
+corruption_resistance = 5.0
+
+base_experience = 11
+base_currency = 4
+drop_table = [{"item_id": "luminous_spore", "chance": 0.5, "quantity": 1}, {"item_id": "fungal_cap", "chance": 0.3, "quantity": 1}, {"item_id": "host_antler", "chance": 0.1, "quantity": 1}]
+
+habitat = "Corrupted forests, swamps, anywhere decay has taken hold"
+behavior_notes = "Wanders aimlessly until it senses the living. Spreads spores constantly. Multiple Sporecallers in an area create toxic clouds that persist."
+purification_hint = "The fungus retreats, revealing the peaceful spirit of the deer beneath. It becomes a nature spirit that spreads healing growth instead of decay."

@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "the_broodmother"
+display_name = "The Broodmother"
+description = "A grotesque spider-wasp hybrid, her bloated abdomen pulsing with writhing larvae visible through translucent chitin. She doesn't attack to kill - she injects parasitic eggs that hatch inside the living. The corruption twisted maternal instinct into something unspeakable. She just wants her children to thrive."
+tier = 2
+brand = 2
+rarity = 2
+
+brand_tier = 0
+secondary_brand = 13
+evolution_stage = 0
+
+sprite_path = "res://assets/sprites/monsters/the_broodmother.png"
+portrait_path = "res://assets/characters/monsters/the_broodmother_portrait.png"
+color_palette = Color(0.3, 0.25, 0.35, 1)
+
+base_hp = 68
+base_mp = 35
+base_attack = 8
+base_defense = 10
+base_magic = 22
+base_resistance = 18
+base_speed = 11
+base_luck = 8
+
+hp_growth = 1.18
+mp_growth = 1.22
+attack_growth = 1.08
+defense_growth = 1.12
+magic_growth = 1.25
+resistance_growth = 1.2
+speed_growth = 1.1
+
+innate_skills = ["parasitic_injection", "spawn_broodling"]
+learnable_skills = {10: "venomous_nursery", 18: "infestation_wave", 28: "the_hatching", 40: "hive_queen_ascension"}
+
+ai_pattern = "summoner"
+skill_weights = {"parasitic_injection": 30, "spawn_broodling": 45, "venomous_nursery": 25}
+
+base_corruption = 88.0
+corruption_resistance = 12.0
+
+base_experience = 45
+base_currency = 22
+drop_table = [{"item_id": "brood_chitin", "chance": 0.5, "quantity": 1}, {"item_id": "parasitic_larva", "chance": 0.35, "quantity": 1}, {"item_id": "queens_ovipositor", "chance": 0.05, "quantity": 1}]
+
+habitat = "Dark caves, abandoned structures, anywhere eggs can incubate undisturbed"
+behavior_notes = "Prioritizes spawning broodlings over direct attacks. Protects her young fiercely. The larvae she injects cause DOT and spawn additional enemies if not cleansed."
+purification_hint = "Her children become healing spores instead of parasites. The maternal love remains, but now expressed as nurturing growth. She tends gardens instead of hosts."

@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "crackling"
+display_name = "Crackling"
+description = "Pure electrical energy given malevolent form. It appears as a child-sized figure made of forking lightning, flickering in and out of existence with each heartbeat. Its laughter is static, and it doesn't understand why touching things hurts them."
+tier = 0
+brand = 3
+rarity = 1
+
+brand_tier = 0
+secondary_brand = 13
+evolution_stage = 0
+
+sprite_path = "res://assets/sprites/monsters/crackling.png"
+portrait_path = "res://assets/characters/monsters/crackling_portrait.png"
+color_palette = Color(0.8, 0.9, 1.0, 1)
+
+base_hp = 25
+base_mp = 20
+base_attack = 16
+base_defense = 4
+base_magic = 12
+base_resistance = 6
+base_speed = 18
+base_luck = 10
+
+hp_growth = 1.08
+mp_growth = 1.15
+attack_growth = 1.2
+defense_growth = 1.02
+magic_growth = 1.15
+resistance_growth = 1.05
+speed_growth = 1.25
+
+innate_skills = ["static_touch", "flicker_strike"]
+learnable_skills = {5: "chain_lightning", 11: "surge_dash", 18: "stormkin_call", 26: "tempest_incarnate"}
+
+ai_pattern = "aggressive"
+skill_weights = {"static_touch": 35, "flicker_strike": 45, "chain_lightning": 20}
+
+base_corruption = 65.0
+corruption_resistance = 2.0
+
+base_experience = 14
+base_currency = 6
+drop_table = [{"item_id": "static_essence", "chance": 0.5, "quantity": 1}, {"item_id": "lightning_shard", "chance": 0.25, "quantity": 1}]
+
+habitat = "Storm-touched areas, places struck by lightning, near electrical phenomena"
+behavior_notes = "Erratic movement patterns, almost playful. Attacks the closest target repeatedly. Leaves scorch marks everywhere it goes. Sometimes just watches curiously."
+purification_hint = "The chaotic energy stabilizes into warm, guiding light. It becomes a beacon that leads travelers safely through storms, finally understanding that touch can be gentle."

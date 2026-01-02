@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "voltgeist"
+display_name = "Voltgeist"
+description = "The ghost of someone struck by lightning, forever burning with the storm that killed them. It appears during electrical storms, leaving scorched afterimages of its death pose. Looking directly at it shows you a vision of YOUR death - sudden, violent, inevitable."
+tier = 2
+brand = 9
+rarity = 2
+
+brand_tier = 1
+secondary_brand = 4
+evolution_stage = 0
+
+sprite_path = "res://assets/sprites/monsters/voltgeist.png"
+portrait_path = "res://assets/characters/monsters/voltgeist_portrait.png"
+color_palette = Color(0.6, 0.7, 0.9, 1)
+
+base_hp = 55
+base_mp = 40
+base_attack = 14
+base_defense = 8
+base_magic = 24
+base_resistance = 16
+base_speed = 20
+base_luck = 9
+
+hp_growth = 1.12
+mp_growth = 1.2
+attack_growth = 1.12
+defense_growth = 1.08
+magic_growth = 1.28
+resistance_growth = 1.18
+speed_growth = 1.22
+
+innate_skills = ["death_vision", "lightning_haunt"]
+learnable_skills = {12: "storm_terror", 20: "thunderwraith_scream", 30: "inevitable_strike", 42: "the_storm_that_remembers"}
+
+ai_pattern = "debuffer"
+skill_weights = {"death_vision": 40, "lightning_haunt": 35, "storm_terror": 25}
+
+base_corruption = 85.0
+corruption_resistance = 8.0
+
+base_experience = 48
+base_currency = 24
+drop_table = [{"item_id": "storm_essence", "chance": 0.5, "quantity": 1}, {"item_id": "death_echo", "chance": 0.3, "quantity": 1}, {"item_id": "inevitable_spark", "chance": 0.06, "quantity": 1}]
+
+habitat = "Storm-struck peaks, places of sudden death, electrical anomalies"
+behavior_notes = "Inflicts Fear and Paralysis. Death Vision shows enemies their death, reducing their accuracy and causing hesitation. Can teleport short distances. More powerful during storms."
+purification_hint = "The burning stops. It becomes a warning spirit, showing visions of danger to PREVENT deaths rather than foretell them. It guides travelers away from lightning strikes."

@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "chainbound"
+display_name = "Chainbound"
+description = "A mass of rusted chains that has formed into a vaguely humanoid shape. Where a heart should be, there's a corroded padlock that rattles with each movement. It remembers being used to imprison something terrible - now it wants to bind everything."
+tier = 0
+brand = 1
+rarity = 0
+
+brand_tier = 0
+secondary_brand = 13
+evolution_stage = 0
+
+sprite_path = "res://assets/sprites/monsters/chainbound.png"
+portrait_path = "res://assets/characters/monsters/chainbound_portrait.png"
+color_palette = Color(0.35, 0.3, 0.25, 1)
+
+base_hp = 48
+base_mp = 8
+base_attack = 7
+base_defense = 14
+base_magic = 5
+base_resistance = 12
+base_speed = 5
+base_luck = 4
+
+hp_growth = 1.25
+mp_growth = 1.05
+attack_growth = 1.08
+defense_growth = 1.22
+magic_growth = 1.05
+resistance_growth = 1.18
+speed_growth = 1.02
+
+innate_skills = ["iron_bind", "rusted_embrace"]
+learnable_skills = {6: "shackle_slam", 12: "chain_wall", 20: "the_wardens_grip", 28: "eternal_imprisonment"}
+
+ai_pattern = "defensive"
+skill_weights = {"iron_bind": 45, "rusted_embrace": 30, "shackle_slam": 25}
+
+base_corruption = 75.0
+corruption_resistance = 8.0
+
+base_experience = 12
+base_currency = 5
+drop_table = [{"item_id": "rusted_link", "chance": 0.55, "quantity": 1}, {"item_id": "corroded_padlock", "chance": 0.2, "quantity": 1}]
+
+habitat = "Abandoned prisons, old dungeons, places where things were meant to be kept"
+behavior_notes = "Moves slowly but relentlessly. Prioritizes binding the most mobile enemy. The chains rattle constantly - you always hear it coming."
+purification_hint = "The padlock opens. The chains become a protective barrier rather than a prison. It guards the innocent instead of trapping them."

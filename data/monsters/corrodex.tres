@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "corrodex"
+display_name = "Corrodex"
+description = "An ornate suit of knight's armor, but instead of a body, it contains only acidic sludge. Green-yellow liquid leaks from every joint, hissing where it touches stone. It still tries to speak with a noble voice, but only bubbling comes out. It remembers honor. Now it only dissolves."
+tier = 1
+brand = 7
+rarity = 1
+
+brand_tier = 1
+secondary_brand = 2
+evolution_stage = 0
+
+sprite_path = "res://assets/sprites/monsters/corrodex.png"
+portrait_path = "res://assets/characters/monsters/corrodex_portrait.png"
+color_palette = Color(0.3, 0.4, 0.15, 1)
+
+base_hp = 70
+base_mp = 18
+base_attack = 10
+base_defense = 22
+base_magic = 14
+base_resistance = 14
+base_speed = 5
+base_luck = 4
+
+hp_growth = 1.22
+mp_growth = 1.12
+attack_growth = 1.1
+defense_growth = 1.25
+magic_growth = 1.15
+resistance_growth = 1.18
+speed_growth = 1.02
+
+innate_skills = ["acid_leak", "corroding_guard"]
+learnable_skills = {10: "dissolving_embrace", 17: "noble_sacrifice", 26: "acid_flood", 38: "the_dissolved_knights_oath"}
+
+ai_pattern = "tank"
+skill_weights = {"acid_leak": 35, "corroding_guard": 40, "dissolving_embrace": 25}
+
+base_corruption = 80.0
+corruption_resistance = 12.0
+
+base_experience = 26
+base_currency = 12
+drop_table = [{"item_id": "corroded_plate", "chance": 0.5, "quantity": 1}, {"item_id": "acid_vial", "chance": 0.35, "quantity": 1}, {"item_id": "knights_crest", "chance": 0.1, "quantity": 1}]
+
+habitat = "Ruined castles, poisoned battlefields, places where honor died"
+behavior_notes = "Tries to protect allies despite the acid hurting them. Attackers that hit it take acid damage. Periodically says fragments of knightly oaths in bubbling tones."
+purification_hint = "The acid becomes healing waters that flow through pristine armor. The knight's voice returns, clear and noble. It finally speaks the oath it could never finish."

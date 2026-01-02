@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "the_bulwark"
+display_name = "The Bulwark"
+description = "A humanoid figure completely encased in rusted, fused armor that has grown INTO the flesh beneath. The helmet is welded shut - you can hear muffled screaming from inside. Chains drag behind it, attached to nothing. It was meant to protect something. Now it only knows how to endure."
+tier = 1
+brand = 1
+rarity = 1
+
+brand_tier = 0
+secondary_brand = 13
+evolution_stage = 0
+
+sprite_path = "res://assets/sprites/monsters/the_bulwark.png"
+portrait_path = "res://assets/characters/monsters/the_bulwark_portrait.png"
+color_palette = Color(0.4, 0.35, 0.3, 1)
+
+base_hp = 75
+base_mp = 12
+base_attack = 10
+base_defense = 20
+base_magic = 4
+base_resistance = 16
+base_speed = 4
+base_luck = 3
+
+hp_growth = 1.3
+mp_growth = 1.08
+attack_growth = 1.1
+defense_growth = 1.28
+magic_growth = 1.02
+resistance_growth = 1.22
+speed_growth = 1.0
+
+innate_skills = ["iron_stance", "guardian_chains"]
+learnable_skills = {8: "fortress_body", 15: "immovable_will", 24: "bastion_form", 35: "citadel_eternal"}
+
+ai_pattern = "tank"
+skill_weights = {"iron_stance": 40, "guardian_chains": 35, "fortress_body": 25}
+
+base_corruption = 85.0
+corruption_resistance = 15.0
+
+base_experience = 22
+base_currency = 10
+drop_table = [{"item_id": "fused_plate", "chance": 0.45, "quantity": 1}, {"item_id": "guardian_shard", "chance": 0.25, "quantity": 1}, {"item_id": "welded_helm", "chance": 0.08, "quantity": 1}]
+
+habitat = "Ruined fortresses, fallen castles, battlefields where last stands occurred"
+behavior_notes = "Positions itself between threats and allies. Never retreats. The screaming from inside gets louder when allies are hurt. Will sacrifice HP to protect others."
+purification_hint = "The armor cracks and falls away, revealing a guardian spirit of pure protection. The first thing it does is breathe freely. It finally remembers WHO it was protecting."

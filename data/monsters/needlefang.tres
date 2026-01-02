@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "needlefang"
+display_name = "Needlefang"
+description = "A serpentine creature covered in thousands of hollow spines that vibrate at impossible speeds. It doesn't bite - it fires venomous needles in millisecond bursts, turning the air into a storm of poison. By the time you feel the first sting, you've already been hit a hundred times."
+tier = 1
+brand = 8
+rarity = 2
+
+brand_tier = 1
+secondary_brand = 3
+evolution_stage = 0
+
+sprite_path = "res://assets/sprites/monsters/needlefang.png"
+portrait_path = "res://assets/characters/monsters/needlefang_portrait.png"
+color_palette = Color(0.4, 0.6, 0.3, 1)
+
+base_hp = 42
+base_mp = 22
+base_attack = 18
+base_defense = 8
+base_magic = 16
+base_resistance = 10
+base_speed = 22
+base_luck = 12
+
+hp_growth = 1.1
+mp_growth = 1.15
+attack_growth = 1.22
+defense_growth = 1.05
+magic_growth = 1.18
+resistance_growth = 1.08
+speed_growth = 1.28
+
+innate_skills = ["needle_storm", "venomous_acceleration"]
+learnable_skills = {8: "spine_flurry", 14: "toxin_overdrive", 22: "thousand_stings", 32: "death_of_a_thousand_cuts"}
+
+ai_pattern = "assassin"
+skill_weights = {"needle_storm": 45, "venomous_acceleration": 30, "spine_flurry": 25}
+
+base_corruption = 78.0
+corruption_resistance = 6.0
+
+base_experience = 32
+base_currency = 16
+drop_table = [{"item_id": "hollow_spine", "chance": 0.55, "quantity": 3}, {"item_id": "venom_sac", "chance": 0.3, "quantity": 1}, {"item_id": "quicksilver_scale", "chance": 0.08, "quantity": 1}]
+
+habitat = "Dense undergrowth, canyon walls, anywhere it can ambush from"
+behavior_notes = "Strikes first, strikes often. High crit chance. Applies stacking poison. Retreats when HP is low to strike again. The vibrating spines make a distinctive hum before it attacks."
+purification_hint = "The needles become iridescent scales that shimmer with healing properties. Its venom transforms into antivenom. It becomes a protector that neutralizes poisons instead of spreading them."

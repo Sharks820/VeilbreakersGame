@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "ironjaw"
+display_name = "Ironjaw"
+description = "A massive bear-like beast with blackened metal plates fused into its skull and spine. Its lower jaw has been replaced entirely with a spring-loaded steel trap mechanism that snaps shut with bone-shattering force. Every bite is permanent. It doesn't eat - it collects."
+tier = 1
+brand = 6
+rarity = 1
+
+brand_tier = 1
+secondary_brand = 1
+evolution_stage = 0
+
+sprite_path = "res://assets/sprites/monsters/ironjaw.png"
+portrait_path = "res://assets/characters/monsters/ironjaw_portrait.png"
+color_palette = Color(0.5, 0.2, 0.15, 1)
+
+base_hp = 65
+base_mp = 5
+base_attack = 24
+base_defense = 16
+base_magic = 3
+base_resistance = 10
+base_speed = 8
+base_luck = 6
+
+hp_growth = 1.25
+mp_growth = 1.02
+attack_growth = 1.28
+defense_growth = 1.2
+magic_growth = 1.0
+resistance_growth = 1.1
+speed_growth = 1.08
+
+innate_skills = ["trap_bite", "iron_charge"]
+learnable_skills = {9: "berserker_plate", 16: "steelrend", 25: "siege_breaker", 36: "unstoppable_maw"}
+
+ai_pattern = "aggressive"
+skill_weights = {"trap_bite": 50, "iron_charge": 35, "berserker_plate": 15}
+
+base_corruption = 82.0
+corruption_resistance = 10.0
+
+base_experience = 28
+base_currency = 14
+drop_table = [{"item_id": "iron_fang", "chance": 0.5, "quantity": 1}, {"item_id": "trap_spring", "chance": 0.3, "quantity": 1}, {"item_id": "berserker_plate", "chance": 0.08, "quantity": 1}]
+
+habitat = "Mountain passes, ruined forges, places where metal was worked"
+behavior_notes = "Charges the strongest-looking enemy. The trap-jaw deals bonus damage and can inflict Bleed. Once it bites, it doesn't let go. Roars cause Intimidation."
+purification_hint = "The metal becomes decorative armor, gleaming instead of rusted. The trap-jaw softens into a protective muzzle. It becomes a noble guardian beast, fiercely loyal."

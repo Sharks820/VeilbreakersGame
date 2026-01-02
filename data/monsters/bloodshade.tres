@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "bloodshade"
+display_name = "Bloodshade"
+description = "A shadow that has learned to DRINK. It pools beneath the dying, absorbing their final moments along with their life force. It speaks in the layered voices of everyone it has ever drained - dozens of whispers overlapping, begging, thanking, cursing. It collects endings."
+tier = 2
+brand = 10
+rarity = 2
+
+brand_tier = 1
+secondary_brand = 5
+evolution_stage = 0
+
+sprite_path = "res://assets/sprites/monsters/bloodshade.png"
+portrait_path = "res://assets/characters/monsters/bloodshade_portrait.png"
+color_palette = Color(0.2, 0.1, 0.15, 1)
+
+base_hp = 62
+base_mp = 38
+base_attack = 12
+base_defense = 10
+base_magic = 20
+base_resistance = 18
+base_speed = 14
+base_luck = 8
+
+hp_growth = 1.18
+mp_growth = 1.2
+attack_growth = 1.1
+defense_growth = 1.12
+magic_growth = 1.22
+resistance_growth = 1.2
+speed_growth = 1.12
+
+innate_skills = ["life_siphon", "shadow_embrace"]
+learnable_skills = {11: "choir_of_the_dying", 19: "soulthirst", 29: "stolen_vitality", 40: "the_final_drink"}
+
+ai_pattern = "support"
+skill_weights = {"life_siphon": 40, "shadow_embrace": 35, "choir_of_the_dying": 25}
+
+base_corruption = 90.0
+corruption_resistance = 10.0
+
+base_experience = 50
+base_currency = 25
+drop_table = [{"item_id": "shadow_essence", "chance": 0.5, "quantity": 1}, {"item_id": "stolen_breath", "chance": 0.35, "quantity": 1}, {"item_id": "memory_of_endings", "chance": 0.05, "quantity": 1}]
+
+habitat = "Battlefields, hospitals, anywhere death is common - pools in shadowed corners"
+behavior_notes = "Drains HP from enemies and distributes it to allies. The voices speak truths the dying knew. Stronger in darkness. Weak to light-based attacks. Never fully solid."
+purification_hint = "It returns the stolen life-force to the world. The voices find peace and fade to silence. It becomes a gentle psychopomp, guiding souls peacefully to their rest instead of consuming them."
