@@ -116,11 +116,20 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	var attack := attacker.get_stat(scaling_stat)
 	var defense := defender.get_stat(defense_stat)
 
-	# Level scaling
-	var level_factor := (float(attacker.level) / 10.0) + 1.0
+	# Level scaling - SIGNIFICANTLY REDUCED for balanced combat
+	# Target: ~10-20 damage per hit, battles last 5-8 rounds
+	# Old formula was dealing 40-60+ damage, killing allies in 2 hits
+	# New: Level barely matters (0.9 to 1.1 range)
+	var level_factor := 0.9 + (float(attacker.level) / 100.0)  # Level 10 = 1.0x
 
-	# Base formula: (Power * Attack / Defense) * LevelFactor
-	var raw_damage := (power * (attack / maxf(1.0, defense))) * level_factor
+	# Base formula with HEAVY defense scaling
+	# Defense now reduces damage significantly more
+	var defense_multiplier := 2.0  # Defense counts double
+	var effective_defense := maxf(10.0, defense * defense_multiplier)
+	
+	# Damage = Power * (Attack / (Defense * 2)) * LevelFactor * GlobalScale
+	var global_damage_scale := 0.4  # 40% of original damage output
+	var raw_damage := power * (attack / effective_defense) * level_factor * global_damage_scale
 
 	# Brand effectiveness
 	var brand_mod := 1.0
@@ -281,9 +290,13 @@ func preview_damage(attacker: CharacterBase, defender: CharacterBase, skill: Res
 
 	var attack := attacker.get_stat(scaling_stat)
 	var defense := defender.get_stat(defense_stat)
-	var level_factor := (float(attacker.level) / 10.0) + 1.0
-
-	var base_damage := (power * (attack / maxf(1.0, defense))) * level_factor
+	# Match the SIGNIFICANTLY reduced scaling from calculate_damage
+	var level_factor := 0.9 + (float(attacker.level) / 100.0)
+	
+	var defense_multiplier := 2.0
+	var effective_defense := maxf(10.0, defense * defense_multiplier)
+	var global_damage_scale := 0.4
+	var base_damage := power * (attack / effective_defense) * level_factor * global_damage_scale
 
 	# Get brand effectiveness
 	var attacker_brand: Enums.Brand = attacker.brand if "brand" in attacker else Enums.Brand.NONE
