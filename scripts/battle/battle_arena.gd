@@ -520,13 +520,28 @@ func _calculate_formation_positions(characters: Array[CharacterBase], positions_
 	var party_size := characters.size()
 
 	if not is_player_party:
-		# Enemies use standard marker positions (less formal formation)
-		for i in range(party_size):
-			if i < markers.size():
-				positions.append(markers[i].global_position)
-			else:
-				# Fallback position with offset
-				positions.append(base_pos + Vector2(i * 80, (i % 2) * 100 - 50))
+		# Enemies - spread out formation based on party size
+		match party_size:
+			1:
+				positions.append(base_pos + Vector2(0, 0))
+			2:
+				positions.append(base_pos + Vector2(-80, -120))  # Upper enemy
+				positions.append(base_pos + Vector2(80, 120))    # Lower enemy
+			3:
+				positions.append(base_pos + Vector2(100, 0))      # Front center
+				positions.append(base_pos + Vector2(-80, -150))  # Back upper
+				positions.append(base_pos + Vector2(-80, 150))   # Back lower
+			4:
+				positions.append(base_pos + Vector2(100, -80))   # Front upper
+				positions.append(base_pos + Vector2(100, 80))    # Front lower
+				positions.append(base_pos + Vector2(-80, -160))  # Back upper
+				positions.append(base_pos + Vector2(-80, 160))   # Back lower
+			_:
+				# Fallback for 5+ enemies
+				for i in range(party_size):
+					var row: int = i / 2
+					var col: int = i % 2
+					positions.append(base_pos + Vector2(-row * 120, (col * 2 - 1) * 140))
 		return positions
 
 	# Player party - intelligent arrow formation
