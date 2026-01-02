@@ -143,7 +143,7 @@ VeilbreakersGame/
 | Scenario/Assets | Opus 4 | 0.8 | Art generation |
 | Monster/Lore | Opus 4 | 0.9 | Story/creatures |
 | Map Creator | Opus 4 | 0.7 | World design |
-| Code Review | Opus 4 | 0.2 | Quality analysis |
+| Code Review | Opus 4 | 0.2 | Security, anti-cheat, file protection |
 
 ---
 

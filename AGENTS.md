@@ -48,7 +48,7 @@ No separate build step - Godot compiles GDScript on load.
 | **Scenario/Assets** | Opus 4 | 0.8 | Art generation, style consistency |
 | **Monster/Lore** | Opus 4 | 0.9 | Story, creatures, quests |
 | **Map Creator** | Opus 4 | 0.7 | World design, environments |
-| **Code Review** | Opus 4 | 0.2 | Quality analysis, optimization |
+| **Code Review** | Opus 4 | 0.2 | Security, anti-cheat, code quality, file protection |
 
 Agent configs: `.opencode/agent/*.md`
 
