@@ -11,12 +11,12 @@ title = "The Illusionist"
 description = "Something touched them near the Veil as a child. Now they see what isn't there, and can make others see it too. Reality is flexible around them."
 backstory = "No one knows where Mirage came from. They appeared at the Compact's gates three years ago, asking to join, knowing things they shouldn't know. Tests revealed they're human - mostly. The Compact keeps them close because the alternative - Mirage alone and unsupervised - is terrifying. They're genuinely trying to help, but their perception of 'help' is sometimes skewed. Finds humor in situations others find horrifying. May or may not be aware of conversations happening in other rooms."
 
-primary_brand = 4
+primary_brand = 3
 primary_path = 3
 role = "Illusionist"
 hero_class = "VOIDWALKER"
-recommended_monsters = ["flicker", "voltgeist", "crackling"]
-synergy_explanation = "UNCHAINED path heroes excel with SURGE and DREAD brand monsters. These reality-bending creatures complement Mirage's illusions with speed and terror effects."
+recommended_monsters = ["crackling"]
+synergy_explanation = "Crackling's SURGE brand harmonizes with Mirage's UNCHAINED path. Its chaotic lightning energy amplifies Mirage's reality-bending abilities."
 
 sprite_path = "res://assets/characters/heroes/mirage.png"
 portrait_path = "res://assets/characters/heroes/mirage_portrait.png"

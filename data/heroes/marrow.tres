@@ -15,8 +15,8 @@ primary_brand = 5
 primary_path = 2
 role = "Healer"
 hero_class = "SOULWEAVER"
-recommended_monsters = ["the_weeping", "hollow", "gluttony_polyp"]
-synergy_explanation = "VOIDTOUCHED path heroes synergize with LEECH brand monsters. These life-draining creatures enhance Marrow's drain healing, turning enemy vitality into ally restoration."
+recommended_monsters = ["gluttony_polyp"]
+synergy_explanation = "Gluttony Polyp's LEECH brand aligns with Marrow's VOIDTOUCHED path. Its life-draining nature complements Marrow's drain healing abilities."
 
 sprite_path = "res://assets/characters/heroes/marrow.png"
 portrait_path = "res://assets/characters/heroes/marrow_portrait.png"

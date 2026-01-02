@@ -499,8 +499,8 @@ func _create_info_panel() -> PanelContainer:
 	stats_grid.add_theme_constant_override("v_separation", 8)
 	vbox.add_child(stats_grid)
 	
-	# === RECOMMENDED MONSTERS SECTION ===
-	var monsters_section := _create_section_header("RECOMMENDED STARTER MONSTERS")
+	# === STARTER MONSTER SECTION ===
+	var monsters_section := _create_section_header("YOUR STARTER MONSTER")
 	vbox.add_child(monsters_section)
 	
 	synergy_label = RichTextLabel.new()
@@ -787,9 +787,9 @@ func _animate_hero_change(data: HeroData) -> void:
 		# Update labels
 		hero_name_label.text = data.display_name.to_upper()
 		
-		var class_name := data.hero_class if data.hero_class != "" else data.role.to_upper()
-		hero_class_label.text = class_name
-		var class_color: Color = CLASS_COLORS.get(class_name, Color.WHITE)
+		var hero_class_name := data.hero_class if data.hero_class != "" else data.role.to_upper()
+		hero_class_label.text = hero_class_name
+		var class_color: Color = CLASS_COLORS.get(hero_class_name, Color.WHITE)
 		hero_class_label.add_theme_color_override("font_color", class_color)
 		
 		hero_title_label.text = "\"" + data.title + "\""

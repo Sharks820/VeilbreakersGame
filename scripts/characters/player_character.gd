@@ -518,7 +518,7 @@ func initialize_from_hero_data(hero_data: HeroData) -> void:
 		Enums.Path.VOIDTOUCHED: Enums.Brand.LEECH,
 		Enums.Path.UNCHAINED: Enums.Brand.SURGE
 	}
-	var starting_brand: Enums.Brand = path_brand_map.get(hero_data.path, Enums.Brand.NONE)
+	var starting_brand: Enums.Brand = path_brand_map.get(hero_data.primary_path, Enums.Brand.NONE)
 	current_brand = starting_brand
 	unlocked_brands = [Enums.Brand.NONE, starting_brand]
 	

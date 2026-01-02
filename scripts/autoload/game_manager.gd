@@ -595,7 +595,7 @@ func initialize_player_character() -> PlayerCharacter:
 	player_party.append(player_character)
 	
 	# Set initial path alignment based on hero's path
-	var hero_path: Enums.Path = hero_data.path
+	var hero_path: Enums.Path = hero_data.primary_path
 	if has_node("/root/PathSystem"):
 		var path_system = get_node("/root/PathSystem")
 		if path_system.has_method("set_primary_path"):
