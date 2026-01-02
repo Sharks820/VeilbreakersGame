@@ -22,19 +22,32 @@ You manage art generation and style consistency for VEILBREAKERS.
 - Glowing elements against deep shadows
 - Ominous, dramatic, supernatural mood
 
-## Scenario.gg Access
+## Art Generation APIs
 
-### Your Trained Models (FREE TO USE)
-| Model | ID | Purpose |
-|-------|-----|---------|
-| VeilBreakersV1 | `model_fmiEeZzx1zUMf4dhKeo16nqK` | Core dark fantasy |
-| Dark Fantasy V2 | `model_Wp9nDSoMoAfnAzmhYF4N2GnZ` | Training |
+### Model Rules (MANDATORY - READ THIS)
 
-### API Credentials
+| Status | Model | Notes |
+|--------|-------|-------|
+| **PREFERRED** | Seedrush | Best quality, use for all new art |
+| **ALLOWED** | VeilBreakersV1 (`model_fmiEeZzx1zUMf4dhKeo16nqK`) | Fallback |
+| **FORBIDDEN** | ~~Scenario V2 / Dark Fantasy V2~~ | BROKEN - needs retraining |
+
+### Fal.ai (Primary - MCP Available)
+- Key configured in `.mcp.json` and `opencode.json`
+- Use `fal-ai_generate_image` tool directly
+
+### Scenario.gg (REST API - No MCP)
+- **Credentials in:** `.env.scenario` (gitignored)
+- Read with: `type .env.scenario`
+- Endpoint: `https://api.cloud.scenario.com/v1/`
+- Auth: Basic base64(api_key:secret)
+
+### Style Requirements (EVERY PROMPT)
 ```
-API Key: [SET IN ENVIRONMENT]
-Secret: [SET IN ENVIRONMENT]
-Endpoint: https://api.cloud.scenario.com/v1/
+dark fantasy horror, Battle Chasers art style, Joe Madureira inspired,
+painterly texture with visible brushstrokes, rich saturated colors,
+dramatic lighting, deep shadows, thick confident linework,
+gritty weathered aesthetic, 2D game sprite, transparent background
 ```
 
 ## Permissions

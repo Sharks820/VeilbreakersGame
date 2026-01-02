@@ -266,6 +266,55 @@ var brand: Enums.Brand = Enums.Brand.SAVAGE
 
 ---
 
+## Art Generation (CRITICAL - READ EVERY SESSION)
+
+### API Configuration
+- **Fal.ai:** Configured in `.mcp.json` and `opencode.json` - USE THIS
+- **Scenario.gg:** Credentials in `.env` file (read via bash if needed)
+
+### Model Rules (MANDATORY)
+
+| Status | Model | Notes |
+|--------|-------|-------|
+| **PREFERRED** | Seedrush | Best quality, use for all new art |
+| **ALLOWED** | VeilBreakersV1 (`model_fmiEeZzx1zUMf4dhKeo16nqK`) | Fallback option |
+| **FORBIDDEN** | ~~Scenario V2 / Dark Fantasy V2~~ | INACCURATE - needs retraining |
+
+### Style Requirements (INCLUDE IN EVERY PROMPT)
+```
+dark fantasy horror, Battle Chasers art style, Joe Madureira inspired,
+painterly texture with visible brushstrokes, rich saturated colors,
+dramatic lighting, deep shadows, thick confident linework,
+gritty weathered aesthetic, 2D game sprite, transparent background
+```
+
+### DO NOT
+- Use Scenario V2 trained model (broken)
+- Use anime/cel-shaded style
+- Use flat colors or comic halftone
+- Generate checker pattern backgrounds
+
+### Scenario.gg API (No MCP - Use REST)
+```bash
+# Credentials stored in: .env.scenario (GITIGNORED)
+# Read with: type .env.scenario (Windows) or cat .env.scenario (Unix)
+# Endpoint: https://api.cloud.scenario.com/v1/
+# Auth: Basic base64(api_key:secret)
+#
+# To generate auth header:
+# powershell -Command "[Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes('API_KEY:SECRET'))"
+```
+
+### Output Specs
+| Parameter | Value |
+|-----------|-------|
+| Resolution | 1024-2048px |
+| Format | PNG with transparency |
+| Save to | `assets/sprites/monsters/` |
+| Scale in-game | 0.08 |
+
+---
+
 ## Session Protocols
 
 ### Memory Protocol
