@@ -97,6 +97,9 @@ var _turn_order_tweens: Array[Tween] = []
 var _sprite_hitboxes: Dictionary = {}  # CharacterBase -> Rect2
 var _hovered_sprite_character: CharacterBase = null
 
+# Level up tracking for victory screen
+var _battle_level_ups: Dictionary = {}  # CharacterBase -> {old_level, new_level, stat_gains}
+
 # =============================================================================
 # INITIALIZATION
 # =============================================================================
@@ -104,12 +107,11 @@ var _hovered_sprite_character: CharacterBase = null
 func _ready() -> void:
 	_connect_signals()
 	_hide_all_menus()
+	_style_action_buttons()
 	
 	# Ensure we receive input events for mouse tracking
 	set_process_input(true)
 	mouse_filter = Control.MOUSE_FILTER_PASS  # Pass events through but still receive them
-
-
 
 	# IMMEDIATELY hide party_status_container and clear its placeholder children
 	# This must happen before the first frame renders to avoid showing placeholders
@@ -297,10 +299,13 @@ func _on_turn_started_update_order(character: CharacterBase) -> void:
 		update_turn_order(current_order)
 
 func _on_victory(rewards: Dictionary) -> void:
-	var items: Array = []
-	for item in rewards.get("items", []):
-		items.append(item.get("item_id", "Unknown"))
-	show_victory(rewards.get("experience", 0), rewards.get("currency", 0), items)
+	# Pass the full rewards dictionary to show_victory for enhanced display
+	var victory_data := {
+		"exp_gained": rewards.get("experience", 0),
+		"gold": rewards.get("currency", 0),
+		"items_dropped": rewards.get("items", [])
+	}
+	show_victory(victory_data)
 
 func _on_defeat() -> void:
 	show_defeat()
@@ -335,6 +340,10 @@ func _connect_signals() -> void:
 	EventBus.character_hovered.connect(_on_character_sprite_hovered)
 	EventBus.character_unhovered.connect(_on_character_sprite_unhovered)
 	EventBus.target_selected.connect(_on_target_selected_from_sprite)
+	
+	# Level up tracking for victory screen stat display
+	EventBus.level_up.connect(_on_character_level_up)
+	EventBus.battle_started.connect(_on_battle_started_clear_level_ups)
 
 func _hide_all_menus() -> void:
 	skill_menu.hide()
@@ -630,6 +639,87 @@ func _on_flee_pressed() -> void:
 	pending_skill = ""
 	action_selected.emit(pending_action, null, "")
 	set_ui_state(UIState.ANIMATING)
+
+# =============================================================================
+# BUTTON STYLING
+# =============================================================================
+
+func _style_action_buttons() -> void:
+	"""Apply polished AAA styling to action buttons with icons"""
+	var button_data := {
+		attack_button: {"icon": "res://assets/ui/icons/actions/attack.png", "color": Color(0.9, 0.3, 0.3)},
+		skill_button: {"icon": "res://assets/ui/icons/actions/skill.png", "color": Color(0.3, 0.5, 0.9)},
+		purify_button: {"icon": "res://assets/ui/icons/actions/special.png", "color": Color(0.8, 0.6, 0.9)},
+		item_button: {"icon": "res://assets/ui/icons/actions/item.png", "color": Color(0.3, 0.8, 0.4)},
+		defend_button: {"icon": "res://assets/ui/icons/actions/defend.png", "color": Color(0.6, 0.6, 0.7)},
+		flee_button: {"icon": "res://assets/ui/icons/actions/flee.png", "color": Color(0.8, 0.7, 0.3)}
+	}
+	
+	for button in button_data.keys():
+		if not button:
+			continue
+		
+		var data: Dictionary = button_data[button]
+		var accent_color: Color = data.color
+		
+		# Create custom stylebox for normal state
+		var normal_style := StyleBoxFlat.new()
+		normal_style.bg_color = Color(0.12, 0.12, 0.15, 0.95)
+		normal_style.border_color = accent_color.darkened(0.3)
+		normal_style.set_border_width_all(2)
+		normal_style.set_corner_radius_all(6)
+		normal_style.shadow_color = Color(0, 0, 0, 0.5)
+		normal_style.shadow_size = 4
+		normal_style.shadow_offset = Vector2(2, 2)
+		
+		# Hover style - brighter
+		var hover_style := StyleBoxFlat.new()
+		hover_style.bg_color = Color(0.18, 0.18, 0.22, 0.98)
+		hover_style.border_color = accent_color
+		hover_style.set_border_width_all(2)
+		hover_style.set_corner_radius_all(6)
+		hover_style.shadow_color = accent_color.darkened(0.5)
+		hover_style.shadow_color.a = 0.6
+		hover_style.shadow_size = 8
+		hover_style.shadow_offset = Vector2(0, 0)
+		
+		# Pressed style
+		var pressed_style := StyleBoxFlat.new()
+		pressed_style.bg_color = accent_color.darkened(0.4)
+		pressed_style.border_color = accent_color.lightened(0.2)
+		pressed_style.set_border_width_all(2)
+		pressed_style.set_corner_radius_all(6)
+		
+		# Disabled style
+		var disabled_style := StyleBoxFlat.new()
+		disabled_style.bg_color = Color(0.08, 0.08, 0.1, 0.7)
+		disabled_style.border_color = Color(0.3, 0.3, 0.3, 0.5)
+		disabled_style.set_border_width_all(1)
+		disabled_style.set_corner_radius_all(6)
+		
+		# Apply styles
+		button.add_theme_stylebox_override("normal", normal_style)
+		button.add_theme_stylebox_override("hover", hover_style)
+		button.add_theme_stylebox_override("pressed", pressed_style)
+		button.add_theme_stylebox_override("disabled", disabled_style)
+		
+		# Text styling
+		button.add_theme_color_override("font_color", Color(0.95, 0.9, 0.8))
+		button.add_theme_color_override("font_hover_color", Color(1.0, 0.95, 0.85))
+		button.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0))
+		button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
+		button.add_theme_font_size_override("font_size", 16)
+		
+		# Add icon if texture exists
+		var icon_path: String = data.icon
+		if ResourceLoader.exists(icon_path):
+			var icon_tex := load(icon_path) as Texture2D
+			if icon_tex:
+				button.icon = icon_tex
+				button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+				button.expand_icon = true
+				# Scale icon to fit button height
+				button.add_theme_constant_override("icon_max_width", 28)
 
 # =============================================================================
 # BUTTON HOVER EFFECTS
@@ -1416,6 +1506,8 @@ func _get_status_effect_icon_path(effect: Enums.StatusEffect) -> String:
 			return "res://assets/ui/icons/buffs/speed_up.png"
 		Enums.StatusEffect.PURIFYING:
 			return "res://assets/ui/icons/buffs/blessed.png"
+		Enums.StatusEffect.UNTARGETABLE:
+			return "res://assets/ui/icons/buffs/invisible.png"
 		_:
 			return ""
 
@@ -1461,11 +1553,38 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 		if icon_path == "" or not ResourceLoader.exists(icon_path):
 			continue
 
+		# Create container for icon with background
+		var icon_container := PanelContainer.new()
+		icon_container.custom_minimum_size = Vector2(20, 20)
+		
+		# Style the container based on buff/debuff
+		var style := StyleBoxFlat.new()
+		style.set_corner_radius_all(3)
+		style.set_border_width_all(1)
+		
+		# Determine if buff or debuff for coloring
+		var is_buff := effect in [
+			Enums.StatusEffect.REGEN, Enums.StatusEffect.SHIELD,
+			Enums.StatusEffect.ATTACK_UP, Enums.StatusEffect.DEFENSE_UP,
+			Enums.StatusEffect.SPEED_UP, Enums.StatusEffect.PURIFYING,
+			Enums.StatusEffect.UNTARGETABLE
+		]
+		
+		if is_buff:
+			style.bg_color = Color(0.1, 0.3, 0.1, 0.8)  # Green tint for buffs
+			style.border_color = Color(0.3, 0.7, 0.3, 0.9)
+		else:
+			style.bg_color = Color(0.3, 0.1, 0.1, 0.8)  # Red tint for debuffs
+			style.border_color = Color(0.7, 0.3, 0.3, 0.9)
+		
+		icon_container.add_theme_stylebox_override("panel", style)
+		
 		var icon := TextureRect.new()
 		icon.custom_minimum_size = Vector2(16, 16)
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.texture = load(icon_path)
+		icon_container.add_child(icon)
 
 		# Add tooltip with effect name and remaining duration
 		var effect_data: Dictionary = character.status_effects[effect_key]
@@ -1476,9 +1595,9 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 			tooltip += " (%d turns)" % duration
 		if stacks > 1:
 			tooltip += " x%d" % stacks
-		icon.tooltip_text = tooltip
+		icon_container.tooltip_text = tooltip
 
-		status_icons.add_child(icon)
+		status_icons.add_child(icon_container)
 		icon_count += 1
 
 
@@ -1681,26 +1800,538 @@ func clear_combat_log() -> void:
 # BATTLE END SCREENS
 # =============================================================================
 
-func show_victory(exp_gained: int, gold_gained: int, items_obtained: Array) -> void:
+func show_victory(data_or_exp, gold_gained: int = 0, items_obtained: Array = []) -> void:
+	## Show victory screen with rewards
+	## Can be called with:
+	##   show_victory(exp: int, gold: int, items: Array) - legacy
+	##   show_victory(data: Dictionary) - new format with party info
 	set_ui_state(UIState.WAITING)
-	victory_screen.show()
-
-	exp_label.text = "EXP Gained: %d" % exp_gained
-	gold_label.text = "Gold: %d" % gold_gained
-
-	var item_text := "Items: "
-	if items_obtained.is_empty():
-		item_text += "None"
+	
+	var exp_gained: int = 0
+	var gold: int = gold_gained
+	var items: Array = items_obtained
+	var party_data: Array = []  # Array of {character, exp_before, exp_after, level_before, level_after}
+	
+	# Handle both call signatures
+	if data_or_exp is Dictionary:
+		var data: Dictionary = data_or_exp
+		exp_gained = data.get("exp_gained", 0)
+		gold = data.get("gold", data.get("currency", 0))
+		items = data.get("items_dropped", [])
+		party_data = data.get("party_xp_data", [])
 	else:
-		item_text += ", ".join(items_obtained)
-	items_label.text = item_text
+		exp_gained = data_or_exp as int
+		gold = gold_gained
+		items = items_obtained
+	
+	# Style the victory panel
+	_style_victory_panel()
+	
+	victory_screen.show()
+	
+	# Get the rewards container
+	var rewards_container: VBoxContainer = victory_screen.get_node_or_null("VictoryPanel/VBoxContainer/RewardsContainer")
+	if rewards_container:
+		# Clear old content and rebuild
+		_build_victory_rewards_display(rewards_container, exp_gained, gold, items, party_data)
+	else:
+		# Fallback to simple labels
+		exp_label.text = "EXP Gained: %d" % exp_gained
+		gold_label.text = "Gold: %d" % gold
+		var item_text := "Items: "
+		if items.is_empty():
+			item_text += "None"
+		else:
+			var item_names: Array[String] = []
+			for item in items:
+				if item is Dictionary:
+					item_names.append(item.get("item_id", "Unknown"))
+				else:
+					item_names.append(str(item))
+			item_text += ", ".join(item_names)
+		items_label.text = item_text
 
 	continue_button.grab_focus()
+	
+	# Animate victory screen entrance
+	var victory_panel: PanelContainer = victory_screen.get_node_or_null("VictoryPanel")
+	if victory_panel:
+		victory_panel.modulate.a = 0.0
+		victory_panel.scale = Vector2(0.8, 0.8)
+		victory_panel.pivot_offset = victory_panel.size / 2
+		var tween := create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(victory_panel, "modulate:a", 1.0, 0.4).set_ease(Tween.EASE_OUT)
+		tween.tween_property(victory_panel, "scale", Vector2(1.0, 1.0), 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 
-func show_defeat() -> void:
+func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, gold: int, items: Array, party_data: Array) -> void:
+	## Build the enhanced victory rewards display with per-character XP bars
+	
+	# Clear existing children except the original labels (we'll hide them)
+	for child in container.get_children():
+		if child.name.begins_with("CharXP_") or child.name == "PartyXPSection" or child.name == "Separator":
+			child.queue_free()
+	
+	# Hide original simple labels - we'll use our custom display
+	if exp_label:
+		exp_label.hide()
+	if gold_label:
+		gold_label.hide()
+	if items_label:
+		items_label.hide()
+	
+	# === TOTAL EXP HEADER ===
+	var exp_header := Label.new()
+	exp_header.name = "CharXP_Header"
+	exp_header.text = "⚔ BATTLE REWARDS ⚔"
+	exp_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	exp_header.add_theme_font_size_override("font_size", 20)
+	exp_header.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
+	container.add_child(exp_header)
+	
+	# === PARTY XP SECTION ===
+	var party_section := VBoxContainer.new()
+	party_section.name = "PartyXPSection"
+	party_section.add_theme_constant_override("separation", 8)
+	container.add_child(party_section)
+	
+	# Get party members from battle_manager or GameManager
+	var party: Array = []
+	if battle_manager and battle_manager.player_party.size() > 0:
+		party = battle_manager.player_party
+	elif GameManager and GameManager.player_party.size() > 0:
+		party = GameManager.player_party
+	
+	# Calculate XP per member
+	var alive_count := 0
+	for member in party:
+		if member and member.is_alive():
+			alive_count += 1
+	var xp_per_member: int = exp_gained / maxi(1, alive_count) if alive_count > 0 else 0
+	
+	# Create XP display for each party member
+	var delay := 0.0
+	for i in range(party.size()):
+		var member: CharacterBase = party[i]
+		if not member:
+			continue
+		
+		var char_row := _create_character_xp_row(member, xp_per_member, delay)
+		party_section.add_child(char_row)
+		delay += 0.15  # Stagger animations
+	
+	# === SEPARATOR ===
+	var sep := HSeparator.new()
+	sep.name = "Separator"
+	sep.add_theme_constant_override("separation", 10)
+	sep.modulate = Color(0.4, 0.8, 0.4, 0.5)
+	container.add_child(sep)
+	
+	# === GOLD & ITEMS ROW ===
+	var rewards_row := HBoxContainer.new()
+	rewards_row.name = "CharXP_RewardsRow"
+	rewards_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	rewards_row.add_theme_constant_override("separation", 40)
+	container.add_child(rewards_row)
+	
+	# Gold display
+	var gold_display := HBoxContainer.new()
+	gold_display.add_theme_constant_override("separation", 5)
+	rewards_row.add_child(gold_display)
+	
+	var gold_icon := Label.new()
+	gold_icon.text = "💰"
+	gold_icon.add_theme_font_size_override("font_size", 20)
+	gold_display.add_child(gold_icon)
+	
+	var gold_amount := Label.new()
+	gold_amount.text = "%d Gold" % gold
+	gold_amount.add_theme_font_size_override("font_size", 18)
+	gold_amount.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	gold_display.add_child(gold_amount)
+	
+	# Items display
+	var items_display := HBoxContainer.new()
+	items_display.add_theme_constant_override("separation", 5)
+	rewards_row.add_child(items_display)
+	
+	var items_icon := Label.new()
+	items_icon.text = "📦"
+	items_icon.add_theme_font_size_override("font_size", 20)
+	items_display.add_child(items_icon)
+	
+	var items_text := Label.new()
+	if items.is_empty():
+		items_text.text = "No items"
+		items_text.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	else:
+		var item_names: Array[String] = []
+		for item in items:
+			if item is Dictionary:
+				var qty: int = item.get("quantity", 1)
+				var name: String = item.get("item_id", "Unknown")
+				item_names.append("%s x%d" % [name, qty] if qty > 1 else name)
+			else:
+				item_names.append(str(item))
+		items_text.text = ", ".join(item_names)
+		items_text.add_theme_color_override("font_color", Color(0.7, 0.9, 1.0))
+	items_text.add_theme_font_size_override("font_size", 16)
+	items_display.add_child(items_text)
+	
+	# Animate rewards row entrance
+	rewards_row.modulate.a = 0.0
+	var tween := create_tween()
+	tween.tween_property(rewards_row, "modulate:a", 1.0, 0.3).set_delay(delay + 0.3)
+
+func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: float) -> PanelContainer:
+	## Create a single character's XP display row with animated progress bar
+	var row := PanelContainer.new()
+	row.name = "CharXP_%s" % character.character_name
+	row.custom_minimum_size = Vector2(380, 50)
+	
+	# Style the row panel
+	var row_style := StyleBoxFlat.new()
+	row_style.bg_color = Color(0.05, 0.08, 0.05, 0.8)
+	row_style.border_color = Color(0.3, 0.5, 0.3, 0.6)
+	row_style.set_border_width_all(1)
+	row_style.set_corner_radius_all(6)
+	row_style.content_margin_left = 10
+	row_style.content_margin_right = 10
+	row_style.content_margin_top = 5
+	row_style.content_margin_bottom = 5
+	row.add_theme_stylebox_override("panel", row_style)
+	
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 10)
+	row.add_child(hbox)
+	
+	# Character name and level
+	var name_container := VBoxContainer.new()
+	name_container.custom_minimum_size.x = 100
+	hbox.add_child(name_container)
+	
+	var name_label := Label.new()
+	name_label.text = character.character_name
+	name_label.add_theme_font_size_override("font_size", 14)
+	name_label.add_theme_color_override("font_color", Color(0.9, 0.95, 0.9))
+	name_container.add_child(name_label)
+	
+	var level_label := Label.new()
+	level_label.text = "Lv. %d" % character.level
+	level_label.add_theme_font_size_override("font_size", 12)
+	level_label.add_theme_color_override("font_color", Color(0.6, 0.8, 0.6))
+	name_container.add_child(level_label)
+	
+	# XP bar section
+	var xp_section := VBoxContainer.new()
+	xp_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	xp_section.add_theme_constant_override("separation", 2)
+	hbox.add_child(xp_section)
+	
+	# XP text row
+	var xp_text_row := HBoxContainer.new()
+	xp_section.add_child(xp_text_row)
+	
+	var xp_label := Label.new()
+	xp_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	xp_label.add_theme_font_size_override("font_size", 11)
+	xp_label.add_theme_color_override("font_color", Color(0.7, 0.9, 0.7))
+	xp_text_row.add_child(xp_label)
+	
+	var xp_gained_label := Label.new()
+	xp_gained_label.text = "+%d XP" % xp_gained
+	xp_gained_label.add_theme_font_size_override("font_size", 12)
+	xp_gained_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
+	xp_text_row.add_child(xp_gained_label)
+	
+	# XP progress bar
+	var xp_bar := ProgressBar.new()
+	xp_bar.custom_minimum_size = Vector2(200, 12)
+	xp_bar.show_percentage = false
+	xp_section.add_child(xp_bar)
+	
+	# Style the progress bar
+	var bar_bg := StyleBoxFlat.new()
+	bar_bg.bg_color = Color(0.1, 0.15, 0.1, 0.9)
+	bar_bg.set_corner_radius_all(4)
+	xp_bar.add_theme_stylebox_override("background", bar_bg)
+	
+	var bar_fill := StyleBoxFlat.new()
+	bar_fill.bg_color = Color(0.3, 0.7, 0.3, 1.0)
+	bar_fill.set_corner_radius_all(4)
+	xp_bar.add_theme_stylebox_override("fill", bar_fill)
+	
+	# Calculate XP values
+	var current_xp: int = 0
+	var xp_for_next: int = 100
+	var is_alive := character.is_alive()
+	
+	if character.has_method("get_xp_for_next_level"):
+		xp_for_next = character.get_xp_for_next_level()
+	
+	# Get current XP - check for both player and monster
+	if "current_experience" in character:
+		current_xp = character.current_experience
+	
+	# Calculate the XP BEFORE this battle's gain (for animation)
+	var xp_before: int = current_xp - xp_gained if is_alive else current_xp
+	xp_before = maxi(0, xp_before)
+	
+	# Set initial bar state
+	xp_bar.max_value = xp_for_next
+	xp_bar.value = xp_before
+	
+	# Update XP text
+	xp_label.text = "%d / %d" % [current_xp, xp_for_next]
+	
+	# Dead characters get dimmed and no XP
+	if not is_alive:
+		row.modulate = Color(0.5, 0.5, 0.5, 0.7)
+		xp_gained_label.text = "(KO)"
+		xp_gained_label.add_theme_color_override("font_color", Color(0.8, 0.3, 0.3))
+	
+	# Animate entrance
+	row.modulate.a = 0.0
+	row.position.x = -20
+	
+	var entrance_tween := create_tween()
+	entrance_tween.set_parallel(true)
+	entrance_tween.tween_property(row, "modulate:a", 1.0 if is_alive else 0.7, 0.3).set_delay(delay)
+	entrance_tween.tween_property(row, "position:x", 0.0, 0.3).set_delay(delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	
+	# Animate XP bar fill (only for alive characters)
+	if is_alive and xp_gained > 0:
+		var bar_tween := create_tween()
+		bar_tween.tween_property(xp_bar, "value", float(current_xp), 0.8).set_delay(delay + 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+		
+		# Check for level up - use our tracked level up data
+		if has_character_leveled_up(character):
+			# Level up occurred! Add celebration effect with stat gains
+			bar_tween.tween_callback(_show_level_up_flash.bind(row, level_label, character.level, character)).set_delay(delay + 1.2)
+	
+	return row
+
+func _show_level_up_flash(row: PanelContainer, level_label: Label, new_level: int, character: CharacterBase = null) -> void:
+	## Flash effect when character levels up, with stat gains display
+	level_label.text = "Lv. %d ⬆" % new_level
+	level_label.add_theme_color_override("font_color", Color(1.0, 1.0, 0.3))
+	
+	# Flash the row
+	var flash_tween := create_tween()
+	flash_tween.tween_property(row, "modulate", Color(1.5, 1.5, 1.0, 1.0), 0.15)
+	flash_tween.tween_property(row, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.3)
+	
+	# Add "LEVEL UP!" popup with stat gains
+	var popup := PanelContainer.new()
+	popup.name = "LevelUpPopup"
+	popup.z_index = 10
+	
+	var popup_style := StyleBoxFlat.new()
+	popup_style.bg_color = Color(0.15, 0.12, 0.05, 0.95)
+	popup_style.border_color = Color(1.0, 0.85, 0.3)
+	popup_style.set_border_width_all(2)
+	popup_style.set_corner_radius_all(6)
+	popup_style.content_margin_left = 10
+	popup_style.content_margin_right = 10
+	popup_style.content_margin_top = 6
+	popup_style.content_margin_bottom = 6
+	popup.add_theme_stylebox_override("panel", popup_style)
+	
+	var popup_vbox := VBoxContainer.new()
+	popup_vbox.add_theme_constant_override("separation", 2)
+	popup.add_child(popup_vbox)
+	
+	# Title
+	var title := Label.new()
+	title.text = "⭐ LEVEL UP! ⭐"
+	title.add_theme_font_size_override("font_size", 14)
+	title.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	popup_vbox.add_child(title)
+	
+	# Get stat gains if we have level up data
+	var level_up_data: Dictionary = {}
+	if character:
+		level_up_data = get_level_up_data(character)
+	
+	if not level_up_data.is_empty() and level_up_data.has("stat_gains"):
+		var stat_gains: Dictionary = level_up_data["stat_gains"]
+		
+		# Create stat gains display
+		var stats_grid := GridContainer.new()
+		stats_grid.columns = 4  # 4 stats per row
+		stats_grid.add_theme_constant_override("h_separation", 8)
+		stats_grid.add_theme_constant_override("v_separation", 1)
+		popup_vbox.add_child(stats_grid)
+		
+		# Add stat gains in a compact format
+		var stat_order: Array[String] = ["max_hp", "max_mp", "attack", "defense", "magic", "resistance", "speed", "luck"]
+		var stat_abbrevs := {
+			"max_hp": "HP", "max_mp": "MP", "attack": "ATK", "defense": "DEF",
+			"magic": "MAG", "resistance": "RES", "speed": "SPD", "luck": "LCK"
+		}
+		var stat_colors := {
+			"max_hp": Color(0.4, 0.9, 0.4), "max_mp": Color(0.4, 0.6, 1.0),
+			"attack": Color(1.0, 0.5, 0.4), "defense": Color(0.5, 0.7, 1.0),
+			"magic": Color(0.8, 0.5, 1.0), "resistance": Color(0.6, 0.8, 0.9),
+			"speed": Color(0.5, 1.0, 0.7), "luck": Color(1.0, 0.9, 0.4)
+		}
+		
+		for stat in stat_order:
+			if stat_gains.has(stat) and stat_gains[stat] > 0:
+				var stat_label := Label.new()
+				stat_label.text = "%s+%d" % [stat_abbrevs.get(stat, stat), stat_gains[stat]]
+				stat_label.add_theme_font_size_override("font_size", 10)
+				stat_label.add_theme_color_override("font_color", stat_colors.get(stat, Color.WHITE))
+				stats_grid.add_child(stat_label)
+	
+	# Position popup above the row
+	popup.position = Vector2(row.size.x / 2 - 80, -60)
+	row.add_child(popup)
+	
+	# Animate popup entrance and exit
+	popup.modulate.a = 0.0
+	popup.scale = Vector2(0.8, 0.8)
+	popup.pivot_offset = popup.size / 2
+	
+	var popup_tween := create_tween()
+	popup_tween.set_parallel(true)
+	popup_tween.tween_property(popup, "modulate:a", 1.0, 0.2)
+	popup_tween.tween_property(popup, "scale", Vector2(1.0, 1.0), 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	popup_tween.tween_property(popup, "position:y", -80.0, 0.5).set_ease(Tween.EASE_OUT)
+	popup_tween.chain().tween_property(popup, "modulate:a", 0.0, 0.5).set_delay(1.5)
+	popup_tween.tween_callback(popup.queue_free)
+
+func _style_victory_panel() -> void:
+	"""Apply polished styling to victory screen"""
+	var victory_panel: PanelContainer = victory_screen.get_node_or_null("VictoryPanel")
+	if not victory_panel:
+		return
+	
+	# Style the panel
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.08, 0.12, 0.08, 0.98)
+	panel_style.border_color = Color(0.4, 0.8, 0.3)
+	panel_style.set_border_width_all(3)
+	panel_style.set_corner_radius_all(12)
+	panel_style.shadow_color = Color(0.2, 0.6, 0.2, 0.4)
+	panel_style.shadow_size = 20
+	panel_style.content_margin_left = 30
+	panel_style.content_margin_right = 30
+	panel_style.content_margin_top = 25
+	panel_style.content_margin_bottom = 25
+	victory_panel.add_theme_stylebox_override("panel", panel_style)
+	
+	# Style the title
+	var title: Label = victory_panel.get_node_or_null("VBoxContainer/VictoryTitle")
+	if title:
+		title.add_theme_font_size_override("font_size", 36)
+		title.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
+	
+	# Style the labels
+	for label in [exp_label, gold_label, items_label]:
+		if label:
+			label.add_theme_font_size_override("font_size", 18)
+			label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.85))
+	
+	# Style the continue button
+	if continue_button:
+		var btn_normal := StyleBoxFlat.new()
+		btn_normal.bg_color = Color(0.2, 0.5, 0.2, 0.95)
+		btn_normal.border_color = Color(0.4, 0.8, 0.4)
+		btn_normal.set_border_width_all(2)
+		btn_normal.set_corner_radius_all(6)
+		
+		var btn_hover := StyleBoxFlat.new()
+		btn_hover.bg_color = Color(0.3, 0.6, 0.3, 0.98)
+		btn_hover.border_color = Color(0.5, 1.0, 0.5)
+		btn_hover.set_border_width_all(2)
+		btn_hover.set_corner_radius_all(6)
+		btn_hover.shadow_color = Color(0.3, 0.8, 0.3, 0.5)
+		btn_hover.shadow_size = 8
+		
+		continue_button.add_theme_stylebox_override("normal", btn_normal)
+		continue_button.add_theme_stylebox_override("hover", btn_hover)
+		continue_button.add_theme_stylebox_override("pressed", btn_hover)
+		continue_button.add_theme_font_size_override("font_size", 18)
+		continue_button.add_theme_color_override("font_color", Color.WHITE)
+
+func show_defeat(data: Dictionary = {}) -> void:
+	## Show defeat screen. Accepts optional data dictionary for battle stats.
 	set_ui_state(UIState.WAITING)
+	
+	# Style the defeat panel
+	_style_defeat_panel()
+	
 	defeat_screen.show()
 	retry_button.grab_focus()
+	
+	# Animate defeat screen entrance
+	var defeat_panel: PanelContainer = defeat_screen.get_node_or_null("DefeatPanel")
+	if defeat_panel:
+		defeat_panel.modulate.a = 0.0
+		defeat_panel.scale = Vector2(0.8, 0.8)
+		defeat_panel.pivot_offset = defeat_panel.size / 2
+		var tween := create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(defeat_panel, "modulate:a", 1.0, 0.5).set_ease(Tween.EASE_OUT)
+		tween.tween_property(defeat_panel, "scale", Vector2(1.0, 1.0), 0.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
+func _style_defeat_panel() -> void:
+	"""Apply polished styling to defeat screen"""
+	var defeat_panel: PanelContainer = defeat_screen.get_node_or_null("DefeatPanel")
+	if not defeat_panel:
+		return
+	
+	# Style the panel - dark red theme
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.12, 0.06, 0.06, 0.98)
+	panel_style.border_color = Color(0.7, 0.2, 0.2)
+	panel_style.set_border_width_all(3)
+	panel_style.set_corner_radius_all(12)
+	panel_style.shadow_color = Color(0.5, 0.1, 0.1, 0.4)
+	panel_style.shadow_size = 20
+	panel_style.content_margin_left = 30
+	panel_style.content_margin_right = 30
+	panel_style.content_margin_top = 25
+	panel_style.content_margin_bottom = 25
+	defeat_panel.add_theme_stylebox_override("panel", panel_style)
+	
+	# Style the title
+	var title: Label = defeat_panel.get_node_or_null("VBoxContainer/DefeatTitle")
+	if title:
+		title.add_theme_font_size_override("font_size", 36)
+		title.add_theme_color_override("font_color", Color(0.9, 0.3, 0.3))
+	
+	# Style the message
+	var message: Label = defeat_panel.get_node_or_null("VBoxContainer/DefeatMessage")
+	if message:
+		message.add_theme_font_size_override("font_size", 16)
+		message.add_theme_color_override("font_color", Color(0.8, 0.7, 0.7))
+	
+	# Style buttons
+	for button in [retry_button, title_button]:
+		if not button:
+			continue
+		var btn_normal := StyleBoxFlat.new()
+		btn_normal.bg_color = Color(0.4, 0.15, 0.15, 0.95)
+		btn_normal.border_color = Color(0.6, 0.3, 0.3)
+		btn_normal.set_border_width_all(2)
+		btn_normal.set_corner_radius_all(6)
+		
+		var btn_hover := StyleBoxFlat.new()
+		btn_hover.bg_color = Color(0.5, 0.2, 0.2, 0.98)
+		btn_hover.border_color = Color(0.8, 0.4, 0.4)
+		btn_hover.set_border_width_all(2)
+		btn_hover.set_corner_radius_all(6)
+		btn_hover.shadow_color = Color(0.6, 0.2, 0.2, 0.5)
+		btn_hover.shadow_size = 8
+		
+		button.add_theme_stylebox_override("normal", btn_normal)
+		button.add_theme_stylebox_override("hover", btn_hover)
+		button.add_theme_stylebox_override("pressed", btn_hover)
+		button.add_theme_font_size_override("font_size", 16)
+		button.add_theme_color_override("font_color", Color(0.95, 0.9, 0.9))
 
 func _on_continue_pressed() -> void:
 	victory_screen.hide()
@@ -3192,6 +3823,44 @@ func _get_path_type_color(path: Enums.Path) -> Color:
 	return Color(0.7, 0.7, 0.7)
 
 # =============================================================================
+# LEVEL UP TRACKING FOR VICTORY SCREEN
+# =============================================================================
+
+func _on_battle_started_clear_level_ups(_enemy_data: Array) -> void:
+	## Clear level up tracking when a new battle starts
+	_battle_level_ups.clear()
+
+func _on_character_level_up(character: Node, new_level: int, stat_gains: Dictionary) -> void:
+	## Track level ups during battle for display on victory screen
+	if not character:
+		return
+	
+	# Store or update level up data for this character
+	if _battle_level_ups.has(character):
+		# Character leveled up multiple times - merge stat gains
+		var existing: Dictionary = _battle_level_ups[character]
+		existing["new_level"] = new_level
+		for stat in stat_gains:
+			if existing["stat_gains"].has(stat):
+				existing["stat_gains"][stat] += stat_gains[stat]
+			else:
+				existing["stat_gains"][stat] = stat_gains[stat]
+	else:
+		_battle_level_ups[character] = {
+			"old_level": new_level - 1,
+			"new_level": new_level,
+			"stat_gains": stat_gains.duplicate()
+		}
+
+func get_level_up_data(character: CharacterBase) -> Dictionary:
+	## Get level up data for a character (if they leveled up this battle)
+	return _battle_level_ups.get(character, {})
+
+func has_character_leveled_up(character: CharacterBase) -> bool:
+	## Check if a character leveled up during this battle
+	return _battle_level_ups.has(character)
+
+# =============================================================================
 # CLEANUP
 # =============================================================================
 
@@ -3207,6 +3876,10 @@ func _exit_tree() -> void:
 		EventBus.character_unhovered.disconnect(_on_character_sprite_unhovered)
 	if EventBus.target_selected.is_connected(_on_target_selected_from_sprite):
 		EventBus.target_selected.disconnect(_on_target_selected_from_sprite)
+	if EventBus.level_up.is_connected(_on_character_level_up):
+		EventBus.level_up.disconnect(_on_character_level_up)
+	if EventBus.battle_started.is_connected(_on_battle_started_clear_level_ups):
+		EventBus.battle_started.disconnect(_on_battle_started_clear_level_ups)
 	
 	# Kill any running tweens
 	for tween in _turn_order_tweens:

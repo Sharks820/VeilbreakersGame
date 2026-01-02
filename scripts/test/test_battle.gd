@@ -488,8 +488,11 @@ func _debug_add_corruption() -> void:
 # BATTLE CALLBACKS
 # =============================================================================
 
-func _on_battle_ended(victory: bool, _rewards: Dictionary) -> void:
+func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
+	var fled: bool = rewards.get("fled", false)
 	if victory:
 		EventBus.emit_debug("Test battle WON!")
+	elif fled:
+		EventBus.emit_debug("Test battle FLED!")
 	else:
 		EventBus.emit_debug("Test battle LOST!")

@@ -1306,7 +1306,8 @@ func _execute_flee(character: CharacterBase) -> Dictionary:
 		audio_command.emit("play_sfx", {"sound": "flee_success"})
 		EventBus.emit_debug("Successfully fled from battle!")
 		battle_fled.emit()
-		EventBus.battle_ended.emit(false, {})
+		# Pass "fled" flag so handlers know this isn't a defeat
+		EventBus.battle_ended.emit(false, {"fled": true})
 		return {"success": true}
 
 	ui_command.emit("show_message", {"text": "Couldn't escape!"})

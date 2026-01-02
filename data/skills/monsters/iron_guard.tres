@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "iron_guard"
+display_name = "Iron Guard"
+description = "Hardens body to increase defense significantly for 3 turns."
+icon_path = "res://assets/ui/skills/monsters/iron_guard.png"
+
+skill_type = 2
+element = 2
+damage_type = 0
+target_type = 0
+brand_requirement = 1
+
+mp_cost = 5
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 0
+scaling_stat = 6
+scaling_ratio = 0.0
+hit_count = 0
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 14, "chance": 1.0, "duration": 3}]
+stat_modifiers = []
+special_effects = []
+
+animation_id = "iron_guard"
+sound_effect = "sfx_metal"
+particle_effect = "shield_up"
+screen_shake = false
+
+level_requirement = 3
+path_requirement = 0.0
+prerequisite_skills = []

@@ -18,8 +18,14 @@ script = ExtResource("1_arena")
 [node name="Background" type="CanvasLayer" parent="."]
 layer = -10
 
-[node name="BackgroundSprite" type="Sprite2D" parent="Background"]
-position = Vector2(640, 360)
+[node name="BackgroundRect" type="TextureRect" parent="Background"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
 
 [node name="ParallaxBackground" type="ParallaxBackground" parent="Background"]
 

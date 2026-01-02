@@ -419,12 +419,16 @@ func _on_battle_started(_enemy_data: Array) -> void:
 	# Save pre-battle state for quit-during-battle functionality
 	save_pre_battle_state()
 
-func _on_battle_ended(victory: bool, _rewards: Dictionary) -> void:
+func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 	battle_count += 1
+	var fled: bool = rewards.get("fled", false)
+	
 	if victory:
 		victory_count += 1
-	else:
+	elif not fled:
+		# Only count as defeat if not fled
 		defeat_count += 1
+	# Note: flee_count is incremented in battle_manager._execute_flee()
 	
 	# Clear pre-battle state since battle completed normally
 	clear_pre_battle_state()

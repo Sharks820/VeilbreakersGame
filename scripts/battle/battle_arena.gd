@@ -3,6 +3,12 @@ extends Node2D
 ## Now integrated with full animation systems for AAA-quality combat.
 
 # =============================================================================
+# PRELOADS
+# =============================================================================
+
+const SkillVFXControllerScript := preload("res://scripts/battle/animation/skill_vfx_controller.gd")
+
+# =============================================================================
 # NODE REFERENCES - Core Systems
 # =============================================================================
 
@@ -159,16 +165,46 @@ func _on_character_sprite_clicked(character: CharacterBase) -> void:
 
 func _setup_background() -> void:
 	"""Load a battle background"""
-	var bg_sprite: Sprite2D = get_node_or_null("Background/BackgroundSprite")
+	var bg_layer: CanvasLayer = get_node_or_null("Background")
+	if not bg_layer:
+		push_warning("[BattleArena] Background CanvasLayer not found")
+		return
+	
+	# Load the background texture
+	var bg_texture: Texture2D = load("res://assets/environments/battles/corrupted_grove.png")
+	if not bg_texture:
+		push_warning("[BattleArena] Failed to load background texture")
+		return
+	
+	# Try to find existing BackgroundRect (TextureRect - preferred)
+	var bg_rect: TextureRect = bg_layer.get_node_or_null("BackgroundRect")
+	if bg_rect:
+		bg_rect.texture = bg_texture
+		EventBus.emit_debug("[BattleArena] Background loaded via TextureRect")
+		return
+	
+	# Fallback: Try BackgroundSprite (Sprite2D - legacy)
+	var bg_sprite: Sprite2D = bg_layer.get_node_or_null("BackgroundSprite")
 	if bg_sprite:
-		var bg_texture := load("res://assets/environments/battles/corrupted_grove.png")
-		if bg_texture:
-			bg_sprite.texture = bg_texture
-			bg_sprite.centered = false
-			bg_sprite.position = Vector2.ZERO
-			# Scale to fill 1920x1080
-			var tex_size = bg_texture.get_size()
+		bg_sprite.texture = bg_texture
+		bg_sprite.centered = false
+		bg_sprite.position = Vector2.ZERO
+		var tex_size := bg_texture.get_size()
+		if tex_size.x > 0 and tex_size.y > 0:
 			bg_sprite.scale = Vector2(1920.0 / tex_size.x, 1080.0 / tex_size.y)
+		EventBus.emit_debug("[BattleArena] Background loaded via Sprite2D")
+		return
+	
+	# Create TextureRect if neither exists
+	var new_bg_rect := TextureRect.new()
+	new_bg_rect.name = "BackgroundRect"
+	new_bg_rect.texture = bg_texture
+	new_bg_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	new_bg_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	new_bg_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	new_bg_rect.size = Vector2(1920, 1080)
+	bg_layer.add_child(new_bg_rect)
+	EventBus.emit_debug("[BattleArena] Background created dynamically")
 
 func _connect_signals() -> void:
 	# Core battle events
@@ -1063,6 +1099,14 @@ func _on_damage_dealt(source: Node, target: Node, amount: int, is_critical: bool
 
 	# Play hit animation
 	_play_hit_animation(sprite)
+	
+	# Spawn hit particle effect
+	var source_brand: Enums.Brand = Enums.Brand.NONE
+	if source and source.has_method("get_brand"):
+		var brand_value = source.get_brand()
+		if brand_value is int:
+			source_brand = brand_value as Enums.Brand
+	SkillVFXControllerScript.spawn_hit_effect(vfx_container, sprite.global_position, source_brand, is_critical)
 
 	# Apply knockback using the KnockbackAnimator
 	var knockback_direction := Vector2.LEFT
@@ -1091,6 +1135,13 @@ func _on_damage_dealt(source: Node, target: Node, amount: int, is_critical: bool
 	# Check for death
 	if character.is_dead():
 		_play_death_animation(sprite)
+		# Spawn death particle effect
+		var death_brand: Enums.Brand = Enums.Brand.NONE
+		if character.has_method("get_brand"):
+			var brand_value = character.get_brand()
+			if brand_value is int:
+				death_brand = brand_value as Enums.Brand
+		SkillVFXControllerScript.spawn_death_effect(vfx_container, sprite.global_position, death_brand)
 		if screen_effects:
 			screen_effects.on_enemy_death()
 
@@ -1131,6 +1182,7 @@ func _on_healing_done(_source: Node, target: Node, amount: int) -> void:
 	})
 
 	# Spawn heal VFX
+	SkillVFXControllerScript.spawn_heal_effect(vfx_container, sprite.global_position)
 	if vfx_manager:
 		vfx_manager.spawn_heal_effect({"position": sprite.global_position})
 

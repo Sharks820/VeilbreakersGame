@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "healing_pulse"
+display_name = "Healing Pulse"
+description = "Releases a wave of restorative energy, healing all allies."
+icon_path = "res://assets/ui/skills/monsters/healing_pulse.png"
+
+skill_type = 1
+element = 0
+damage_type = 1
+target_type = 2
+brand_requirement = -1
+
+mp_cost = 12
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 25
+scaling_stat = 5
+scaling_ratio = 1.2
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = []
+stat_modifiers = []
+special_effects = []
+
+animation_id = "healing_pulse"
+sound_effect = "sfx_heal"
+particle_effect = "heal_wave"
+screen_shake = false
+
+level_requirement = 8
+path_requirement = 0.0
+prerequisite_skills = []

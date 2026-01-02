@@ -127,13 +127,17 @@ func start_battle(enemy_data: Array) -> void:
 	SceneManager.change_scene("res://scenes/battle/battle_arena.tscn")
 
 func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
+	var fled: bool = rewards.get("fled", false)
+	
 	if victory:
 		EventBus.emit_debug("Battle won! Rewards: %s" % str(rewards))
+	elif fled:
+		EventBus.emit_debug("Fled from battle!")
 	else:
 		EventBus.emit_debug("Battle lost!")
 
 	# Return to overworld or handle game over
-	if victory:
+	if victory or fled:
 		GameManager.change_state(Enums.GameState.OVERWORLD)
 		# Return to previous scene
 	else:

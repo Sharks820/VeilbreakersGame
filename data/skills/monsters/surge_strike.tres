@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "surge_strike"
+display_name = "Surge Strike"
+description = "A lightning-fast attack that may paralyze the target."
+icon_path = "res://assets/ui/skills/monsters/surge_strike.png"
+
+skill_type = 0
+element = 4
+damage_type = 0
+target_type = 3
+brand_requirement = 3
+
+mp_cost = 6
+hp_cost = 0
+cooldown_turns = 1
+
+base_power = 22
+scaling_stat = 4
+scaling_ratio = 1.1
+hit_count = 1
+accuracy_modifier = 0.1
+crit_modifier = 0.15
+
+status_effects = [{"effect": 4, "chance": 0.25, "duration": 2}]
+stat_modifiers = []
+special_effects = []
+
+animation_id = "surge_strike"
+sound_effect = "sfx_lightning"
+particle_effect = "electric_spark"
+screen_shake = true
+
+level_requirement = 4
+path_requirement = 0.0
+prerequisite_skills = []

@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "dread_gaze"
+display_name = "Dread Gaze"
+description = "Stares into the target's soul, lowering their defense and possibly causing confusion."
+icon_path = "res://assets/ui/skills/monsters/dread_gaze.png"
+
+skill_type = 3
+element = 5
+damage_type = 1
+target_type = 3
+brand_requirement = 4
+
+mp_cost = 7
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 10
+scaling_stat = 5
+scaling_ratio = 0.5
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.0
+
+status_effects = [{"effect": 13, "chance": 1.0, "duration": 3}, {"effect": 6, "chance": 0.35, "duration": 2}]
+stat_modifiers = []
+special_effects = []
+
+animation_id = "dread_gaze"
+sound_effect = "sfx_dread"
+particle_effect = "shadow_eyes"
+screen_shake = false
+
+level_requirement = 6
+path_requirement = 0.0
+prerequisite_skills = []
