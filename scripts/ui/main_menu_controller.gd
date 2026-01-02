@@ -398,7 +398,8 @@ func _on_new_game_pressed() -> void:
 	_play_button_press(new_game_button)
 	GameManager.reset_for_new_game()
 	await get_tree().create_timer(0.3).timeout
-	SceneManager.change_scene("res://scenes/test/test_battle.tscn")
+	# Go to character select screen instead of directly to battle
+	SceneManager.change_scene("res://scenes/ui/character_select.tscn")
 
 func _on_continue_pressed() -> void:
 	if not continue_has_saves:

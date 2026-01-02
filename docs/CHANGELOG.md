@@ -4,6 +4,40 @@
 
 ---
 
+## [v0.64] - 2026-01-02
+
+### Added
+- **Character Select HUD** - Full hero selection screen
+  - 4 heroes displayed: Bastion (Tank), Rend (DPS), Marrow (Healer), Mirage (Illusionist)
+  - Left panel: Hero cards with portraits, names, titles, roles
+  - Center: Large animated hero sprite with breathing animation
+  - Right panel: Path/Brand alignment, description, 8 base stats, combat style, starting skills
+  - Path → Brand mapping visualization (IRONBOUND→IRON, FANGBORN→SAVAGE, etc.)
+  - Role-colored cards (Tank=blue, DPS=red, Healer=green, Illusionist=purple)
+  - Keyboard (up/down/enter/escape) and mouse navigation
+  - Animated hero transitions with fade + scale pop
+- New files: `scripts/ui/character_select_controller.gd`, `scenes/ui/character_select.tscn`
+
+### Changed
+- Main Menu "New Game" now goes to Character Select instead of directly to battle
+
+---
+
+## [v0.63] - 2026-01-02
+
+### Added
+- **Capture UI Animations** - Full visual feedback for capture system
+  - Corruption bar pulse/glow during capture attempts
+  - Floating "-X% CORRUPTION" popup on corruption reduction
+  - Semi-transparent overlay during capture phase
+  - Success popup with green flash ("CAPTURED!")
+  - Failure popup with red flash ("ESCAPED!")
+  - Monster panel color flash effects
+  - Smooth corruption bar decrease animation
+- Connected CaptureSystem signals to BattleUIController
+
+---
+
 ## [v0.62] - 2026-01-02
 
 ### Changed

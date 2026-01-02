@@ -134,6 +134,9 @@ func _ready() -> void:
 		var scrollbar := combat_log_scroll.get_v_scroll_bar()
 		if scrollbar:
 			scrollbar.value_changed.connect(_on_combat_log_scrolled)
+	
+	# Connect capture system signals for animated corruption bar
+	_connect_capture_signals()
 
 func _on_viewport_size_changed() -> void:
 	"""Called when viewport size changes (windowed mode resize) - reposition all UI elements"""
@@ -3861,6 +3864,374 @@ func has_character_leveled_up(character: CharacterBase) -> bool:
 	return _battle_level_ups.has(character)
 
 # =============================================================================
+# CAPTURE SYSTEM UI ANIMATIONS
+# =============================================================================
+
+var _corruption_bar_tweens: Dictionary = {}  # monster -> Tween
+var _capture_overlay: ColorRect = null
+
+func _connect_capture_signals() -> void:
+	"""Connect to CaptureSystem signals for animated UI feedback"""
+	# These signals come from CaptureSystem - connect if it exists
+	var capture_system := get_node_or_null("/root/BattleManager/CaptureSystem")
+	if capture_system:
+		if capture_system.has_signal("corruption_reduced"):
+			capture_system.corruption_reduced.connect(_on_corruption_reduced)
+		if capture_system.has_signal("capture_succeeded"):
+			capture_system.capture_succeeded.connect(_on_capture_succeeded)
+		if capture_system.has_signal("capture_failed"):
+			capture_system.capture_failed.connect(_on_capture_failed)
+		if capture_system.has_signal("capture_attempt_started"):
+			capture_system.capture_attempt_started.connect(_on_capture_attempt_started)
+		if capture_system.has_signal("corruption_battle_started"):
+			capture_system.corruption_battle_started.connect(_on_corruption_battle_started)
+		if capture_system.has_signal("corruption_battle_pass"):
+			capture_system.corruption_battle_pass.connect(_on_corruption_battle_pass)
+	
+	# Also connect via EventBus for decoupled communication
+	if not EventBus.corruption_battle_started.is_connected(_on_corruption_battle_started_event):
+		EventBus.corruption_battle_started.connect(_on_corruption_battle_started_event)
+	if not EventBus.corruption_battle_pass_completed.is_connected(_on_corruption_battle_pass_event):
+		EventBus.corruption_battle_pass_completed.connect(_on_corruption_battle_pass_event)
+
+func _on_corruption_reduced(monster: Node, old_value: float, new_value: float) -> void:
+	"""Animate corruption bar decrease with dramatic effect"""
+	if not monster or not is_instance_valid(monster):
+		return
+	
+	# Find the corruption bar for this monster
+	var corruption_bar := _get_monster_corruption_bar(monster)
+	if not corruption_bar:
+		return
+	
+	# Kill any existing tween for this monster
+	if _corruption_bar_tweens.has(monster) and _corruption_bar_tweens[monster].is_valid():
+		_corruption_bar_tweens[monster].kill()
+	
+	# Calculate percentages
+	var max_corruption: float = 100.0
+	if monster.has_method("get_max_corruption"):
+		max_corruption = monster.get_max_corruption()
+	elif "max_corruption" in monster:
+		max_corruption = monster.max_corruption
+	
+	var old_percent := (old_value / max_corruption) * 100.0
+	var new_percent := (new_value / max_corruption) * 100.0
+	
+	# Create dramatic animation
+	var tween := create_tween()
+	_corruption_bar_tweens[monster] = tween
+	
+	# Flash the bar bright purple
+	var bar_fill := corruption_bar.get_theme_stylebox("fill") as StyleBoxFlat
+	if bar_fill:
+		var original_color := bar_fill.bg_color
+		var flash_color := Color(0.9, 0.4, 1.0, 1.0)  # Bright purple flash
+		
+		tween.tween_callback(func(): bar_fill.bg_color = flash_color)
+		tween.tween_interval(0.1)
+		tween.tween_callback(func(): bar_fill.bg_color = original_color)
+	
+	# Animate the value decrease with easing
+	tween.tween_property(corruption_bar, "value", new_percent, 0.6).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	
+	# Add floating text showing corruption reduction
+	var reduction := old_value - new_value
+	if reduction > 0:
+		_show_corruption_reduction_popup(monster, reduction)
+	
+	# Log to combat log
+	if monster.has_method("get_character_name"):
+		var name: String = monster.character_name if "character_name" in monster else "Monster"
+		_append_to_log("[color=purple]%s's corruption reduced by %.0f%%![/color]" % [name, reduction])
+
+func _get_monster_corruption_bar(monster: Node) -> ProgressBar:
+	"""Find the corruption bar for a monster in the UI"""
+	# Check enemy_sidebar_panel first (right sidebar)
+	if monster.has_meta("enemy_sidebar_panel"):
+		var panel: PanelContainer = monster.get_meta("enemy_sidebar_panel")
+		if is_instance_valid(panel):
+			return panel.find_child("CorruptionBar", true, false) as ProgressBar
+	
+	# Check ui_panel (old sidebar)
+	if monster.has_meta("ui_panel"):
+		var panel: PanelContainer = monster.get_meta("ui_panel")
+		if is_instance_valid(panel):
+			return panel.find_child("CorruptionBar", true, false) as ProgressBar
+	
+	return null
+
+func _show_corruption_reduction_popup(monster: Node, amount: float) -> void:
+	"""Show floating popup when corruption is reduced"""
+	var popup := Label.new()
+	popup.text = "-%.0f%% CORRUPTION" % amount
+	popup.add_theme_font_size_override("font_size", 16)
+	popup.add_theme_color_override("font_color", Color(0.8, 0.4, 1.0))  # Purple
+	popup.add_theme_color_override("font_outline_color", Color(0.1, 0.0, 0.15))
+	popup.add_theme_constant_override("outline_size", 3)
+	popup.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	popup.z_index = 100
+	
+	# Position near the monster's sidebar panel
+	var panel_pos := Vector2(size.x - 200, 150)  # Default to right side
+	if monster.has_meta("enemy_sidebar_panel"):
+		var panel: PanelContainer = monster.get_meta("enemy_sidebar_panel")
+		if is_instance_valid(panel):
+			panel_pos = panel.global_position + Vector2(-50, 20)
+	
+	popup.position = panel_pos
+	add_child(popup)
+	
+	# Animate float up and fade
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(popup, "position:y", panel_pos.y - 60, 1.2).set_ease(Tween.EASE_OUT)
+	tween.tween_property(popup, "modulate:a", 0.0, 0.8).set_delay(0.4)
+	tween.set_parallel(false)
+	tween.tween_callback(popup.queue_free)
+
+func _on_capture_attempt_started(monster: Node, vessel_tier: int, chance: float) -> void:
+	"""Show capture attempt UI with chance display"""
+	if not monster or not is_instance_valid(monster):
+		return
+	
+	var name: String = monster.character_name if "character_name" in monster else "Monster"
+	_append_to_log("[color=cyan]⚔ Capture attempt on %s! (%.0f%% chance)[/color]" % [name, chance * 100])
+	
+	# Start corruption bar pulsing animation
+	_start_corruption_bar_pulse(monster)
+
+func _start_corruption_bar_pulse(monster: Node) -> void:
+	"""Make corruption bar pulse during capture attempt"""
+	var corruption_bar := _get_monster_corruption_bar(monster)
+	if not corruption_bar:
+		return
+	
+	# Create pulsing glow effect
+	var pulse_tween := create_tween().set_loops(5)  # Pulse 5 times
+	pulse_tween.tween_property(corruption_bar, "modulate", Color(1.4, 1.0, 1.4, 1.0), 0.3)
+	pulse_tween.tween_property(corruption_bar, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.3)
+
+func _on_corruption_battle_started(monster: Node, passes_needed: int) -> void:
+	"""Show corruption battle UI overlay"""
+	if not monster or not is_instance_valid(monster):
+		return
+	
+	var name: String = monster.character_name if "character_name" in monster else "Monster"
+	_append_to_log("[color=magenta]═══ CORRUPTION BATTLE: %s ═══[/color]" % name)
+	_append_to_log("[color=gray]%d passes needed to break the corruption...[/color]" % passes_needed)
+	
+	# Create dramatic overlay effect
+	_show_capture_overlay(Color(0.3, 0.1, 0.4, 0.3))
+
+func _on_corruption_battle_started_event(monster: Node, passes: int) -> void:
+	"""EventBus version of corruption battle started"""
+	_on_corruption_battle_started(monster, passes)
+
+func _on_corruption_battle_pass(monster: Node, current_pass: int, total_passes: int) -> void:
+	"""Show progress during corruption battle"""
+	_append_to_log("[color=purple]Pass %d/%d complete![/color]" % [current_pass, total_passes])
+	
+	# Flash the corruption bar
+	var corruption_bar := _get_monster_corruption_bar(monster)
+	if corruption_bar:
+		var flash_tween := create_tween()
+		flash_tween.tween_property(corruption_bar, "modulate", Color(2.0, 1.5, 2.0, 1.0), 0.1)
+		flash_tween.tween_property(corruption_bar, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.2)
+
+func _on_corruption_battle_pass_event(monster: Node, current: int, total: int) -> void:
+	"""EventBus version of corruption battle pass"""
+	_on_corruption_battle_pass(monster, current, total)
+
+func _on_capture_succeeded(monster: Node, method: int, bonus_data: Dictionary) -> void:
+	"""Show dramatic capture success animation"""
+	if not monster or not is_instance_valid(monster):
+		return
+	
+	var name: String = monster.character_name if "character_name" in monster else "Monster"
+	var method_name := _get_capture_method_name(method)
+	
+	_append_to_log("[color=lime][b]★ CAPTURE SUCCESS! ★[/b][/color]")
+	_append_to_log("[color=green]%s has been captured via %s![/color]" % [name, method_name])
+	
+	# Hide capture overlay
+	_hide_capture_overlay()
+	
+	# Show success popup
+	_show_capture_result_popup(true, name, method_name)
+	
+	# Flash the monster's panel green
+	_flash_monster_panel(monster, Color(0.3, 1.0, 0.3, 1.0))
+
+func _on_capture_failed(monster: Node, method: int, reason: String) -> void:
+	"""Show capture failure animation"""
+	if not monster or not is_instance_valid(monster):
+		return
+	
+	var name: String = monster.character_name if "character_name" in monster else "Monster"
+	var method_name := _get_capture_method_name(method)
+	
+	_append_to_log("[color=red][b]✗ CAPTURE FAILED![/b][/color]")
+	_append_to_log("[color=salmon]%s[/color]" % reason)
+	
+	# Hide capture overlay
+	_hide_capture_overlay()
+	
+	# Show failure popup
+	_show_capture_result_popup(false, name, method_name)
+	
+	# Flash the monster's panel red
+	_flash_monster_panel(monster, Color(1.0, 0.3, 0.3, 1.0))
+
+func _get_capture_method_name(method: int) -> String:
+	"""Get display name for capture method"""
+	match method:
+		0: return "SOULBIND"
+		1: return "PURIFY"
+		2: return "DOMINATE"
+		3: return "BARGAIN"
+		_: return "UNKNOWN"
+
+func _show_capture_overlay(color: Color) -> void:
+	"""Show semi-transparent overlay during capture"""
+	if _capture_overlay and is_instance_valid(_capture_overlay):
+		_capture_overlay.queue_free()
+	
+	_capture_overlay = ColorRect.new()
+	_capture_overlay.name = "CaptureOverlay"
+	_capture_overlay.color = color
+	_capture_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_capture_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_capture_overlay.z_index = 50
+	add_child(_capture_overlay)
+	
+	# Fade in
+	_capture_overlay.modulate.a = 0.0
+	var tween := create_tween()
+	tween.tween_property(_capture_overlay, "modulate:a", 1.0, 0.3)
+
+func _hide_capture_overlay() -> void:
+	"""Hide and remove capture overlay"""
+	if _capture_overlay and is_instance_valid(_capture_overlay):
+		var tween := create_tween()
+		tween.tween_property(_capture_overlay, "modulate:a", 0.0, 0.3)
+		tween.tween_callback(_capture_overlay.queue_free)
+		_capture_overlay = null
+
+func _show_capture_result_popup(success: bool, monster_name: String, method_name: String) -> void:
+	"""Show dramatic capture result popup"""
+	var popup := PanelContainer.new()
+	popup.name = "CaptureResultPopup"
+	popup.z_index = 100
+	
+	# Style based on success/failure
+	var style := StyleBoxFlat.new()
+	if success:
+		style.bg_color = Color(0.1, 0.2, 0.1, 0.95)
+		style.border_color = Color(0.4, 1.0, 0.4)
+	else:
+		style.bg_color = Color(0.2, 0.1, 0.1, 0.95)
+		style.border_color = Color(1.0, 0.4, 0.4)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(12)
+	style.content_margin_left = 40
+	style.content_margin_right = 40
+	style.content_margin_top = 30
+	style.content_margin_bottom = 30
+	popup.add_theme_stylebox_override("panel", style)
+	
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	popup.add_child(vbox)
+	
+	# Title
+	var title := Label.new()
+	if success:
+		title.text = "★ CAPTURED! ★"
+		title.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
+	else:
+		title.text = "✗ ESCAPED!"
+		title.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
+	title.add_theme_font_size_override("font_size", 32)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+	
+	# Monster name
+	var name_label := Label.new()
+	name_label.text = monster_name
+	name_label.add_theme_font_size_override("font_size", 20)
+	name_label.add_theme_color_override("font_color", Color.WHITE)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(name_label)
+	
+	# Method used
+	var method_label := Label.new()
+	method_label.text = "via %s" % method_name
+	method_label.add_theme_font_size_override("font_size", 14)
+	method_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	method_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(method_label)
+	
+	add_child(popup)
+	
+	# Center on screen
+	await get_tree().process_frame
+	var viewport_size := get_viewport_rect().size
+	popup.position = (viewport_size - popup.size) / 2
+	
+	# Animate entrance
+	popup.modulate.a = 0.0
+	popup.scale = Vector2(0.5, 0.5)
+	popup.pivot_offset = popup.size / 2
+	
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(popup, "modulate:a", 1.0, 0.3).set_ease(Tween.EASE_OUT)
+	tween.tween_property(popup, "scale", Vector2(1.0, 1.0), 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	
+	# Hold and fade out
+	tween.set_parallel(false)
+	tween.tween_interval(2.0)
+	tween.tween_property(popup, "modulate:a", 0.0, 0.5)
+	tween.tween_callback(popup.queue_free)
+
+func _flash_monster_panel(monster: Node, color: Color) -> void:
+	"""Flash a monster's sidebar panel with a color"""
+	var panel: PanelContainer = null
+	if monster.has_meta("enemy_sidebar_panel"):
+		panel = monster.get_meta("enemy_sidebar_panel")
+	elif monster.has_meta("ui_panel"):
+		panel = monster.get_meta("ui_panel")
+	
+	if not panel or not is_instance_valid(panel):
+		return
+	
+	var tween := create_tween()
+	tween.tween_property(panel, "modulate", color, 0.15)
+	tween.tween_property(panel, "modulate", Color.WHITE, 0.3)
+	tween.tween_property(panel, "modulate", color.lerp(Color.WHITE, 0.5), 0.15)
+	tween.tween_property(panel, "modulate", Color.WHITE, 0.2)
+
+func animate_corruption_change(monster: Node, new_corruption: float) -> void:
+	"""Public method to animate corruption bar change (called from battle system)"""
+	if not monster or not is_instance_valid(monster):
+		return
+	
+	var corruption_bar := _get_monster_corruption_bar(monster)
+	if not corruption_bar:
+		return
+	
+	# Calculate percentage
+	var max_corruption: float = 100.0
+	if "max_corruption" in monster:
+		max_corruption = monster.max_corruption
+	var new_percent := (new_corruption / max_corruption) * 100.0
+	
+	# Animate smoothly
+	var tween := create_tween()
+	tween.tween_property(corruption_bar, "value", new_percent, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+
+# =============================================================================
 # CLEANUP
 # =============================================================================
 
@@ -3881,8 +4252,26 @@ func _exit_tree() -> void:
 	if EventBus.battle_started.is_connected(_on_battle_started_clear_level_ups):
 		EventBus.battle_started.disconnect(_on_battle_started_clear_level_ups)
 	
+	# Disconnect capture system signals
+	if EventBus.corruption_battle_started.is_connected(_on_corruption_battle_started_event):
+		EventBus.corruption_battle_started.disconnect(_on_corruption_battle_started_event)
+	if EventBus.corruption_battle_pass_completed.is_connected(_on_corruption_battle_pass_event):
+		EventBus.corruption_battle_pass_completed.disconnect(_on_corruption_battle_pass_event)
+	
 	# Kill any running tweens
 	for tween in _turn_order_tweens:
 		if tween and tween.is_valid():
 			tween.kill()
 	_turn_order_tweens.clear()
+	
+	# Kill corruption bar tweens
+	for monster in _corruption_bar_tweens:
+		var tween: Tween = _corruption_bar_tweens[monster]
+		if tween and tween.is_valid():
+			tween.kill()
+	_corruption_bar_tweens.clear()
+	
+	# Clean up capture overlay
+	if _capture_overlay and is_instance_valid(_capture_overlay):
+		_capture_overlay.queue_free()
+		_capture_overlay = null
