@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v5.3** | Last updated: 2026-01-01
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v0.60** | Last updated: 2026-01-02
 
 ---
 
@@ -351,11 +351,12 @@ battle, ui, art, audio, vera, monsters, critical
 | 2026-01-01 | v5.0: **MAJOR** - Brand System v5.0 LOCKED (12 brands, 3 tiers, evolution system) |
 | 2026-01-01 | v5.2: Removed deprecated Element system, modernized to Brand-only damage |
 | 2026-01-01 | v5.2.4: Fixed game_manager.gd to use new 4-Path system |
-| 2026-01-01 | v5.3: Fixed Variant type inference errors in player_character.gd, added AGENTS.md + opencode.json |
+| 2026-01-01 | v0.53: Fixed Variant type inference errors in player_character.gd, added AGENTS.md + opencode.json |
+| 2026-01-02 | **v0.60: MAJOR** - Agent architecture (6 agents), documentation system, style guide, version format change |
 
 ---
 
-## Recent Changes (v5.2-v5.3)
+## Recent Changes (v0.53-v0.60)
 
 ### Removed Systems
 - **Element System** - Completely removed (was deprecated)

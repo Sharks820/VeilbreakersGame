@@ -1,6 +1,21 @@
 # VEILBREAKERS - Agent Instructions
 
-> Godot 4.5 | GDScript | Turn-Based Monster-Capturing RPG
+> Godot 4.5 | GDScript | Turn-Based Monster-Capturing RPG | **v0.60**
+
+---
+
+## Quick Reference
+
+| Resource | Purpose |
+|----------|---------|
+| `AGENT_SYSTEMS.md` | Game systems (brands, paths, capture) - **READ ONLY** |
+| `docs/STYLE_GUIDE.md` | Art direction, color palette |
+| `docs/CURRENT_STATE.md` | What's working now |
+| `docs/CHANGELOG.md` | Version history |
+| `docs/DECISIONS.md` | Architectural decisions |
+| `VEILBREAKERS.md` | UI values, session notes |
+
+---
 
 ## Build & Run Commands
 
@@ -20,6 +35,49 @@ GODOT="C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.Godot
 
 No separate build step - Godot compiles GDScript on load.
 
+---
+
+## Agent Architecture
+
+### Primary Agents (6)
+
+| Agent | Model | Temp | Role |
+|-------|-------|------|------|
+| **Builder** | Opus 4.5 + Extended Thinking | 0.3 | Autonomous coding, bug fixes, features |
+| **Operations** | Opus 4 | 0.3 | Task orchestration, docs, git hygiene |
+| **Scenario/Assets** | Opus 4 | 0.8 | Art generation, style consistency |
+| **Monster/Lore** | Opus 4 | 0.9 | Story, creatures, quests |
+| **Map Creator** | Opus 4 | 0.7 | World design, environments |
+| **Code Review** | Opus 4 | 0.2 | Quality analysis, optimization |
+
+Agent configs: `.opencode/agent/*.md`
+
+### High-Risk Items (MUST ASK USER)
+- Change Brand/Path system design
+- Modify save file format
+- Remove or rename core classes
+- Change corruption philosophy
+- Major UI flow changes
+- Game function/story/big script changes
+- Delete ANY file (archive only, never delete)
+
+---
+
+## Version Format
+
+```
+v0.XX (+0.01 minor, +0.10 major, v1.00 = release)
+```
+
+**Commit often** - every 15 minutes of work or after significant changes.
+
+```bash
+git add -A && git commit -m "v0.XX: Brief description"
+git push origin master
+```
+
+---
+
 ## Project Structure
 
 ```
@@ -33,6 +91,8 @@ scripts/
 ├── utils/             # Enums, Constants, Helpers
 └── test/              # Test scenes (test_battle.gd)
 ```
+
+---
 
 ## Code Style
 
@@ -75,8 +135,8 @@ var internal_state: Dictionary = {}
 - **Variables:** snake_case (`current_hp`, `turn_order`)
 - **Constants:** SCREAMING_SNAKE_CASE (`MAX_PARTY_SIZE`, `BRAND_STRONG`)
 - **Signals:** snake_case past tense (`damage_dealt`, `turn_ended`)
-- **Enums:** PascalCase enum, SCREAMING_SNAKE values (`enum BattleState { INITIALIZING, TURN_START }`)
-- **Private functions:** prefix with `_` (`_on_button_pressed`, `_calculate_internal`)
+- **Enums:** PascalCase enum, SCREAMING_SNAKE values
+- **Private functions:** prefix with `_` (`_on_button_pressed`)
 
 ### Type Hints (REQUIRED)
 ```gdscript
@@ -116,6 +176,8 @@ if critical_resource == null:
     return
 ```
 
+---
+
 ## Key Systems (DO NOT BREAK)
 
 ### Autoload Order (project.godot)
@@ -150,6 +212,8 @@ IRONBOUND, FANGBORN, VOIDTOUCHED, UNCHAINED, NONE
 
 **Core philosophy:** Lower corruption = STRONGER monster. Goal is ASCENSION.
 
+---
+
 ## Common Patterns
 
 ### Signals via EventBus
@@ -178,30 +242,106 @@ var state: Enums.BattleState = Enums.BattleState.INITIALIZING
 var brand: Enums.Brand = Enums.Brand.SAVAGE
 ```
 
-## Documentation Files
+---
 
-- `AGENT_SYSTEMS.md` - Complete game systems design (corruption, capture, brands, paths)
-- `CLAUDE.md` - Session protocols, MCP servers, art style
-- `VEILBREAKERS.md` - Current state, version history, UI values
+## MCP Servers (15 Active)
 
-## Git Workflow
+| Server | Purpose |
+|--------|---------|
+| godot-screenshots | Run game, capture screenshots |
+| godot-editor | Scene/node manipulation |
+| gdai-mcp | Full editor control |
+| minimal-godot | GDScript LSP |
+| godot-docs | Official documentation |
+| git | Git operations |
+| gsap-animation | Animation patterns |
+| sequential-thinking | Problem solving |
+| memory | Persistent knowledge |
+| image-process | Image manipulation |
+| lottiefiles | Animation library |
+| wolfram | Math calculations |
+| figma | UI design |
+| trello | Task tracking |
+| fal-ai | Image generation |
 
-```bash
-# Check status
-git status
+---
 
-# Commit with version
-git add -A && git commit -m "v0.X.Y: Brief description"
-git push origin master
+## Session Protocols
+
+### Memory Protocol
+1. **READ** `VEILBREAKERS.md` at session start
+2. **ACKNOWLEDGE** current project state
+3. **UPDATE** docs when making significant changes
+
+### Auto-Save Protocol (Every 15 Minutes)
+1. Increment version in appropriate file
+2. `git add -A`
+3. `git commit -m "v0.XX: [description]"`
+4. `git push origin master`
+
+### Screenshot Protocol
+ALL screenshots go to: `screenshots/` folder (not project root, not assets/)
+
+### File Naming Rules
+**NEVER create files with Windows reserved names:**
+- `NUL`, `CON`, `PRN`, `AUX`, `COM1`-`COM9`, `LPT1`-`LPT9`
+
+---
+
+## Animation Patterns
+
+### Button Hover (Working)
+```gdscript
+func _on_button_hover(button: BaseButton) -> void:
+    create_tween().tween_property(button, "scale", Vector2(1.05, 1.05), 0.15)
+    create_tween().tween_property(button, "modulate", Color(1.4, 0.9, 0.9, 1.0), 0.15)
+
+func _on_button_unhover(button: BaseButton) -> void:
+    create_tween().tween_property(button, "scale", Vector2(1.0, 1.0), 0.15)
+    create_tween().tween_property(button, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
 ```
 
-**Commit often** - every 15 minutes of work or after significant changes.
+### Standard Timings
+| Animation | Duration |
+|-----------|----------|
+| Button hover | 0.15s |
+| Button press | 0.1s |
+| Scene fade | 0.3s |
+| Menu slide | 0.25s |
+
+---
+
+## Lessons Learned
+
+### FAILED (Don't Repeat)
+- Lightning effects - background already has them
+- Custom eye drawing - artwork has them
+- Complex logo animation - caused glitching
+- Fake transparency (checker pattern) - use REAL alpha
+
+### WORKS
+- TextureButton with texture_disabled
+- Simple scale/modulate tweens
+- Clean button transparency
+- Subtle, fast animations
+- GSAP power3.out = Godot EASE_OUT + TRANS_CUBIC
+- Sprite sheet animation with hframes/vframes
+- Python PIL for removing white backgrounds (threshold >220)
+- Force Godot reimport: `godot --headless --path PROJECT --import --quit`
+
+---
 
 ## Testing
 
-Run `test_battle.tscn` scene for battle system testing. Debug commands available via backtick (`) key.
+Run `test_battle.tscn` scene for battle system testing. Debug commands via backtick (`) key.
+
+---
 
 ## Known Issues
 
-- Missing font: `res://assets/fonts/main_font.tres` (non-blocking)
+- Missing font: `res://assets/fonts/main_font.tres` (non-blocking, uses fallback)
 - Some `.uid` files untracked (Godot-generated, can ignore)
+
+---
+
+*See `.opencode/agent/` for detailed agent configurations.*
