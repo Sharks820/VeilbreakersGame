@@ -496,3 +496,64 @@ static func create_new_player(player_name: String = "Veilbreaker") -> PlayerChar
 	player.learn_skill("defend")
 
 	return player
+
+# =============================================================================
+# HERO DATA INITIALIZATION
+# =============================================================================
+
+func initialize_from_hero_data(hero_data: HeroData) -> void:
+	## Initialize this PlayerCharacter from a HeroData resource
+	## Called when player selects their hero at character select
+	
+	# Basic info
+	character_name = hero_data.display_name
+	player_id = hero_data.hero_id
+	level = 1
+	is_protagonist = true
+	
+	# Set path-aligned brand as starting brand
+	var path_brand_map: Dictionary = {
+		Enums.Path.IRONBOUND: Enums.Brand.IRON,
+		Enums.Path.FANGBORN: Enums.Brand.SAVAGE,
+		Enums.Path.VOIDTOUCHED: Enums.Brand.LEECH,
+		Enums.Path.UNCHAINED: Enums.Brand.SURGE
+	}
+	var starting_brand: Enums.Brand = path_brand_map.get(hero_data.path, Enums.Brand.NONE)
+	current_brand = starting_brand
+	unlocked_brands = [Enums.Brand.NONE, starting_brand]
+	
+	# Base stats from hero data
+	base_max_hp = hero_data.base_hp
+	base_max_mp = hero_data.base_mp
+	base_attack = hero_data.base_attack
+	base_defense = hero_data.base_defense
+	base_magic = hero_data.base_magic
+	base_resistance = hero_data.base_resistance
+	base_speed = hero_data.base_speed
+	base_luck = hero_data.base_luck
+	
+	# Initialize current HP/MP to max
+	initialize_stats()
+	
+	# Set brand alignment based on hero's path
+	# Give a boost to the path-aligned brand
+	var brand_key: String = Enums.Brand.keys()[starting_brand]
+	if brand_alignment.has(brand_key):
+		brand_alignment[brand_key] = 40.0  # Start with 40% alignment to path brand
+	
+	# Learn innate skills
+	for skill_id in hero_data.innate_skills:
+		learn_skill(skill_id)
+	
+	# Always have basic attack and defend
+	if "attack_basic" not in known_skills:
+		learn_skill("attack_basic")
+	if "defend" not in known_skills:
+		learn_skill("defend")
+	
+	# Apply brand bonuses
+	_apply_brand_bonuses()
+	
+	EventBus.emit_debug("PlayerCharacter initialized from HeroData: %s (Brand: %s)" % [
+		character_name, Enums.Brand.keys()[current_brand]
+	])

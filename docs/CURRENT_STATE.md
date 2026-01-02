@@ -1,6 +1,6 @@
 # VEILBREAKERS - Current State
 
-> **Version:** v0.64 | **Last Updated:** 2026-01-02
+> **Version:** v0.65 | **Last Updated:** 2026-01-02
 
 ---
 
@@ -23,11 +23,12 @@
 | System | Status | Notes |
 |--------|--------|-------|
 | Main Menu | 100% | Logo, buttons, eye animation working |
-| Battle Manager | 85% | Core loop complete, some polish needed |
+| Character Select | 100% | 4 heroes, Path/Brand display, animated |
+| Battle Manager | 90% | Core loop complete, victory/defeat polished |
 | Turn System | 100% | Lock-in party selection working |
 | Damage Calculator | 100% | Brand effectiveness implemented |
 | Status Effects | 100% | 17 effects, icons with tooltips |
-| Capture System | 50% | 4 methods defined, needs overhaul |
+| Capture System | 80% | 4 methods, UI animations complete |
 | Brand System | 100% | 12 brands, 3 tiers, LOCKED |
 | Path System | 100% | 4 paths, synergies defined |
 | Monster Data | 100% | Resource system working |

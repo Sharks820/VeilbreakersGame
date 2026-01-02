@@ -1856,16 +1856,27 @@ func show_victory(data_or_exp, gold_gained: int = 0, items_obtained: Array = [])
 
 	continue_button.grab_focus()
 	
-	# Animate victory screen entrance
+	# === VICTORY FANFARE SEQUENCE ===
+	# 1. Screen flash effect
+	_play_victory_screen_flash()
+	
+	# 2. Animate victory screen entrance with dramatic timing
 	var victory_panel: PanelContainer = victory_screen.get_node_or_null("VictoryPanel")
 	if victory_panel:
 		victory_panel.modulate.a = 0.0
-		victory_panel.scale = Vector2(0.8, 0.8)
+		victory_panel.scale = Vector2(0.5, 0.5)
 		victory_panel.pivot_offset = victory_panel.size / 2
+		
 		var tween := create_tween()
 		tween.set_parallel(true)
-		tween.tween_property(victory_panel, "modulate:a", 1.0, 0.4).set_ease(Tween.EASE_OUT)
-		tween.tween_property(victory_panel, "scale", Vector2(1.0, 1.0), 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+		# Fade in with slight delay for flash
+		tween.tween_property(victory_panel, "modulate:a", 1.0, 0.5).set_delay(0.15).set_ease(Tween.EASE_OUT)
+		# Scale up with dramatic bounce
+		tween.tween_property(victory_panel, "scale", Vector2(1.0, 1.0), 0.6).set_delay(0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	
+	# 3. Animate the "VICTORY!" title with extra flair
+	await get_tree().create_timer(0.2).timeout
+	_animate_victory_title()
 
 func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, gold: int, items: Array, party_data: Array) -> void:
 	## Build the enhanced victory rewards display with per-character XP bars
@@ -1985,6 +1996,82 @@ func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, g
 	rewards_row.modulate.a = 0.0
 	var tween := create_tween()
 	tween.tween_property(rewards_row, "modulate:a", 1.0, 0.3).set_delay(delay + 0.3)
+	
+	# === BATTLE STATS SECTION ===
+	_add_battle_stats_section(container, delay + 0.5)
+
+func _add_battle_stats_section(container: VBoxContainer, delay: float) -> void:
+	## Add battle statistics summary to victory screen
+	if not battle_manager:
+		return
+	
+	var stats: Dictionary = battle_manager.battle_stats
+	if stats.is_empty():
+		return
+	
+	# Separator
+	var sep2 := HSeparator.new()
+	sep2.name = "CharXP_StatsSep"
+	sep2.add_theme_constant_override("separation", 8)
+	sep2.modulate = Color(0.4, 0.6, 0.8, 0.4)
+	container.add_child(sep2)
+	
+	# Stats header
+	var stats_header := Label.new()
+	stats_header.name = "CharXP_StatsHeader"
+	stats_header.text = "📊 BATTLE STATS"
+	stats_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	stats_header.add_theme_font_size_override("font_size", 14)
+	stats_header.add_theme_color_override("font_color", Color(0.7, 0.85, 1.0))
+	container.add_child(stats_header)
+	
+	# Stats grid
+	var stats_grid := GridContainer.new()
+	stats_grid.name = "CharXP_StatsGrid"
+	stats_grid.columns = 2
+	stats_grid.add_theme_constant_override("h_separation", 30)
+	stats_grid.add_theme_constant_override("v_separation", 4)
+	container.add_child(stats_grid)
+	
+	# Add stat entries
+	var stat_entries: Array[Dictionary] = [
+		{"icon": "⚔", "label": "Turns", "value": stats.get("turns_taken", 0), "color": Color(0.9, 0.9, 0.9)},
+		{"icon": "💥", "label": "Damage Dealt", "value": stats.get("damage_dealt", 0), "color": Color(1.0, 0.6, 0.4)},
+		{"icon": "🛡", "label": "Damage Taken", "value": stats.get("damage_received", 0), "color": Color(0.6, 0.8, 1.0)},
+	]
+	
+	# Add capture stats if any captures were attempted
+	if stats.get("captures_attempted", 0) > 0:
+		stat_entries.append({
+			"icon": "🔮", 
+			"label": "Captures", 
+			"value": "%d/%d" % [stats.get("captures_successful", 0), stats.get("captures_attempted", 0)],
+			"color": Color(0.8, 0.5, 1.0)
+		})
+	
+	for entry in stat_entries:
+		var stat_label := Label.new()
+		stat_label.text = "%s %s:" % [entry.icon, entry.label]
+		stat_label.add_theme_font_size_override("font_size", 12)
+		stat_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+		stats_grid.add_child(stat_label)
+		
+		var stat_value := Label.new()
+		stat_value.text = str(entry.value)
+		stat_value.add_theme_font_size_override("font_size", 12)
+		stat_value.add_theme_color_override("font_color", entry.color)
+		stat_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		stats_grid.add_child(stat_value)
+	
+	# Animate stats section entrance
+	sep2.modulate.a = 0.0
+	stats_header.modulate.a = 0.0
+	stats_grid.modulate.a = 0.0
+	
+	var stats_tween := create_tween()
+	stats_tween.tween_property(sep2, "modulate:a", 0.4, 0.2).set_delay(delay)
+	stats_tween.tween_property(stats_header, "modulate:a", 1.0, 0.2).set_delay(delay + 0.1)
+	stats_tween.tween_property(stats_grid, "modulate:a", 1.0, 0.3).set_delay(delay + 0.2)
 
 func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: float) -> PanelContainer:
 	## Create a single character's XP display row with animated progress bar
@@ -2259,6 +2346,56 @@ func _style_victory_panel() -> void:
 		continue_button.add_theme_font_size_override("font_size", 18)
 		continue_button.add_theme_color_override("font_color", Color.WHITE)
 
+func _play_victory_screen_flash() -> void:
+	## Create a dramatic screen flash effect for victory
+	var flash := ColorRect.new()
+	flash.name = "VictoryFlash"
+	flash.color = Color(1.0, 1.0, 0.8, 0.0)
+	flash.anchors_preset = Control.PRESET_FULL_RECT
+	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flash.z_index = 50
+	victory_screen.add_child(flash)
+	
+	# Flash sequence: quick bright flash then fade
+	var tween := create_tween()
+	tween.tween_property(flash, "color:a", 0.7, 0.08)
+	tween.tween_property(flash, "color:a", 0.0, 0.4).set_ease(Tween.EASE_OUT)
+	tween.tween_callback(flash.queue_free)
+
+func _animate_victory_title() -> void:
+	## Animate the VICTORY! title with dramatic effects
+	var victory_panel: PanelContainer = victory_screen.get_node_or_null("VictoryPanel")
+	if not victory_panel:
+		return
+	
+	var title: Label = victory_panel.get_node_or_null("VBoxContainer/VictoryTitle")
+	if not title:
+		return
+	
+	# Store original text
+	var original_text := title.text
+	title.text = ""
+	
+	# Animate each letter appearing
+	var full_text := "⚔ VICTORY! ⚔"
+	var letter_delay := 0.05
+	
+	for i in range(full_text.length()):
+		await get_tree().create_timer(letter_delay).timeout
+		title.text = full_text.substr(0, i + 1)
+	
+	# Final pulse effect on the title
+	title.pivot_offset = title.size / 2
+	var pulse_tween := create_tween()
+	pulse_tween.tween_property(title, "scale", Vector2(1.15, 1.15), 0.15).set_ease(Tween.EASE_OUT)
+	pulse_tween.tween_property(title, "scale", Vector2(1.0, 1.0), 0.2).set_ease(Tween.EASE_IN_OUT)
+	
+	# Add glow effect by modulating color
+	var glow_tween := create_tween()
+	glow_tween.set_loops(3)
+	glow_tween.tween_property(title, "modulate", Color(1.3, 1.3, 1.0, 1.0), 0.3)
+	glow_tween.tween_property(title, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.3)
+
 func show_defeat(data: Dictionary = {}) -> void:
 	## Show defeat screen. Accepts optional data dictionary for battle stats.
 	set_ui_state(UIState.WAITING)
@@ -2269,16 +2406,67 @@ func show_defeat(data: Dictionary = {}) -> void:
 	defeat_screen.show()
 	retry_button.grab_focus()
 	
-	# Animate defeat screen entrance
+	# === DEFEAT SEQUENCE ===
+	# 1. Red screen flash effect
+	_play_defeat_screen_flash()
+	
+	# 2. Animate defeat screen entrance with somber timing
 	var defeat_panel: PanelContainer = defeat_screen.get_node_or_null("DefeatPanel")
 	if defeat_panel:
 		defeat_panel.modulate.a = 0.0
-		defeat_panel.scale = Vector2(0.8, 0.8)
+		defeat_panel.scale = Vector2(0.9, 0.9)
 		defeat_panel.pivot_offset = defeat_panel.size / 2
+		
 		var tween := create_tween()
 		tween.set_parallel(true)
-		tween.tween_property(defeat_panel, "modulate:a", 1.0, 0.5).set_ease(Tween.EASE_OUT)
-		tween.tween_property(defeat_panel, "scale", Vector2(1.0, 1.0), 0.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+		# Slower, more somber fade in
+		tween.tween_property(defeat_panel, "modulate:a", 1.0, 0.8).set_delay(0.3).set_ease(Tween.EASE_OUT)
+		tween.tween_property(defeat_panel, "scale", Vector2(1.0, 1.0), 0.6).set_delay(0.3).set_ease(Tween.EASE_OUT)
+	
+	# 3. Animate the defeat title
+	await get_tree().create_timer(0.4).timeout
+	_animate_defeat_title()
+
+func _play_defeat_screen_flash() -> void:
+	## Create a dramatic red screen flash effect for defeat
+	var flash := ColorRect.new()
+	flash.name = "DefeatFlash"
+	flash.color = Color(0.6, 0.0, 0.0, 0.0)
+	flash.anchors_preset = Control.PRESET_FULL_RECT
+	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flash.z_index = 50
+	defeat_screen.add_child(flash)
+	
+	# Flash sequence: slower, more ominous
+	var tween := create_tween()
+	tween.tween_property(flash, "color:a", 0.5, 0.15)
+	tween.tween_property(flash, "color:a", 0.0, 0.6).set_ease(Tween.EASE_OUT)
+	tween.tween_callback(flash.queue_free)
+
+func _animate_defeat_title() -> void:
+	## Animate the DEFEAT title with somber effects
+	var defeat_panel: PanelContainer = defeat_screen.get_node_or_null("DefeatPanel")
+	if not defeat_panel:
+		return
+	
+	var title: Label = defeat_panel.get_node_or_null("VBoxContainer/DefeatTitle")
+	if not title:
+		return
+	
+	# Slow fade-in of text with slight shake
+	title.modulate.a = 0.0
+	title.text = "💀 DEFEAT 💀"
+	
+	var tween := create_tween()
+	tween.tween_property(title, "modulate:a", 1.0, 0.6).set_ease(Tween.EASE_IN)
+	
+	# Subtle shake effect
+	var original_pos := title.position
+	var shake_tween := create_tween()
+	shake_tween.set_loops(3)
+	shake_tween.tween_property(title, "position:x", original_pos.x - 2, 0.05)
+	shake_tween.tween_property(title, "position:x", original_pos.x + 2, 0.05)
+	shake_tween.tween_property(title, "position:x", original_pos.x, 0.05)
 
 func _style_defeat_panel() -> void:
 	"""Apply polished styling to defeat screen"""

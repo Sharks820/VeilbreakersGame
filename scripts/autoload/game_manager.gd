@@ -13,6 +13,8 @@ var is_initialized: bool = false
 # PLAYER DATA
 # =============================================================================
 
+var selected_hero_id: String = ""  # Hero chosen at character select
+var player_character: Node = null  # The protagonist PlayerCharacter instance
 var player_party: Array = []  # Array of Character nodes/resources
 var reserve_party: Array = []  # Benched party members
 var owned_monsters: Array = []  # All captured monsters
@@ -532,6 +534,8 @@ func get_purification_rate() -> float:
 	return float(purification_successes) / float(purification_attempts) * 100.0
 
 func reset_for_new_game() -> void:
+	selected_hero_id = ""
+	player_character = null
 	player_party.clear()
 	reserve_party.clear()
 	owned_monsters.clear()
@@ -558,3 +562,52 @@ func reset_for_new_game() -> void:
 	vera_corruption = 0.0
 	vera_power_used = 0.0
 	EventBus.emit_debug("Game reset for new game")
+
+# =============================================================================
+# HERO SELECTION & INITIALIZATION
+# =============================================================================
+
+func set_selected_hero(hero_id: String) -> void:
+	## Called from character select screen to set the chosen hero
+	selected_hero_id = hero_id
+	EventBus.emit_debug("Hero selected: %s" % hero_id)
+
+func initialize_player_character() -> PlayerCharacter:
+	## Create the player character from the selected hero data
+	if selected_hero_id.is_empty():
+		push_error("Cannot initialize player character: no hero selected")
+		return null
+	
+	var hero_data: HeroData = DataManager.get_hero(selected_hero_id)
+	if not hero_data:
+		push_error("Cannot initialize player character: hero data not found for '%s'" % selected_hero_id)
+		return null
+	
+	# Create PlayerCharacter instance
+	player_character = PlayerCharacter.new()
+	player_character.name = hero_data.display_name
+	
+	# Initialize from hero data
+	player_character.initialize_from_hero_data(hero_data)
+	
+	# Add to party
+	player_party.clear()
+	player_party.append(player_character)
+	
+	# Set initial path alignment based on hero's path
+	var hero_path: Enums.Path = hero_data.path
+	if has_node("/root/PathSystem"):
+		var path_system = get_node("/root/PathSystem")
+		if path_system.has_method("set_primary_path"):
+			path_system.set_primary_path(hero_path)
+	
+	EventBus.emit_debug("Player character initialized: %s (Path: %s)" % [
+		hero_data.display_name,
+		Enums.Path.keys()[hero_path]
+	])
+	
+	return player_character
+
+func get_player_character() -> PlayerCharacter:
+	## Get the current player character (protagonist)
+	return player_character as PlayerCharacter

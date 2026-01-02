@@ -701,10 +701,28 @@ func _input(event: InputEvent) -> void:
 func _on_confirm_pressed() -> void:
 	var hero_id := HERO_IDS[selected_hero_index]
 	print("[CHARACTER_SELECT] Selected hero: %s" % hero_id)
-	character_selected.emit(hero_id)
+	
+	# Store selection in GameManager
+	GameManager.set_selected_hero(hero_id)
+	
+	# Initialize the player character
+	var player := GameManager.initialize_player_character()
+	if player:
+		print("[CHARACTER_SELECT] Player character created: %s" % player.character_name)
+		
+		# Emit signal for any listeners
+		character_selected.emit(hero_id)
+		
+		# Transition to test battle (or overworld when ready)
+		# For now, go to test_battle.tscn
+		SceneManager.goto_scene("res://scenes/test/test_battle.tscn")
+	else:
+		push_error("[CHARACTER_SELECT] Failed to create player character!")
 
 func _on_back_pressed() -> void:
 	selection_cancelled.emit()
+	# Return to main menu
+	SceneManager.goto_main_menu()
 
 # =============================================================================
 # CLEANUP

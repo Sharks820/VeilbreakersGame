@@ -4,6 +4,31 @@
 
 ---
 
+## [v0.65] - 2026-01-02
+
+### Added
+- **Victory Fanfare** - Enhanced victory screen with dramatic animations
+  - Screen flash effect on victory
+  - Animated "VICTORY!" title with letter-by-letter reveal
+  - Title pulse and glow effects
+  - Battle stats summary (turns, damage dealt/taken, captures)
+  - Staggered reward reveals
+- **Defeat Screen Polish** - Enhanced defeat screen
+  - Red screen flash effect
+  - Animated "DEFEAT" title with shake effect
+  - Somber fade-in timing
+- **Character Select → Game Flow** - Full integration
+  - GameManager stores selected hero
+  - PlayerCharacter.initialize_from_hero_data() method
+  - Character select transitions to test battle
+  - Hero's Path determines starting Brand alignment
+
+### Changed
+- PlayerCharacter now initializes from HeroData resource
+- GameManager tracks selected_hero_id and player_character
+
+---
+
 ## [v0.64] - 2026-01-02
 
 ### Added
