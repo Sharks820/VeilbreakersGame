@@ -113,35 +113,63 @@ func _ready() -> void:
 	_setup_subsystems()
 
 func _setup_subsystems() -> void:
-	turn_manager = TurnManager.new()
-	turn_manager.name = "TurnManager"
-	add_child(turn_manager)
+	# Check if subsystems already exist as scene children (from battle_arena.tscn)
+	# Only create new instances if they don't exist to avoid duplicates
+	
+	var existing_turn_manager := get_node_or_null("TurnManager")
+	if existing_turn_manager:
+		turn_manager = existing_turn_manager
+	else:
+		turn_manager = TurnManager.new()
+		turn_manager.name = "TurnManager"
+		add_child(turn_manager)
 
-	damage_calculator = DamageCalculator.new()
-	damage_calculator.name = "DamageCalculator"
-	add_child(damage_calculator)
+	var existing_damage_calc := get_node_or_null("DamageCalculator")
+	if existing_damage_calc:
+		damage_calculator = existing_damage_calc
+	else:
+		damage_calculator = DamageCalculator.new()
+		damage_calculator.name = "DamageCalculator"
+		add_child(damage_calculator)
 
-	status_effect_manager = StatusEffectManager.new()
-	status_effect_manager.name = "StatusEffectManager"
-	add_child(status_effect_manager)
+	var existing_status_mgr := get_node_or_null("StatusEffectManager")
+	if existing_status_mgr:
+		status_effect_manager = existing_status_mgr
+	else:
+		status_effect_manager = StatusEffectManager.new()
+		status_effect_manager.name = "StatusEffectManager"
+		add_child(status_effect_manager)
 
-	ai_controller = AIController.new()
-	ai_controller.name = "AIController"
-	add_child(ai_controller)
+	var existing_ai := get_node_or_null("AIController")
+	if existing_ai:
+		ai_controller = existing_ai
+	else:
+		ai_controller = AIController.new()
+		ai_controller.name = "AIController"
+		add_child(ai_controller)
 
-	purification_system = PurificationSystem.new()
-	purification_system.name = "PurificationSystem"
-	add_child(purification_system)
+	var existing_purify := get_node_or_null("PurificationSystem")
+	if existing_purify:
+		purification_system = existing_purify
+	else:
+		purification_system = PurificationSystem.new()
+		purification_system.name = "PurificationSystem"
+		add_child(purification_system)
 
 	# Load CaptureSystem dynamically to avoid circular dependency
-	var capture_script = load("res://scripts/battle/capture_system.gd")
-	if capture_script:
-		capture_system = capture_script.new()
-		capture_system.name = "CaptureSystem"
-		add_child(capture_system)
+	var existing_capture := get_node_or_null("CaptureSystem")
+	if existing_capture:
+		capture_system = existing_capture
 		_connect_capture_signals()
 	else:
-		push_error("Failed to load capture_system.gd")
+		var capture_script = load("res://scripts/battle/capture_system.gd")
+		if capture_script:
+			capture_system = capture_script.new()
+			capture_system.name = "CaptureSystem"
+			add_child(capture_system)
+			_connect_capture_signals()
+		else:
+			push_error("Failed to load capture_system.gd")
 
 func _connect_capture_signals() -> void:
 	capture_system.capture_succeeded.connect(_on_capture_succeeded)

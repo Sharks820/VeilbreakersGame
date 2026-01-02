@@ -473,7 +473,7 @@ func _update_card_highlights() -> void:
 		
 		var hero_id := HERO_IDS[i]
 		var data: HeroData = hero_data_cache.get(hero_id)
-		var role_color := ROLE_COLORS.get(data.role if data else "DPS", Color.WHITE)
+		var role_color: Color = ROLE_COLORS.get(data.role if data else "DPS", Color.WHITE)
 		
 		if i == selected_hero_index:
 			# Selected - bright border and glow
