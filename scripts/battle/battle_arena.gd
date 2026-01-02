@@ -523,25 +523,29 @@ func _calculate_formation_positions(characters: Array[CharacterBase], positions_
 		# Enemies - spread out formation based on party size
 		match party_size:
 			1:
+				# Single enemy - centered
 				positions.append(base_pos + Vector2(0, 0))
 			2:
-				positions.append(base_pos + Vector2(-80, -120))  # Upper enemy
-				positions.append(base_pos + Vector2(80, 120))    # Lower enemy
+				# 2 enemies - vertical spread
+				positions.append(base_pos + Vector2(0, -100))   # Upper enemy
+				positions.append(base_pos + Vector2(0, 100))    # Lower enemy
 			3:
-				positions.append(base_pos + Vector2(100, 0))      # Front center
-				positions.append(base_pos + Vector2(-80, -150))  # Back upper
-				positions.append(base_pos + Vector2(-80, 150))   # Back lower
+				# 3 enemies - triangle formation
+				positions.append(base_pos + Vector2(80, 0))     # Front center
+				positions.append(base_pos + Vector2(-60, -100)) # Back upper
+				positions.append(base_pos + Vector2(-60, 100))  # Back lower
 			4:
-				positions.append(base_pos + Vector2(100, -80))   # Front upper
-				positions.append(base_pos + Vector2(100, 80))    # Front lower
-				positions.append(base_pos + Vector2(-80, -160))  # Back upper
-				positions.append(base_pos + Vector2(-80, 160))   # Back lower
+				# 4 enemies - 2x2 grid
+				positions.append(base_pos + Vector2(80, -80))   # Front upper
+				positions.append(base_pos + Vector2(80, 80))    # Front lower
+				positions.append(base_pos + Vector2(-60, -100)) # Back upper
+				positions.append(base_pos + Vector2(-60, 100))  # Back lower
 			_:
 				# Fallback for 5+ enemies
 				for i in range(party_size):
 					var row: int = i / 2
 					var col: int = i % 2
-					positions.append(base_pos + Vector2(-row * 120, (col * 2 - 1) * 140))
+					positions.append(base_pos + Vector2(-row * 100, (col * 2 - 1) * 100))
 		return positions
 
 	# Player party - arrow formation with good spacing
@@ -552,26 +556,26 @@ func _calculate_formation_positions(characters: Array[CharacterBase], positions_
 			# Player only - single position centered
 			positions.append(base_pos + Vector2(60, 0))
 		2:
-			# Player + 1 monster - player far behind monster
-			positions.append(base_pos + Vector2(-120, 0))   # Player far back
-			positions.append(base_pos + Vector2(140, 0))    # Monster in front
+			# Player + 1 monster - player behind, monster in front
+			positions.append(base_pos + Vector2(-80, 0))    # Player back
+			positions.append(base_pos + Vector2(120, 0))    # Monster in front
 		3:
 			# Player + 2 monsters - player far back, 2 monsters spread in front
-			positions.append(base_pos + Vector2(-120, 0))   # Player far back center
-			positions.append(base_pos + Vector2(140, -150)) # Monster 1 upper
-			positions.append(base_pos + Vector2(140, 150))  # Monster 2 lower
+			positions.append(base_pos + Vector2(-80, 0))    # Player far back center
+			positions.append(base_pos + Vector2(120, -100)) # Monster 1 upper
+			positions.append(base_pos + Vector2(120, 100))  # Monster 2 lower
 		4:
 			# Player + 3 monsters - full arrow formation with spread
-			positions.append(base_pos + Vector2(-120, 0))   # Player (far behind point)
-			positions.append(base_pos + Vector2(220, 0))    # Point monster (front apex)
-			positions.append(base_pos + Vector2(80, -150))  # Upper wing
-			positions.append(base_pos + Vector2(80, 150))   # Lower wing
+			positions.append(base_pos + Vector2(-80, 0))    # Player (far behind point)
+			positions.append(base_pos + Vector2(180, 0))    # Point monster (front apex)
+			positions.append(base_pos + Vector2(60, -100))  # Upper wing
+			positions.append(base_pos + Vector2(60, 100))   # Lower wing
 		_:
 			# Fallback for 5+ party members
 			for i in range(party_size):
 				var row: int = i / 2
 				var col: int = i % 2
-				positions.append(base_pos + Vector2(row * 120, (col * 2 - 1) * 140))
+				positions.append(base_pos + Vector2(row * 100, (col * 2 - 1) * 100))
 
 	return positions
 
