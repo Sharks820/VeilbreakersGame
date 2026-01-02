@@ -54,7 +54,7 @@ func _notification(what: int) -> void:
 # PUBLIC API
 # =============================================================================
 
-func safe_call(callable: Callable, error_context: String = "Unknown") -> Variant:
+func safe_call(callable: Callable, _error_context: String = "Unknown") -> Variant:
 	## Wraps a function call in error handling
 	## Use for any operation that might fail (file I/O, network, etc.)
 	var result: Variant = null

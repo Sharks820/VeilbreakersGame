@@ -81,6 +81,10 @@ var purification_progress: float = 0.0
 var is_being_purified: bool = false
 var turns_since_last_skill: int = 0
 
+## Whether monster is corrupted (wild enemy) or purified (allied)
+## True = enemy monster, False = allied/captured monster
+var is_corrupted: bool = true
+
 ## Experience tracking (for allied/recruited monsters)
 var current_experience: int = 0
 var total_experience: int = 0

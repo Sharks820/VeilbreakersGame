@@ -465,7 +465,7 @@ func _bargain_accepted() -> void:
 
 	_reset_state()
 
-func bargain_declined() -> void:
+func decline_bargain() -> void:
 	## Called when player declines bargain
 	bargain_declined.emit(active_monster)
 	_reset_state()

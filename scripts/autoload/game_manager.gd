@@ -129,8 +129,8 @@ func _setup_window() -> void:
 	DisplayServer.window_set_size(Vector2i(target_width, target_height))
 
 	# Center window in usable area
-	var center_x := usable_rect.position.x + (usable_rect.size.x - target_width) / 2
-	var center_y := usable_rect.position.y + (usable_rect.size.y - target_height) / 2
+	var center_x: int = usable_rect.position.x + int((usable_rect.size.x - target_width) / 2)
+	var center_y: int = usable_rect.position.y + int((usable_rect.size.y - target_height) / 2)
 	DisplayServer.window_set_position(Vector2i(center_x, center_y))
 
 	EventBus.emit_debug("Window sized to %dx%d, positioned at (%d, %d)" % [target_width, target_height, center_x, center_y])
@@ -448,10 +448,10 @@ func load_save_data(data: Dictionary) -> void:
 # =============================================================================
 
 func get_formatted_play_time() -> String:
-	var total_seconds := int(play_time_seconds)
-	var hours := total_seconds / 3600
-	var minutes := (total_seconds % 3600) / 60
-	var seconds := total_seconds % 60
+	var total_seconds: int = int(play_time_seconds)
+	var hours: int = int(total_seconds / 3600)
+	var minutes: int = int((total_seconds % 3600) / 60)
+	var seconds: int = total_seconds % 60
 	return "%02d:%02d:%02d" % [hours, minutes, seconds]
 
 func get_purification_rate() -> float:

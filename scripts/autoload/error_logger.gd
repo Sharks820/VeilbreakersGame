@@ -63,8 +63,8 @@ func _setup_window_size() -> void:
 	DisplayServer.window_set_size(Vector2i(target_width, target_height))
 
 	# Center in usable area
-	var center_x := usable_rect.position.x + (usable_rect.size.x - target_width) / 2
-	var center_y := usable_rect.position.y + (usable_rect.size.y - target_height) / 2
+	var center_x: int = usable_rect.position.x + int((usable_rect.size.x - target_width) / 2)
+	var center_y: int = usable_rect.position.y + int((usable_rect.size.y - target_height) / 2)
 	DisplayServer.window_set_position(Vector2i(center_x, center_y))
 	print("[Window] Sized to %dx%d at (%d, %d)" % [target_width, target_height, center_x, center_y])
 
@@ -294,7 +294,7 @@ func get_system_info() -> Dictionary:
 		"processor_count": OS.get_processor_count(),
 		"video_adapter": RenderingServer.get_video_adapter_name(),
 		"video_vendor": RenderingServer.get_video_adapter_vendor(),
-		"memory_mb": OS.get_static_memory_usage() / 1048576,
+		"memory_mb": int(OS.get_static_memory_usage() / 1048576),
 		"godot_version": Engine.get_version_info().string,
 		"game_version": ProjectSettings.get_setting("application/config/version", "0.0.0"),
 	}

@@ -20,6 +20,9 @@ temp_*/
 # Godot 4+ specific ignores
 .godot/
 
+# Godot UID files (auto-generated, Godot 4.4+)
+*.uid
+
 # Godot-specific ignores
 *.translation
 

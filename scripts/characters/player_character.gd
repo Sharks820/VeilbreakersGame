@@ -61,23 +61,23 @@ func _ready() -> void:
 # BRAND SYSTEM
 # =============================================================================
 
-func set_brand(brand: Enums.Brand) -> bool:
-	if brand not in unlocked_brands:
+func set_brand(new_brand: Enums.Brand) -> bool:
+	if new_brand not in unlocked_brands:
 		return false
 
 	var old_brand := current_brand
-	current_brand = brand
+	current_brand = new_brand
 	_apply_brand_bonuses()
-	brand_changed.emit(old_brand, brand)
+	brand_changed.emit(old_brand, new_brand)
 	return true
 
-func unlock_brand(brand: Enums.Brand) -> void:
-	if brand not in unlocked_brands:
-		unlocked_brands.append(brand)
-		EventBus.brand_unlocked.emit(brand)
+func unlock_brand(new_brand: Enums.Brand) -> void:
+	if new_brand not in unlocked_brands:
+		unlocked_brands.append(new_brand)
+		EventBus.brand_unlocked.emit(new_brand)
 
-func has_brand(brand: Enums.Brand) -> bool:
-	return brand in unlocked_brands
+func has_brand(check_brand: Enums.Brand) -> bool:
+	return check_brand in unlocked_brands
 
 func _apply_brand_bonuses() -> void:
 	# Clear previous brand modifiers by removing all with "brand" source

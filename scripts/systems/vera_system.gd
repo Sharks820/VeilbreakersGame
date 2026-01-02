@@ -137,11 +137,11 @@ func trigger_memory(memory_id: String) -> void:
 		EventBus.vera_dialogue_triggered.emit("memory_%s" % memory_id)
 		EventBus.emit_notification("VERA experiences a memory fragment...", "warning")
 
-func _modify_corruption(amount: float, source: String, emit_signal: bool = true) -> void:
+func _modify_corruption(amount: float, source: String, should_emit: bool = true) -> void:
 	var old_level := corruption_level
 	corruption_level = clampf(corruption_level + amount, 0.0, Constants.MAX_CORRUPTION)
 
-	if emit_signal and corruption_level != old_level:
+	if should_emit and corruption_level != old_level:
 		EventBus.vera_corruption_changed.emit(corruption_level, source)
 
 	_evaluate_state()
@@ -426,7 +426,7 @@ func _on_monster_ascended(_monster: Node) -> void:
 	if ascension_count >= 3:
 		trigger_dialogue("ascension_discomfort")
 
-func _on_monster_captured(monster: Node, method: int) -> void:
+func _on_monster_captured(_monster: Node, method: int) -> void:
 	## Called when a monster is captured - tracks method for glitch triggers
 	match method:
 		Enums.CaptureMethod.DOMINATE:

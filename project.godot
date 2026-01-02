@@ -45,7 +45,8 @@ import/blender/enabled=false
 
 [gui]
 
-theme/custom_font="res://assets/fonts/main_font.tres"
+# Custom font disabled - file does not exist
+# theme/custom_font="res://assets/fonts/main_font.tres"
 
 [input]
 

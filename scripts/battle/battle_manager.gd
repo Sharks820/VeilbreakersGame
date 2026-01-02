@@ -3,8 +3,8 @@ extends Node
 ## BattleManager: Orchestrates the entire battle flow.
 ## Enhanced with dramatic camera choreography, boss phases, and cinematic timing.
 
-# Preload to avoid class_name load order issues
-const CaptureSystemScript = preload("res://scripts/battle/capture_system.gd")
+# Load CaptureSystem dynamically to avoid circular dependency issues
+# The CaptureSystem class is created in _setup_subsystems()
 
 # =============================================================================
 # SIGNALS - Battle Flow
@@ -133,15 +133,20 @@ func _setup_subsystems() -> void:
 	purification_system.name = "PurificationSystem"
 	add_child(purification_system)
 
-	capture_system = CaptureSystemScript.new()
-	capture_system.name = "CaptureSystem"
-	add_child(capture_system)
-	_connect_capture_signals()
+	# Load CaptureSystem dynamically to avoid circular dependency
+	var capture_script = load("res://scripts/battle/capture_system.gd")
+	if capture_script:
+		capture_system = capture_script.new()
+		capture_system.name = "CaptureSystem"
+		add_child(capture_system)
+		_connect_capture_signals()
+	else:
+		push_error("Failed to load capture_system.gd")
 
 func _connect_capture_signals() -> void:
 	capture_system.capture_succeeded.connect(_on_capture_succeeded)
 	capture_system.capture_failed.connect(_on_capture_failed)
-	capture_system.shake_progress.connect(_on_capture_shake)
+	capture_system.corruption_battle_pass.connect(_on_capture_shake)
 	capture_system.corruption_reduced.connect(_on_corruption_reduced)
 
 func _on_capture_succeeded(monster: Node, method: int, bonus_data: Dictionary) -> void:
@@ -1110,7 +1115,7 @@ func _execute_purify(purifier: CharacterBase, target: CharacterBase) -> Dictiona
 
 	# Use the new CaptureSystem with PURIFY method
 	# This reduces corruption rather than attempting direct capture
-	await capture_system.attempt_capture(monster, purifier, CaptureSystemScript.CaptureMethod.PURIFY)
+	await capture_system.attempt_capture(monster, purifier, Enums.CaptureMethod.PURIFY)
 
 	# Return basic result - actual success/fail handled by signals
 	return {"success": true, "delegated": true}
@@ -1143,9 +1148,9 @@ func execute_orb_capture(caster: CharacterBase, target: CharacterBase, orb_tier:
 
 	await get_tree().create_timer(capture_throw_time).timeout
 
-	# Use CaptureSystem
-	var tier_enum: CaptureSystemScript.OrbTier = orb_tier as CaptureSystemScript.OrbTier
-	await capture_system.attempt_capture(monster, caster, CaptureSystemScript.CaptureMethod.ORB, tier_enum)
+	# Use CaptureSystem with SOULBIND method (orb-based capture)
+	var tier_enum: Enums.SoulVesselTier = orb_tier as Enums.SoulVesselTier
+	await capture_system.attempt_capture(monster, caster, Enums.CaptureMethod.SOULBIND, tier_enum)
 
 	return {"success": true, "delegated": true}
 
@@ -1159,7 +1164,7 @@ func execute_bargain_capture(caster: CharacterBase, target: CharacterBase) -> Di
 	battle_state = Enums.BattleState.PURIFICATION
 	capture_attempt_started.emit(target)
 
-	await capture_system.attempt_capture(monster, caster, CaptureSystemScript.CaptureMethod.BARGAIN)
+	await capture_system.attempt_capture(monster, caster, Enums.CaptureMethod.BARGAIN)
 
 	return {"success": true, "delegated": true}
 
@@ -1170,8 +1175,8 @@ func execute_force_capture(caster: CharacterBase, target: CharacterBase) -> Dict
 
 	var monster: Monster = target as Monster
 
-	# Validate force conditions
-	var check: Dictionary = capture_system.can_use_method(monster, caster, CaptureSystemScript.CaptureMethod.FORCE)
+	# Validate dominate conditions (DOMINATE replaces FORCE)
+	var check: Dictionary = capture_system.can_use_method(monster, caster, Enums.CaptureMethod.DOMINATE)
 	if not check.available:
 		ui_command.emit("show_message", {"text": check.reason})
 		return {"success": false, "reason": check.reason}
@@ -1179,7 +1184,7 @@ func execute_force_capture(caster: CharacterBase, target: CharacterBase) -> Dict
 	battle_state = Enums.BattleState.PURIFICATION
 	capture_attempt_started.emit(target)
 
-	await capture_system.attempt_capture(monster, caster, CaptureSystemScript.CaptureMethod.FORCE)
+	await capture_system.attempt_capture(monster, caster, Enums.CaptureMethod.DOMINATE)
 
 	return {"success": true, "delegated": true}
 
@@ -1188,12 +1193,12 @@ func get_capture_chance_preview(caster: CharacterBase, target: CharacterBase, me
 	if not target is Monster:
 		return {"available": false, "chance": 0.0, "reason": "Not a monster"}
 
-	var capture_method: int = method
+	var capture_method: Enums.CaptureMethod = method as Enums.CaptureMethod
 	var check: Dictionary = capture_system.can_use_method(target, caster, capture_method)
 
-	if capture_method == CaptureSystemScript.CaptureMethod.ORB:
-		var tier: int = orb_tier
-		check.capture_chance = capture_system.calculate_orb_capture_chance(target, caster, tier)
+	if capture_method == Enums.CaptureMethod.SOULBIND:
+		var tier: Enums.SoulVesselTier = orb_tier as Enums.SoulVesselTier
+		check.capture_chance = capture_system.calculate_soulbind_chance(target, caster, tier)
 		check.chance_text = capture_system.get_capture_chance_text(check.capture_chance)
 
 	return check

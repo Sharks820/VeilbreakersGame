@@ -53,8 +53,8 @@ func get_path_brand_modifier(hero_path: Enums.Path, monster_brand: Enums.Brand) 
 	if hero_path == Enums.Path.NONE:
 		return 1.0
 
-	var path_name := Enums.Path.keys()[hero_path]
-	var brand_name := _get_primary_brand(monster_brand)
+	var path_name: String = Enums.Path.keys()[hero_path]
+	var brand_name: String = _get_primary_brand(monster_brand)
 
 	# Check if hero's path is strong against this brand
 	if Constants.PATH_BRAND_STRENGTH.has(path_name):

@@ -280,16 +280,16 @@ func play_ambience(track_id: String, fade_duration: float = 2.0) -> void:
 	var stream: AudioStream = load(path)
 
 	if _ambience_player.playing and fade_duration > 0:
-		var tween := create_tween()
-		tween.tween_property(_ambience_player, "volume_db", -80.0, fade_duration / 2)
-		await tween.finished
+		var fade_out_tween := create_tween()
+		fade_out_tween.tween_property(_ambience_player, "volume_db", -80.0, fade_duration / 2)
+		await fade_out_tween.finished
 
 	_ambience_player.stream = stream
 	_ambience_player.volume_db = -80.0
 	_ambience_player.play()
 
-	var tween := create_tween()
-	tween.tween_property(_ambience_player, "volume_db", -6.0, fade_duration / 2)
+	var fade_in_tween := create_tween()
+	fade_in_tween.tween_property(_ambience_player, "volume_db", -6.0, fade_duration / 2)
 
 	current_ambience_track = track_id
 

@@ -86,9 +86,9 @@ func get_formatted_slot_time(slot: int) -> String:
 	var info := get_slot_info(slot)
 	if info.empty:
 		return "Empty"
-	var total_seconds := int(info.get("play_time", 0.0))
-	var hours := total_seconds / 3600
-	var minutes := (total_seconds % 3600) / 60
+	var total_seconds: int = int(info.get("play_time", 0.0))
+	var hours: int = int(total_seconds / 3600)
+	var minutes: int = int((total_seconds % 3600) / 60)
 	return "%02d:%02d" % [hours, minutes]
 
 # =============================================================================

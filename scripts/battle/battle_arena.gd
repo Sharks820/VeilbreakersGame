@@ -161,22 +161,38 @@ func _setup_battle_manager() -> void:
 # =============================================================================
 
 func initialize_battle(players: Array[CharacterBase], enemies: Array[CharacterBase]) -> void:
+	print("[DEBUG] initialize_battle called with %d players, %d enemies" % [players.size(), enemies.size()])
 	is_battle_active = true
 
 	# Place characters on the battlefield
+	print("[DEBUG]   Placing player characters...")
+	print("[DEBUG]   player_positions: %s" % str(player_positions))
+	print("[DEBUG]   players_container: %s" % str(players_container))
 	_place_characters(players, player_positions, players_container, player_sprites)
+	print("[DEBUG]   Player sprites created: %d" % player_sprites.size())
+	
+	print("[DEBUG]   Placing enemy characters...")
+	print("[DEBUG]   enemy_positions: %s" % str(enemy_positions))
+	print("[DEBUG]   enemies_container: %s" % str(enemies_container))
 	_place_characters(enemies, enemy_positions, enemies_container, enemy_sprites)
+	print("[DEBUG]   Enemy sprites created: %d" % enemy_sprites.size())
 
 	# Setup battle UI with party and enemy info (CRITICAL for button functionality!)
+	print("[DEBUG]   Setting up battle UI...")
 	if battle_ui and battle_ui.has_method("setup_battle"):
+		print("[DEBUG]   Calling battle_ui.setup_battle()")
 		battle_ui.setup_battle(players, enemies)
+	else:
+		print("[DEBUG]   WARNING: battle_ui is null or missing setup_battle method!")
 
 	# Sidebars are created by battle_ui_controller.gd - do NOT duplicate here
 	# _create_party_sidebar(players)  # DISABLED - battle_ui_controller creates left_party_sidebar
 	# _create_enemy_sidebar(enemies)   # DISABLED - battle_ui_controller creates enemy sidebar
 
 	# Start battle logic
+	print("[DEBUG]   Starting battle_manager...")
 	battle_manager.start_battle(players, enemies)
+	print("[DEBUG]   Battle manager started!")
 
 	EventBus.emit_debug("Battle initialized with %d players vs %d enemies" % [players.size(), enemies.size()])
 
@@ -763,35 +779,55 @@ func _spawn_damage_number(pos: Vector2, amount: int, is_critical: bool, is_heal:
 # =============================================================================
 
 func _on_battle_started(enemy_data: Array) -> void:
+	print("[DEBUG] _on_battle_started called")
+	print("[DEBUG]   is_battle_active: %s" % is_battle_active)
+	print("[DEBUG]   enemy_data size: %d" % enemy_data.size())
+	
 	# Guard against being called twice (battle_manager also emits this signal)
 	if is_battle_active:
+		print("[DEBUG]   RETURNING EARLY - battle already active!")
 		return
 
 	# Create enemy characters from data if provided
 	if enemy_data.is_empty():
+		print("[DEBUG]   RETURNING EARLY - enemy_data is empty!")
 		return
 
 	var enemies: Array[CharacterBase] = []
 	for data in enemy_data:
-		EventBus.emit_debug("  Processing enemy data type: %s" % [typeof(data)])
-		if data is Monster:
-			enemies.append(data)
-			EventBus.emit_debug("    -> Added Monster: %s" % [data.character_name])
+		print("[DEBUG]   Processing enemy data - is CharacterBase: %s, is Monster: %s" % [data is CharacterBase, data is Monster])
+		if data is CharacterBase:
+			enemies.append(data as CharacterBase)
+			print("[DEBUG]     -> Added CharacterBase: %s" % [data.character_name])
 		elif data is Dictionary:
-			enemies.append(Monster.create_from_data(data))
-		# Limit to 2 enemy monsters
-		if enemies.size() >= 2:
+			var new_monster := Monster.create_from_data(data)
+			enemies.append(new_monster)
+			print("[DEBUG]     -> Created Monster from Dictionary: %s" % [new_monster.character_name])
+		else:
+			print("[DEBUG]     -> UNKNOWN DATA TYPE: %s, skipping!" % typeof(data))
+		# Limit to 4 enemy monsters
+		if enemies.size() >= 4:
 			break
+	
+	print("[DEBUG]   Processed enemies count: %d" % enemies.size())
 
 	# Get full party (1 player + up to 3 allied monsters = 4 max)
+	print("[DEBUG]   GameManager.player_party size: %d" % GameManager.player_party.size())
 	var players: Array[CharacterBase] = []
 	for i in range(mini(4, GameManager.player_party.size())):
 		var member = GameManager.player_party[i]
+		print("[DEBUG]   Checking party member %d: %s (is CharacterBase: %s)" % [i, str(member), member is CharacterBase])
 		if member is CharacterBase:
 			players.append(member)
+			print("[DEBUG]     -> Added to players: %s" % [member.character_name])
 
+	print("[DEBUG]   Final players count: %d, enemies count: %d" % [players.size(), enemies.size()])
+	
 	if not players.is_empty() and not enemies.is_empty():
+		print("[DEBUG]   Calling initialize_battle!")
 		initialize_battle(players, enemies)
+	else:
+		print("[DEBUG]   NOT calling initialize_battle - players or enemies empty!")
 
 func _on_battle_initialized() -> void:
 	EventBus.emit_debug("Battle arena: Battle initialized")

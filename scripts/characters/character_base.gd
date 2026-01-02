@@ -528,7 +528,7 @@ func play_victory() -> void:
 	tween.tween_property(self, "position:y", position.y - 20, 0.2).set_trans(Tween.TRANS_QUAD)
 	tween.tween_property(self, "position:y", position.y, 0.3).set_trans(Tween.TRANS_BOUNCE)
 
-func play_skill_cast(skill_name: String) -> void:
+func play_skill_cast(_skill_name: String) -> void:
 	## Skill/magic casting animation
 	_tween_scale(Vector2(1.15, 1.15), 0.3)
 	await get_tree().create_timer(0.3).timeout

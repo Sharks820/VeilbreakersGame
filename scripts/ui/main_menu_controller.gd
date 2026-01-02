@@ -256,7 +256,7 @@ func _update_eye_tracking(delta: float) -> void:
 	var alpha = 0.95  # Nearly opaque
 	monster_eye.modulate = Color(red_tint, green, blue, alpha)
 
-func _update_cursor_tracking(delta: float) -> void:
+func _update_cursor_tracking(_delta: float) -> void:
 	# SMOOTH 9-ZONE TRACKING with frame cycling within each direction
 	var mouse_pos = get_global_mouse_position()
 	var eye_pos = monster_eye.global_position
@@ -344,7 +344,7 @@ func _start_logo_pulse() -> void:
 	logo_tween.tween_property(logo, "scale", Vector2(LOGO_SCALE_MAX, LOGO_SCALE_MAX), LOGO_PULSE_DURATION).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 	logo_tween.tween_property(logo, "scale", Vector2(LOGO_SCALE_MIN, LOGO_SCALE_MIN), LOGO_PULSE_DURATION).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
-func _update_breathing(delta: float) -> void:
+func _update_breathing(_delta: float) -> void:
 	var breath = (sin(ambient_time * BREATH_SPEED) + 1.0) * 0.5
 	var brightness = 0.85 + breath * 0.35
 	background.self_modulate = Color(brightness * 1.15, brightness * 0.85, brightness * 0.75, 1.0)
@@ -367,17 +367,17 @@ func _setup_button_effects() -> void:
 
 func _on_button_hover(button: TextureButton) -> void:
 	if button == continue_button and not continue_has_saves:
-		var tween = create_tween().set_parallel(true)
-		tween.tween_property(button, "scale", Vector2(1.03, 1.03), 0.2).set_ease(Tween.EASE_OUT)
-		tween.tween_property(button, "modulate:a", 0.55, 0.2)
+		var disabled_tween := create_tween().set_parallel(true)
+		disabled_tween.tween_property(button, "scale", Vector2(1.03, 1.03), 0.2).set_ease(Tween.EASE_OUT)
+		disabled_tween.tween_property(button, "modulate:a", 0.55, 0.2)
 		return
 
-	var base_y = button_base_positions.get(button, button.position.y)
-	var tween = create_tween().set_parallel(true)
-	tween.tween_property(button, "scale", Vector2(1.12, 1.12), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	tween.tween_property(button, "position:y", base_y - 12, 0.18).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	tween.tween_property(button, "modulate", Color(1.2, 1.1, 1.05, 1.0), 0.15)
-	tween.tween_property(button, "rotation_degrees", randf_range(-1.0, 1.0), 0.12)
+	var base_y: float = button_base_positions.get(button, button.position.y)
+	var hover_tween := create_tween().set_parallel(true)
+	hover_tween.tween_property(button, "scale", Vector2(1.12, 1.12), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	hover_tween.tween_property(button, "position:y", base_y - 12, 0.18).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	hover_tween.tween_property(button, "modulate", Color(1.2, 1.1, 1.05, 1.0), 0.15)
+	hover_tween.tween_property(button, "rotation_degrees", randf_range(-1.0, 1.0), 0.12)
 
 func _on_button_unhover(button: TextureButton) -> void:
 	var base_y = button_base_positions.get(button, button.position.y + 20)

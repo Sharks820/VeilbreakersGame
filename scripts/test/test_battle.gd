@@ -310,14 +310,26 @@ func _create_test_enemy(monster_id: String, level: int) -> Monster:
 # =============================================================================
 
 func _start_battle(party: Array[CharacterBase], enemies: Array[CharacterBase]) -> void:
+	# DEBUG: Log party and enemy details before starting
+	print("[DEBUG] _start_battle called")
+	print("[DEBUG]   Party size: %d" % party.size())
+	for i in range(party.size()):
+		print("[DEBUG]   Party[%d]: %s (type: %s)" % [i, party[i].character_name, Enums.CharacterType.keys()[party[i].character_type]])
+	print("[DEBUG]   Enemies size: %d" % enemies.size())
+	for i in range(enemies.size()):
+		print("[DEBUG]   Enemy[%d]: %s (corrupted: %s)" % [i, enemies[i].character_name, enemies[i].is_corrupted if enemies[i] is Monster else "N/A"])
+	
 	# Register party with GameManager
 	GameManager.player_party = party
+	print("[DEBUG]   GameManager.player_party set, size: %d" % GameManager.player_party.size())
 
 	# Change game state
 	GameManager.change_state(Enums.GameState.BATTLE)
 
 	# Emit battle started signal
+	print("[DEBUG]   Emitting EventBus.battle_started with %d enemies" % enemies.size())
 	EventBus.battle_started.emit(enemies)
+	print("[DEBUG]   EventBus.battle_started emitted")
 
 	# Note: Health bars are now handled by the real battle_ui.tscn loaded via battle_arena.gd
 
