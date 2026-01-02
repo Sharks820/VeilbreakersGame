@@ -5,6 +5,7 @@
 *.secret
 secrets/
 .mcp.json
+opencode.json
 
 # Windows reserved filenames (cause git errors)
 nul

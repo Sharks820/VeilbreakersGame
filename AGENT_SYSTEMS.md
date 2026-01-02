@@ -636,8 +636,8 @@ When player Ascends monsters frequently:
 
 ## Authentication
 ```
-API Key: REDACTED_SCENARIO_KEY
-Secret: REDACTED_SCENARIO_SECRET
+API Key: [SET IN ENVIRONMENT - SCENARIO_API_KEY]
+Secret: [SET IN ENVIRONMENT - SCENARIO_SECRET]
 Format: Basic Auth (base64 of "api_key:secret")
 ```
 

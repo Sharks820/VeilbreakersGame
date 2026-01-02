@@ -32,8 +32,8 @@ You manage art generation and style consistency for VEILBREAKERS.
 
 ### API Credentials
 ```
-API Key: REDACTED_SCENARIO_KEY
-Secret: REDACTED_SCENARIO_SECRET
+API Key: [SET IN ENVIRONMENT]
+Secret: [SET IN ENVIRONMENT]
 Endpoint: https://api.cloud.scenario.com/v1/
 ```
 
