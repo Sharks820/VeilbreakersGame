@@ -43,8 +43,8 @@ magic_growth = 1.22
 resistance_growth = 1.18
 speed_growth = 1.08
 
-innate_skills = ["witnessed"]
-learnable_skills = {5: "glimpse_of_death", 10: "many_eyed_gaze", 14: "shared_vision", 20: "foresight", 26: "absolute_vision"}
+innate_skills = ["witnessed", "glimpse_of_death", "dread_gaze", "many_eyes"]
+learnable_skills = {8: "many_eyed_gaze", 14: "shared_vision", 20: "foresight", 26: "absolute_vision"}
 
 ai_pattern = "debuffer"
 skill_weights = {"witnessed": 30, "glimpse_of_death": 35, "many_eyed_gaze": 35}

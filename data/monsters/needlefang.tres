@@ -37,7 +37,7 @@ magic_growth = 1.18
 resistance_growth = 1.08
 speed_growth = 1.28
 
-innate_skills = ["needle_storm", "venomous_acceleration"]
+innate_skills = ["needle_storm", "venomous_acceleration", "venom_spray", "razor_swarm"]
 learnable_skills = {8: "spine_flurry", 14: "toxin_overdrive", 22: "thousand_stings", 32: "death_of_a_thousand_cuts"}
 
 ai_pattern = "assassin"

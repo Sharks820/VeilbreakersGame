@@ -37,7 +37,7 @@ magic_growth = 1.2
 resistance_growth = 1.15
 speed_growth = 1.06
 
-innate_skills = ["spore_cloud", "fungal_touch"]
+innate_skills = ["spore_cloud", "fungal_touch", "toxic_cloud", "venom_spray"]
 learnable_skills = {7: "decomposer", 14: "bloom_of_rot", 21: "mycelium_network", 30: "the_rot_sovereign"}
 
 ai_pattern = "debuffer"

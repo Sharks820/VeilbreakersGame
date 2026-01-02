@@ -37,7 +37,7 @@ magic_growth = 1.28
 resistance_growth = 1.18
 speed_growth = 1.22
 
-innate_skills = ["death_vision", "lightning_haunt"]
+innate_skills = ["death_vision", "lightning_haunt", "dread_gaze", "distortion_field"]
 learnable_skills = {12: "storm_terror", 20: "thunderwraith_scream", 30: "inevitable_strike", 42: "the_storm_that_remembers"}
 
 ai_pattern = "debuffer"

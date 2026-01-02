@@ -43,7 +43,7 @@ magic_growth = 1.02
 resistance_growth = 1.05
 speed_growth = 1.15
 
-innate_skills = ["rend", "bloodscent"]
+innate_skills = ["rend", "bloodscent", "pounce", "eviscerate"]
 learnable_skills = {8: "prey_on_weak", 15: "feeding_frenzy", 22: "pack_tactics", 30: "apex_strike"}
 
 ai_pattern = "aggressive"

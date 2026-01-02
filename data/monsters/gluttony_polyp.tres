@@ -43,8 +43,8 @@ magic_growth = 1.12
 resistance_growth = 1.2
 speed_growth = 1.02
 
-innate_skills = ["soothing_pulse"]
-learnable_skills = {5: "acid_splash", 10: "absorb_pain", 15: "nurturing_light", 22: "life_returned"}
+innate_skills = ["soothing_pulse", "acid_splash", "absorb_pain", "healing_pulse"]
+learnable_skills = {8: "bloat", 15: "nurturing_light", 22: "life_returned", 30: "regenerating_mass"}
 
 ai_pattern = "healer"
 skill_weights = {"soothing_pulse": 50, "acid_splash": 20, "absorb_pain": 30}

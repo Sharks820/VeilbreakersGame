@@ -37,8 +37,8 @@ magic_growth = 1.15
 resistance_growth = 1.05
 speed_growth = 1.25
 
-innate_skills = ["static_touch", "flicker_strike"]
-learnable_skills = {5: "chain_lightning", 11: "surge_dash", 18: "stormkin_call", 26: "tempest_incarnate"}
+innate_skills = ["static_touch", "flicker_strike", "surge_strike", "warp"]
+learnable_skills = {8: "chain_lightning", 14: "surge_dash", 20: "stormkin_call", 28: "tempest_incarnate"}
 
 ai_pattern = "aggressive"
 skill_weights = {"static_touch": 35, "flicker_strike": 45, "chain_lightning": 20}

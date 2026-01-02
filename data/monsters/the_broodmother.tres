@@ -37,7 +37,7 @@ magic_growth = 1.25
 resistance_growth = 1.2
 speed_growth = 1.1
 
-innate_skills = ["parasitic_injection", "spawn_broodling"]
+innate_skills = ["parasitic_injection", "spawn_broodling", "venom_spray", "multiply"]
 learnable_skills = {10: "venomous_nursery", 18: "infestation_wave", 28: "the_hatching", 40: "hive_queen_ascension"}
 
 ai_pattern = "summoner"

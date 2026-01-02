@@ -43,8 +43,8 @@ magic_growth = 1.02
 resistance_growth = 1.1
 speed_growth = 1.08
 
-innate_skills = ["bone_snap"]
-learnable_skills = {5: "harvest", 10: "reassemble", 16: "bone_wall", 24: "wardens_stand"}
+innate_skills = ["bone_snap", "harvest", "iron_guard", "leg_trap"]
+learnable_skills = {8: "reassemble", 15: "bone_wall", 22: "wardens_stand", 30: "final_form"}
 
 ai_pattern = "tank"
 skill_weights = {"bone_snap": 40, "harvest": 20, "bone_wall": 40}

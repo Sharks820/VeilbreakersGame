@@ -37,7 +37,7 @@ magic_growth = 1.15
 resistance_growth = 1.18
 speed_growth = 1.02
 
-innate_skills = ["acid_leak", "corroding_guard"]
+innate_skills = ["acid_leak", "corroding_guard", "acid_spit", "iron_guard"]
 learnable_skills = {10: "dissolving_embrace", 17: "noble_sacrifice", 26: "acid_flood", 38: "the_dissolved_knights_oath"}
 
 ai_pattern = "tank"

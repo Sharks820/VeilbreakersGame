@@ -37,7 +37,7 @@ magic_growth = 1.02
 resistance_growth = 1.22
 speed_growth = 1.0
 
-innate_skills = ["iron_stance", "guardian_chains"]
+innate_skills = ["iron_stance", "guardian_chains", "iron_guard", "reflected_pain"]
 learnable_skills = {8: "fortress_body", 15: "immovable_will", 24: "bastion_form", 35: "citadel_eternal"}
 
 ai_pattern = "tank"

@@ -43,8 +43,8 @@ magic_growth = 1.05
 resistance_growth = 1.08
 speed_growth = 1.1
 
-innate_skills = ["gnaw"]
-learnable_skills = {5: "desperate_lunge", 12: "devour_scraps", 20: "loyal_bite", 30: "pack_feast"}
+innate_skills = ["gnaw", "desperate_lunge", "frenzy_bite", "pounce"]
+learnable_skills = {8: "devour_scraps", 15: "loyal_bite", 22: "feeding_frenzy", 30: "pack_feast"}
 
 ai_pattern = "aggressive"
 skill_weights = {"gnaw": 60, "desperate_lunge": 30, "devour_scraps": 10}

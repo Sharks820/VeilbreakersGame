@@ -43,7 +43,7 @@ magic_growth = 1.1
 resistance_growth = 1.08
 speed_growth = 1.25
 
-innate_skills = ["blur_strike", "too_fast"]
+innate_skills = ["blur_strike", "too_fast", "phase_shift", "scatter"]
 learnable_skills = {7: "between_seconds", 12: "interrupt", 18: "hit_and_run", 25: "quicksilver_blitz"}
 
 ai_pattern = "speed"

@@ -43,8 +43,8 @@ magic_growth = 1.18
 resistance_growth = 1.15
 speed_growth = 1.08
 
-innate_skills = ["empty_grasp"]
-learnable_skills = {5: "hollow_wail", 10: "mimic_stance", 18: "void_touch", 25: "defined_purpose"}
+innate_skills = ["empty_grasp", "hollow_wail", "dread_gaze", "empty_husk"]
+learnable_skills = {8: "mimic_stance", 15: "void_touch", 22: "defined_purpose", 30: "endless_grief"}
 
 ai_pattern = "support"
 skill_weights = {"empty_grasp": 40, "hollow_wail": 35, "mimic_stance": 25}

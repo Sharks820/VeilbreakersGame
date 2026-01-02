@@ -37,7 +37,7 @@ magic_growth = 1.0
 resistance_growth = 1.1
 speed_growth = 1.08
 
-innate_skills = ["trap_bite", "iron_charge"]
+innate_skills = ["trap_bite", "iron_charge", "iron_guard", "rend"]
 learnable_skills = {9: "berserker_plate", 16: "steelrend", 25: "siege_breaker", 36: "unstoppable_maw"}
 
 ai_pattern = "aggressive"

@@ -43,8 +43,8 @@ magic_growth = 1.25
 resistance_growth = 1.2
 speed_growth = 1.05
 
-innate_skills = ["stolen_grace"]
-learnable_skills = {5: "merciful_light", 10: "absorb_suffering", 15: "blessed_touch", 20: "sanctuary", 28: "divine_devotion"}
+innate_skills = ["stolen_grace", "merciful_light", "healing_pulse", "soothing_pulse"]
+learnable_skills = {8: "absorb_suffering", 15: "blessed_touch", 20: "sanctuary", 28: "divine_devotion"}
 
 ai_pattern = "healer"
 skill_weights = {"stolen_grace": 45, "merciful_light": 35, "absorb_suffering": 20}
