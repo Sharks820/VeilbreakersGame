@@ -28,7 +28,7 @@ You manage art generation and style consistency for VEILBREAKERS.
 
 | Status | Model | Notes |
 |--------|-------|-------|
-| **PREFERRED** | Seedrush | Best quality, use for all new art |
+| **PREFERRED** | Seedream (`model_bytedance-seedream-4-5`) | Best quality, use for all new art |
 | **ALLOWED** | VeilBreakersV1 (`model_fmiEeZzx1zUMf4dhKeo16nqK`) | Fallback |
 | **FORBIDDEN** | ~~Scenario V2 / Dark Fantasy V2~~ | BROKEN - needs retraining |
 
