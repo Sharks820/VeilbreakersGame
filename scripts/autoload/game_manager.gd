@@ -84,6 +84,13 @@ var player_position: Vector2 = Vector2.ZERO
 var visited_areas: Array[String] = []
 
 # =============================================================================
+# PRE-BATTLE STATE (for quit-during-battle save)
+# =============================================================================
+
+var _pre_battle_state: Dictionary = {}
+var _has_pre_battle_state: bool = false
+
+# =============================================================================
 # RUNTIME STATS
 # =============================================================================
 
@@ -140,6 +147,7 @@ func _process(delta: float) -> void:
 		play_time_seconds += delta
 
 func _connect_signals() -> void:
+	EventBus.battle_started.connect(_on_battle_started)
 	EventBus.battle_ended.connect(_on_battle_ended)
 	EventBus.purification_succeeded.connect(_on_purification_succeeded)
 	EventBus.purification_failed.connect(_on_purification_failed)
@@ -360,8 +368,56 @@ func can_afford(amount: int) -> bool:
 	return currency >= amount
 
 # =============================================================================
+# PRE-BATTLE STATE MANAGEMENT
+# =============================================================================
+
+func save_pre_battle_state() -> void:
+	## Call this BEFORE entering a battle to save the state for quit-during-battle
+	_pre_battle_state = {
+		"current_area": current_area,
+		"current_map": current_map,
+		"player_position": {"x": player_position.x, "y": player_position.y},
+		"play_time": play_time_seconds,
+		"currency": currency,
+		# Party HP/MP states could be added here if needed
+	}
+	_has_pre_battle_state = true
+	EventBus.emit_debug("Pre-battle state saved: area=%s, pos=(%d,%d)" % [
+		current_area, int(player_position.x), int(player_position.y)
+	])
+
+func restore_pre_battle_state() -> void:
+	## Restore state to before the current battle (for quit-during-battle)
+	if not _has_pre_battle_state:
+		EventBus.emit_debug("No pre-battle state to restore")
+		return
+	
+	current_area = _pre_battle_state.get("current_area", current_area)
+	current_map = _pre_battle_state.get("current_map", current_map)
+	var pos: Dictionary = _pre_battle_state.get("player_position", {"x": 0, "y": 0})
+	player_position = Vector2(pos.x, pos.y)
+	play_time_seconds = _pre_battle_state.get("play_time", play_time_seconds)
+	currency = _pre_battle_state.get("currency", currency)
+	
+	EventBus.emit_debug("Pre-battle state restored: area=%s, pos=(%d,%d)" % [
+		current_area, int(player_position.x), int(player_position.y)
+	])
+
+func clear_pre_battle_state() -> void:
+	## Clear pre-battle state after battle completes normally
+	_pre_battle_state.clear()
+	_has_pre_battle_state = false
+
+func has_pre_battle_state() -> bool:
+	return _has_pre_battle_state
+
+# =============================================================================
 # SIGNAL HANDLERS
 # =============================================================================
+
+func _on_battle_started(_enemy_data: Array) -> void:
+	# Save pre-battle state for quit-during-battle functionality
+	save_pre_battle_state()
 
 func _on_battle_ended(victory: bool, _rewards: Dictionary) -> void:
 	battle_count += 1
@@ -369,6 +425,9 @@ func _on_battle_ended(victory: bool, _rewards: Dictionary) -> void:
 		victory_count += 1
 	else:
 		defeat_count += 1
+	
+	# Clear pre-battle state since battle completed normally
+	clear_pre_battle_state()
 
 func _on_purification_succeeded(_monster: Node) -> void:
 	purification_successes += 1
@@ -422,14 +481,12 @@ func load_save_data(data: Dictionary) -> void:
 	player_level = data.get("player_level", 1)
 	total_experience = data.get("total_experience", 0)
 	path_alignment = data.get("path_alignment", 0.0)
-	unlocked_brands = data.get("unlocked_brands", [Enums.Brand.NONE])
 	story_flags = data.get("story_flags", {})
 	current_chapter = data.get("current_chapter", 1)
 	current_area = data.get("current_area", "")
 	current_map = data.get("current_map", "")
-	var pos = data.get("player_position", {"x": 0, "y": 0})
-	player_position = Vector2(pos.x, pos.y)
-	visited_areas = data.get("visited_areas", [])
+	var pos: Dictionary = data.get("player_position", {"x": 0, "y": 0})
+	player_position = Vector2(float(pos.get("x", 0)), float(pos.get("y", 0)))
 	battle_count = data.get("battle_count", 0)
 	victory_count = data.get("victory_count", 0)
 	defeat_count = data.get("defeat_count", 0)
@@ -442,6 +499,17 @@ func load_save_data(data: Dictionary) -> void:
 	vera_corruption = data.get("vera_corruption", 0.0)
 	vera_power_used = data.get("vera_power_used", 0.0)
 	owned_monsters = data.get("owned_monsters", [])
+	
+	# Safely load typed arrays from save data
+	unlocked_brands.clear()
+	var loaded_brands: Array = data.get("unlocked_brands", [Enums.Brand.NONE])
+	for b in loaded_brands:
+		unlocked_brands.append(int(b))
+	
+	visited_areas.clear()
+	var loaded_areas: Array = data.get("visited_areas", [])
+	for area in loaded_areas:
+		visited_areas.append(str(area))
 
 # =============================================================================
 # UTILITY

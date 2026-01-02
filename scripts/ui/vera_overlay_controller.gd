@@ -265,3 +265,22 @@ func pulse_corruption() -> void:
 	_pulse_tween = create_tween()
 	_pulse_tween.tween_property(corruption_bar, "scale", Vector2(1.1, 1.1), 0.1)
 	_pulse_tween.tween_property(corruption_bar, "scale", Vector2.ONE, 0.2)
+
+# =============================================================================
+# CLEANUP
+# =============================================================================
+
+func _exit_tree() -> void:
+	# Disconnect EventBus signals to prevent errors after scene is freed
+	if EventBus.vera_state_changed.is_connected(_on_state_changed):
+		EventBus.vera_state_changed.disconnect(_on_state_changed)
+	if EventBus.vera_corruption_changed.is_connected(_on_corruption_changed):
+		EventBus.vera_corruption_changed.disconnect(_on_corruption_changed)
+	if EventBus.vera_glitch_triggered.is_connected(_on_glitch_triggered):
+		EventBus.vera_glitch_triggered.disconnect(_on_glitch_triggered)
+	if EventBus.game_state_changed.is_connected(_on_game_state_changed):
+		EventBus.game_state_changed.disconnect(_on_game_state_changed)
+	
+	# Kill any running tweens
+	if _pulse_tween and _pulse_tween.is_valid():
+		_pulse_tween.kill()

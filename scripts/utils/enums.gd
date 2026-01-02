@@ -3,6 +3,30 @@ extends RefCounted
 ## Enums: All game-wide enumerations.
 
 # =============================================================================
+# HELPER FUNCTIONS FOR SAFE ENUM ACCESS
+# =============================================================================
+
+## Safely get the name of a Brand enum value, handling NONE = -1
+static func get_brand_name(brand: int) -> String:
+	if brand < 0:
+		return "NONE"
+	var keys := Brand.keys()
+	# Keys include NONE at index 0, so we need to offset by 1 for positive values
+	if brand + 1 < keys.size():
+		return keys[brand + 1]
+	return "UNKNOWN"
+
+## Safely get the name of a Path enum value, handling NONE = -1
+static func get_path_name(path: int) -> String:
+	if path < 0:
+		return "NONE"
+	var keys := Path.keys()
+	# Keys include NONE at index 0, so we need to offset by 1 for positive values
+	if path + 1 < keys.size():
+		return keys[path + 1]
+	return "UNKNOWN"
+
+# =============================================================================
 # GAME STATE
 # =============================================================================
 

@@ -31,6 +31,7 @@ VERASystem="*res://scripts/systems/vera_system.gd"
 InventorySystem="*res://scripts/systems/inventory_system.gd"
 PathSystem="*res://scripts/autoload/path_system.gd"
 CrashHandler="*res://scripts/autoload/crash_handler.gd"
+PauseMenu="*res://scenes/ui/pause_menu.tscn"
 
 [display]
 

@@ -204,7 +204,7 @@ func _finish_typing() -> void:
 	var line: Dictionary = current_dialogue[current_index]
 
 	if line.has("choices"):
-		_show_choices(line.choices)
+		_show_choices(line["choices"])
 	else:
 		continue_indicator.visible = true
 
@@ -306,3 +306,12 @@ func skip_to_end() -> void:
 	"""Skip all remaining dialogue (for testing/accessibility)"""
 	if is_active:
 		end_dialogue()
+
+# =============================================================================
+# CLEANUP
+# =============================================================================
+
+func _exit_tree() -> void:
+	# Disconnect EventBus signals to prevent errors after scene is freed
+	if EventBus.vera_dialogue_triggered.is_connected(_on_vera_dialogue_triggered):
+		EventBus.vera_dialogue_triggered.disconnect(_on_vera_dialogue_triggered)

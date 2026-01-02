@@ -93,6 +93,10 @@ var _log_start_top: float = 0.0
 # Turn order breathing tweens (stored to kill before recreating)
 var _turn_order_tweens: Array[Tween] = []
 
+# Sprite hitbox reference for mouse hover
+var _sprite_hitboxes: Dictionary = {}  # CharacterBase -> Rect2
+var _hovered_sprite_character: CharacterBase = null
+
 # =============================================================================
 # INITIALIZATION
 # =============================================================================
@@ -100,6 +104,12 @@ var _turn_order_tweens: Array[Tween] = []
 func _ready() -> void:
 	_connect_signals()
 	_hide_all_menus()
+	
+	# Ensure we receive input events for mouse tracking
+	set_process_input(true)
+	mouse_filter = Control.MOUSE_FILTER_PASS  # Pass events through but still receive them
+
+
 
 	# IMMEDIATELY hide party_status_container and clear its placeholder children
 	# This must happen before the first frame renders to avoid showing placeholders
@@ -195,6 +205,7 @@ func set_battle_manager(manager: BattleManager) -> void:
 	# Connect battle manager signals
 	battle_manager.waiting_for_player_input.connect(_on_waiting_for_input)
 	battle_manager.round_started.connect(_on_round_started)
+	battle_manager.turn_started_signal.connect(_on_turn_started_update_order)
 	print("[BATTLE_UI] Signals connected to battle_manager")
 	battle_manager.battle_victory.connect(_on_victory)
 	battle_manager.battle_defeat.connect(_on_defeat)
@@ -257,6 +268,31 @@ func _on_round_started(round_number: int) -> void:
 		print("[BATTLE_UI] Updating turn order with %d characters" % battle_manager.turn_order.size())
 		update_turn_order(battle_manager.turn_order)
 
+func _on_turn_started_update_order(character: CharacterBase) -> void:
+	"""Update turn order display when a new character's turn starts"""
+	if not battle_manager:
+		return
+	# Rebuild turn order starting from the current character
+	var current_order: Array[CharacterBase] = []
+	var found_current := false
+	
+	# First pass: add characters from current onwards
+	for c in battle_manager.turn_order:
+		if c == character:
+			found_current = true
+		if found_current and c.is_alive():
+			current_order.append(c)
+	
+	# Second pass: add remaining characters (wrapped around for next round preview)
+	for c in battle_manager.turn_order:
+		if c == character:
+			break
+		if c.is_alive():
+			current_order.append(c)
+	
+	if not current_order.is_empty():
+		update_turn_order(current_order)
+
 func _on_victory(rewards: Dictionary) -> void:
 	var items: Array = []
 	for item in rewards.get("items", []):
@@ -291,6 +327,11 @@ func _connect_signals() -> void:
 	# Status effect signals for icon updates
 	EventBus.status_effect_applied.connect(_on_status_effect_changed)
 	EventBus.status_effect_removed.connect(_on_status_effect_changed)
+	
+	# Character sprite hover signals (from battle arena)
+	EventBus.character_hovered.connect(_on_character_sprite_hovered)
+	EventBus.character_unhovered.connect(_on_character_sprite_unhovered)
+	EventBus.target_selected.connect(_on_target_selected_from_sprite)
 
 func _hide_all_menus() -> void:
 	skill_menu.hide()
@@ -305,6 +346,34 @@ func _hide_all_menus() -> void:
 # =============================================================================
 
 func _input(event: InputEvent) -> void:
+	# Handle cancel/escape for various states
+	if event.is_action_pressed("ui_cancel"):
+		match current_state:
+			UIState.TARGET_SELECT:
+				_cancel_target_selection()
+				get_viewport().set_input_as_handled()
+			UIState.SKILL_SELECT:
+				_on_skill_back_pressed()
+				get_viewport().set_input_as_handled()
+			UIState.ITEM_SELECT:
+				_on_item_back_pressed()
+				get_viewport().set_input_as_handled()
+		return
+	
+	# Handle right-click as cancel during target selection
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+		match current_state:
+			UIState.TARGET_SELECT:
+				_cancel_target_selection()
+				get_viewport().set_input_as_handled()
+			UIState.SKILL_SELECT:
+				_on_skill_back_pressed()
+				get_viewport().set_input_as_handled()
+			UIState.ITEM_SELECT:
+				_on_item_back_pressed()
+				get_viewport().set_input_as_handled()
+		return
+	
 	# Handle target selection with arrow keys - MUST consume input to prevent focus stealing
 	if current_state == UIState.TARGET_SELECT:
 		if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_up"):
@@ -316,9 +385,53 @@ func _input(event: InputEvent) -> void:
 		elif event.is_action_pressed("ui_accept"):
 			_confirm_target()
 			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("ui_cancel"):
-			_cancel_target_selection()
-			get_viewport().set_input_as_handled()
+
+func register_sprite_hitbox(character: CharacterBase, hitbox: Rect2) -> void:
+	"""Register a character's sprite hitbox for mouse detection (called from BattleArena)"""
+	_sprite_hitboxes[character] = hitbox
+
+func clear_sprite_hitboxes() -> void:
+	"""Clear all sprite hitboxes"""
+	_sprite_hitboxes.clear()
+	_hovered_sprite_character = null
+
+func _check_sprite_hover_at(mouse_pos: Vector2) -> void:
+	"""Check if mouse is over any character sprite hitbox (called from BattleArena)"""
+	var hovered: CharacterBase = null
+	
+	for character in _sprite_hitboxes:
+		var hitbox: Rect2 = _sprite_hitboxes[character]
+		if hitbox.has_point(mouse_pos):
+			hovered = character
+			break
+	
+	# Handle hover state change
+	if hovered != _hovered_sprite_character:
+		# Unhover previous
+		if _hovered_sprite_character:
+			_on_character_sprite_unhovered(_hovered_sprite_character)
+		
+		# Hover new
+		_hovered_sprite_character = hovered
+		if _hovered_sprite_character:
+			_on_character_sprite_hovered(_hovered_sprite_character)
+
+func _check_sprite_click_at(mouse_pos: Vector2) -> void:
+	"""Check if mouse clicked on a character sprite"""
+	if current_state != UIState.TARGET_SELECT:
+		return
+	
+	for character in _sprite_hitboxes:
+		var hitbox: Rect2 = _sprite_hitboxes[character]
+		if hitbox.has_point(mouse_pos):
+			# Check if this is a valid target
+			if character in valid_targets:
+				var idx := valid_targets.find(character)
+				if idx >= 0:
+					current_target_index = idx
+					_update_target_display()
+					_confirm_target()
+			break
 
 # =============================================================================
 # BATTLE FLOW
@@ -364,12 +477,28 @@ func start_turn(character: CharacterBase) -> void:
 	var is_ally := character.is_protagonist or character in party_members
 	log_turn_start(character.character_name, is_ally)
 
-	# Show action menu for protagonist (the player character)
-	if character.is_protagonist:
-		print("[BATTLE_UI] Character IS protagonist - showing action menu")
+	# Determine if this character should be player-controlled
+	# - Protagonist: always player controlled
+	# - Party monsters: player controlled unless high corruption
+	var is_player_controlled := character.is_protagonist
+	
+	if not is_player_controlled and character in party_members:
+		# Check if monster has high corruption (auto-attacks on its own)
+		if character is Monster:
+			var monster: Monster = character as Monster
+			if monster.corruption_level < Constants.MONSTER_AUTO_ATTACK_CORRUPTION_THRESHOLD:
+				# Player controls this party monster
+				is_player_controlled = true
+		else:
+			# Non-monster party member - player controlled
+			is_player_controlled = true
+
+	# Show action menu for player-controlled characters (protagonist OR party monsters)
+	if is_player_controlled:
+		print("[BATTLE_UI] Character is player-controlled - showing action menu")
 		show_action_menu()
 	else:
-		print("[BATTLE_UI] Character is NOT protagonist - setting ANIMATING state")
+		print("[BATTLE_UI] Character is AI-controlled (high corruption) - setting ANIMATING state")
 		set_ui_state(UIState.ANIMATING)
 
 func show_action_menu() -> void:
@@ -384,6 +513,7 @@ func hide_action_menu() -> void:
 	action_menu.hide()
 
 func set_ui_state(state: UIState) -> void:
+	var previous_state := current_state
 	current_state = state
 
 	match state:
@@ -392,6 +522,10 @@ func set_ui_state(state: UIState) -> void:
 			skill_menu.hide()
 			item_menu.hide()
 			target_selector.hide()
+			# Clear all highlights when returning to action select
+			if previous_state == UIState.TARGET_SELECT:
+				_clear_all_sidebar_highlights()
+				target_highlight_changed.emit(null)
 		UIState.SKILL_SELECT:
 			skill_menu.show()
 		UIState.ITEM_SELECT:
@@ -403,6 +537,9 @@ func set_ui_state(state: UIState) -> void:
 			skill_menu.hide()
 			item_menu.hide()
 			target_selector.hide()
+			# Clear all highlights when action is submitted
+			_clear_all_sidebar_highlights()
+			target_highlight_changed.emit(null)
 
 func _update_action_buttons() -> void:
 	if current_character == null:
@@ -1743,6 +1880,16 @@ func _create_brand_icon(brand: Enums.Brand) -> PanelContainer:
 
 	return icon
 
+func _get_path_color() -> Color:
+	"""Get color for player's Path based on alignment"""
+	var alignment := GameManager.path_alignment if GameManager else 0.0
+	if alignment > 30:
+		return Color(0.9, 0.85, 0.4)  # Gold/yellow for Seraph (light path)
+	elif alignment < -30:
+		return Color(0.5, 0.3, 0.7)  # Purple for Shade (dark path)
+	else:
+		return Color(0.6, 0.6, 0.6)  # Gray for neutral/undecided
+
 # =============================================================================
 # ENEMY HOVER TOOLTIP
 # =============================================================================
@@ -2038,31 +2185,56 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 	_add_stat_row(stats_grid, "MAG", character.base_magic, Color(0.8, 0.5, 1.0))
 	_add_stat_row(stats_grid, "SPD", character.base_speed, Color(0.5, 1.0, 0.7))
 
-	# Brand info (if character has a brand)
-	if "brand" in character and character.brand != Enums.Brand.NONE:
+	# For monsters: show Brand. For player characters: show Path
+	if character is Monster:
+		# Monster - show Brand
+		var monster := character as Monster
+		if monster.brand != Enums.Brand.NONE:
+			var sep3 := HSeparator.new()
+			sep3.add_theme_color_override("separator", Color(0.3, 0.4, 0.35))
+			vbox.add_child(sep3)
+
+			var brand_info := HBoxContainer.new()
+			brand_info.add_theme_constant_override("separation", 6)
+			vbox.add_child(brand_info)
+
+			var brand_title := Label.new()
+			brand_title.text = "Brand:"
+			brand_title.add_theme_font_size_override("font_size", 10)
+			brand_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+			brand_info.add_child(brand_title)
+
+			# Brand icon (colored indicator)
+			var brand_icon := _create_brand_icon(monster.brand)
+			brand_info.add_child(brand_icon)
+
+			var brand_value := Label.new()
+			brand_value.text = _get_brand_name(monster.brand)
+			brand_value.add_theme_font_size_override("font_size", 10)
+			brand_value.add_theme_color_override("font_color", _get_brand_color(monster.brand))
+			brand_info.add_child(brand_value)
+	elif character is PlayerCharacter:
+		# Player character - show Path
 		var sep3 := HSeparator.new()
 		sep3.add_theme_color_override("separator", Color(0.3, 0.4, 0.35))
 		vbox.add_child(sep3)
 
-		var brand_info := HBoxContainer.new()
-		brand_info.add_theme_constant_override("separation", 6)
-		vbox.add_child(brand_info)
+		var path_info := HBoxContainer.new()
+		path_info.add_theme_constant_override("separation", 6)
+		vbox.add_child(path_info)
 
-		var brand_title := Label.new()
-		brand_title.text = "Brand:"
-		brand_title.add_theme_font_size_override("font_size", 10)
-		brand_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-		brand_info.add_child(brand_title)
+		var path_title := Label.new()
+		path_title.text = "Path:"
+		path_title.add_theme_font_size_override("font_size", 10)
+		path_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		path_info.add_child(path_title)
 
-		# Brand icon (colored indicator)
-		var brand_icon := _create_brand_icon(character.brand)
-		brand_info.add_child(brand_icon)
-
-		var brand_value := Label.new()
-		brand_value.text = _get_brand_name(character.brand)
-		brand_value.add_theme_font_size_override("font_size", 10)
-		brand_value.add_theme_color_override("font_color", _get_brand_color(character.brand))
-		brand_info.add_child(brand_value)
+		var path_value := Label.new()
+		var path_name := GameManager.get_path_name() if GameManager.has_method("get_path_name") else "Unknown"
+		path_value.text = path_name
+		path_value.add_theme_font_size_override("font_size", 10)
+		path_value.add_theme_color_override("font_color", _get_path_color())
+		path_info.add_child(path_value)
 
 	# Position tooltip to the RIGHT of the panel (party is on left side)
 	add_child(party_tooltip)
@@ -2088,6 +2260,274 @@ func _hide_party_tooltip() -> void:
 	if party_tooltip and is_instance_valid(party_tooltip):
 		party_tooltip.queue_free()
 		party_tooltip = null
+
+# =============================================================================
+# CHARACTER SPRITE HOVER (from Battle Arena)
+# =============================================================================
+
+func _on_character_sprite_hovered(character: Node) -> void:
+	"""Handle hover on character sprite in battle arena - show tooltip and update target if in TARGET_SELECT"""
+	if not character is CharacterBase:
+		return
+	var char := character as CharacterBase
+	
+	# If in target selection mode, hovering selects this character as target
+	if current_state == UIState.TARGET_SELECT and char in valid_targets:
+		var idx := valid_targets.find(char)
+		if idx >= 0 and idx != current_target_index:
+			current_target_index = idx
+			_update_target_display()
+	
+	# Don't show sprite tooltip if sidebar tooltip is already visible (prevents glitching)
+	if tooltip_visible or (party_tooltip and is_instance_valid(party_tooltip)):
+		return
+	
+	# Determine if this is an enemy or ally and show appropriate tooltip
+	if char is Monster and (char as Monster).is_corrupted:
+		# Enemy monster - show enemy tooltip at mouse position
+		_show_sprite_enemy_tooltip(char)
+	else:
+		# Ally - show party tooltip at mouse position
+		_show_sprite_party_tooltip(char)
+
+func _on_character_sprite_unhovered(character: Node) -> void:
+	"""Hide tooltips when mouse leaves character sprite"""
+	_hide_enemy_tooltip()
+	_hide_party_tooltip()
+
+func _on_target_selected_from_sprite(character: Node) -> void:
+	"""Handle target selection from clicking on character sprite"""
+	if not character is CharacterBase:
+		return
+	var char := character as CharacterBase
+	
+	# Only process if we're in target selection mode
+	if current_state != UIState.TARGET_SELECT:
+		return
+	
+	# Check if this is a valid target
+	if char in valid_targets:
+		var idx := valid_targets.find(char)
+		if idx >= 0:
+			current_target_index = idx
+			_update_target_display()
+			# Confirm the selection
+			_confirm_target()
+
+func _show_sprite_enemy_tooltip(enemy: CharacterBase) -> void:
+	"""Show enemy tooltip near mouse position when hovering arena sprite"""
+	_hide_enemy_tooltip()
+	
+	# Create tooltip (same as _on_enemy_panel_hover but positioned at mouse)
+	enemy_tooltip = PanelContainer.new()
+	enemy_tooltip.name = "EnemyTooltip"
+	enemy_tooltip.custom_minimum_size = Vector2(280, 0)
+	enemy_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	var tooltip_style := StyleBoxFlat.new()
+	tooltip_style.bg_color = Color(0.08, 0.06, 0.1, 0.95)
+	tooltip_style.border_color = Color(0.6, 0.3, 0.4, 1.0)
+	tooltip_style.set_border_width_all(2)
+	tooltip_style.set_corner_radius_all(6)
+	tooltip_style.content_margin_left = 12
+	tooltip_style.content_margin_right = 12
+	tooltip_style.content_margin_top = 10
+	tooltip_style.content_margin_bottom = 10
+	enemy_tooltip.add_theme_stylebox_override("panel", tooltip_style)
+	
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	enemy_tooltip.add_child(vbox)
+	
+	# Name header
+	var name_label := Label.new()
+	name_label.text = enemy.character_name
+	name_label.add_theme_font_size_override("font_size", 16)
+	name_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.7))
+	vbox.add_child(name_label)
+	
+	# Level and tier
+	var level_label := Label.new()
+	if enemy is Monster:
+		var monster := enemy as Monster
+		var tier_name: String = str(Enums.MonsterTier.keys()[monster.monster_tier])
+		level_label.text = "Lv.%d %s" % [enemy.level, tier_name]
+	else:
+		level_label.text = "Level %d" % enemy.level
+	level_label.add_theme_font_size_override("font_size", 11)
+	level_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	vbox.add_child(level_label)
+	
+	# Separator
+	var sep := HSeparator.new()
+	sep.add_theme_color_override("separator", Color(0.4, 0.3, 0.35))
+	vbox.add_child(sep)
+	
+	# HP info
+	var hp_info := HBoxContainer.new()
+	hp_info.add_theme_constant_override("separation", 8)
+	vbox.add_child(hp_info)
+	
+	var hp_title := Label.new()
+	hp_title.text = "HP:"
+	hp_title.add_theme_font_size_override("font_size", 11)
+	hp_title.add_theme_color_override("font_color", Color(0.8, 0.6, 0.6))
+	hp_info.add_child(hp_title)
+	
+	var hp_value := Label.new()
+	hp_value.text = "%d / %d" % [enemy.current_hp, enemy.get_max_hp()]
+	hp_value.add_theme_font_size_override("font_size", 11)
+	hp_value.add_theme_color_override("font_color", Color(0.9, 0.4, 0.4))
+	hp_info.add_child(hp_value)
+	
+	# Brand info for monsters
+	if enemy is Monster:
+		var monster := enemy as Monster
+		var brand_info := HBoxContainer.new()
+		brand_info.add_theme_constant_override("separation", 8)
+		vbox.add_child(brand_info)
+		
+		var brand_title := Label.new()
+		brand_title.text = "Brand:"
+		brand_title.add_theme_font_size_override("font_size", 11)
+		brand_title.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+		brand_info.add_child(brand_title)
+		
+		var brand_value := Label.new()
+		var brand_name: String = Enums.Brand.keys()[monster.brand] if monster.brand < Enums.Brand.size() else "UNKNOWN"
+		brand_value.text = brand_name
+		brand_value.add_theme_font_size_override("font_size", 11)
+		brand_value.add_theme_color_override("font_color", _get_brand_color(monster.brand))
+		brand_info.add_child(brand_value)
+	
+	add_child(enemy_tooltip)
+	tooltip_visible = true
+	
+	# Position near mouse
+	await get_tree().process_frame
+	var mouse_pos := get_global_mouse_position()
+	var tooltip_pos := mouse_pos + Vector2(15, 15)
+	
+	# Keep tooltip on screen
+	if tooltip_pos.x + enemy_tooltip.size.x > size.x - 10:
+		tooltip_pos.x = mouse_pos.x - enemy_tooltip.size.x - 15
+	if tooltip_pos.y + enemy_tooltip.size.y > size.y - 10:
+		tooltip_pos.y = size.y - enemy_tooltip.size.y - 10
+	
+	enemy_tooltip.position = tooltip_pos
+
+func _show_sprite_party_tooltip(character: CharacterBase) -> void:
+	"""Show party tooltip near mouse position when hovering arena sprite"""
+	_hide_party_tooltip()
+	
+	party_tooltip = PanelContainer.new()
+	party_tooltip.name = "PartyTooltip"
+	party_tooltip.custom_minimum_size = Vector2(280, 0)
+	party_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	var tooltip_style := StyleBoxFlat.new()
+	tooltip_style.bg_color = Color(0.06, 0.1, 0.08, 0.95)
+	tooltip_style.border_color = Color(0.3, 0.6, 0.4, 1.0)
+	tooltip_style.set_border_width_all(2)
+	tooltip_style.set_corner_radius_all(6)
+	tooltip_style.content_margin_left = 12
+	tooltip_style.content_margin_right = 12
+	tooltip_style.content_margin_top = 10
+	tooltip_style.content_margin_bottom = 10
+	party_tooltip.add_theme_stylebox_override("panel", tooltip_style)
+	
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	party_tooltip.add_child(vbox)
+	
+	# Name header
+	var name_label := Label.new()
+	name_label.text = character.character_name
+	name_label.add_theme_font_size_override("font_size", 16)
+	name_label.add_theme_color_override("font_color", Color(0.85, 1.0, 0.9))
+	vbox.add_child(name_label)
+	
+	# Level info
+	var level_label := Label.new()
+	level_label.text = "Level %d" % character.level
+	level_label.add_theme_font_size_override("font_size", 11)
+	level_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	vbox.add_child(level_label)
+	
+	# Separator
+	var sep := HSeparator.new()
+	sep.add_theme_color_override("separator", Color(0.3, 0.4, 0.35))
+	vbox.add_child(sep)
+	
+	# HP info
+	var hp_info := HBoxContainer.new()
+	hp_info.add_theme_constant_override("separation", 8)
+	vbox.add_child(hp_info)
+	
+	var hp_title := Label.new()
+	hp_title.text = "HP:"
+	hp_title.add_theme_font_size_override("font_size", 11)
+	hp_title.add_theme_color_override("font_color", Color(0.6, 0.8, 0.6))
+	hp_info.add_child(hp_title)
+	
+	var hp_value := Label.new()
+	hp_value.text = "%d / %d" % [character.current_hp, character.get_max_hp()]
+	hp_value.add_theme_font_size_override("font_size", 11)
+	hp_value.add_theme_color_override("font_color", Color(0.4, 0.9, 0.4))
+	hp_info.add_child(hp_value)
+	
+	# MP info if character has MP
+	if character.get_max_mp() > 0:
+		var mp_info := HBoxContainer.new()
+		mp_info.add_theme_constant_override("separation", 8)
+		vbox.add_child(mp_info)
+		
+		var mp_title := Label.new()
+		mp_title.text = "MP:"
+		mp_title.add_theme_font_size_override("font_size", 11)
+		mp_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.8))
+		mp_info.add_child(mp_title)
+		
+		var mp_value := Label.new()
+		mp_value.text = "%d / %d" % [character.current_mp, character.get_max_mp()]
+		mp_value.add_theme_font_size_override("font_size", 11)
+		mp_value.add_theme_color_override("font_color", Color(0.5, 0.7, 1.0))
+		mp_info.add_child(mp_value)
+	
+	# Brand info for monsters
+	if character is Monster:
+		var monster := character as Monster
+		var brand_info := HBoxContainer.new()
+		brand_info.add_theme_constant_override("separation", 8)
+		vbox.add_child(brand_info)
+		
+		var brand_title := Label.new()
+		brand_title.text = "Brand:"
+		brand_title.add_theme_font_size_override("font_size", 11)
+		brand_title.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+		brand_info.add_child(brand_title)
+		
+		var brand_value := Label.new()
+		var brand_name: String = Enums.Brand.keys()[monster.brand] if monster.brand < Enums.Brand.size() else "UNKNOWN"
+		brand_value.text = brand_name
+		brand_value.add_theme_font_size_override("font_size", 11)
+		brand_value.add_theme_color_override("font_color", _get_brand_color(monster.brand))
+		brand_info.add_child(brand_value)
+	
+	add_child(party_tooltip)
+	
+	# Position near mouse
+	await get_tree().process_frame
+	var mouse_pos := get_global_mouse_position()
+	var tooltip_pos := mouse_pos + Vector2(15, 15)
+	
+	# Keep tooltip on screen
+	if tooltip_pos.x + party_tooltip.size.x > size.x - 10:
+		tooltip_pos.x = mouse_pos.x - party_tooltip.size.x - 15
+	if tooltip_pos.y + party_tooltip.size.y > size.y - 10:
+		tooltip_pos.y = size.y - party_tooltip.size.y - 10
+	
+	party_tooltip.position = tooltip_pos
 
 # =============================================================================
 # LEFT PARTY SIDEBAR
@@ -2595,3 +3035,26 @@ func _on_combat_log_drag_input(event: InputEvent) -> void:
 		# Update drag handle text
 		var is_expanded := new_top < -300
 		combat_log_drag_handle.text = "━━ ▲ ━━" if is_expanded else "━━ ▼ ━━"
+
+# =============================================================================
+# CLEANUP
+# =============================================================================
+
+func _exit_tree() -> void:
+	# Disconnect EventBus signals to prevent errors after scene is freed
+	if EventBus.status_effect_applied.is_connected(_on_status_effect_changed):
+		EventBus.status_effect_applied.disconnect(_on_status_effect_changed)
+	if EventBus.status_effect_removed.is_connected(_on_status_effect_changed):
+		EventBus.status_effect_removed.disconnect(_on_status_effect_changed)
+	if EventBus.character_hovered.is_connected(_on_character_sprite_hovered):
+		EventBus.character_hovered.disconnect(_on_character_sprite_hovered)
+	if EventBus.character_unhovered.is_connected(_on_character_sprite_unhovered):
+		EventBus.character_unhovered.disconnect(_on_character_sprite_unhovered)
+	if EventBus.target_selected.is_connected(_on_target_selected_from_sprite):
+		EventBus.target_selected.disconnect(_on_target_selected_from_sprite)
+	
+	# Kill any running tweens
+	for tween in _turn_order_tweens:
+		if tween and tween.is_valid():
+			tween.kill()
+	_turn_order_tweens.clear()

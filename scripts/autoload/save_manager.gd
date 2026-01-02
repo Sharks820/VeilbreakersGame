@@ -84,7 +84,7 @@ func _get_save_path(slot: int) -> String:
 
 func get_formatted_slot_time(slot: int) -> String:
 	var info := get_slot_info(slot)
-	if info.empty:
+	if info.get("empty", true):
 		return "Empty"
 	var total_seconds: int = int(info.get("play_time", 0.0))
 	var hours: int = int(total_seconds / 3600)

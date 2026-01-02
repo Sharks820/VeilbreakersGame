@@ -549,13 +549,22 @@ func load_save_data(data: Dictionary) -> void:
 	current_state = data.get("current_state", Enums.VERAState.INTERFACE)
 	corruption_level = data.get("corruption_level", 0.0)
 	veil_integrity = data.get("veil_integrity", 100.0)
-	dialogue_history = data.get("dialogue_history", [])
 	relationship_points = data.get("relationship_points", 0)
-	memories_unlocked = data.get("memories_unlocked", [])
 	is_active = data.get("is_active", true)
 	dominate_count = data.get("dominate_count", 0)
 	bargain_count = data.get("bargain_count", 0)
 	purify_count = data.get("purify_count", 0)
 	ascension_count = data.get("ascension_count", 0)
+	
+	# Safely load typed arrays from save data
+	dialogue_history.clear()
+	var loaded_history: Array = data.get("dialogue_history", [])
+	for entry in loaded_history:
+		dialogue_history.append(str(entry))
+	
+	memories_unlocked.clear()
+	var loaded_memories: Array = data.get("memories_unlocked", [])
+	for entry in loaded_memories:
+		memories_unlocked.append(str(entry))
 
 	_update_glitch_intensity()

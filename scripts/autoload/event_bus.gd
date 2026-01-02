@@ -30,6 +30,9 @@ signal status_effect_applied(target: Node, effect: int, duration: int)
 signal status_effect_removed(target: Node, effect: int)
 signal status_effect_tick(target: Node, effect: int, damage: int)
 signal skill_used(character: Node, skill_id: String, targets: Array)
+signal character_hovered(character: Node)
+signal character_unhovered(character: Node)
+signal target_selected(character: Node)
 
 # =============================================================================
 # PURIFICATION SIGNALS

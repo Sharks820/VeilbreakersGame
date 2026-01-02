@@ -37,6 +37,8 @@ var battle_ui: Control = null
 var is_battle_active: bool = false
 var _currently_highlighted_sprite: Node2D = null  # For target hover highlighting
 var _highlight_breathing_tween: Tween = null  # Breathing animation for highlighted sprite
+var _hovered_character: CharacterBase = null  # Currently hovered character sprite
+var _sprite_hitboxes: Dictionary = {}  # Maps character -> Rect2 hitbox in global coords
 
 # =============================================================================
 # LIFECYCLE
@@ -50,6 +52,102 @@ func _ready() -> void:
 	_setup_animation_systems()
 	_setup_screen_effects()
 	EventBus.emit_debug("BattleArena ready with animation systems")
+
+
+
+var _arena_hovered_character: CharacterBase = null
+
+func _process(_delta: float) -> void:
+	if not is_battle_active:
+		return
+	
+	# Get mouse position in viewport coordinates, then convert to canvas coordinates
+	# This accounts for the camera transform
+	var viewport := get_viewport()
+	var mouse_viewport := viewport.get_mouse_position()
+	var canvas_transform := get_canvas_transform()
+	var mouse_canvas := canvas_transform.affine_inverse() * mouse_viewport
+	
+	_check_arena_sprite_hover(mouse_canvas)
+
+func _check_arena_sprite_hover(mouse_pos: Vector2) -> void:
+	"""Check if mouse is hovering over any character sprite"""
+	var hovered: CharacterBase = null
+	
+	for character in _sprite_hitboxes:
+		var hitbox: Rect2 = _sprite_hitboxes[character]
+		if hitbox.has_point(mouse_pos):
+			hovered = character
+			break
+	
+	# Handle hover state change
+	if hovered != _arena_hovered_character:
+		# Unhover previous
+		if _arena_hovered_character:
+			var old_sprite: Node2D = _arena_hovered_character.get_meta("battle_sprite", null)
+			if old_sprite:
+				old_sprite.modulate = Color.WHITE
+			EventBus.character_unhovered.emit(_arena_hovered_character)
+		
+		# Hover new
+		_arena_hovered_character = hovered
+		if _arena_hovered_character:
+			var sprite: Node2D = _arena_hovered_character.get_meta("battle_sprite", null)
+			if sprite:
+				sprite.modulate = Color(1.3, 1.3, 1.3, 1.0)  # Brighten on hover
+			EventBus.character_hovered.emit(_arena_hovered_character)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not is_battle_active:
+		return
+	
+	# Handle mouse click for target selection (only if not consumed by UI)
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var mouse_world_pos := get_global_mouse_position()
+		_check_sprite_click(mouse_world_pos)
+
+func _check_sprite_hover(mouse_pos: Vector2) -> void:
+	"""Check if mouse is hovering over any character sprite"""
+	var hovered: CharacterBase = null
+	var hovered_container: Node2D = null
+	
+	# Check all character sprites
+	for character in _sprite_hitboxes:
+		var hitbox: Rect2 = _sprite_hitboxes[character]
+		if hitbox.has_point(mouse_pos):
+			hovered = character
+			hovered_container = character.get_meta("battle_sprite", null)
+			break
+	
+	# Handle hover state change
+	if hovered != _hovered_character:
+		# Unhover previous
+		if _hovered_character:
+			var old_container: Node2D = _hovered_character.get_meta("battle_sprite", null)
+			_on_character_sprite_mouse_exited(_hovered_character, old_container)
+		
+		# Hover new
+		_hovered_character = hovered
+		if _hovered_character and hovered_container:
+			_on_character_sprite_mouse_entered(_hovered_character, hovered_container)
+
+func _check_sprite_click(mouse_pos: Vector2) -> void:
+	"""Check if mouse clicked on a character sprite"""
+	for character in _sprite_hitboxes:
+		var hitbox: Rect2 = _sprite_hitboxes[character]
+		if hitbox.has_point(mouse_pos):
+			_on_character_sprite_clicked(character)
+			break
+
+func _on_character_sprite_clicked(character: CharacterBase) -> void:
+	"""Handle click on character sprite"""
+	# Check if we're in target selection mode
+	if battle_manager and battle_manager.waiting_for_target_selection:
+		var current_action: Enums.BattleAction = battle_manager.pending_action if battle_manager.get("pending_action") else Enums.BattleAction.ATTACK
+		var valid_targets: Array = battle_manager.get_valid_targets(current_action)
+		if character in valid_targets:
+			EventBus.target_selected.emit(character)
+			print("[BATTLE_ARENA] Target selected via sprite click: %s" % character.character_name)
 
 func _setup_background() -> void:
 	"""Load a battle background"""
@@ -511,6 +609,25 @@ func _place_characters(characters: Array[CharacterBase], positions_node: Node2D,
 		# Store reference for animations
 		character.set_meta("battle_sprite", sprite)
 		character.battle_position = target_pos
+		
+		# Register hitbox for mouse detection
+		_register_sprite_hitbox(character, sprite)
+
+func _register_sprite_hitbox(character: CharacterBase, sprite_container: Node2D) -> void:
+	"""Register a character's sprite hitbox for mouse hover/click detection"""
+	var hitbox_size: Vector2 = sprite_container.get_meta("hitbox_size", Vector2(80, 120))
+	var hitbox_offset: Vector2 = sprite_container.get_meta("hitbox_offset", Vector2(0, -60))
+	
+	# Calculate hitbox rect in global coordinates
+	var global_pos := sprite_container.global_position
+	var hitbox_pos := global_pos + Vector2(-hitbox_size.x / 2, hitbox_offset.y - hitbox_size.y / 2)
+	var hitbox := Rect2(hitbox_pos, hitbox_size)
+	
+	_sprite_hitboxes[character] = hitbox
+	
+	# Also register with UI controller for click detection
+	if battle_ui and battle_ui.has_method("register_sprite_hitbox"):
+		battle_ui.register_sprite_hitbox(character, hitbox)
 
 func _calculate_formation_positions(characters: Array[CharacterBase], positions_node: Node2D, is_player_party: bool) -> Array[Vector2]:
 	"""Calculate intelligent formation positions based on party size"""
@@ -586,6 +703,8 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 
 	var sprite_path := _get_character_sprite_path(character)
 	var sprite_loaded := false
+	var hitbox_size := Vector2(80, 120)  # Default hitbox size
+	var hitbox_offset := Vector2(0, -60)  # Default hitbox offset
 
 	if sprite_path != "" and ResourceLoader.exists(sprite_path):
 		var tex := load(sprite_path)
@@ -599,18 +718,26 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 				Enums.CharacterType.PLAYER:
 					sprite.scale = Vector2(0.08, 0.08)
 					sprite.position = Vector2(0, -60)
+					hitbox_size = Vector2(100, 150)
+					hitbox_offset = Vector2(0, -75)
 				Enums.CharacterType.MONSTER:
 					if character is Monster and character.is_corrupted:
 						# Enemy monsters - same size as players
 						sprite.scale = Vector2(0.08, 0.08)
 						sprite.position = Vector2(0, -60)
+						hitbox_size = Vector2(100, 150)
+						hitbox_offset = Vector2(0, -75)
 					else:
 						# Allied monsters
 						sprite.scale = Vector2(0.08, 0.08)
 						sprite.position = Vector2(0, -60)
+						hitbox_size = Vector2(80, 120)
+						hitbox_offset = Vector2(0, -60)
 				Enums.CharacterType.BOSS:
 					sprite.scale = Vector2(0.10, 0.10)
 					sprite.position = Vector2(0, -75)
+					hitbox_size = Vector2(120, 180)
+					hitbox_offset = Vector2(0, -90)
 				_:
 					sprite.scale = Vector2(0.08, 0.08)
 					sprite.position = Vector2(0, -60)
@@ -632,19 +759,30 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 				sprite.size = Vector2(100, 150)
 				sprite.position = Vector2(-50, -150)
 				sprite.color = Color(0.2, 0.6, 1.0, 0.9)
+				hitbox_size = Vector2(100, 150)
+				hitbox_offset = Vector2(0, -75)
 			Enums.CharacterType.MONSTER:
 				sprite.size = Vector2(50, 75)
 				sprite.position = Vector2(-25, -75)
 				sprite.color = Color(0.8, 0.2, 0.2, 0.9)
+				hitbox_size = Vector2(50, 75)
+				hitbox_offset = Vector2(0, -37)
 			Enums.CharacterType.BOSS:
 				sprite.size = Vector2(80, 120)
 				sprite.position = Vector2(-40, -120)
 				sprite.color = Color(0.6, 0.1, 0.6, 0.9)
+				hitbox_size = Vector2(80, 120)
+				hitbox_offset = Vector2(0, -60)
 			_:
 				sprite.size = Vector2(50, 75)
 				sprite.position = Vector2(-25, -75)
 				sprite.color = Color(0.5, 0.5, 0.5, 0.9)
 		container.add_child(sprite)
+
+	# Store hitbox info for mouse detection (will be updated when container is positioned)
+	container.set_meta("hitbox_size", hitbox_size)
+	container.set_meta("hitbox_offset", hitbox_offset)
+	container.set_meta("character_ref", character)
 
 	# Name label - position based on sprite size
 	var label := Label.new()
@@ -704,6 +842,28 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 			hp_bar.position = Vector2(-35, -88)
 
 	return container
+
+# =============================================================================
+# CHARACTER SPRITE MOUSE INTERACTION
+# =============================================================================
+
+func _on_character_sprite_mouse_entered(character: CharacterBase, sprite_container: Node2D) -> void:
+	# Highlight the sprite on hover
+	var sprite_node: Node = sprite_container.get_node_or_null("CharacterSprite")
+	if sprite_node and sprite_node is Sprite2D:
+		sprite_node.modulate = Color(1.3, 1.3, 1.3, 1.0)  # Brighten
+	
+	# Emit signal for UI to show character info
+	EventBus.character_hovered.emit(character)
+
+func _on_character_sprite_mouse_exited(character: CharacterBase, sprite_container: Node2D) -> void:
+	# Remove highlight
+	var sprite_node: Node = sprite_container.get_node_or_null("CharacterSprite")
+	if sprite_node and sprite_node is Sprite2D:
+		sprite_node.modulate = Color.WHITE
+	
+	# Emit signal to hide character info
+	EventBus.character_unhovered.emit(character)
 
 # =============================================================================
 # ANIMATIONS

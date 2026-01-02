@@ -144,7 +144,7 @@ func _connect_buttons() -> void:
 func enter_mindscape(creature: Node, brand: String) -> void:
 	"""Begin the mindscape visual transition"""
 	current_brand = brand
-	var colors = BRAND_MINDSCAPE_COLORS.get(brand, BRAND_MINDSCAPE_COLORS.SAVAGE)
+	var colors: Dictionary = BRAND_MINDSCAPE_COLORS.get(brand, BRAND_MINDSCAPE_COLORS["SAVAGE"])
 
 	visible = true
 	choice_container.visible = false

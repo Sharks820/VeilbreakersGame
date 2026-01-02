@@ -27,17 +27,27 @@ func _ready() -> void:
 	EventBus.emit_debug("InventorySystem initialized")
 
 func _load_item_database() -> void:
-	# Load all item resources from data/items/
-	var dir := DirAccess.open("res://data/items/")
-	if dir:
-		dir.list_dir_begin()
-		var file_name := dir.get_next()
-		while file_name != "":
-			if file_name.ends_with(".tres"):
-				var item: ItemData = load("res://data/items/" + file_name)
-				if item:
-					item_database[item.item_id] = item
-			file_name = dir.get_next()
+	# Load all item resources from data/items/ subdirectories
+	_load_items_from_directory("res://data/items/consumables/")
+	_load_items_from_directory("res://data/items/equipment/")
+	# Also check root for any stray items
+	_load_items_from_directory("res://data/items/")
+
+func _load_items_from_directory(path: String) -> void:
+	var dir := DirAccess.open(path)
+	if not dir:
+		return
+	
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if file_name.ends_with(".tres"):
+			var resource := load(path + file_name)
+			if resource is ItemData:
+				var item: ItemData = resource
+				item_database[item.item_id] = item
+		file_name = dir.get_next()
+	dir.list_dir_end()
 
 # =============================================================================
 # ITEM MANAGEMENT
