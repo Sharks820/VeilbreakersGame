@@ -2,7 +2,7 @@
 description: Task orchestration, documentation management, git hygiene - manages all subagents and keeps project organized
 name: Overseer
 mode: primary
-model: anthropic/claude-opus-4-5-20250514
+model: anthropic/claude-opus-4-5
 temperature: 0.3
 permission:
   edit: allow

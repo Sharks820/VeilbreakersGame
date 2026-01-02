@@ -2,7 +2,7 @@
 description: World design, environments, biomes, arenas, towns - spatial reasoning and creative level design
 name: Cartographer
 mode: subagent
-model: anthropic/claude-opus-4-20250514
+model: anthropic/claude-opus-4-5
 temperature: 0.7
 permission:
   edit: allow

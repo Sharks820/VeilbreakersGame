@@ -2,7 +2,7 @@
 description: Security, anti-cheat, code quality, file protection - the vigilant guardian of game integrity
 name: Sentinel
 mode: subagent
-model: anthropic/claude-opus-4-20250514
+model: anthropic/claude-opus-4-5
 temperature: 0.2
 permission:
   edit: allow
