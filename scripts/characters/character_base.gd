@@ -22,6 +22,7 @@ signal revived()
 @export var character_type: Enums.CharacterType = Enums.CharacterType.PLAYER
 @export var level: int = 1
 @export var brand: Enums.Brand = Enums.Brand.NONE
+@export var current_path: Enums.Path = Enums.Path.NONE
 @export var is_protagonist: bool = false
 
 # =============================================================================
@@ -100,6 +101,14 @@ func get_stat(stat: Enums.Stat) -> float:
 	var base_value := _get_base_stat(stat)
 	var modifier := _get_stat_modifier(stat)
 	var equipment_bonus := _get_equipment_bonus(stat)
+	
+	# Percentage-based stats (0-1 range) shouldn't use minimum of 1.0
+	if stat in [Enums.Stat.ACCURACY, Enums.Stat.EVASION, Enums.Stat.CRIT_CHANCE]:
+		return clampf(base_value + modifier + equipment_bonus, 0.0, 1.0)
+	# Crit damage is a multiplier (1.0+)
+	elif stat == Enums.Stat.CRIT_DAMAGE:
+		return maxf(1.0, base_value + modifier + equipment_bonus)
+	# All other stats use minimum of 1
 	return maxf(1.0, base_value + modifier + equipment_bonus)
 
 func _get_base_stat(stat: Enums.Stat) -> float:
@@ -133,8 +142,11 @@ func _get_equipment_bonus(stat: Enums.Stat) -> float:
 	var total := 0.0
 
 	# Cache inventory reference for performance (called frequently during combat)
+	# Use Engine.get_main_loop() to safely access autoloads even when not in tree
 	if not _inventory_cache_valid:
-		_inventory_system_cached = get_node_or_null("/root/InventorySystem")
+		var tree := Engine.get_main_loop() as SceneTree
+		if tree and tree.root:
+			_inventory_system_cached = tree.root.get_node_or_null("InventorySystem")
 		_inventory_cache_valid = true
 
 	if _inventory_system_cached == null:
@@ -418,7 +430,11 @@ func can_use_skill(skill_id: String) -> bool:
 		return false
 
 	# Check MP cost from skill data - safely check for DataManager autoload
-	var data_manager := get_node_or_null("/root/DataManager")
+	# Use Engine.get_main_loop() to safely access autoloads even when not in tree
+	var data_manager: Node = null
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree and tree.root:
+		data_manager = tree.root.get_node_or_null("DataManager")
 	if data_manager and data_manager.has_method("get_skill"):
 		var skill_data: SkillData = data_manager.get_skill(skill_id)
 		if skill_data:

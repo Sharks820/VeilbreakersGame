@@ -141,13 +141,10 @@ func _check_sprite_click(mouse_pos: Vector2) -> void:
 
 func _on_character_sprite_clicked(character: CharacterBase) -> void:
 	"""Handle click on character sprite"""
-	# Check if we're in target selection mode
-	if battle_manager and battle_manager.waiting_for_target_selection:
-		var current_action: Enums.BattleAction = battle_manager.pending_action if battle_manager.get("pending_action") else Enums.BattleAction.ATTACK
-		var valid_targets: Array = battle_manager.get_valid_targets(current_action)
-		if character in valid_targets:
-			EventBus.target_selected.emit(character)
-			print("[BATTLE_ARENA] Target selected via sprite click: %s" % character.character_name)
+	# Emit target_selected signal - let the UI controller handle the logic
+	# The UI controller knows if we're in target selection mode
+	EventBus.target_selected.emit(character)
+	print("[BATTLE_ARENA] Target clicked via sprite: %s" % character.character_name)
 
 func _setup_background() -> void:
 	"""Load a battle background"""

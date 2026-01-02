@@ -242,14 +242,17 @@ func _on_action_started(character: CharacterBase, action: int) -> void:
 	log_action(character.character_name, action_name)
 
 func _on_action_executed(character: CharacterBase, action: int, result: Dictionary) -> void:
+	# NOTE: Action name is already logged by _on_action_started() - only log results here
+	var attacker_name: String = result.get("attacker_name", character.character_name)
+	var target_name: String = result.get("target_name", "target")
+	
+	# Log the result (damage, miss, heal, etc.)
 	if result.has("is_miss") and result.is_miss:
-		log_miss(character.character_name, result.get("target_name", "target"))
+		log_miss(attacker_name, target_name)
 	elif result.has("damage") and result.damage > 0:
-		var target_name: String = result.get("target_name", "target")
 		var is_crit: bool = result.get("is_critical", false)
 		log_damage(target_name, result.damage, is_crit)
 	elif result.has("heal") and result.heal > 0:
-		var target_name: String = result.get("target_name", character.character_name)
 		log_heal(target_name, result.heal)
 
 func _on_action_selected(action: Enums.BattleAction, target: CharacterBase, skill_id: String) -> void:
@@ -438,11 +441,13 @@ func _check_sprite_click_at(mouse_pos: Vector2) -> void:
 # =============================================================================
 
 func setup_battle(player_party: Array, enemy_party: Array) -> void:
+	print("[BATTLE_UI] setup_battle called with %d players, %d enemies" % [player_party.size(), enemy_party.size()])
 	# Assign to typed arrays
 	party_members.clear()
 	for p in player_party:
 		if p is CharacterBase:
 			party_members.append(p)
+	print("[BATTLE_UI] After filtering: party_members=%d" % party_members.size())
 
 	enemies.clear()
 	for e in enemy_party:
@@ -607,8 +612,8 @@ func _on_defend_pressed() -> void:
 	_reset_combat_log_scroll()
 	pending_action = Enums.BattleAction.DEFEND
 	pending_skill = ""
-	action_selected.emit(pending_action, current_character, "")
-	set_ui_state(UIState.ANIMATING)
+	# Start target selection for allies (defend ally feature)
+	_start_target_selection(true)  # Target allies with BLUE highlights
 
 func _on_flee_pressed() -> void:
 	_reset_combat_log_scroll()
@@ -1221,36 +1226,46 @@ func _highlight_all_valid_targets(target_allies: bool) -> void:
 			if ally in valid_targets:
 				_set_panel_highlight(ally, "sidebar_panel", Color(0.3, 0.5, 1.0, 1.0), 2)  # Blue glow
 	else:
-		# Highlight all valid enemy targets in RED
+		# Highlight all valid enemy targets in RED (check both panel types)
 		for enemy in enemies:
 			if enemy in valid_targets:
 				_set_panel_highlight(enemy, "ui_panel", Color(1.0, 0.3, 0.3, 1.0), 2)  # Red glow
+				_set_panel_highlight(enemy, "enemy_sidebar_panel", Color(1.0, 0.3, 0.3, 1.0), 2)  # Red glow on right sidebar
 
 func _highlight_enemy_in_sidebar(target: CharacterBase) -> void:
 	"""Highlight the SELECTED enemy target (brighter red), others stay dimmer red"""
 	for enemy in enemies:
+		# Check both ui_panel and enemy_sidebar_panel
+		var panels: Array[PanelContainer] = []
 		if enemy.has_meta("ui_panel"):
-			var panel: PanelContainer = enemy.get_meta("ui_panel")
-			if is_instance_valid(panel):
-				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
-				if style:
-					if enemy == target:
-						# SELECTED - bright red border + glow effect
-						style.border_color = Color(1.0, 0.2, 0.2, 1.0)
-						style.set_border_width_all(4)
-						style.shadow_color = Color(1.0, 0.0, 0.0, 0.6)
-						style.shadow_size = 8
-					elif enemy in valid_targets:
-						# Valid but not selected - dimmer red
-						style.border_color = Color(0.8, 0.3, 0.3, 1.0)
-						style.set_border_width_all(2)
-						style.shadow_color = Color(1.0, 0.0, 0.0, 0.3)
-						style.shadow_size = 4
-					else:
-						# Not targetable - normal border
-						style.border_color = Color(0.5, 0.25, 0.25, 1.0)
-						style.set_border_width_all(1)
-						style.shadow_size = 0
+			var p: PanelContainer = enemy.get_meta("ui_panel")
+			if is_instance_valid(p):
+				panels.append(p)
+		if enemy.has_meta("enemy_sidebar_panel"):
+			var p: PanelContainer = enemy.get_meta("enemy_sidebar_panel")
+			if is_instance_valid(p):
+				panels.append(p)
+		
+		for panel in panels:
+			var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
+			if style:
+				if enemy == target:
+					# SELECTED - bright red border + glow effect
+					style.border_color = Color(1.0, 0.2, 0.2, 1.0)
+					style.set_border_width_all(4)
+					style.shadow_color = Color(1.0, 0.0, 0.0, 0.6)
+					style.shadow_size = 8
+				elif enemy in valid_targets:
+					# Valid but not selected - dimmer red
+					style.border_color = Color(0.8, 0.3, 0.3, 1.0)
+					style.set_border_width_all(2)
+					style.shadow_color = Color(1.0, 0.0, 0.0, 0.3)
+					style.shadow_size = 4
+				else:
+					# Not targetable - normal border
+					style.border_color = Color(0.5, 0.25, 0.25, 1.0)
+					style.set_border_width_all(1)
+					style.shadow_size = 0
 
 func _highlight_ally_in_sidebar(target: CharacterBase) -> void:
 	"""Highlight the SELECTED ally target (brighter blue), others stay dimmer blue"""
@@ -1293,7 +1308,7 @@ func _set_panel_highlight(character: CharacterBase, meta_key: String, color: Col
 
 func _clear_all_sidebar_highlights() -> void:
 	"""Clear all target highlights from both enemy and party sidebars"""
-	# Reset enemy sidebar to normal state
+	# Reset enemy sidebar to normal state (check both ui_panel and enemy_sidebar_panel)
 	for enemy in enemies:
 		if enemy.has_meta("ui_panel"):
 			var panel: PanelContainer = enemy.get_meta("ui_panel")
@@ -1301,6 +1316,16 @@ func _clear_all_sidebar_highlights() -> void:
 				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
 				if style:
 					style.border_color = Color(0.5, 0.25, 0.25, 1.0)
+					style.set_border_width_all(1)
+					style.shadow_size = 0  # Clear shadow
+		
+		# Also check enemy_sidebar_panel (right sidebar)
+		if enemy.has_meta("enemy_sidebar_panel"):
+			var panel: PanelContainer = enemy.get_meta("enemy_sidebar_panel")
+			if is_instance_valid(panel):
+				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
+				if style:
+					style.border_color = Color(0.5, 0.3, 0.3, 1.0)
 					style.set_border_width_all(1)
 					style.shadow_size = 0  # Clear shadow
 
@@ -1627,12 +1652,17 @@ func log_round_start(round_number: int) -> void:
 
 func _append_to_log(entry: String) -> void:
 	combat_log_text.append_text("\n" + entry)
-	# Auto-scroll to bottom only if user hasn't scrolled up
+	# Schedule auto-scroll after text is rendered
+	_schedule_auto_scroll()
+
+func _schedule_auto_scroll() -> void:
+	"""Schedule auto-scroll after frame to ensure text layout is complete"""
+	if not combat_log_scroll or user_scrolled_log:
+		return
+	# Wait for the text layout to update
 	await get_tree().process_frame
-	var scrollbar := combat_log_scroll.get_v_scroll_bar()
-	var at_bottom := scrollbar.value >= scrollbar.max_value - 30  # 30px tolerance
-	if at_bottom:
-		combat_log_scroll.scroll_vertical = scrollbar.max_value
+	await get_tree().process_frame  # Extra frame for RichTextLabel layout
+	_auto_scroll_combat_log()
 
 func clear_combat_log() -> void:
 	combat_log_text.clear()
@@ -2214,10 +2244,38 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 			brand_value.add_theme_color_override("font_color", _get_brand_color(monster.brand))
 			brand_info.add_child(brand_value)
 	elif character is PlayerCharacter:
-		# Player character - show Path
-		var sep3 := HSeparator.new()
-		sep3.add_theme_color_override("separator", Color(0.3, 0.4, 0.35))
-		vbox.add_child(sep3)
+		var player := character as PlayerCharacter
+		
+		# Player character - show Brand if they have one
+		if player.current_brand != Enums.Brand.NONE:
+			var sep3 := HSeparator.new()
+			sep3.add_theme_color_override("separator", Color(0.3, 0.4, 0.35))
+			vbox.add_child(sep3)
+
+			var brand_info := HBoxContainer.new()
+			brand_info.add_theme_constant_override("separation", 6)
+			vbox.add_child(brand_info)
+
+			var brand_title := Label.new()
+			brand_title.text = "Brand:"
+			brand_title.add_theme_font_size_override("font_size", 10)
+			brand_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+			brand_info.add_child(brand_title)
+
+			# Brand icon (colored indicator)
+			var brand_icon := _create_brand_icon(player.current_brand)
+			brand_info.add_child(brand_icon)
+
+			var brand_value := Label.new()
+			brand_value.text = _get_brand_name(player.current_brand)
+			brand_value.add_theme_font_size_override("font_size", 10)
+			brand_value.add_theme_color_override("font_color", _get_brand_color(player.current_brand))
+			brand_info.add_child(brand_value)
+		
+		# Also show Path
+		var sep_path := HSeparator.new()
+		sep_path.add_theme_color_override("separator", Color(0.3, 0.4, 0.35))
+		vbox.add_child(sep_path)
 
 		var path_info := HBoxContainer.new()
 		path_info.add_theme_constant_override("separation", 6)
@@ -2543,8 +2601,10 @@ var right_enemy_sidebar: PanelContainer = null
 
 func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	"""Create a vertical party sidebar on the left side of the screen"""
+	print("[BATTLE_UI] _create_left_party_sidebar called, party_members: %d, viewport: %s" % [party_members.size(), str(viewport_size)])
 	# Don't create sidebar if no party members
 	if party_members.is_empty():
+		print("[BATTLE_UI] No party members, skipping party sidebar")
 		return
 
 	# Remove existing sidebar if present (use .free() for immediate removal to prevent duplication)
@@ -2594,6 +2654,7 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	add_child(left_party_sidebar)
 	left_party_sidebar.show()
 	left_party_sidebar.visible = true
+	print("[BATTLE_UI] Party sidebar added to tree, visible: %s, position: %s, z_index: %d" % [left_party_sidebar.visible, str(left_party_sidebar.global_position), left_party_sidebar.z_index])
 
 	# Refresh status icons for all characters
 	_refresh_all_status_icons()
@@ -2663,6 +2724,18 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	name_label.add_theme_color_override("font_color", Color(0.9, 0.95, 0.85))
 	name_label.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	vbox.add_child(name_label)
+
+	# Path display for player characters (with aligned brand info)
+	if character.character_type == Enums.CharacterType.PLAYER and character.current_path != Enums.Path.NONE:
+		var path_label := Label.new()
+		path_label.name = "PathLabel"
+		var path_name: String = Enums.get_path_name(character.current_path)
+		var aligned_brand: String = _get_path_aligned_brand(character.current_path)
+		path_label.text = "%s [%s]" % [path_name, aligned_brand]
+		path_label.add_theme_font_size_override("font_size", 9)
+		path_label.add_theme_color_override("font_color", _get_path_type_color(character.current_path))
+		path_label.mouse_filter = Control.MOUSE_FILTER_PASS
+		vbox.add_child(path_label)
 
 	# HP Bar
 	var hp_bar := ProgressBar.new()
@@ -2875,6 +2948,17 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	name_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	vbox.add_child(name_label)
 
+	# Brand display for enemies
+	if enemy.brand != Enums.Brand.NONE:
+		var brand_label := Label.new()
+		brand_label.name = "BrandLabel"
+		var brand_name: String = Enums.get_brand_name(enemy.brand)
+		brand_label.text = brand_name
+		brand_label.add_theme_font_size_override("font_size", 9)
+		brand_label.add_theme_color_override("font_color", _get_brand_color(enemy.brand))
+		brand_label.mouse_filter = Control.MOUSE_FILTER_PASS
+		vbox.add_child(brand_label)
+
 	# HP Bar - red themed
 	var hp_bar := ProgressBar.new()
 	hp_bar.name = "HPBar"
@@ -2894,6 +2978,15 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	hp_bg.set_corner_radius_all(2)
 	hp_bar.add_theme_stylebox_override("background", hp_bg)
 	vbox.add_child(hp_bar)
+
+	# HP Label (numeric) - matches party sidebar
+	var hp_label := Label.new()
+	hp_label.name = "HPLabel"
+	hp_label.text = "%d/%d" % [enemy.current_hp, enemy.get_max_hp()]
+	hp_label.add_theme_font_size_override("font_size", 9)
+	hp_label.add_theme_color_override("font_color", Color(0.7, 0.6, 0.6))
+	hp_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	vbox.add_child(hp_label)
 
 	# Corruption bar for monsters
 	if enemy is Monster:
@@ -2930,11 +3023,14 @@ func update_enemy_sidebar() -> void:
 			var panel: PanelContainer = enemy.get_meta("enemy_sidebar_panel")
 			if is_instance_valid(panel):
 				var hp_bar := panel.find_child("HPBar", true, false) as ProgressBar
+				var hp_label := panel.find_child("HPLabel", true, false) as Label
 				var corruption_bar := panel.find_child("CorruptionBar", true, false) as ProgressBar
 
 				if hp_bar:
 					hp_bar.max_value = maxi(1, enemy.get_max_hp())
 					hp_bar.value = enemy.current_hp
+				if hp_label:
+					hp_label.text = "%d/%d" % [enemy.current_hp, enemy.get_max_hp()]
 				if corruption_bar and enemy is Monster:
 					var monster := enemy as Monster
 					var corruption_percent := (monster.corruption_level / monster.max_corruption) * 100.0
@@ -2947,7 +3043,9 @@ func _auto_scroll_combat_log() -> void:
 	if user_scrolled_log:
 		return  # User scrolled manually, don't auto-scroll until they interact
 	var scrollbar := combat_log_scroll.get_v_scroll_bar()
-	combat_log_scroll.scroll_vertical = int(scrollbar.max_value)
+	if scrollbar:
+		# Force scroll to absolute bottom
+		combat_log_scroll.scroll_vertical = int(scrollbar.max_value) + 100
 
 func _on_combat_log_scrolled(_value: float) -> void:
 	"""Called when user manually scrolls the combat log"""
@@ -3035,6 +3133,36 @@ func _on_combat_log_drag_input(event: InputEvent) -> void:
 		# Update drag handle text
 		var is_expanded := new_top < -300
 		combat_log_drag_handle.text = "━━ ▲ ━━" if is_expanded else "━━ ▼ ━━"
+
+# =============================================================================
+# PATH & BRAND HELPERS
+# =============================================================================
+
+func _get_path_aligned_brand(path: Enums.Path) -> String:
+	"""Get the primary aligned brand for a given Path"""
+	match path:
+		Enums.Path.IRONBOUND:
+			return "IRON"
+		Enums.Path.FANGBORN:
+			return "SAVAGE"
+		Enums.Path.VOIDTOUCHED:
+			return "LEECH"
+		Enums.Path.UNCHAINED:
+			return "SURGE"
+	return ""
+
+func _get_path_type_color(path: Enums.Path) -> Color:
+	"""Get the display color for a given Path type (IRONBOUND, FANGBORN, etc.)"""
+	match path:
+		Enums.Path.IRONBOUND:
+			return Color(0.6, 0.65, 0.75)  # Steel blue
+		Enums.Path.FANGBORN:
+			return Color(0.85, 0.4, 0.3)   # Savage red
+		Enums.Path.VOIDTOUCHED:
+			return Color(0.6, 0.3, 0.7)    # Void purple
+		Enums.Path.UNCHAINED:
+			return Color(0.9, 0.8, 0.3)    # Lightning gold
+	return Color(0.7, 0.7, 0.7)
 
 # =============================================================================
 # CLEANUP

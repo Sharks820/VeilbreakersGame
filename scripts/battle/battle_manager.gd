@@ -572,7 +572,7 @@ func _execute_next_party_action() -> void:
 		Enums.BattleAction.SKILL:
 			result = await _execute_skill(character, queued.target, queued.skill)
 		Enums.BattleAction.DEFEND:
-			result = _execute_defend(character)
+			result = _execute_defend(character, queued.target)
 		Enums.BattleAction.ITEM:
 			result = await _execute_item(character, queued.target, queued.skill)
 		Enums.BattleAction.PURIFY:
@@ -697,7 +697,7 @@ func _execute_next_enemy_attack() -> void:
 		Enums.BattleAction.SKILL:
 			result = await _execute_skill(attacker, ai_decision.target, ai_decision.get("skill", ""))
 		Enums.BattleAction.DEFEND:
-			result = _execute_defend(attacker)
+			result = _execute_defend(attacker, ai_decision.target)
 		_:
 			result = await _execute_attack(attacker, ai_decision.target)
 
@@ -758,7 +758,7 @@ func execute_action(character: CharacterBase, action: Enums.BattleAction, target
 		Enums.BattleAction.SKILL:
 			result = await _execute_skill(character, target, skill)
 		Enums.BattleAction.DEFEND:
-			result = _execute_defend(character)
+			result = _execute_defend(character, target)
 		Enums.BattleAction.ITEM:
 			result = await _execute_item(character, target, skill)  # skill = item_id
 		Enums.BattleAction.PURIFY:
@@ -802,8 +802,8 @@ func _execute_attack(attacker: CharacterBase, target: CharacterBase) -> Dictiona
 
 	if result.is_miss:
 		ui_command.emit("show_message", {"text": "MISS!", "position": target.global_position})
-		EventBus.emit_debug("%s's attack missed!" % attacker.character_name)
-		return {"success": true, "is_miss": true}
+		EventBus.emit_debug("%s's attack missed %s!" % [attacker.character_name, target.character_name])
+		return {"success": true, "is_miss": true, "target_name": target.character_name, "attacker_name": attacker.character_name}
 
 	# 3. IMPACT MOMENT
 	# Hitstop
@@ -825,21 +825,44 @@ func _execute_attack(attacker: CharacterBase, target: CharacterBase) -> Dictiona
 		vfx_command.emit("screen_flash", {"color": Color.WHITE, "duration": 0.1})
 		audio_command.emit("play_sfx", {"sound": "critical_hit"})
 
+	# Check if target is being defended by an ally
+	var actual_target: CharacterBase = target
+	var damage_to_apply: int = result.damage
+	
+	if target.has_meta("defended_by"):
+		var defender: CharacterBase = target.get_meta("defended_by")
+		if is_instance_valid(defender) and defender.is_defending:
+			# Redirect damage to defender (50% damage reduction since they're defending)
+			actual_target = defender
+			damage_to_apply = int(result.damage * 0.5)
+			
+			# Clear the defend relationship after use
+			target.remove_meta("defended_by")
+			defender.remove_meta("defending_target")
+			defender.set_defending(false)
+			
+			ui_command.emit("show_status_popup", {
+				"target": defender,
+				"status": "PROTECTED %s!" % target.character_name.to_upper(),
+				"positive": true
+			})
+			EventBus.emit_debug("%s protected %s, taking %d damage instead!" % [defender.character_name, target.character_name, damage_to_apply])
+	
 	# Damage number
 	vfx_command.emit("spawn_damage_number", {
-		"position": target.global_position,
-		"amount": result.damage,
+		"position": actual_target.global_position,
+		"amount": damage_to_apply,
 		"is_critical": result.is_critical
 	})
 
-	# Apply damage
-	target.take_damage(result.damage, attacker, result.is_critical)
+	# Apply damage to actual target (could be defender)
+	actual_target.take_damage(damage_to_apply, attacker, result.is_critical)
 
 	# Track stats
 	if attacker in player_party:
-		battle_stats.damage_dealt += result.damage
+		battle_stats.damage_dealt += damage_to_apply
 	else:
-		battle_stats.damage_received += result.damage
+		battle_stats.damage_received += damage_to_apply
 
 	# Check for boss phase transition
 	if target in active_bosses:
@@ -854,6 +877,9 @@ func _execute_attack(attacker: CharacterBase, target: CharacterBase) -> Dictiona
 
 	await get_tree().create_timer(impact_pause_time).timeout
 
+	# Add target name to result for combat log
+	result["target_name"] = target.character_name
+	result["attacker_name"] = attacker.character_name
 	return result
 
 func _execute_skill(caster: CharacterBase, target: CharacterBase, skill_id: String) -> Dictionary:
@@ -957,6 +983,11 @@ func _execute_skill(caster: CharacterBase, target: CharacterBase, skill_id: Stri
 	EventBus.emit_debug("%s used %s!" % [caster.character_name, skill_data.display_name])
 	EventBus.skill_used.emit(caster, skill_id)
 
+	# Add skill name and attacker info for combat log
+	result["skill_name"] = skill_data.display_name
+	result["attacker_name"] = caster.character_name
+	if targets.size() > 0:
+		result["target_name"] = targets[0].character_name
 	return result
 
 func _get_skill_targets(caster: CharacterBase, primary_target: CharacterBase, target_type: Enums.TargetType) -> Array[CharacterBase]:
@@ -1042,20 +1073,53 @@ func _handle_special_effect(caster: CharacterBase, targets: Array[CharacterBase]
 		_:
 			EventBus.emit_debug("Unknown special effect: %s" % effect_id)
 
-func _execute_defend(character: CharacterBase) -> Dictionary:
+func _execute_defend(character: CharacterBase, target: CharacterBase = null) -> Dictionary:
+	# If no target specified, defend self
+	var defend_target: CharacterBase = target if target != null else character
+	
+	# Check if target is already being defended by someone else
+	if defend_target != character and defend_target.has_meta("defended_by"):
+		var existing_defender: CharacterBase = defend_target.get_meta("defended_by")
+		if is_instance_valid(existing_defender) and existing_defender.is_defending:
+			# Target is already defended - defender can't double up
+			ui_command.emit("show_message", {"text": "%s is already being defended!" % defend_target.character_name})
+			return {"success": false, "reason": "already_defended"}
+	
 	character.set_defending(true)
-
-	vfx_command.emit("defend_effect", {"position": character.global_position})
-	audio_command.emit("play_sfx", {"sound": "defend"})
-
-	ui_command.emit("show_status_popup", {
-		"target": character,
-		"status": "DEFENDING",
-		"positive": true
-	})
-
-	EventBus.emit_debug("%s is defending" % character.character_name)
-	return {"success": true, "defense_boost": character.base_defense * 0.5}
+	
+	# If defending an ally, mark the relationship
+	if defend_target != character:
+		defend_target.set_meta("defended_by", character)
+		character.set_meta("defending_target", defend_target)
+		
+		vfx_command.emit("defend_effect", {"position": defend_target.global_position})
+		audio_command.emit("play_sfx", {"sound": "defend"})
+		
+		ui_command.emit("show_status_popup", {
+			"target": character,
+			"status": "DEFENDING %s" % defend_target.character_name.to_upper(),
+			"positive": true
+		})
+		
+		EventBus.emit_debug("%s is defending %s" % [character.character_name, defend_target.character_name])
+		return {
+			"success": true, 
+			"defense_boost": character.base_defense * 0.5,
+			"defending_ally": true,
+			"target_name": defend_target.character_name
+		}
+	else:
+		vfx_command.emit("defend_effect", {"position": character.global_position})
+		audio_command.emit("play_sfx", {"sound": "defend"})
+		
+		ui_command.emit("show_status_popup", {
+			"target": character,
+			"status": "DEFENDING",
+			"positive": true
+		})
+		
+		EventBus.emit_debug("%s is defending" % character.character_name)
+		return {"success": true, "defense_boost": character.base_defense * 0.5}
 
 func _execute_item(user: CharacterBase, target: CharacterBase, item_id: String) -> Dictionary:
 	# Check if this is a capture orb item first
@@ -1337,9 +1401,20 @@ func _end_turn() -> void:
 func _end_round() -> void:
 	round_ended.emit(current_round)
 	EventBus.emit_debug("Round %d ended" % current_round)
+	
+	# Clear all defend relationships at end of round
+	_clear_all_defend_relationships()
 
 	if not _check_battle_end():
 		_start_round()
+
+func _clear_all_defend_relationships() -> void:
+	"""Clear all defend meta data at end of round"""
+	for character in turn_order:
+		if character.has_meta("defended_by"):
+			character.remove_meta("defended_by")
+		if character.has_meta("defending_target"):
+			character.remove_meta("defending_target")
 
 # =============================================================================
 # BATTLE END CONDITIONS

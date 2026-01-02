@@ -50,7 +50,10 @@ func _ready() -> void:
 	layer = 200  # Above everything
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
-	hide_menu()
+	
+	# IMPORTANT: Start hidden - don't call hide_menu() as it does animation
+	visible = false
+	is_open = false
 	
 	# Connect to game state changes
 	EventBus.game_state_changed.connect(_on_game_state_changed)
@@ -146,8 +149,14 @@ func _build_ui() -> void:
 func _create_button(text: String, callback: Callable) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.custom_minimum_size = Vector2(0, BUTTON_HEIGHT)
+	button.custom_minimum_size = Vector2(PANEL_WIDTH - 40, BUTTON_HEIGHT)  # Full width minus padding
 	button.pressed.connect(callback)
+	
+	# Center the text
+	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	
+	# Expand to fill width
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	
 	# Create hover/focus styles
 	var normal_style := StyleBoxFlat.new()
@@ -216,13 +225,7 @@ func hide_menu() -> void:
 	
 	is_open = false
 	
-	# Animate out
-	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(_panel, "modulate:a", 0.0, 0.1)
-	tween.tween_property(_panel, "scale", Vector2(0.95, 0.95), 0.1)
-	
-	await tween.finished
+	# Hide immediately (no await - that was causing issues with button callbacks)
 	visible = false
 	
 	# Restore previous pause state and game state

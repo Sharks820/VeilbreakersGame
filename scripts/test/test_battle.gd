@@ -141,12 +141,13 @@ func _create_ally_monster(monster_id: String, level: int, brand: Enums.Brand) ->
 
 	return monster
 
-func _create_test_character(char_name: String, level: int, brand: Enums.Brand) -> CharacterBase:
+func _create_test_character(char_name: String, level: int, brand: Enums.Brand, path: Enums.Path = Enums.Path.FANGBORN) -> CharacterBase:
 	var character := CharacterBase.new()
 
 	character.character_name = char_name
 	character.level = level
 	character.brand = brand
+	character.current_path = path  # Set the character's Path
 	character.character_type = Enums.CharacterType.PLAYER  # Set as player for proper battle handling
 
 	# Base stats scaled by level
