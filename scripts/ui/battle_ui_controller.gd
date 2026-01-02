@@ -575,8 +575,17 @@ func _update_action_buttons() -> void:
 		# TODO: Check inventory for usable items
 		item_button.disabled = false
 
-	# Flee might be disabled in boss battles
-	flee_button.disabled = _is_boss_battle()
+	# Flee button: Only protagonist can flee for the party
+	# Allied monsters cannot flee (corruption-based fleeing is handled separately by AI)
+	var is_protagonist := current_character.is_protagonist
+	if is_protagonist:
+		# Protagonist can flee unless it's a boss battle
+		flee_button.visible = true
+		flee_button.disabled = _is_boss_battle()
+	else:
+		# Allied monsters cannot use flee button - hide it entirely
+		flee_button.visible = false
+		flee_button.disabled = true
 
 func _is_boss_battle() -> bool:
 	for enemy in enemies:
@@ -1834,6 +1843,11 @@ func shake_screen(intensity: float = 5.0, duration: float = 0.2) -> void:
 
 func _get_brand_name(brand: Enums.Brand) -> String:
 	"""Get display name for monster brand"""
+	# Handle invalid brand values (can happen with old .tres files)
+	var brand_int := int(brand)
+	if brand_int < 0 or brand_int > 11:
+		return "— UNKNOWN"
+	
 	match brand:
 		# Pure Brands
 		Enums.Brand.SAVAGE:
@@ -1861,8 +1875,10 @@ func _get_brand_name(brand: Enums.Brand) -> String:
 			return "💀🩸 NIGHTLEECH"
 		Enums.Brand.RAVENOUS:
 			return "🩸⚔ RAVENOUS"
-		_:
+		Enums.Brand.NONE:
 			return "— NONE"
+		_:
+			return "— UNKNOWN"
 
 func _get_brand_color(brand: Enums.Brand) -> Color:
 	"""Get color for monster brand display"""
@@ -2452,8 +2468,7 @@ func _show_sprite_enemy_tooltip(enemy: CharacterBase) -> void:
 		brand_info.add_child(brand_title)
 		
 		var brand_value := Label.new()
-		var brand_name: String = Enums.Brand.keys()[monster.brand] if monster.brand < Enums.Brand.size() else "UNKNOWN"
-		brand_value.text = brand_name
+		brand_value.text = _get_brand_name(monster.brand)
 		brand_value.add_theme_font_size_override("font_size", 11)
 		brand_value.add_theme_color_override("font_color", _get_brand_color(monster.brand))
 		brand_info.add_child(brand_value)
@@ -2566,8 +2581,7 @@ func _show_sprite_party_tooltip(character: CharacterBase) -> void:
 		brand_info.add_child(brand_title)
 		
 		var brand_value := Label.new()
-		var brand_name: String = Enums.Brand.keys()[monster.brand] if monster.brand < Enums.Brand.size() else "UNKNOWN"
-		brand_value.text = brand_name
+		brand_value.text = _get_brand_name(monster.brand)
 		brand_value.add_theme_font_size_override("font_size", 11)
 		brand_value.add_theme_color_override("font_color", _get_brand_color(monster.brand))
 		brand_info.add_child(brand_value)
@@ -2736,6 +2750,19 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 		path_label.add_theme_color_override("font_color", _get_path_type_color(character.current_path))
 		path_label.mouse_filter = Control.MOUSE_FILTER_PASS
 		vbox.add_child(path_label)
+	
+	# Brand display for monsters (allied monsters in party)
+	if character is Monster:
+		var monster := character as Monster
+		var brand_label := Label.new()
+		brand_label.name = "BrandLabel"
+		var brand_name := _get_brand_name(monster.brand)
+		var brand_color := _get_brand_color(monster.brand)
+		brand_label.text = brand_name
+		brand_label.add_theme_font_size_override("font_size", 9)
+		brand_label.add_theme_color_override("font_color", brand_color)
+		brand_label.mouse_filter = Control.MOUSE_FILTER_PASS
+		vbox.add_child(brand_label)
 
 	# HP Bar
 	var hp_bar := ProgressBar.new()

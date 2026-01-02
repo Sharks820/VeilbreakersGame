@@ -416,7 +416,7 @@ func _on_continue_pressed() -> void:
 func _on_settings_pressed() -> void:
 	EventBus.emit_debug("Settings selected")
 	_play_button_press(settings_button)
-	EventBus.emit_notification("Settings - Not yet implemented", "info")
+	_open_settings_menu()
 
 func _on_quit_pressed() -> void:
 	EventBus.emit_debug("Quit selected")
@@ -429,6 +429,26 @@ func _play_button_press(button: TextureButton) -> void:
 	tween.tween_property(button, "scale", Vector2(0.9, 0.9), 0.08).set_trans(Tween.TRANS_CUBIC)
 	tween.tween_property(button, "scale", Vector2(1.05, 1.05), 0.1).set_trans(Tween.TRANS_BACK)
 	tween.tween_property(button, "scale", Vector2(1.0, 1.0), 0.08).set_trans(Tween.TRANS_CUBIC)
+
+# =============================================================================
+# SETTINGS MENU
+# =============================================================================
+
+var settings_menu: Control = null
+const SETTINGS_MENU_SCENE := preload("res://scenes/ui/settings_menu.tscn")
+
+func _open_settings_menu() -> void:
+	if settings_menu == null:
+		settings_menu = SETTINGS_MENU_SCENE.instantiate()
+		add_child(settings_menu)
+		settings_menu.settings_closed.connect(_on_settings_closed)
+	
+	settings_menu.open()
+
+func _on_settings_closed() -> void:
+	# Return focus to settings button
+	await get_tree().create_timer(0.1).timeout
+	settings_button.grab_focus()
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_debug"):

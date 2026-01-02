@@ -114,9 +114,21 @@ func _create_test_party() -> Array[CharacterBase]:
 	return party
 
 func _create_ally_monster(monster_id: String, level: int, brand: Enums.Brand) -> Monster:
+	# Try to load from MonsterData resource first (proper brand/stats from .tres)
+	var data_path := "res://data/monsters/%s.tres" % monster_id
+	if ResourceLoader.exists(data_path):
+		var monster_data: MonsterData = load(data_path)
+		if monster_data:
+			var monster := monster_data.create_instance(level)
+			monster.is_corrupted = false  # Allied monsters are purified/recruited
+			monster.corruption_level = 0.0  # No corruption - this is an ally
+			return monster
+	
+	# Fallback: create basic monster manually
 	var monster := Monster.new()
 
 	monster.monster_id = monster_id
+	monster.character_name = monster_id.capitalize()
 	monster.level = level
 	monster.brand = brand
 	monster.character_type = Enums.CharacterType.MONSTER
@@ -269,6 +281,18 @@ func _create_test_enemies() -> Array[CharacterBase]:
 	return enemies
 
 func _create_test_enemy(monster_id: String, level: int) -> Monster:
+	# Try to load from MonsterData resource first (proper brand/stats)
+	var data_path := "res://data/monsters/%s.tres" % monster_id
+	if ResourceLoader.exists(data_path):
+		var monster_data: MonsterData = load(data_path)
+		if monster_data:
+			var monster := monster_data.create_instance(level)
+			monster.is_corrupted = true  # Enemy monsters are corrupted
+			# Wild monsters are 80%+ corrupted
+			monster.corruption_level = 80.0 + randf() * 20.0
+			return monster
+	
+	# Fallback: create basic monster manually (brand will be NONE)
 	var monster := Monster.new()
 
 	monster.monster_id = monster_id

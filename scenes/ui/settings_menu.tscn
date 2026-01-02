@@ -1,0 +1,369 @@
+[gd_scene load_steps=2 format=3 uid="uid://cqr8k2m5xvnp4"]
+
+[ext_resource type="Script" path="res://scripts/ui/settings_menu.gd" id="1_script"]
+
+[node name="SettingsMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="DimBackground" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -350.0
+offset_right = 400.0
+offset_bottom = 350.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 15
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="HeaderContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/HeaderContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SETTINGS"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/HeaderContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+text = "X"
+
+[node name="HSeparator" type="HSeparator" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TabContainer" type="TabContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Audio" type="MarginContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="MasterVolume" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/MasterVolume"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Master Volume"
+
+[node name="HSlider" type="HSlider" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/MasterVolume"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="MusicVolume" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/MusicVolume"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Music Volume"
+
+[node name="HSlider" type="HSlider" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/MusicVolume"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 0.8
+
+[node name="SFXVolume" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/SFXVolume"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "SFX Volume"
+
+[node name="HSlider" type="HSlider" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/SFXVolume"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="VoiceVolume" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/VoiceVolume"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Voice Volume"
+
+[node name="HSlider" type="HSlider" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/VoiceVolume"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="MuteUnfocused" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/MuteUnfocused"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Mute When Unfocused"
+
+[node name="CheckButton" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/MuteUnfocused"]
+layout_mode = 2
+button_pressed = true
+
+[node name="Display" type="MarginContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Display"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Fullscreen" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Display/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Display/VBoxContainer/Fullscreen"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Fullscreen"
+
+[node name="CheckButton" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Display/VBoxContainer/Fullscreen"]
+layout_mode = 2
+
+[node name="VSync" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Display/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Display/VBoxContainer/VSync"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "V-Sync"
+
+[node name="CheckButton" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Display/VBoxContainer/VSync"]
+layout_mode = 2
+button_pressed = true
+
+[node name="Resolution" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Display/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Display/VBoxContainer/Resolution"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Resolution"
+
+[node name="OptionButton" type="OptionButton" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Display/VBoxContainer/Resolution"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Brightness" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Display/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Display/VBoxContainer/Brightness"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Brightness"
+
+[node name="HSlider" type="HSlider" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Display/VBoxContainer/Brightness"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.5
+max_value = 1.5
+step = 0.05
+value = 1.0
+
+[node name="Gameplay" type="MarginContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TextSpeed" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer/TextSpeed"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Text Speed"
+
+[node name="HSlider" type="HSlider" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer/TextSpeed"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.5
+max_value = 3.0
+step = 0.25
+value = 1.0
+
+[node name="BattleAnimations" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer/BattleAnimations"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Battle Animations"
+
+[node name="CheckButton" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer/BattleAnimations"]
+layout_mode = 2
+button_pressed = true
+
+[node name="DamageNumbers" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer/DamageNumbers"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Damage Numbers"
+
+[node name="CheckButton" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer/DamageNumbers"]
+layout_mode = 2
+button_pressed = true
+
+[node name="BattleLog" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer/BattleLog"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Battle Log"
+
+[node name="CheckButton" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer/BattleLog"]
+layout_mode = 2
+button_pressed = true
+
+[node name="AutoSave" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer/AutoSave"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Auto-Save"
+
+[node name="CheckButton" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Gameplay/VBoxContainer/AutoSave"]
+layout_mode = 2
+button_pressed = true
+
+[node name="Accessibility" type="MarginContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Accessibility"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ScreenShake" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Accessibility/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Accessibility/VBoxContainer/ScreenShake"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Screen Shake"
+
+[node name="CheckButton" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Accessibility/VBoxContainer/ScreenShake"]
+layout_mode = 2
+button_pressed = true
+
+[node name="FlashEffects" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Accessibility/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Accessibility/VBoxContainer/FlashEffects"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Flash Effects"
+
+[node name="CheckButton" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Accessibility/VBoxContainer/FlashEffects"]
+layout_mode = 2
+button_pressed = true
+
+[node name="ReduceMotion" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Accessibility/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Accessibility/VBoxContainer/ReduceMotion"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Reduce Motion"
+
+[node name="CheckButton" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Accessibility/VBoxContainer/ReduceMotion"]
+layout_mode = 2
+
+[node name="LargeText" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Accessibility/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Accessibility/VBoxContainer/LargeText"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Large Text"
+
+[node name="CheckButton" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/TabContainer/Accessibility/VBoxContainer/LargeText"]
+layout_mode = 2
+
+[node name="HSeparator2" type="HSeparator" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="FooterContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="ResetButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/FooterContainer"]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+text = "Reset"
+
+[node name="ApplyButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/FooterContainer"]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+text = "Apply"

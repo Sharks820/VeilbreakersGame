@@ -33,6 +33,14 @@ signal experience_changed(old_exp: int, new_exp: int)
 @export var rarity: Enums.Rarity = Enums.Rarity.COMMON
 @export var description: String = ""
 
+@export_group("Brand System (v5.0)")
+## Monster brand tier: PURE (3 stages), HYBRID (3 stages), PRIMAL (2 stages)
+@export var brand_tier: Enums.MonsterBrandTier = Enums.MonsterBrandTier.PURE
+## Secondary brand (HYBRID: fixed, PRIMAL: assigned at evolution)
+@export var secondary_brand: Enums.Brand = Enums.Brand.NONE
+## Current evolution stage
+@export var evolution_stage: Enums.EvolutionStage = Enums.EvolutionStage.BIRTH
+
 @export_group("Corruption System")
 ## Corruption level 0-100. LOWER = STRONGER (opposite of traditional systems)
 ## 0-10: ASCENDED (+25% stats), 11-25: Purified (+10%), 26-50: Unstable (normal)

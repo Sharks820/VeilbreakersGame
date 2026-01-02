@@ -52,7 +52,7 @@ static func calculate_party_synergy(hero: Node, party_monsters: Array) -> Dictio
 			continue
 		
 		var monster_brand: String = ""
-		if "brand" in monster:
+		if "brand" in monster and monster.brand >= 0 and monster.brand < Enums.Brand.size():
 			monster_brand = Enums.Brand.keys()[monster.brand]
 		
 		if monster_brand in synergy_brands:
@@ -231,7 +231,7 @@ static func analyze_party_composition(hero: Node, monsters: Array) -> Dictionary
 		
 		# Brand distribution
 		var brand_key: String = ""
-		if "brand" in monster:
+		if "brand" in monster and monster.brand >= 0 and monster.brand < Enums.Brand.size():
 			brand_key = Enums.Brand.keys()[monster.brand]
 		if brand_key != "":
 			analysis.brand_distribution[brand_key] = \
