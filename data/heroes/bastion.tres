@@ -14,6 +14,9 @@ backstory = "Born in a fortress overlooking the nearest Veil breach, raised to t
 primary_brand = 1
 primary_path = 0
 role = "Tank"
+hero_class = "VEILGUARD"
+recommended_monsters = ["chainbound", "ironjaw", "the_bulwark"]
+synergy_explanation = "IRONBOUND path heroes excel with IRON brand monsters. These defensive creatures complement Bastion's protective abilities, creating an impenetrable frontline."
 
 sprite_path = "res://assets/characters/heroes/bastion.png"
 portrait_path = "res://assets/characters/heroes/bastion_portrait.png"

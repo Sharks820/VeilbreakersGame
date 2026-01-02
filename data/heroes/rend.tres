@@ -14,6 +14,9 @@ backstory = "Rend earned their name at age 14 by single-handedly killing a Raven
 primary_brand = 0
 primary_path = 1
 role = "DPS"
+hero_class = "BLOODHUNTER"
+recommended_monsters = ["ravener", "mawling", "bloodshade"]
+synergy_explanation = "FANGBORN path heroes thrive with SAVAGE brand monsters. These aggressive predators amplify Rend's bleed-focused combat style for devastating burst damage."
 
 sprite_path = "res://assets/characters/heroes/rend.png"
 portrait_path = "res://assets/characters/heroes/rend_portrait.png"

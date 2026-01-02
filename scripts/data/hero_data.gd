@@ -12,7 +12,12 @@ extends Resource
 @export_group("Alignment")
 @export var primary_brand: Enums.Brand = Enums.Brand.NONE
 @export var primary_path: Enums.Path = Enums.Path.NONE
-@export var role: String = "DPS"  # DPS, Tank, Healer, Support, Illusionist
+@export var role: String = "DPS"  # Legacy - use hero_class instead
+@export var hero_class: String = ""  # VEILGUARD, BLOODHUNTER, SOULWEAVER, VOIDWALKER
+
+@export_group("Recommended Monsters")
+@export var recommended_monsters: Array[String] = []  # Monster IDs that synergize with this hero
+@export var synergy_explanation: String = ""  # Why these monsters work well
 
 @export_group("Visuals")
 @export var sprite_path: String = ""

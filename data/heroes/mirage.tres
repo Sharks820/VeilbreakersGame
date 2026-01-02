@@ -14,6 +14,9 @@ backstory = "No one knows where Mirage came from. They appeared at the Compact's
 primary_brand = 4
 primary_path = 3
 role = "Illusionist"
+hero_class = "VOIDWALKER"
+recommended_monsters = ["flicker", "voltgeist", "crackling"]
+synergy_explanation = "UNCHAINED path heroes excel with SURGE and DREAD brand monsters. These reality-bending creatures complement Mirage's illusions with speed and terror effects."
 
 sprite_path = "res://assets/characters/heroes/mirage.png"
 portrait_path = "res://assets/characters/heroes/mirage_portrait.png"

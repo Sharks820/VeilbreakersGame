@@ -1,5 +1,6 @@
 extends Node
 ## TestBattle: Sets up and runs a test battle for debugging and development.
+## Also serves as the TUTORIAL BATTLE when tutorial_battle_pending flag is set.
 
 # =============================================================================
 # CONFIGURATION
@@ -19,6 +20,54 @@ extends Node
 @export var vera_state: Enums.VERAState = Enums.VERAState.INTERFACE
 
 # =============================================================================
+# TUTORIAL STATE
+# =============================================================================
+
+var is_tutorial: bool = false
+var tutorial_step: int = 0
+var tutorial_dialogue_shown: bool = false
+var vera_tutorial_panel: Control = null
+
+const TUTORIAL_DIALOGUES: Array[Dictionary] = [
+	{
+		"trigger": "battle_start",
+		"speaker": "V.E.R.A.",
+		"text": "Welcome to your first battle, Hunter. I'll guide you through the basics. The corrupted creatures before you must be defeated... or [color=#88ff88]purified[/color] and recruited to your cause.",
+		"highlight": ""
+	},
+	{
+		"trigger": "turn_start",
+		"speaker": "V.E.R.A.",
+		"text": "Each round, you'll select actions for your entire party before they execute. Choose [color=#ffaa88]ATTACK[/color] to deal damage, or [color=#88aaff]SKILLS[/color] for special abilities.",
+		"highlight": "action_bar"
+	},
+	{
+		"trigger": "action_selected",
+		"speaker": "V.E.R.A.",
+		"text": "Excellent. Now select a [color=#ff8888]target[/color] for your attack. Enemies are highlighted in red. Click on one to confirm your action.",
+		"highlight": "enemies"
+	},
+	{
+		"trigger": "first_attack",
+		"speaker": "V.E.R.A.",
+		"text": "Well done! Notice the [color=#ffff88]Brand effectiveness[/color] - your attacks deal bonus damage against certain Brand types. The wheel is: SAVAGE > IRON > VENOM > SURGE > DREAD > LEECH > SAVAGE.",
+		"highlight": ""
+	},
+	{
+		"trigger": "enemy_low_hp",
+		"speaker": "V.E.R.A.",
+		"text": "That creature is weakened! You can now attempt to [color=#88ff88]PURIFY[/color] it. Purified monsters can join your party. Lower corruption means a stronger ally.",
+		"highlight": "purify_button"
+	},
+	{
+		"trigger": "battle_end",
+		"speaker": "V.E.R.A.",
+		"text": "Victory! You've completed your first battle. Remember: the monsters you capture will synergize with your Path. Choose wisely, Hunter.",
+		"highlight": ""
+	}
+]
+
+# =============================================================================
 # NODES
 # =============================================================================
 
@@ -30,6 +79,16 @@ var battle_arena: Node2D = null
 
 func _ready() -> void:
 	EventBus.emit_debug("TestBattle scene loaded")
+	
+	# Check if this is a tutorial battle
+	is_tutorial = GameManager.get_story_flag("tutorial_battle_pending", false)
+	if is_tutorial:
+		EventBus.emit_debug("TUTORIAL MODE ACTIVE")
+		# Use easier settings for tutorial
+		enemy_count = 2
+		enemy_level = 5
+		enemy_type = "hollow"  # Easier enemy for tutorial
+		ally_monster_count = 1  # Just player + 1 monster for simplicity
 
 	# Remove the fake placeholder BattleArena (we'll load the real one)
 	var fake_arena = get_node_or_null("BattleArena")
@@ -56,6 +115,11 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	_setup_test_battle()
+	
+	# Start tutorial if applicable
+	if is_tutorial:
+		await get_tree().create_timer(0.5).timeout
+		_show_tutorial_step("battle_start")
 
 func _setup_test_battle() -> void:
 	# Set up VERA state
@@ -90,11 +154,19 @@ func _setup_vera() -> void:
 func _create_test_party() -> Array[CharacterBase]:
 	var party: Array[CharacterBase] = []
 
-	# Create protagonist (the player character) - "Rend" matches hero sprite
-	# Using SAVAGE brand for attack-focused protagonist (v5.0 Brand system)
-	var protagonist := _create_test_character("Rend", party_level, Enums.Brand.SAVAGE)
-	protagonist.is_protagonist = true
-	party.append(protagonist)
+	# Check if player has a selected hero from character select
+	var player_char: PlayerCharacter = GameManager.get_player_character()
+	if player_char:
+		# Use the actual selected hero
+		player_char.is_protagonist = true
+		party.append(player_char)
+		EventBus.emit_debug("Using selected hero: %s" % player_char.character_name)
+	else:
+		# Fallback: Create protagonist (the player character) - "Rend" matches hero sprite
+		# Using SAVAGE brand for attack-focused protagonist (v5.0 Brand system)
+		var protagonist := _create_test_character("Rend", party_level, Enums.Brand.SAVAGE)
+		protagonist.is_protagonist = true
+		party.append(protagonist)
 
 	# Create allied monsters (recruited/captured monsters that fight with the player)
 	# Using valid v5.0 Brand system values: SAVAGE, IRON, VENOM, SURGE, DREAD, LEECH
@@ -492,7 +564,165 @@ func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 	var fled: bool = rewards.get("fled", false)
 	if victory:
 		EventBus.emit_debug("Test battle WON!")
+		if is_tutorial:
+			_show_tutorial_step("battle_end")
+			# Mark tutorial as complete
+			GameManager.set_story_flag("tutorial_battle_pending", false)
+			GameManager.set_story_flag("tutorial_complete", true)
 	elif fled:
 		EventBus.emit_debug("Test battle FLED!")
 	else:
 		EventBus.emit_debug("Test battle LOST!")
+
+# =============================================================================
+# TUTORIAL SYSTEM
+# =============================================================================
+
+func _show_tutorial_step(trigger: String) -> void:
+	"""Show a tutorial dialogue for the given trigger"""
+	if not is_tutorial:
+		return
+	
+	# Find the dialogue for this trigger
+	for dialogue in TUTORIAL_DIALOGUES:
+		if dialogue.trigger == trigger:
+			_display_vera_tutorial(dialogue)
+			return
+
+func _display_vera_tutorial(dialogue: Dictionary) -> void:
+	"""Display VERA tutorial panel with the given dialogue"""
+	# Create or get the tutorial panel
+	if not vera_tutorial_panel:
+		_create_vera_tutorial_panel()
+	
+	vera_tutorial_panel.visible = true
+	
+	# Update content
+	var speaker_label: Label = vera_tutorial_panel.get_node("HBox/VBox/SpeakerLabel")
+	var text_label: RichTextLabel = vera_tutorial_panel.get_node("HBox/VBox/TextLabel")
+	var portrait: TextureRect = vera_tutorial_panel.get_node("HBox/Portrait")
+	
+	speaker_label.text = dialogue.speaker
+	text_label.text = ""
+	
+	# Typewriter effect
+	var full_text: String = dialogue.text
+	for i in range(full_text.length()):
+		text_label.text = full_text.substr(0, i + 1)
+		await get_tree().create_timer(0.02).timeout
+	
+	# Load VERA portrait
+	if ResourceLoader.exists("res://assets/characters/vera/vera_interface.png"):
+		portrait.texture = load("res://assets/characters/vera/vera_interface.png")
+	
+	# Highlight relevant UI element if specified
+	if dialogue.highlight != "":
+		_highlight_ui_element(dialogue.highlight)
+	
+	# Wait for player to dismiss
+	await get_tree().create_timer(0.5).timeout
+	
+	# Add continue prompt
+	var continue_label: Label = vera_tutorial_panel.get_node("ContinueLabel")
+	continue_label.visible = true
+	
+	# Wait for input
+	await _wait_for_tutorial_continue()
+	
+	continue_label.visible = false
+	vera_tutorial_panel.visible = false
+	_clear_highlights()
+
+func _create_vera_tutorial_panel() -> void:
+	"""Create the VERA tutorial panel UI"""
+	vera_tutorial_panel = PanelContainer.new()
+	vera_tutorial_panel.name = "VERATutorialPanel"
+	
+	# Position at bottom of screen
+	vera_tutorial_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	vera_tutorial_panel.offset_top = -180
+	vera_tutorial_panel.offset_left = 100
+	vera_tutorial_panel.offset_right = -100
+	
+	# Style
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.05, 0.08, 0.95)
+	style.border_color = Color(0.4, 0.3, 0.5, 0.8)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(10)
+	style.content_margin_left = 20
+	style.content_margin_right = 20
+	style.content_margin_top = 15
+	style.content_margin_bottom = 15
+	vera_tutorial_panel.add_theme_stylebox_override("panel", style)
+	
+	# Content
+	var hbox := HBoxContainer.new()
+	hbox.name = "HBox"
+	hbox.add_theme_constant_override("separation", 20)
+	vera_tutorial_panel.add_child(hbox)
+	
+	# Portrait
+	var portrait := TextureRect.new()
+	portrait.name = "Portrait"
+	portrait.custom_minimum_size = Vector2(100, 100)
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	hbox.add_child(portrait)
+	
+	# Text content
+	var vbox := VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.add_theme_constant_override("separation", 8)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(vbox)
+	
+	var speaker := Label.new()
+	speaker.name = "SpeakerLabel"
+	speaker.add_theme_font_size_override("font_size", 18)
+	speaker.add_theme_color_override("font_color", Color(0.6, 0.5, 0.7))
+	vbox.add_child(speaker)
+	
+	var text := RichTextLabel.new()
+	text.name = "TextLabel"
+	text.bbcode_enabled = true
+	text.fit_content = true
+	text.add_theme_font_size_override("normal_font_size", 15)
+	text.add_theme_color_override("default_color", Color(0.85, 0.8, 0.75))
+	vbox.add_child(text)
+	
+	# Continue prompt
+	var continue_label := Label.new()
+	continue_label.name = "ContinueLabel"
+	continue_label.text = "Press SPACE or ENTER to continue..."
+	continue_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	continue_label.add_theme_font_size_override("font_size", 12)
+	continue_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	continue_label.visible = false
+	vera_tutorial_panel.add_child(continue_label)
+	continue_label.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	continue_label.offset_top = -25
+	continue_label.offset_left = -250
+	
+	# Add to scene
+	var canvas := CanvasLayer.new()
+	canvas.layer = 100
+	add_child(canvas)
+	canvas.add_child(vera_tutorial_panel)
+
+func _wait_for_tutorial_continue() -> void:
+	"""Wait for player to press continue"""
+	while true:
+		await get_tree().process_frame
+		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("ui_select"):
+			break
+
+func _highlight_ui_element(element_name: String) -> void:
+	"""Highlight a UI element for the tutorial"""
+	# This would add a glow/pulse effect to the specified element
+	# For now, just log it
+	EventBus.emit_debug("Tutorial highlight: %s" % element_name)
+
+func _clear_highlights() -> void:
+	"""Clear all tutorial highlights"""
+	pass

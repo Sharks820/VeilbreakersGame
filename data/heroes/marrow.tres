@@ -14,6 +14,9 @@ backstory = "Marrow was dying from age 8. By 12, they'd accepted death. Then the
 primary_brand = 5
 primary_path = 2
 role = "Healer"
+hero_class = "SOULWEAVER"
+recommended_monsters = ["the_weeping", "hollow", "gluttony_polyp"]
+synergy_explanation = "VOIDTOUCHED path heroes synergize with LEECH brand monsters. These life-draining creatures enhance Marrow's drain healing, turning enemy vitality into ally restoration."
 
 sprite_path = "res://assets/characters/heroes/marrow.png"
 portrait_path = "res://assets/characters/heroes/marrow_portrait.png"
