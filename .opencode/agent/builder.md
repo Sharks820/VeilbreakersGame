@@ -58,6 +58,24 @@ if node and node.has_method("method"):
 EventBus.damage_dealt.emit(source, target, amount)
 ```
 
+## Subagent Access
+
+You can invoke these subagents via @mention for specialized tasks:
+
+| Subagent | Invoke With | When To Use |
+|----------|-------------|-------------|
+| @code-review | After significant code changes | Quality check, bug detection, optimization |
+| @scenario-assets | Need game assets | Request sprites, backgrounds, UI elements |
+| @monster-lore | Need creature/story info | Get monster stats, lore details, skill ideas |
+| @map-creator | Need environment info | Arena layouts, biome specs, spawn locations |
+
+### Example Usage
+```
+@code-review check battle_manager.gd for issues
+@scenario-assets generate a DREAD brand monster sprite
+@monster-lore design skills for Gluttony Polyp
+```
+
 ## Key References
 - `AGENT_SYSTEMS.md` - Game systems (READ ONLY)
 - `docs/STYLE_GUIDE.md` - Art direction
