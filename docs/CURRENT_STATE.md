@@ -1,6 +1,6 @@
 # VEILBREAKERS - Current State
 
-> **Version:** v0.60 | **Last Updated:** 2026-01-02
+> **Version:** v0.62 | **Last Updated:** 2026-01-02
 
 ---
 
@@ -66,12 +66,12 @@ VeilbreakersGame/
 ├── assets/
 │   ├── characters/      # Heroes (4) + VERA stages (4)
 │   ├── environments/    # Battle backgrounds, hubs
-│   ├── sprites/         # Monsters (9)
+│   ├── sprites/         # Monsters (19)
 │   └── ui/              # Buttons, frames, icons, sheets
 ├── data/
 │   ├── heroes/          # 4 hero .tres files
 │   ├── items/           # Consumables + equipment
-│   ├── monsters/        # 9 monster .tres files
+│   ├── monsters/        # 19 monster .tres files
 │   └── skills/          # 99+ skill .tres files
 ├── docs/
 │   ├── BRAND_REFERENCE.md
@@ -125,7 +125,7 @@ VeilbreakersGame/
 | Category | Count |
 |----------|-------|
 | Heroes | 4 (Bastion, Rend, Marrow, Mirage) |
-| Monsters | 9 (Hollow, Ravener, Mawling, Flicker, The Weeping, The Vessel, Gluttony Polyp, Skitter Teeth, The Congregation [BOSS]) |
+| Monsters | 19 (Hollow, Bloodshade, Chainbound, Corrodex, Crackling, Flicker, Gluttony Polyp, Ironjaw, Mawling, Needlefang, Ravener, Skitter Teeth, Sporecaller, The Broodmother, The Bulwark, The Congregation [BOSS], The Vessel, The Weeping, Voltgeist) |
 | Skills | 99+ defined |
 | Items | 33+ defined |
 | Status Effects | 17 |

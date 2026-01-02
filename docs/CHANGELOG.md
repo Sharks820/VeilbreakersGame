@@ -4,6 +4,29 @@
 
 ---
 
+## [v0.62] - 2026-01-02
+
+### Changed
+- **Monster Sprites Overhaul** - All 19 monster sprites regenerated
+  - User-approved horror art with proper transparency
+  - All sprites resized to 1024x1024 PNG format
+  - More terror/sinister aesthetic (not just zombie style)
+  - Backgrounds removed using external tool (not Python PIL)
+  - Archived old sprites to assets/sprites/monsters/archive/
+
+### Added
+- 10 new monsters with complete art: Bloodshade, Chainbound, Corrodex, Crackling, Ironjaw, Needlefang, Sporecaller, The Broodmother, The Bulwark, Voltgeist
+
+---
+
+## [v0.61] - 2026-01-02
+
+### Fixed
+- Background transparency for needlefang and sporecaller sprites
+- Brand display in battle UI tooltips and party sidebar
+
+---
+
 ## [v0.60] - 2026-01-02 (MAJOR)
 
 ### Added
