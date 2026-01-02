@@ -1,6 +1,6 @@
 ---
 description: World design, environments, biomes, arenas, towns - spatial reasoning and creative level design
-mode: primary
+mode: subagent
 model: anthropic/claude-opus-4-20250514
 temperature: 0.7
 permission:

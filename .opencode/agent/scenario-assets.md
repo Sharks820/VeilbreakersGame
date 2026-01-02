@@ -1,6 +1,6 @@
 ---
 description: Art generation and style consistency - manages Scenario.gg API, fal-ai, maintains Dark Fantasy Horror aesthetic
-mode: primary
+mode: subagent
 model: anthropic/claude-opus-4-20250514
 temperature: 0.8
 permission:

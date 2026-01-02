@@ -1,6 +1,6 @@
 ---
 description: Quality analysis, optimization, bug detection - strict code reviewer with low temperature for precision
-mode: primary
+mode: subagent
 model: anthropic/claude-opus-4-20250514
 temperature: 0.2
 permission:

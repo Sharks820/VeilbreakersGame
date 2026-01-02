@@ -1,6 +1,6 @@
 ---
 description: Story, creatures, quests, lore development - highly creative agent for world-building and narrative
-mode: primary
+mode: subagent
 model: anthropic/claude-opus-4-20250514
 temperature: 0.9
 permission:

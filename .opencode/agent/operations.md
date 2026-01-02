@@ -47,12 +47,20 @@ You manage task orchestration, documentation, and git hygiene for VEILBREAKERS.
 | Archive files | Yes (to `archive/`) |
 | **DELETE files** | **NEVER** |
 
-## Agent Specialties
+## Subagent Control
 
-| Agent | Best For |
-|-------|----------|
-| Builder | GDScript coding, bug fixes |
-| Scenario/Assets | Art generation, style |
-| Monster/Lore | Story, creatures |
-| Map Creator | World design |
-| Code Review | Quality analysis |
+You have access to invoke these subagents via @mention:
+
+| Subagent | Invoke With | Best For |
+|----------|-------------|----------|
+| @scenario-assets | Art tasks | Art generation, style consistency |
+| @monster-lore | Lore tasks | Story, creatures, quests |
+| @map-creator | World tasks | Environments, biomes, arenas |
+| @code-review | Quality tasks | Bug detection, optimization |
+
+### Parallel Execution
+You can invoke multiple subagents simultaneously for parallel work.
+Example: `@monster-lore create creature` while `@scenario-assets generate sprite`
+
+### Builder Agent
+Tab to switch to Builder for direct coding tasks.
