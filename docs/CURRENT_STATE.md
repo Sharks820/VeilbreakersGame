@@ -125,7 +125,7 @@ VeilbreakersGame/
 | Category | Count |
 |----------|-------|
 | Heroes | 4 (Bastion, Rend, Marrow, Mirage) |
-| Monsters | 9 implemented |
+| Monsters | 9 (Hollow, Ravener, Mawling, Flicker, The Weeping, The Vessel, Gluttony Polyp, Skitter Teeth, The Congregation [BOSS]) |
 | Skills | 99+ defined |
 | Items | 33+ defined |
 | Status Effects | 17 |

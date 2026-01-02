@@ -202,9 +202,14 @@ game interface element, transparent background
 
 **Monsters (assets/sprites/monsters/):**
 - `hollow.png` - Base creature style
-- `the_congregation.png` - Multi-entity style
-- `the_weeping.png` - Emotional horror
+- `the_congregation.png` - **FIRST BOSS** - Multi-entity horror
+- `the_weeping.png` - Emotional horror, grief incarnate
+- `the_vessel.png` - Possessed/container creature
 - `ravener.png` - Aggressive predator
+- `mawling.png` - Hungry beast
+- `gluttony_polyp.png` - Consuming horror
+- `skitter_teeth.png` - Fast, toothy swarm creature
+- `flicker.png` - Ethereal, phasing creature
 
 **Heroes (assets/characters/heroes/):**
 - `bastion.png` - Armored tank style
