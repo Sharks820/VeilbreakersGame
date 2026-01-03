@@ -1113,7 +1113,7 @@ func _handle_special_effect(caster: CharacterBase, targets: Array[CharacterBase]
 		"extend_on_kill":
 			# Handled by listening to death signals
 			pass
-		"life_steal":
+		"life_steal", "life_steal_100", "life_steal_50":
 			# Already handled in damage calculation
 			pass
 		"dispel":
@@ -1124,6 +1124,24 @@ func _handle_special_effect(caster: CharacterBase, targets: Array[CharacterBase]
 				if t.is_dead():
 					t.revive(0.5)
 					vfx_command.emit("revive_effect", {"position": t.global_position})
+		"force_target_self":
+			# TAUNT - Force all enemies to target the caster for 2 turns
+			for t in targets:
+				t.set_meta("forced_target", caster)
+				t.set_meta("forced_target_turns", 2)
+			caster.set_meta("is_taunting", true)
+			vfx_command.emit("taunt_effect", {"position": caster.global_position})
+			ui_command.emit("show_status_popup", {
+				"target": caster,
+				"status": "TAUNTING",
+				"positive": true
+			})
+			EventBus.emit_debug("%s is taunting all enemies!" % caster.character_name)
+		"heal_ally_from_damage_150", "heal_ally_from_damage":
+			# Siphon heal - damage dealt heals an ally (handled after damage in skill execution)
+			# This is tracked via meta and processed after damage
+			caster.set_meta("siphon_heal_pending", true)
+			caster.set_meta("siphon_heal_multiplier", 1.5 if "150" in effect_id else 1.0)
 		_:
 			EventBus.emit_debug("Unknown special effect: %s" % effect_id)
 
@@ -1459,9 +1477,24 @@ func _end_round() -> void:
 	
 	# Clear all defend relationships at end of round
 	_clear_all_defend_relationships()
+	
+	# Decrement taunt/forced target turns
+	_decrement_forced_target_turns()
 
 	if not _check_battle_end():
 		_start_round()
+
+func _decrement_forced_target_turns() -> void:
+	"""Decrement forced target (taunt) duration at end of round"""
+	for character in turn_order:
+		if character.has_meta("forced_target_turns"):
+			var turns: int = character.get_meta("forced_target_turns") - 1
+			if turns <= 0:
+				character.remove_meta("forced_target")
+				character.remove_meta("forced_target_turns")
+				EventBus.emit_debug("%s is no longer taunted" % character.character_name)
+			else:
+				character.set_meta("forced_target_turns", turns)
 
 func _clear_all_defend_relationships() -> void:
 	"""Clear all defend meta data at end of round"""

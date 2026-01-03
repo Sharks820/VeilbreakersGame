@@ -135,6 +135,16 @@ func _select_optimal_target(attacker: CharacterBase, targets: Array[CharacterBas
 	if targets.is_empty():
 		return null
 	
+	# Check if attacker is TAUNTED - must attack the taunter
+	if attacker.has_meta("forced_target"):
+		var forced: CharacterBase = attacker.get_meta("forced_target")
+		if is_instance_valid(forced) and not forced.is_dead() and forced in targets:
+			return forced
+		else:
+			# Taunt target is dead or invalid, clear it
+			attacker.remove_meta("forced_target")
+			attacker.remove_meta("forced_target_turns")
+	
 	if targets.size() == 1:
 		return targets[0]
 	
