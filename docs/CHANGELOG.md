@@ -4,6 +4,27 @@
 
 ---
 
+## [v0.79] - 2026-01-02
+
+### Added
+- **Sprite Sheet Death Animation Integration** - Death animations now use sprite sheets when available
+  - `_play_death_animation()` checks for animated_battle_sprite with play_death() method
+  - Waits for death_animation_complete signal before hiding sprite
+  - Falls back to tween-based death for monsters without sprite sheets
+- **Animation Debug Logging** - Added print statements to sprite_sheet_animator.gd
+  - Traces animation flow: play(), _switch_sheet(), play_attack()
+  - Logs sheet switching, frame changes, and fallback usage
+  - Helps diagnose animation issues in development
+
+### Verified Working
+- **Sprite Sheet Animation System** - Confirmed fully functional
+  - Mawling: 2 sheets, 13 animations (idle, attack, hurt, death, skills)
+  - Hollow: 3 sheets, 13 animations
+  - Idle animations cycling at 6 FPS
+  - Sheet switching works correctly between animations
+
+---
+
 ## [v0.65] - 2026-01-02
 
 ### Added
