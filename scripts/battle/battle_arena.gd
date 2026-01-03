@@ -763,7 +763,12 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 	var is_enemy: bool = character is Monster and character.is_corrupted
 	if character is Monster:
 		var monster: Monster = character as Monster
+		print("[BattleArena] SPRITE SETUP: Monster %s (id: %s), has_sprite_sheets: %s, is_enemy: %s" % [
+			monster.character_name, monster.monster_id,
+			str(MonsterSpriteConfigScript.has_sprite_sheets(monster.monster_id)), str(is_enemy)
+		])
 		if MonsterSpriteConfigScript.has_sprite_sheets(monster.monster_id):
+			print("[BattleArena] Creating BattleMonsterSprite for %s" % monster.monster_id)
 			# Use the new BattleMonsterSprite with full animation support
 			var battle_sprite: Node2D = BattleMonsterSpriteScript.new()
 			battle_sprite.name = "BattleMonsterSprite"
@@ -790,9 +795,12 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 				hitbox_offset = Vector2(0, -110)
 			
 			sprite_loaded = true
-			
+
 			# Store battle sprite reference for animations
 			character.set_meta("animated_battle_sprite", battle_sprite)
+			print("[BattleArena] SET animated_battle_sprite meta for %s - has_method play_attack: %s" % [
+				character.character_name, str(battle_sprite.has_method("play_attack"))
+			])
 
 	if not sprite_loaded and sprite_path != "" and ResourceLoader.exists(sprite_path):
 		var tex := load(sprite_path)

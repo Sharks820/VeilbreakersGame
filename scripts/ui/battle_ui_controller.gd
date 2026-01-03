@@ -260,11 +260,19 @@ func set_battle_manager(manager: BattleManager) -> void:
 func _on_action_started(character: CharacterBase, action: int) -> void:
 	print("[COMBAT_LOG] _on_action_started called - character: %s, action: %d" % [character.character_name, action])
 	var action_name := ""
+	var skill_name := ""
+	
 	match action:
 		Enums.BattleAction.ATTACK:
 			action_name = "Attack"
 		Enums.BattleAction.SKILL:
-			action_name = "Skill"
+			# Get the actual skill name from character meta
+			var current_skill: SkillData = character.get_meta("current_skill", null)
+			if current_skill:
+				skill_name = current_skill.display_name
+				action_name = skill_name
+			else:
+				action_name = "Skill"
 		Enums.BattleAction.DEFEND:
 			action_name = "Defend"
 		Enums.BattleAction.ITEM:

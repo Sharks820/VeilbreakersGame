@@ -465,8 +465,11 @@ func _start_battle(party: Array[CharacterBase], enemies: Array[CharacterBase]) -
 
 	EventBus.emit_debug("Test battle started: %d party vs %d enemies" % [party.size(), enemies.size()])
 
-	# DEBUG AUTO-ATTACK DISABLED - Waiting for player input now
-	# Use F11 to manually trigger auto-attack if needed
+	# AUTO-TRIGGER: Attack after 2 seconds to test animation system
+	print("[TEST] Scheduling auto-attack in 2 seconds...")
+	await get_tree().create_timer(2.0).timeout
+	print("[TEST] Auto-attack timer fired, calling _debug_auto_attack()")
+	_debug_auto_attack()
 
 # =============================================================================
 # DEBUG CONTROLS
@@ -547,12 +550,23 @@ func _debug_auto_attack() -> void:
 		print("[TEST] No enemies in enemy_party")
 		return
 
-	var attacker = GameManager.player_party[0] if not GameManager.player_party.is_empty() else null
+	# Use party[1] (Mawling - has sprite sheets) instead of party[0] (Rend - no sprite sheets)
+	var attacker = GameManager.player_party[1] if GameManager.player_party.size() > 1 else GameManager.player_party[0]
 	var target = bm.enemy_party[0]
+
+	# Debug: Check if attacker has animated_battle_sprite meta set
+	print("[TEST] ===== SPRITE SHEET DEBUG =====")
+	print("[TEST] Attacker: %s (monster_id: %s)" % [attacker.character_name, attacker.get("monster_id") if attacker.get("monster_id") else "N/A"])
+	print("[TEST] Has animated_battle_sprite meta: %s" % str(attacker.has_meta("animated_battle_sprite")))
+	if attacker.has_meta("animated_battle_sprite"):
+		var anim_sprite = attacker.get_meta("animated_battle_sprite")
+		print("[TEST] animated_battle_sprite valid: %s, has play_attack: %s" % [str(is_instance_valid(anim_sprite)), str(anim_sprite.has_method("play_attack") if anim_sprite else false)])
+	print("[TEST] Has battle_sprite meta: %s" % str(attacker.has_meta("battle_sprite")))
+	print("[TEST] ===============================")
 
 	if attacker and target:
 		EventBus.emit_debug("Auto-attacking %s with %s" % [target.character_name, attacker.character_name])
-		print("[TEST] Attacking %s (HP: %d) with %s" % [target.character_name, target.current_hp, attacker.character_name])
+		print("[TEST] Attacking %s (HP: %d) with %s (should use sprite sheet animation)" % [target.character_name, target.current_hp, attacker.character_name])
 		# Use proper battle system to trigger full animation flow
 		# This calls execute_action which emits action_animation_started signal
 		bm.execute_action(attacker, Enums.BattleAction.ATTACK, target, "")
