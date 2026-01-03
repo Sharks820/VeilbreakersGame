@@ -794,9 +794,13 @@ func _update_card_highlights() -> void:
 		var data: HeroData = hero_data_cache.get(hero_id)
 		var class_color: Color = CLASS_COLORS.get(data.hero_class if data else "", Color.WHITE)
 		
-		var style := card.get_theme_stylebox("panel") as StyleBoxFlat
-		if not style:
-			continue
+		# Create a NEW StyleBoxFlat to avoid shared resource issues
+		var style := StyleBoxFlat.new()
+		style.set_corner_radius_all(8)
+		style.content_margin_left = 12
+		style.content_margin_right = 12
+		style.content_margin_top = 10
+		style.content_margin_bottom = 10
 		
 		if i == selected_hero_index:
 			style.border_color = class_color
@@ -810,6 +814,8 @@ func _update_card_highlights() -> void:
 			style.set_border_width_all(2)
 			style.shadow_size = 0
 			style.bg_color = Color(0.08, 0.08, 0.12, 0.95)
+		
+		card.add_theme_stylebox_override("panel", style)
 
 func _animate_hero_change(data: HeroData) -> void:
 	"""Animate the hero portrait change"""
@@ -1004,15 +1010,32 @@ func _update_card_hover_visual(hovered_index: int) -> void:
 		if not card:
 			continue
 		
-		var style := card.get_theme_stylebox("panel") as StyleBoxFlat
-		if not style:
+		# Skip selected card - it has its own highlight
+		if i == selected_hero_index:
 			continue
 		
+		var hero_id := HERO_IDS[i]
+		var data: HeroData = hero_data_cache.get(hero_id)
+		var class_color: Color = CLASS_COLORS.get(data.hero_class if data else "", Color.WHITE)
+		
+		# Create a NEW StyleBoxFlat to avoid shared resource issues
+		var style := StyleBoxFlat.new()
+		style.set_corner_radius_all(8)
+		style.content_margin_left = 12
+		style.content_margin_right = 12
+		style.content_margin_top = 10
+		style.content_margin_bottom = 10
+		style.border_color = class_color.darkened(0.5)
+		style.set_border_width_all(2)
+		style.shadow_size = 0
+		
 		# If this is the hovered card (but not selected), show subtle hover effect
-		if i == hovered_index and i != selected_hero_index:
+		if i == hovered_index:
 			style.bg_color = Color(0.1, 0.09, 0.14, 0.98)  # Slightly brighter
-		elif i != selected_hero_index:
+		else:
 			style.bg_color = Color(0.08, 0.08, 0.12, 0.95)  # Normal
+		
+		card.add_theme_stylebox_override("panel", style)
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_up"):

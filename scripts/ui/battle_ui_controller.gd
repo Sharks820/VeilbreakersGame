@@ -1955,11 +1955,19 @@ func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, g
 	# === TOTAL EXP HEADER ===
 	var exp_header := Label.new()
 	exp_header.name = "CharXP_Header"
-	exp_header.text = "⚔ BATTLE REWARDS ⚔"
+	exp_header.text = "SPOILS OF BATTLE"
 	exp_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	exp_header.add_theme_font_size_override("font_size", 20)
-	exp_header.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
+	exp_header.add_theme_font_size_override("font_size", 18)
+	exp_header.add_theme_color_override("font_color", Color(0.85, 0.7, 0.45))  # Aged gold
+	exp_header.add_theme_color_override("font_outline_color", Color(0.2, 0.15, 0.1))
+	exp_header.add_theme_constant_override("outline_size", 1)
 	container.add_child(exp_header)
+	
+	# Add decorative separator under header
+	var header_sep := HSeparator.new()
+	header_sep.name = "CharXP_HeaderSep"
+	header_sep.modulate = Color(0.6, 0.45, 0.25, 0.6)
+	container.add_child(header_sep)
 	
 	# === PARTY XP SECTION ===
 	var party_section := VBoxContainer.new()
@@ -2006,47 +2014,51 @@ func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, g
 	rewards_row.add_theme_constant_override("separation", 40)
 	container.add_child(rewards_row)
 	
-	# Gold display
+	# Gold display - dark fantasy style
 	var gold_display := HBoxContainer.new()
-	gold_display.add_theme_constant_override("separation", 5)
+	gold_display.add_theme_constant_override("separation", 8)
 	rewards_row.add_child(gold_display)
 	
-	var gold_icon := Label.new()
-	gold_icon.text = "💰"
-	gold_icon.add_theme_font_size_override("font_size", 20)
-	gold_display.add_child(gold_icon)
+	var gold_label_text := Label.new()
+	gold_label_text.text = "Gold:"
+	gold_label_text.add_theme_font_size_override("font_size", 16)
+	gold_label_text.add_theme_color_override("font_color", Color(0.7, 0.65, 0.55))
+	gold_display.add_child(gold_label_text)
 	
 	var gold_amount := Label.new()
-	gold_amount.text = "%d Gold" % gold
-	gold_amount.add_theme_font_size_override("font_size", 18)
-	gold_amount.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	gold_amount.text = "%d" % gold
+	gold_amount.add_theme_font_size_override("font_size", 20)
+	gold_amount.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))  # Golden
+	gold_amount.add_theme_color_override("font_outline_color", Color(0.3, 0.2, 0.1))
+	gold_amount.add_theme_constant_override("outline_size", 1)
 	gold_display.add_child(gold_amount)
 	
-	# Items display
+	# Items display - dark fantasy style
 	var items_display := HBoxContainer.new()
-	items_display.add_theme_constant_override("separation", 5)
+	items_display.add_theme_constant_override("separation", 8)
 	rewards_row.add_child(items_display)
 	
-	var items_icon := Label.new()
-	items_icon.text = "📦"
-	items_icon.add_theme_font_size_override("font_size", 20)
-	items_display.add_child(items_icon)
+	var items_label_text := Label.new()
+	items_label_text.text = "Loot:"
+	items_label_text.add_theme_font_size_override("font_size", 16)
+	items_label_text.add_theme_color_override("font_color", Color(0.7, 0.65, 0.55))
+	items_display.add_child(items_label_text)
 	
 	var items_text := Label.new()
 	if items.is_empty():
-		items_text.text = "No items"
-		items_text.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		items_text.text = "None"
+		items_text.add_theme_color_override("font_color", Color(0.5, 0.45, 0.4))
 	else:
 		var item_names: Array[String] = []
 		for item in items:
 			if item is Dictionary:
 				var qty: int = item.get("quantity", 1)
-				var name: String = item.get("item_id", "Unknown")
-				item_names.append("%s x%d" % [name, qty] if qty > 1 else name)
+				var name_str: String = item.get("item_id", "Unknown")
+				item_names.append("%s x%d" % [name_str, qty] if qty > 1 else name_str)
 			else:
 				item_names.append(str(item))
 		items_text.text = ", ".join(item_names)
-		items_text.add_theme_color_override("font_color", Color(0.7, 0.9, 1.0))
+		items_text.add_theme_color_override("font_color", Color(0.8, 0.75, 0.65))
 	items_text.add_theme_font_size_override("font_size", 16)
 	items_display.add_child(items_text)
 	
@@ -2351,58 +2363,75 @@ func _show_level_up_flash(row: PanelContainer, level_label: Label, new_level: in
 	popup_tween.tween_callback(popup.queue_free)
 
 func _style_victory_panel() -> void:
-	"""Apply polished styling to victory screen"""
+	"""Apply dark fantasy styling to victory screen"""
 	var victory_panel: PanelContainer = victory_screen.get_node_or_null("VictoryPanel")
 	if not victory_panel:
 		return
 	
-	# Style the panel
+	# Dark fantasy panel style - deep blacks with golden/amber accents
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.08, 0.12, 0.08, 0.98)
-	panel_style.border_color = Color(0.4, 0.8, 0.3)
-	panel_style.set_border_width_all(3)
-	panel_style.set_corner_radius_all(12)
-	panel_style.shadow_color = Color(0.2, 0.6, 0.2, 0.4)
-	panel_style.shadow_size = 20
-	panel_style.content_margin_left = 30
-	panel_style.content_margin_right = 30
-	panel_style.content_margin_top = 25
-	panel_style.content_margin_bottom = 25
+	panel_style.bg_color = Color(0.04, 0.04, 0.06, 0.98)  # Near black
+	panel_style.border_color = Color(0.75, 0.55, 0.25, 1.0)  # Golden amber
+	panel_style.set_border_width_all(4)
+	panel_style.set_corner_radius_all(8)
+	panel_style.shadow_color = Color(0.6, 0.4, 0.1, 0.6)  # Warm glow
+	panel_style.shadow_size = 25
+	panel_style.content_margin_left = 40
+	panel_style.content_margin_right = 40
+	panel_style.content_margin_top = 30
+	panel_style.content_margin_bottom = 30
+	
+	# Add inner border effect with second stylebox
+	var inner_style := StyleBoxFlat.new()
+	inner_style.bg_color = Color(0.06, 0.06, 0.08, 0.95)
+	inner_style.border_color = Color(0.4, 0.3, 0.15, 0.6)
+	inner_style.set_border_width_all(1)
+	inner_style.set_corner_radius_all(6)
+	
 	victory_panel.add_theme_stylebox_override("panel", panel_style)
 	
-	# Style the title
+	# Style the title - golden with dark fantasy feel
 	var title: Label = victory_panel.get_node_or_null("VBoxContainer/VictoryTitle")
 	if title:
-		title.add_theme_font_size_override("font_size", 36)
-		title.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
+		title.add_theme_font_size_override("font_size", 42)
+		title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))  # Golden
+		title.add_theme_color_override("font_outline_color", Color(0.3, 0.2, 0.1))
+		title.add_theme_constant_override("outline_size", 3)
 	
-	# Style the labels
+	# Style the labels with parchment-like colors
 	for label in [exp_label, gold_label, items_label]:
 		if label:
 			label.add_theme_font_size_override("font_size", 18)
-			label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.85))
+			label.add_theme_color_override("font_color", Color(0.85, 0.8, 0.7))  # Parchment
 	
-	# Style the continue button
+	# Style the continue button - dark with golden accents
 	if continue_button:
 		var btn_normal := StyleBoxFlat.new()
-		btn_normal.bg_color = Color(0.2, 0.5, 0.2, 0.95)
-		btn_normal.border_color = Color(0.4, 0.8, 0.4)
+		btn_normal.bg_color = Color(0.12, 0.1, 0.08, 0.98)
+		btn_normal.border_color = Color(0.65, 0.5, 0.25)
 		btn_normal.set_border_width_all(2)
 		btn_normal.set_corner_radius_all(6)
 		
 		var btn_hover := StyleBoxFlat.new()
-		btn_hover.bg_color = Color(0.3, 0.6, 0.3, 0.98)
-		btn_hover.border_color = Color(0.5, 1.0, 0.5)
+		btn_hover.bg_color = Color(0.2, 0.15, 0.1, 0.98)
+		btn_hover.border_color = Color(0.9, 0.7, 0.35)
 		btn_hover.set_border_width_all(2)
 		btn_hover.set_corner_radius_all(6)
-		btn_hover.shadow_color = Color(0.3, 0.8, 0.3, 0.5)
-		btn_hover.shadow_size = 8
+		btn_hover.shadow_color = Color(0.7, 0.5, 0.2, 0.5)
+		btn_hover.shadow_size = 10
+		
+		var btn_pressed := StyleBoxFlat.new()
+		btn_pressed.bg_color = Color(0.25, 0.2, 0.12, 0.98)
+		btn_pressed.border_color = Color(1.0, 0.8, 0.4)
+		btn_pressed.set_border_width_all(2)
+		btn_pressed.set_corner_radius_all(6)
 		
 		continue_button.add_theme_stylebox_override("normal", btn_normal)
 		continue_button.add_theme_stylebox_override("hover", btn_hover)
-		continue_button.add_theme_stylebox_override("pressed", btn_hover)
-		continue_button.add_theme_font_size_override("font_size", 18)
-		continue_button.add_theme_color_override("font_color", Color.WHITE)
+		continue_button.add_theme_stylebox_override("pressed", btn_pressed)
+		continue_button.add_theme_font_size_override("font_size", 20)
+		continue_button.add_theme_color_override("font_color", Color(1.0, 0.9, 0.7))
+		continue_button.text = "CONTINUE"
 
 func _play_victory_screen_flash() -> void:
 	## Create a dramatic screen flash effect for victory
@@ -2421,7 +2450,7 @@ func _play_victory_screen_flash() -> void:
 	tween.tween_callback(flash.queue_free)
 
 func _animate_victory_title() -> void:
-	## Animate the VICTORY! title with dramatic effects
+	## Animate the VICTORY! title with dark fantasy dramatic effects
 	var victory_panel: PanelContainer = victory_screen.get_node_or_null("VictoryPanel")
 	if not victory_panel:
 		return
@@ -2431,28 +2460,35 @@ func _animate_victory_title() -> void:
 		return
 	
 	# Store original text
-	var original_text := title.text
 	title.text = ""
 	
-	# Animate each letter appearing
-	var full_text := "⚔ VICTORY! ⚔"
-	var letter_delay := 0.05
+	# Dark fantasy victory text with decorative elements
+	var full_text := "VICTORY"
+	var letter_delay := 0.06
 	
+	# Start with a dramatic pause
+	await get_tree().create_timer(0.15).timeout
+	
+	# Animate each letter appearing with golden glow
 	for i in range(full_text.length()):
 		await get_tree().create_timer(letter_delay).timeout
 		title.text = full_text.substr(0, i + 1)
+		# Brief flash on each letter
+		title.modulate = Color(1.5, 1.3, 0.8, 1.0)
+		var flash_tween := create_tween()
+		flash_tween.tween_property(title, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.1)
 	
 	# Final pulse effect on the title
 	title.pivot_offset = title.size / 2
 	var pulse_tween := create_tween()
-	pulse_tween.tween_property(title, "scale", Vector2(1.15, 1.15), 0.15).set_ease(Tween.EASE_OUT)
-	pulse_tween.tween_property(title, "scale", Vector2(1.0, 1.0), 0.2).set_ease(Tween.EASE_IN_OUT)
+	pulse_tween.tween_property(title, "scale", Vector2(1.12, 1.12), 0.12).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	pulse_tween.tween_property(title, "scale", Vector2(1.0, 1.0), 0.15).set_ease(Tween.EASE_IN_OUT)
 	
-	# Add glow effect by modulating color
+	# Add golden glow pulse effect
 	var glow_tween := create_tween()
-	glow_tween.set_loops(3)
-	glow_tween.tween_property(title, "modulate", Color(1.3, 1.3, 1.0, 1.0), 0.3)
-	glow_tween.tween_property(title, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.3)
+	glow_tween.set_loops(2)
+	glow_tween.tween_property(title, "modulate", Color(1.4, 1.2, 0.9, 1.0), 0.4)
+	glow_tween.tween_property(title, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.4)
 
 func show_defeat(data: Dictionary = {}) -> void:
 	## Show defeat screen. Accepts optional data dictionary for battle stats.
