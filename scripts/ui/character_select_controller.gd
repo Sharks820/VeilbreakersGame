@@ -46,6 +46,8 @@ var hero_cards: Array[Control] = []
 var selected_hero_index: int = 0
 var hero_data_cache: Dictionary = {}
 var monster_data_cache: Dictionary = {}
+var _selection_locked: bool = false  # True after user clicks to confirm selection
+var _hovered_index: int = -1  # Currently hovered card (for visual feedback only)
 
 # Main UI elements
 var background: TextureRect = null
@@ -332,6 +334,7 @@ func _create_hero_card(hero_id: String, index: int) -> PanelContainer:
 	# Connect signals
 	card.gui_input.connect(_on_card_input.bind(index))
 	card.mouse_entered.connect(_on_card_hover.bind(index))
+	card.mouse_exited.connect(_on_card_unhover.bind(index))
 	card.focus_entered.connect(_on_card_focus.bind(index))
 	
 	return card
@@ -908,15 +911,49 @@ func _start_breathing_animation() -> void:
 
 func _on_card_input(event: InputEvent, index: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		# Click locks in the selection
+		_selection_locked = true
 		_select_hero(index)
 		if index < hero_cards.size():
 			hero_cards[index].grab_focus()
 
 func _on_card_hover(index: int) -> void:
-	_select_hero(index)
+	# Only change selection on hover if not locked
+	if not _selection_locked:
+		_hovered_index = index
+		_select_hero(index)
+	else:
+		# Just update visual hover state without changing selection
+		_hovered_index = index
+		_update_card_hover_visual(index)
 
 func _on_card_focus(index: int) -> void:
+	# Keyboard focus should always select (and lock)
+	_selection_locked = true
 	_select_hero(index)
+
+func _on_card_unhover(index: int) -> void:
+	"""Handle mouse exiting a card"""
+	if _hovered_index == index:
+		_hovered_index = -1
+		_update_card_hover_visual(-1)
+
+func _update_card_hover_visual(hovered_index: int) -> void:
+	"""Update hover visual without changing selection"""
+	for i in range(hero_cards.size()):
+		var card := hero_cards[i] as PanelContainer
+		if not card:
+			continue
+		
+		var style := card.get_theme_stylebox("panel") as StyleBoxFlat
+		if not style:
+			continue
+		
+		# If this is the hovered card (but not selected), show subtle hover effect
+		if i == hovered_index and i != selected_hero_index:
+			style.bg_color = Color(0.1, 0.09, 0.14, 0.98)  # Slightly brighter
+		elif i != selected_hero_index:
+			style.bg_color = Color(0.08, 0.08, 0.12, 0.95)  # Normal
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_up"):

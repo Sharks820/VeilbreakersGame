@@ -14,6 +14,13 @@ signal hit_frame_reached()
 signal death_animation_complete()
 
 # =============================================================================
+# PRELOADS (for class references)
+# =============================================================================
+
+const SpriteSheetAnimatorScript := preload("res://scripts/battle/animation/sprite_sheet_animator.gd")
+const MonsterSpriteConfigScript := preload("res://scripts/battle/animation/monster_sprite_config.gd")
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -31,7 +38,7 @@ signal death_animation_complete()
 # STATE
 # =============================================================================
 
-var _animator: SpriteSheetAnimator = null
+var _animator: Node = null  # SpriteSheetAnimator instance
 var _monster_config: Dictionary = {}
 var _is_dead: bool = false
 
@@ -56,7 +63,7 @@ func _ready() -> void:
 		_create_shadow()
 	
 	# Create animator
-	_animator = SpriteSheetAnimator.new()
+	_animator = SpriteSheetAnimatorScript.new()
 	_animator.name = "Animator"
 	add_child(_animator)
 	
@@ -71,8 +78,8 @@ func setup(p_monster_id: String, p_is_enemy: bool = true) -> void:
 	is_enemy = p_is_enemy
 	
 	# Check if monster has sprite sheet config
-	if MonsterSpriteConfig.has_sprite_sheets(monster_id):
-		_monster_config = MonsterSpriteConfig.get_config(monster_id)
+	if MonsterSpriteConfigScript.has_sprite_sheets(monster_id):
+		_monster_config = MonsterSpriteConfigScript.get_config(monster_id)
 		_brand_color = _monster_config.get("brand_color", Color.WHITE)
 		_glow_color = _monster_config.get("glow_color", Color.WHITE)
 		

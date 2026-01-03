@@ -7,6 +7,8 @@ extends Node2D
 # =============================================================================
 
 const SkillVFXControllerScript := preload("res://scripts/battle/animation/skill_vfx_controller.gd")
+const MonsterSpriteConfigScript := preload("res://scripts/battle/animation/monster_sprite_config.gd")
+const BattleMonsterSpriteScript := preload("res://scripts/battle/animation/battle_monster_sprite.gd")
 
 # =============================================================================
 # NODE REFERENCES - Core Systems
@@ -180,7 +182,12 @@ func _setup_background() -> void:
 	var bg_rect: TextureRect = bg_layer.get_node_or_null("BackgroundRect")
 	if bg_rect:
 		bg_rect.texture = bg_texture
-		EventBus.emit_debug("[BattleArena] Background loaded via TextureRect")
+		# Ensure proper sizing for CanvasLayer context
+		bg_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		bg_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		bg_rect.size = Vector2(1920, 1080)
+		bg_rect.position = Vector2.ZERO
+		print("[BattleArena] Background texture loaded: %s, size: %s" % [bg_texture.resource_path, bg_rect.size])
 		return
 	
 	# Fallback: Try BackgroundSprite (Sprite2D - legacy)
@@ -751,12 +758,12 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 	var hitbox_offset := Vector2(0, -60)  # Default hitbox offset
 	
 	# Check if this monster has sprite sheet animations
-	var is_enemy := character is Monster and character.is_corrupted
+	var is_enemy: bool = character is Monster and character.is_corrupted
 	if character is Monster:
 		var monster: Monster = character as Monster
-		if MonsterSpriteConfig.has_sprite_sheets(monster.monster_id):
+		if MonsterSpriteConfigScript.has_sprite_sheets(monster.monster_id):
 			# Use the new BattleMonsterSprite with full animation support
-			var battle_sprite := BattleMonsterSprite.new()
+			var battle_sprite: Node2D = BattleMonsterSpriteScript.new()
 			battle_sprite.name = "BattleMonsterSprite"
 			container.add_child(battle_sprite)
 			
@@ -793,34 +800,35 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 			sprite.name = "CharacterSprite"
 
 			# Scale and position based on character type
-			# INCREASED SIZES for better visibility (was 0.08, now 0.14-0.18)
+			# Hero sprites are ~1800x2400px, monster sprites are ~1024x1024px
 			match character.character_type:
 				Enums.CharacterType.PLAYER:
-					sprite.scale = Vector2(0.16, 0.16)  # Larger player sprite
+					# Hero sprites are very large - scale down more
+					sprite.scale = Vector2(0.08, 0.08)  # ~144x190 pixels
+					sprite.position = Vector2(0, -95)
+					hitbox_size = Vector2(120, 180)
+					hitbox_offset = Vector2(0, -90)
+				Enums.CharacterType.MONSTER:
+					if character is Monster and character.is_corrupted:
+						# Enemy monsters - moderate size
+						sprite.scale = Vector2(0.12, 0.12)
+						sprite.position = Vector2(0, -70)
+						hitbox_size = Vector2(100, 150)
+						hitbox_offset = Vector2(0, -75)
+					else:
+						# Allied monsters - same as enemies
+						sprite.scale = Vector2(0.12, 0.12)
+						sprite.position = Vector2(0, -70)
+					hitbox_size = Vector2(100, 150)
+					hitbox_offset = Vector2(0, -75)
+				Enums.CharacterType.BOSS:
+					sprite.scale = Vector2(0.18, 0.18)  # Bosses are bigger
 					sprite.position = Vector2(0, -100)
 					hitbox_size = Vector2(160, 240)
 					hitbox_offset = Vector2(0, -120)
-				Enums.CharacterType.MONSTER:
-					if character is Monster and character.is_corrupted:
-						# Enemy monsters - LARGER for visibility
-						sprite.scale = Vector2(0.15, 0.15)
-						sprite.position = Vector2(0, -90)
-						hitbox_size = Vector2(150, 220)
-						hitbox_offset = Vector2(0, -110)
-					else:
-						# Allied monsters - slightly smaller than enemies
-						sprite.scale = Vector2(0.14, 0.14)
-						sprite.position = Vector2(0, -85)
-						hitbox_size = Vector2(140, 200)
-						hitbox_offset = Vector2(0, -100)
-				Enums.CharacterType.BOSS:
-					sprite.scale = Vector2(0.22, 0.22)  # Bosses are BIG
-					sprite.position = Vector2(0, -130)
-					hitbox_size = Vector2(200, 300)
-					hitbox_offset = Vector2(0, -150)
 				_:
-					sprite.scale = Vector2(0.14, 0.14)
-					sprite.position = Vector2(0, -85)
+					sprite.scale = Vector2(0.10, 0.10)
+					sprite.position = Vector2(0, -60)
 
 			# Flip sprite to face enemies (allies face right, enemies face left)
 			if character is Monster and character.is_corrupted:
@@ -965,7 +973,7 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 		brand = character.monster_data.brand
 	
 	# Check if character has animated battle sprite (new system)
-	var animated_sprite: BattleMonsterSprite = character.get_meta("animated_battle_sprite", null)
+	var animated_sprite: Node2D = character.get_meta("animated_battle_sprite", null)
 	
 	if animated_sprite:
 		# Use the new sprite sheet animation system
