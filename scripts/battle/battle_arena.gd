@@ -803,27 +803,30 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 
 			# Scale and position based on character type
 			# Hero sprites are ~1800x2400px, monster sprites are ~1024x1024px
+			# All scales increased 2.5x for better visibility
 			match character.character_type:
 				Enums.CharacterType.PLAYER:
-					# Hero - slightly smaller than before
-					sprite.scale = Vector2(0.10, 0.10)
-					sprite.position = Vector2(0, -115)
-					hitbox_size = Vector2(150, 220)
-					hitbox_offset = Vector2(0, -110)
+					# Hero - 2.5x increase (was 0.10)
+					sprite.scale = Vector2(0.25, 0.25)
+					sprite.position = Vector2(0, -180)
+					hitbox_size = Vector2(200, 300)
+					hitbox_offset = Vector2(0, -150)
 				Enums.CharacterType.MONSTER:
-					# Monsters - slightly bigger than before
-					sprite.scale = Vector2(0.12, 0.12)
-					sprite.position = Vector2(0, -70)
-					hitbox_size = Vector2(110, 160)
-					hitbox_offset = Vector2(0, -80)
+					# Monsters - 2.5x increase (was 0.12)
+					sprite.scale = Vector2(0.30, 0.30)
+					sprite.position = Vector2(0, -120)
+					hitbox_size = Vector2(180, 260)
+					hitbox_offset = Vector2(0, -130)
 				Enums.CharacterType.BOSS:
-					sprite.scale = Vector2(0.18, 0.18)
-					sprite.position = Vector2(0, -110)
-					hitbox_size = Vector2(170, 250)
-					hitbox_offset = Vector2(0, -125)
+					# Boss - 2.5x increase (was 0.18)
+					sprite.scale = Vector2(0.45, 0.45)
+					sprite.position = Vector2(0, -200)
+					hitbox_size = Vector2(280, 400)
+					hitbox_offset = Vector2(0, -200)
 				_:
-					sprite.scale = Vector2(0.11, 0.11)
-					sprite.position = Vector2(0, -65)
+					# Default - 2.5x increase (was 0.11)
+					sprite.scale = Vector2(0.275, 0.275)
+					sprite.position = Vector2(0, -120)
 
 			# Flip sprite to face correct direction:
 			# - Enemies (right side, corrupted) face LEFT = flip_h = false (sprites drawn facing left)

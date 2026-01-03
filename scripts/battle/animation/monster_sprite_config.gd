@@ -60,7 +60,7 @@ static func _get_hollow_config() -> Dictionary:
 		"default_sheet": 0,
 		"h_frames": 4,
 		"v_frames": 4,
-		"scale": Vector2(0.5, 0.5),  # Adjusted for 512px sheets
+		"scale": Vector2(1.25, 1.25),  # 2.5x increase for better visibility (was 0.5)
 		"sheets": [],
 		"brand_color": Color(0.78, 0.24, 0.24),  # DREAD red
 		"glow_color": Color(1.0, 0.4, 0.4),
@@ -125,7 +125,7 @@ static func _get_chainbound_config() -> Dictionary:
 		"default_sheet": 0,
 		"h_frames": 4,
 		"v_frames": 4,
-		"scale": Vector2(0.5, 0.5),
+		"scale": Vector2(1.25, 1.25),  # 2.5x increase for better visibility (was 0.5)
 		"sheets": [],
 		"brand_color": Color(0.48, 0.53, 0.58),  # IRON gray
 		"glow_color": Color(1.0, 0.6, 0.2),  # Orange core
@@ -179,7 +179,7 @@ static func _get_mawling_config() -> Dictionary:
 		"default_sheet": 0,
 		"h_frames": 4,
 		"v_frames": 4,  # Sheet 1 is 4x4
-		"scale": Vector2(0.45, 0.45),  # Slightly smaller - it's a small creature
+		"scale": Vector2(1.125, 1.125),  # 2.5x increase (was 0.45) - still slightly smaller than others
 		"sheets": [],
 		"brand_color": Color(0.78, 0.24, 0.24),  # SAVAGE red
 		"glow_color": Color(1.0, 0.3, 0.5),
@@ -235,7 +235,7 @@ static func _get_default_config() -> Dictionary:
 		"default_sheet": -1,  # No sprite sheet, use static sprite
 		"h_frames": 1,
 		"v_frames": 1,
-		"scale": Vector2(0.5, 0.5),
+		"scale": Vector2(1.25, 1.25),  # 2.5x increase for better visibility (was 0.5)
 		"sheets": [],
 		"brand_color": Color.WHITE,
 		"glow_color": Color.WHITE,
