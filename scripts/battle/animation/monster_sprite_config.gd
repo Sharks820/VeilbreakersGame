@@ -92,8 +92,10 @@ static func _get_hollow_config() -> Dictionary:
 	sheet2.v_frames = 4
 	# Row 1: Idle with floating debris
 	sheet2.add_animation("idle_alt", 0, 3, 5.0, true)
-	# Row 2: Attack with different burst - slowed to match primary attack
+	# Row 2: Attack with chest beam burst - the dramatic red beam effect
 	sheet2.add_animation("attack_heavy", 4, 7, 6.0, false, 5)
+	# Row 2: Void Blast - same frames as attack_heavy, slower for dramatic effect
+	sheet2.add_animation("skill_void_blast", 4, 7, 4.0, false, 5)  # 4fps = ~1s for full animation
 	# Row 3: Combat poses
 	sheet2.add_animation("skill_hollow_wail", 8, 11, 8.0, false, 9)
 	# Row 4: Death

@@ -43,11 +43,11 @@ magic_growth = 1.18
 resistance_growth = 1.15
 speed_growth = 1.08
 
-innate_skills = ["empty_grasp", "hollow_wail", "dread_gaze", "empty_husk"]
-learnable_skills = {8: "mimic_stance", 15: "void_touch", 22: "defined_purpose", 30: "endless_grief"}
+innate_skills = ["empty_grasp", "hollow_wail", "void_blast", "dread_gaze"]
+learnable_skills = {8: "mimic_stance", 12: "empty_husk", 18: "void_touch", 25: "defined_purpose", 32: "endless_grief"}
 
 ai_pattern = "support"
-skill_weights = {"empty_grasp": 40, "hollow_wail": 35, "mimic_stance": 25}
+skill_weights = {"empty_grasp": 30, "hollow_wail": 25, "void_blast": 30, "dread_gaze": 15}
 
 base_corruption = 80.0
 corruption_resistance = 3.0

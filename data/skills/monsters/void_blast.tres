@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "void_blast"
+display_name = "Void Blast"
+description = "The Hollow channels dark energy through its chest core, unleashing a devastating beam of crimson void energy that pierces through enemies."
+icon_path = "res://assets/ui/skills/monsters/void_blast.png"
+
+skill_type = 0
+element = 9
+damage_type = 1
+target_type = 0
+brand_requirement = 0
+brand_type = 4
+
+mp_cost = 8
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 45
+scaling_stat = 4
+scaling_ratio = 1.2
+hit_count = 1
+accuracy_modifier = 0.1
+crit_modifier = 0.15
+
+status_effects = [{"effect": 8, "chance": 0.25, "duration": 2}]
+stat_modifiers = []
+special_effects = ["piercing"]
+
+animation_id = "void_blast"
+sound_effect = "sfx_void_blast"
+particle_effect = "void_beam"
+screen_shake = true
+
+level_requirement = 1
+path_requirement = 0.0
+prerequisite_skills = []
