@@ -32,7 +32,7 @@ motion_scale = Vector2(0.5, 0.5)
 [node name="BattleField" type="Node2D" parent="."]
 
 [node name="PlayerPositions" type="Node2D" parent="BattleField"]
-position = Vector2(100, 540)
+position = Vector2(100, 680)
 
 [node name="Position1" type="Marker2D" parent="BattleField/PlayerPositions"]
 position = Vector2(-60, 80)
@@ -47,7 +47,7 @@ position = Vector2(100, -90)
 position = Vector2(100, 90)
 
 [node name="EnemyPositions" type="Node2D" parent="BattleField"]
-position = Vector2(1100, 550)
+position = Vector2(1100, 690)
 
 [node name="Position1" type="Marker2D" parent="BattleField/EnemyPositions"]
 position = Vector2(120, -100)
