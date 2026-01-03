@@ -328,6 +328,11 @@ func _switch_sheet(sheet_path: String, sheet_index: int = 0) -> void:
 			print("[SpriteSheetAnimator] ERROR: Failed to load sheet: %s" % sheet_path)
 
 func _process(delta: float) -> void:
+	# Debug: Check if we're processing at all
+	if _monster_id != "" and Engine.get_process_frames() % 60 == 0:
+		print("[SpriteSheetAnimator] _process tick for %s: is_playing=%s, sprite=%s, current_anim=%s, frame=%d" % [
+			_monster_id, _is_playing, sprite != null, _current_animation, _current_frame
+		])
 	_process_animation(delta)
 	_process_breathing(delta)
 

@@ -511,6 +511,9 @@ func initialize_from_hero_data(hero_data: HeroData) -> void:
 	level = 1
 	is_protagonist = true
 	
+	# Set the hero's Path (this is what defines the hero!)
+	current_path = hero_data.primary_path
+	
 	# Set path-aligned brand as starting brand
 	var path_brand_map: Dictionary = {
 		Enums.Path.IRONBOUND: Enums.Brand.IRON,
@@ -554,6 +557,6 @@ func initialize_from_hero_data(hero_data: HeroData) -> void:
 	# Apply brand bonuses
 	_apply_brand_bonuses()
 	
-	EventBus.emit_debug("PlayerCharacter initialized from HeroData: %s (Brand: %s)" % [
-		character_name, Enums.Brand.keys()[current_brand]
+	EventBus.emit_debug("PlayerCharacter initialized from HeroData: %s (Path: %s)" % [
+		character_name, Enums.get_path_name(current_path)
 	])

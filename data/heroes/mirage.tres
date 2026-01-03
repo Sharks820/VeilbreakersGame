@@ -41,7 +41,7 @@ resistance_growth = 0.5
 speed_growth = 0.5
 luck_growth = 0.6
 
-innate_skills = ["attack_basic", "defend", "minor_illusion"]
+innate_skills = ["attack_basic", "defend", "minor_illusion", "fear_touch"]
 learnable_skills = {5: "fear_touch", 10: "mirror_image", 15: "mass_confusion", 20: "nightmare", 25: "reality_shatter"}
 ultimate_skill = "true_terror"
 

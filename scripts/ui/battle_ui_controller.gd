@@ -216,11 +216,11 @@ func _force_ui_layout() -> void:
 				scroll_bg.set_corner_radius_all(4)
 				scrollbar.add_theme_stylebox_override("scroll", scroll_bg)
 		if combat_log_text:
-			# Disable RichTextLabel's internal scrolling to prevent dual scrollbar
-			# But keep scroll_active true so content can be scrolled via ScrollContainer
+			combat_log_text.bbcode_enabled = true
+			combat_log_text.fit_content = true
 			combat_log_text.scroll_active = true
-			combat_log_text.scroll_following = false
-			# Let mouse events pass through to ScrollContainer
+			combat_log_text.scroll_following = true  # Enable auto-follow for new text
+			# Allow mouse events to pass through to scroll container
 			combat_log_text.mouse_filter = Control.MOUSE_FILTER_PASS
 		# Add drag handle if not exists
 		_add_combat_log_drag_handle()
@@ -812,6 +812,10 @@ func _populate_skill_list() -> void:
 		return
 
 	for skill_id in current_character.known_skills:
+		# Skip basic actions that have dedicated buttons (attack, defend)
+		if skill_id in ["attack_basic", "defend"]:
+			continue
+		
 		var can_use := current_character.can_use_skill(skill_id)
 		var skill_name := _get_skill_display_name(skill_id)
 		var mp_cost := _get_skill_mp_cost(skill_id)
@@ -1847,7 +1851,11 @@ func _append_to_log(entry: String) -> void:
 
 func _schedule_auto_scroll() -> void:
 	"""Schedule auto-scroll after frame to ensure text layout is complete"""
-	if not combat_log_scroll or user_scrolled_log:
+	if not combat_log_scroll:
+		return
+	# Skip if user manually scrolled away (but still allow if they scrolled back to bottom)
+	if user_scrolled_log:
+		print("[CombatLog] Skipping auto-scroll - user scrolled away")
 		return
 	# Wait for the text layout to update
 	await get_tree().process_frame
@@ -3183,33 +3191,8 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 	elif character is PlayerCharacter:
 		var player := character as PlayerCharacter
 		
-		# Player character - show Brand if they have one
-		if player.current_brand != Enums.Brand.NONE:
-			var sep3 := HSeparator.new()
-			sep3.add_theme_color_override("separator", Color(0.3, 0.4, 0.35))
-			vbox.add_child(sep3)
-
-			var brand_info := HBoxContainer.new()
-			brand_info.add_theme_constant_override("separation", 6)
-			vbox.add_child(brand_info)
-
-			var brand_title := Label.new()
-			brand_title.text = "Brand:"
-			brand_title.add_theme_font_size_override("font_size", 10)
-			brand_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-			brand_info.add_child(brand_title)
-
-			# Brand icon (colored indicator)
-			var brand_icon := _create_brand_icon(player.current_brand)
-			brand_info.add_child(brand_icon)
-
-			var brand_value := Label.new()
-			brand_value.text = _get_brand_name(player.current_brand)
-			brand_value.add_theme_font_size_override("font_size", 10)
-			brand_value.add_theme_color_override("font_color", _get_brand_color(player.current_brand))
-			brand_info.add_child(brand_value)
-		
-		# Also show Path
+		# Player characters have PATHS, not Brands - show Path info only
+		# (Brand alignment is internal and affects synergies, but heroes are not "branded")
 		var sep_path := HSeparator.new()
 		sep_path.add_theme_color_override("separator", Color(0.3, 0.4, 0.35))
 		vbox.add_child(sep_path)
@@ -3225,10 +3208,10 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 		path_info.add_child(path_title)
 
 		var path_value := Label.new()
-		var path_name := GameManager.get_path_name() if GameManager.has_method("get_path_name") else "Unknown"
+		var path_name := Enums.get_path_name(player.current_path)
 		path_value.text = path_name
 		path_value.add_theme_font_size_override("font_size", 10)
-		path_value.add_theme_color_override("font_color", _get_path_color())
+		path_value.add_theme_color_override("font_color", _get_path_type_color(player.current_path))
 		path_info.add_child(path_value)
 
 	# Position tooltip to the RIGHT of the panel (party is on left side)
@@ -4007,9 +3990,13 @@ func _auto_scroll_combat_log() -> void:
 		_is_auto_scrolling = true
 		# Force scroll to absolute bottom
 		combat_log_scroll.scroll_vertical = int(scrollbar.max_value) + 100
-		# Reset flag after a frame to allow the scroll to complete
-		await get_tree().process_frame
-		_is_auto_scrolling = false
+		# Reset flag after a short delay to allow the scroll to complete
+		# Use call_deferred to avoid async issues
+		call_deferred("_reset_auto_scroll_flag")
+
+func _reset_auto_scroll_flag() -> void:
+	"""Reset the auto-scroll flag after scroll completes"""
+	_is_auto_scrolling = false
 
 func _on_combat_log_scrolled(_value: float) -> void:
 	"""Called when user manually scrolls the combat log"""

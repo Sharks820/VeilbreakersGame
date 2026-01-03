@@ -62,26 +62,34 @@ func _ready() -> void:
 	if not shadow_sprite:
 		_create_shadow()
 	
-	# Create animator
-	_animator = SpriteSheetAnimatorScript.new()
-	_animator.name = "Animator"
-	add_child(_animator)
+	# Create animator ONLY if not already created by setup()
+	if not _animator:
+		_animator = SpriteSheetAnimatorScript.new()
+		_animator.name = "Animator"
+		add_child(_animator)
+		
+		# Connect animator signals
+		_animator.animation_event.connect(_on_animation_event)
+		_animator.animation_finished.connect(_on_animation_finished)
+		_animator.hit_frame_reached.connect(_on_hit_frame)
 	
-	# Connect animator signals
-	_animator.animation_event.connect(_on_animation_event)
-	_animator.animation_finished.connect(_on_animation_finished)
-	_animator.hit_frame_reached.connect(_on_hit_frame)
+	print("[BattleMonsterSprite] _ready complete for %s, animator in tree: %s" % [monster_id, _animator.is_inside_tree() if _animator else false])
 
 func setup(p_monster_id: String, p_is_enemy: bool = true) -> void:
 	"""Initialize the battle sprite for a specific monster"""
 	monster_id = p_monster_id
 	is_enemy = p_is_enemy
 	
+	print("[BattleMonsterSprite] setup() called for %s, is_enemy=%s, animator exists=%s, in_tree=%s" % [
+		monster_id, is_enemy, _animator != null, is_inside_tree()
+	])
+	
 	# Ensure animator exists (may be called before _ready)
 	if not _animator:
 		_animator = SpriteSheetAnimatorScript.new()
 		_animator.name = "Animator"
 		add_child(_animator)
+		print("[BattleMonsterSprite] Created animator in setup(), in_tree=%s" % [_animator.is_inside_tree()])
 		# Connect signals
 		if _animator.has_signal("animation_event"):
 			_animator.animation_event.connect(_on_animation_event)

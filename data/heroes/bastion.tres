@@ -41,7 +41,7 @@ resistance_growth = 0.7
 speed_growth = 0.25
 luck_growth = 0.25
 
-innate_skills = ["attack_basic", "defend", "shield_bash"]
+innate_skills = ["attack_basic", "defend", "shield_bash", "taunt"]
 learnable_skills = {5: "taunt", 10: "iron_wall", 15: "cover_ally", 20: "fortress_stance", 25: "unbreakable"}
 ultimate_skill = "last_bastion"
 

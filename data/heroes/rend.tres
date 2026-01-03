@@ -41,7 +41,7 @@ resistance_growth = 0.3
 speed_growth = 0.6
 luck_growth = 0.4
 
-innate_skills = ["attack_basic", "defend", "rending_strike"]
+innate_skills = ["attack_basic", "defend", "rending_strike", "bloodletting"]
 learnable_skills = {5: "bloodletting", 10: "predator_leap", 15: "execute", 20: "frenzy", 25: "apex_fury"}
 ultimate_skill = "avatar_of_the_hunt"
 

@@ -41,7 +41,7 @@ resistance_growth = 0.6
 speed_growth = 0.4
 luck_growth = 0.5
 
-innate_skills = ["attack_basic", "defend", "life_tap"]
+innate_skills = ["attack_basic", "defend", "life_tap", "siphon_heal"]
 learnable_skills = {5: "siphon_heal", 10: "essence_transfer", 15: "pain_split", 20: "life_link", 25: "mass_drain"}
 ultimate_skill = "vessel_of_souls"
 

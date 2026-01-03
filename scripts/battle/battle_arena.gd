@@ -975,13 +975,30 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 	
 	print("[BattleArena] Action animation: %s, action=%d, has_animated_sprite=%s" % [character.character_name, action, str(animated_sprite != null)])
 	
+	# Get original transform for ALL animations (both sprite sheet and tween-only)
+	var dir := -1.0 if is_enemy else 1.0  # Direction multiplier
+	var original_global_pos := sprite.global_position
+	var original_scale := sprite.scale
+	var original_rotation := sprite.rotation_degrees
+	
+	# Get target GLOBAL position for attack/skill animations
+	var target_global_pos := original_global_pos + Vector2(150 * dir, 0)  # Default: move forward
+	var current_target: CharacterBase = character.get_meta("current_target", null)
+	if current_target:
+		var target_sprite: Node2D = current_target.get_meta("battle_sprite", null)
+		if target_sprite:
+			target_global_pos = target_sprite.global_position
+			print("[BattleArena] Target found: %s at global pos %s" % [current_target.character_name, target_global_pos])
+	
 	if animated_sprite and animated_sprite.has_method("play_attack"):
-		# Use the new sprite sheet animation system
+		# Use the new sprite sheet animation system WITH movement tweens
 		print("[BattleArena] Using animated sprite for %s" % character.character_name)
 		match action:
 			Enums.BattleAction.ATTACK:
-				print("[BattleArena] Playing attack animation")
+				print("[BattleArena] Playing attack animation with movement")
+				# Play sprite sheet animation AND movement tween together
 				animated_sprite.play_attack()
+				_play_attack_movement_tween(sprite, original_global_pos, original_scale, original_rotation, target_global_pos)
 			
 			Enums.BattleAction.SKILL:
 				var current_skill: SkillData = character.get_meta("current_skill", null)
@@ -989,12 +1006,16 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 					animated_sprite.play_skill(current_skill.skill_id)
 				else:
 					animated_sprite.play_attack()
+				# Add skill movement
+				_play_skill_movement_tween(sprite, original_global_pos, original_scale, target_global_pos)
 			
 			Enums.BattleAction.DEFEND:
 				animated_sprite.play_idle()  # Defend uses idle with effect
+				_play_defend_tween(sprite, original_scale)
 			
 			Enums.BattleAction.PURIFY:
 				animated_sprite.play_skill("purify")
+				_play_purify_tween(sprite, original_scale)
 			
 			Enums.BattleAction.ITEM:
 				animated_sprite.play_idle()
@@ -1002,23 +1023,8 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 			Enums.BattleAction.FLEE:
 				animated_sprite.play_idle()
 	else:
-		# Use simple, reliable tween animations directly
+		# Use simple, reliable tween animations directly (no sprite sheet)
 		print("[BattleArena] Using direct tween animation for %s" % character.character_name)
-		var dir := -1.0 if is_enemy else 1.0  # Direction multiplier
-		
-		# IMPORTANT: Use global_position for cross-container animations
-		var original_global_pos := sprite.global_position
-		var original_scale := sprite.scale
-		var original_rotation := sprite.rotation_degrees
-		
-		# Get target GLOBAL position for attack animations
-		var target_global_pos := original_global_pos + Vector2(150 * dir, 0)  # Default: move forward
-		var current_target: CharacterBase = character.get_meta("current_target", null)
-		if current_target:
-			var target_sprite: Node2D = current_target.get_meta("battle_sprite", null)
-			if target_sprite:
-				target_global_pos = target_sprite.global_position
-				print("[BattleArena] Target found: %s at global pos %s" % [current_target.character_name, target_global_pos])
 		
 		match action:
 			Enums.BattleAction.ATTACK:
@@ -1044,6 +1050,52 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 			Enums.BattleAction.FLEE:
 				print("[BattleArena] Playing FLEE animation")
 				_play_flee_tween_global(sprite, dir, original_global_pos)
+
+# =============================================================================
+# MOVEMENT-ONLY TWEENS (For use WITH sprite sheet animations)
+# =============================================================================
+
+func _play_attack_movement_tween(sprite: Node2D, original_global_pos: Vector2, original_scale: Vector2, original_rot: float, target_global_pos: Vector2) -> void:
+	"""Movement tween for attack - used alongside sprite sheet animations"""
+	# Calculate direction and strike position (stop just before target for contact)
+	var direction := (target_global_pos - original_global_pos).normalized()
+	var distance := original_global_pos.distance_to(target_global_pos)
+	var strike_global_pos := original_global_pos + direction * (distance - 60)  # Stop 60px from target for contact
+	var pullback_global_pos := original_global_pos - direction * 25  # Pull back opposite direction
+	
+	print("[BattleArena] Attack movement tween: from %s to %s (distance=%d)" % [original_global_pos, strike_global_pos, int(distance)])
+	
+	var tween := create_tween()
+	# Anticipation - pull back slightly
+	tween.tween_property(sprite, "global_position", pullback_global_pos, 0.1).set_ease(Tween.EASE_OUT)
+	
+	# Strike - RUSH toward target (this is where contact happens!)
+	tween.tween_property(sprite, "global_position", strike_global_pos, 0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	
+	# Hold at impact briefly
+	tween.tween_interval(0.15)
+	
+	# Recovery - return to original position
+	tween.tween_property(sprite, "global_position", original_global_pos, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+
+func _play_skill_movement_tween(sprite: Node2D, original_global_pos: Vector2, original_scale: Vector2, target_global_pos: Vector2) -> void:
+	"""Movement tween for skills - used alongside sprite sheet animations"""
+	# Calculate direction toward target
+	var direction := (target_global_pos - original_global_pos).normalized()
+	var thrust_global_pos := original_global_pos + direction * 50  # Move partway toward target
+	
+	var tween := create_tween()
+	# Channel - rise up
+	tween.tween_property(sprite, "global_position", original_global_pos + Vector2(0, -20), 0.2)
+	
+	# Release - thrust toward target
+	tween.tween_property(sprite, "global_position", thrust_global_pos, 0.12).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	
+	# Hold briefly
+	tween.tween_interval(0.12)
+	
+	# Return
+	tween.tween_property(sprite, "global_position", original_global_pos, 0.25).set_ease(Tween.EASE_OUT)
 
 # =============================================================================
 # SIMPLE TWEEN ANIMATIONS (Reliable, no async issues)
