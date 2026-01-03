@@ -131,23 +131,28 @@ func _setup_static_sprite() -> void:
 	main_sprite.flip_h = not is_enemy
 
 func _create_shadow() -> void:
-	"""Create a simple shadow under the monster"""
+	"""Create a shadow under the monster - special red pulsing shadow for Hollow"""
 	shadow_sprite = Sprite2D.new()
 	shadow_sprite.name = "Shadow"
+	
+	# Check if this is a Hollow - they get a special red glowing shadow
+	var is_hollow: bool = monster_id == "hollow"
+	var shadow_color: Color = Color(0.8, 0.1, 0.1) if is_hollow else Color(0, 0, 0)
+	var base_alpha: float = 0.6 if is_hollow else 0.4
 	
 	# Create a simple ellipse texture for shadow
 	var shadow_image := Image.create(64, 32, false, Image.FORMAT_RGBA8)
 	shadow_image.fill(Color(0, 0, 0, 0))
 	
-	# Draw ellipse shadow
+	# Draw ellipse shadow with optional color
 	for x in range(64):
 		for y in range(32):
 			var dx := (x - 32.0) / 32.0
 			var dy := (y - 16.0) / 16.0
 			var dist := dx * dx + dy * dy
 			if dist < 1.0:
-				var alpha := (1.0 - dist) * 0.4
-				shadow_image.set_pixel(x, y, Color(0, 0, 0, alpha))
+				var alpha := (1.0 - dist) * base_alpha
+				shadow_image.set_pixel(x, y, Color(shadow_color.r, shadow_color.g, shadow_color.b, alpha))
 	
 	var shadow_texture := ImageTexture.create_from_image(shadow_image)
 	shadow_sprite.texture = shadow_texture
@@ -155,12 +160,42 @@ func _create_shadow() -> void:
 	shadow_sprite.z_index = -1
 	
 	add_child(shadow_sprite)
+	
+	# Start pulsing animation for Hollow's red shadow
+	if is_hollow:
+		_start_hollow_shadow_pulse()
+
+var _shadow_pulse_tween: Tween = null
+
+func _start_hollow_shadow_pulse() -> void:
+	"""Start the red pulsing/cycling animation for Hollow's shadow"""
+	if not shadow_sprite:
+		return
+	
+	# Kill any existing tween
+	if _shadow_pulse_tween and _shadow_pulse_tween.is_valid():
+		_shadow_pulse_tween.kill()
+	
+	# Create infinite looping pulse animation
+	_shadow_pulse_tween = create_tween().set_loops()
+	_shadow_pulse_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
+	
+	# Pulse cycle: scale up + brighten, then scale down + dim
+	# Phase 1: Expand and brighten (1.2s)
+	_shadow_pulse_tween.tween_property(shadow_sprite, "scale", Vector2(4.5, 3.0), 1.2).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_shadow_pulse_tween.parallel().tween_property(shadow_sprite, "modulate", Color(1.5, 0.8, 0.8, 1.0), 1.2).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	
+	# Phase 2: Contract and dim (1.2s)
+	_shadow_pulse_tween.tween_property(shadow_sprite, "scale", Vector2(3.0, 2.0), 1.2).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_shadow_pulse_tween.parallel().tween_property(shadow_sprite, "modulate", Color(1.0, 0.5, 0.5, 0.8), 1.2).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 func _update_shadow() -> void:
 	"""Update shadow size based on monster scale"""
 	if shadow_sprite and main_sprite:
 		var monster_scale: float = main_sprite.scale.x
-		shadow_sprite.scale = Vector2(monster_scale * 3, monster_scale * 2)
+		# Don't override Hollow's pulsing shadow scale
+		if monster_id != "hollow":
+			shadow_sprite.scale = Vector2(monster_scale * 3, monster_scale * 2)
 
 func _create_particle_systems() -> void:
 	"""Create reusable particle emitters for various effects"""
