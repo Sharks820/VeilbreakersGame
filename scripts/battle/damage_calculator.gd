@@ -116,21 +116,31 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	var attack := attacker.get_stat(scaling_stat)
 	var defense := defender.get_stat(defense_stat)
 
-	# Level scaling - BALANCED for challenging but fair combat
-	# Target: ~25-50 damage per hit, battles last 3-5 rounds
-	# Previous settings were TOO LOW - player skills barely scratched enemies
-	# New: Level matters moderately (1.0 to 1.2 range at level 10)
-	var level_factor := 1.0 + (float(attacker.level) / 50.0)  # Level 10 = 1.2x
-
-	# Base formula with REDUCED defense scaling
-	# Defense reduces damage but doesn't negate it - battles should be FAST and FUN
-	var defense_multiplier := 0.8  # Defense counts 0.8x (was 1.3 - way too high)
-	var effective_defense := maxf(5.0, defense * defense_multiplier)
+	# =============================================================================
+	# BALANCED DAMAGE FORMULA v2
+	# =============================================================================
+	# Problem: Pure ATK/DEF ratio crushes low-ATK heroes (Mirage ATK 5 = 1 damage)
+	# Solution: Additive formula with base damage + stat scaling
+	#
+	# Target damage ranges (vs ~60 HP enemy):
+	#   - Basic Attack: 15-25 damage (3-4 hits to kill)
+	#   - Skills: 25-40 damage (2-3 hits to kill)
+	#   - Rend (DPS): Should be ~30% higher than Marrow (healer)
+	# =============================================================================
 	
-	# Damage = Power * (Attack / Defense) * LevelFactor * GlobalScale
-	# INCREASED global scale for more impactful hits
-	var global_damage_scale := 1.2  # 120% (was 0.65 - way too low)
-	var raw_damage := power * (attack / effective_defense) * level_factor * global_damage_scale
+	# Level scaling (subtle: 1.0 at level 1, 1.18 at level 10)
+	var level_factor := 1.0 + (float(attacker.level - 1) * 0.02)
+	
+	# NEW FORMULA: Base + (ATK - DEF/2) scaling
+	# This ensures everyone does meaningful damage while ATK still matters
+	var base_damage := power * 0.8  # 80% of power as guaranteed base (8 for basic attack)
+	var stat_bonus := maxf(0.0, (attack - defense * 0.3) * 0.5)  # ATK matters, DEF reduces but doesn't negate
+	
+	# Combine: base + stat scaling
+	var raw_damage := (base_damage + stat_bonus) * level_factor
+	
+	# Minimum damage floor based on power (skills always do something)
+	raw_damage = maxf(raw_damage, power * 0.5)
 
 	# Brand effectiveness
 	var brand_mod := 1.0
@@ -291,13 +301,12 @@ func preview_damage(attacker: CharacterBase, defender: CharacterBase, skill: Res
 
 	var attack := attacker.get_stat(scaling_stat)
 	var defense := defender.get_stat(defense_stat)
-	# Match the BALANCED scaling from calculate_damage
-	var level_factor := 1.0 + (float(attacker.level) / 50.0)
 	
-	var defense_multiplier := 0.8
-	var effective_defense := maxf(5.0, defense * defense_multiplier)
-	var global_damage_scale := 1.2
-	var base_damage := power * (attack / effective_defense) * level_factor * global_damage_scale
+	# Match the BALANCED v2 formula from calculate_damage
+	var level_factor := 1.0 + (float(attacker.level - 1) * 0.02)
+	var base_dmg := power * 0.8
+	var stat_bonus := maxf(0.0, (attack - defense * 0.3) * 0.5)
+	var base_damage := maxf((base_dmg + stat_bonus) * level_factor, power * 0.5)
 
 	# Get brand effectiveness
 	var attacker_brand: Enums.Brand = attacker.brand if "brand" in attacker else Enums.Brand.NONE

@@ -1003,21 +1003,28 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 				animated_sprite.play_idle()
 	else:
 		# Use simple, reliable tween animations directly
-		# The static CharacterBattleAnimator functions have issues with await
 		print("[BattleArena] Using direct tween animation for %s" % character.character_name)
 		var dir := -1.0 if is_enemy else 1.0  # Direction multiplier
 		var original_pos := sprite.position
 		var original_scale := sprite.scale
 		var original_rotation := sprite.rotation_degrees
 		
+		# Get target position for attack animations
+		var target_pos := original_pos + Vector2(150 * dir, 0)  # Default: move forward
+		var current_target: CharacterBase = character.get_meta("current_target", null)
+		if current_target:
+			var target_sprite: Node2D = current_target.get_meta("battle_sprite", null)
+			if target_sprite:
+				target_pos = target_sprite.position
+		
 		match action:
 			Enums.BattleAction.ATTACK:
-				print("[BattleArena] Playing ATTACK animation")
-				_play_attack_tween(sprite, dir, original_pos, original_scale, original_rotation)
+				print("[BattleArena] Playing ATTACK animation toward target")
+				_play_attack_tween_to_target(sprite, original_pos, original_scale, original_rotation, target_pos)
 			
 			Enums.BattleAction.SKILL:
 				print("[BattleArena] Playing SKILL animation")
-				_play_skill_tween(sprite, dir, original_pos, original_scale, original_rotation)
+				_play_skill_tween_to_target(sprite, original_pos, original_scale, target_pos)
 			
 			Enums.BattleAction.DEFEND:
 				print("[BattleArena] Playing DEFEND animation")
@@ -1039,39 +1046,61 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 # SIMPLE TWEEN ANIMATIONS (Reliable, no async issues)
 # =============================================================================
 
-func _play_attack_tween(sprite: Node2D, dir: float, original_pos: Vector2, original_scale: Vector2, original_rot: float) -> void:
+func _play_attack_tween_to_target(sprite: Node2D, original_pos: Vector2, original_scale: Vector2, original_rot: float, target_pos: Vector2) -> void:
+	# Calculate direction and strike position (stop just before target)
+	var direction := (target_pos - original_pos).normalized()
+	var distance := original_pos.distance_to(target_pos)
+	var strike_pos := original_pos + direction * (distance - 80)  # Stop 80px from target
+	var pullback_pos := original_pos - direction * 20  # Pull back opposite direction
+	
+	# Calculate rotation based on direction
+	var strike_rotation := rad_to_deg(direction.angle()) * 0.15  # Slight lean into attack
+	
 	var tween := create_tween()
 	# Anticipation - pull back
-	tween.tween_property(sprite, "position", original_pos + Vector2(-15 * dir, 0), 0.1)
-	tween.parallel().tween_property(sprite, "scale", original_scale * Vector2(0.95, 1.05), 0.1)
-	tween.parallel().tween_property(sprite, "rotation_degrees", original_rot - 5 * dir, 0.1)
-	# Strike - lunge forward
-	tween.tween_property(sprite, "position", original_pos + Vector2(60 * dir, 0), 0.08)
-	tween.parallel().tween_property(sprite, "scale", original_scale * Vector2(1.1, 0.95), 0.08)
-	tween.parallel().tween_property(sprite, "rotation_degrees", original_rot + 8 * dir, 0.08)
-	# Flash white on impact
-	tween.tween_property(sprite, "modulate", Color(1.5, 1.5, 1.5, 1.0), 0.03)
+	tween.tween_property(sprite, "position", pullback_pos, 0.12)
+	tween.parallel().tween_property(sprite, "scale", original_scale * Vector2(0.95, 1.05), 0.12)
+	tween.parallel().tween_property(sprite, "rotation_degrees", original_rot - strike_rotation, 0.12)
+	
+	# Strike - RUSH toward target
+	tween.tween_property(sprite, "position", strike_pos, 0.1).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.parallel().tween_property(sprite, "scale", original_scale * Vector2(1.15, 0.9), 0.1)
+	tween.parallel().tween_property(sprite, "rotation_degrees", original_rot + strike_rotation * 2, 0.1)
+	
+	# Impact flash
+	tween.tween_property(sprite, "modulate", Color(1.8, 1.8, 1.8, 1.0), 0.03)
 	tween.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.05)
-	# Recovery - return to original
-	tween.tween_property(sprite, "position", original_pos, 0.15)
-	tween.parallel().tween_property(sprite, "scale", original_scale, 0.15)
-	tween.parallel().tween_property(sprite, "rotation_degrees", original_rot, 0.15)
+	
+	# Hold at impact briefly
+	tween.tween_interval(0.05)
+	
+	# Recovery - return to original position
+	tween.tween_property(sprite, "position", original_pos, 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tween.parallel().tween_property(sprite, "scale", original_scale, 0.2)
+	tween.parallel().tween_property(sprite, "rotation_degrees", original_rot, 0.2)
 
-func _play_skill_tween(sprite: Node2D, dir: float, original_pos: Vector2, original_scale: Vector2, original_rot: float) -> void:
+func _play_skill_tween_to_target(sprite: Node2D, original_pos: Vector2, original_scale: Vector2, target_pos: Vector2) -> void:
+	# Calculate direction toward target
+	var direction := (target_pos - original_pos).normalized()
+	var thrust_pos := original_pos + direction * 50  # Move partway toward target
+	
 	var tween := create_tween()
 	# Channel - rise and glow
-	tween.tween_property(sprite, "position", original_pos + Vector2(0, -15), 0.2)
-	tween.parallel().tween_property(sprite, "scale", original_scale * Vector2(1.05, 1.05), 0.2)
-	tween.parallel().tween_property(sprite, "modulate", Color(1.3, 1.2, 1.4, 1.0), 0.2)
-	# Release - thrust forward
-	tween.tween_property(sprite, "position", original_pos + Vector2(40 * dir, -5), 0.1)
-	tween.parallel().tween_property(sprite, "modulate", Color(1.5, 1.4, 1.6, 1.0), 0.1)
-	# Flash
-	tween.tween_property(sprite, "modulate", Color(2.0, 1.8, 2.2, 1.0), 0.05)
+	tween.tween_property(sprite, "position", original_pos + Vector2(0, -20), 0.25)
+	tween.parallel().tween_property(sprite, "scale", original_scale * Vector2(1.08, 1.08), 0.25)
+	tween.parallel().tween_property(sprite, "modulate", Color(1.4, 1.3, 1.6, 1.0), 0.25)
+	
+	# Release - thrust toward target
+	tween.tween_property(sprite, "position", thrust_pos, 0.12)
+	tween.parallel().tween_property(sprite, "modulate", Color(1.8, 1.6, 2.0, 1.0), 0.12)
+	
+	# Flash on release
+	tween.tween_property(sprite, "modulate", Color(2.5, 2.2, 2.8, 1.0), 0.05)
+	
 	# Recovery
-	tween.tween_property(sprite, "position", original_pos, 0.2)
-	tween.parallel().tween_property(sprite, "scale", original_scale, 0.2)
-	tween.parallel().tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.2)
+	tween.tween_property(sprite, "position", original_pos, 0.25)
+	tween.parallel().tween_property(sprite, "scale", original_scale, 0.25)
+	tween.parallel().tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.25)
 
 func _play_defend_tween(sprite: Node2D, original_scale: Vector2) -> void:
 	var tween := create_tween()

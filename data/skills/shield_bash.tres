@@ -20,7 +20,7 @@ mp_cost = 4
 hp_cost = 0
 cooldown_turns = 0
 
-base_power = 15
+base_power = 12
 scaling_stat = 5
 scaling_ratio = 0.8
 hit_count = 1
