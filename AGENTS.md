@@ -1,6 +1,6 @@
 # VEILBREAKERS - Agent Instructions
 
-> Godot 4.5 | GDScript | Turn-Based Monster-Capturing RPG | **v0.67**
+> Godot 4.5 | GDScript | Turn-Based Monster-Capturing RPG | **v0.72**
 
 ---
 

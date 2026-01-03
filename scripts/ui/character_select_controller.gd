@@ -68,9 +68,12 @@ var confirm_button: Button = null
 var back_button: Button = null
 
 # Animation tweens
-var _breathing_tween: Tween = null
 var _selection_tween: Tween = null
 var _vera_tween: Tween = null
+
+# Breathing animation state (using _process for smooth per-frame animation)
+var _breathing_time: float = 0.0
+var _breathing_enabled: bool = false
 
 # =============================================================================
 # LIFECYCLE
@@ -84,6 +87,14 @@ func _ready() -> void:
 	
 	# Initial VERA greeting
 	_show_vera_dialogue("Welcome, Hunter. I am VERA - your Virtual Entity for Reconnaissance and Analysis. Choose your champion wisely. Each walks a different Path, and the monsters you capture will resonate with that choice.")
+
+func _process(delta: float) -> void:
+	# Smooth breathing animation using sine wave - no frame skipping
+	if _breathing_enabled and hero_portrait:
+		_breathing_time += delta
+		# Gentle sine wave: 1.5 Hz frequency, 2% amplitude
+		var breath: float = sin(_breathing_time * 1.5) * 0.02
+		hero_portrait.scale = Vector2(1.0 + breath, 1.0 + breath)
 
 func _load_all_data() -> void:
 	"""Load all hero and monster data"""
@@ -939,19 +950,19 @@ func _setup_animations() -> void:
 	_start_breathing_animation()
 
 func _start_breathing_animation() -> void:
-	if _breathing_tween and _breathing_tween.is_valid():
-		_breathing_tween.kill()
-	
 	if not hero_portrait:
 		return
 	
-	# Smoother breathing animation - use _process for frame-perfect smoothness instead of tweens
-	# Tweens can cause micro-stuttering on small scale changes
-	# Using larger scale range (1.0 to 1.04) and slower timing for natural feel
-	_breathing_tween = create_tween().set_loops()
-	_breathing_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)  # Process during idle for smoothness
-	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.04, 1.04), 2.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.0, 1.0), 2.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	# Enable smooth per-frame breathing animation via _process()
+	# This avoids the frame-skipping issues that tweens cause on small scale changes
+	_breathing_time = 0.0
+	_breathing_enabled = true
+	hero_portrait.scale = Vector2(1.0, 1.0)
+
+func _stop_breathing_animation() -> void:
+	_breathing_enabled = false
+	if hero_portrait:
+		hero_portrait.scale = Vector2(1.0, 1.0)
 
 # =============================================================================
 # INPUT HANDLING
