@@ -882,28 +882,41 @@ func _execute_attack(attacker: CharacterBase, target: CharacterBase) -> Dictiona
 		vfx_command.emit("screen_flash", {"color": Color.WHITE, "duration": 0.1})
 		audio_command.emit("play_sfx", {"sound": "critical_hit"})
 
-	# Check if target is being defended by an ally
+	# Check if target has GUARDED status (being protected by an ally or self-defending)
 	var actual_target: CharacterBase = target
 	var damage_to_apply: int = result.damage
 	
-	if target.has_meta("defended_by"):
-		var defender: CharacterBase = target.get_meta("defended_by")
-		if is_instance_valid(defender) and defender.is_defending:
-			# Redirect damage to defender (50% damage reduction since they're defending)
-			actual_target = defender
-			damage_to_apply = int(result.damage * 0.5)
-			
-			# Clear the defend relationship after use
-			target.remove_meta("defended_by")
-			defender.remove_meta("defending_target")
-			defender.set_defending(false)
-			
-			ui_command.emit("show_status_popup", {
-				"target": defender,
-				"status": "PROTECTED %s!" % target.character_name.to_upper(),
-				"positive": true
-			})
-			EventBus.emit_debug("%s protected %s, taking %d damage instead!" % [defender.character_name, target.character_name, damage_to_apply])
+	if target.has_status_effect(Enums.StatusEffect.GUARDED):
+		# Apply 30% damage reduction for GUARDED status
+		damage_to_apply = int(result.damage * 0.7)  # 30% reduction = 70% of original
+		
+		# Check if being guarded by an ally (damage redirects to guardian)
+		if target.has_meta("guarded_by"):
+			var guardian: CharacterBase = target.get_meta("guarded_by")
+			if is_instance_valid(guardian) and guardian.is_alive() and guardian.is_defending:
+				# Redirect damage to the guardian (they take the reduced damage)
+				actual_target = guardian
+				
+				ui_command.emit("show_status_popup", {
+					"target": guardian,
+					"status": "PROTECTED %s!" % target.character_name.to_upper(),
+					"positive": true
+				})
+				EventBus.emit_debug("%s protected %s, taking %d damage (30%% reduced)!" % [guardian.character_name, target.character_name, damage_to_apply])
+				
+				# Clear the guard relationship after use
+				target.remove_meta("guarded_by")
+				guardian.remove_meta("guarding_target")
+				guardian.set_defending(false)
+			else:
+				# Guardian is dead/invalid - target takes reduced damage themselves
+				EventBus.emit_debug("%s's GUARDED status reduced damage by 30%% (%d -> %d)" % [target.character_name, result.damage, damage_to_apply])
+		else:
+			# Self-defending - just apply the reduction
+			EventBus.emit_debug("%s's GUARDED status reduced damage by 30%% (%d -> %d)" % [target.character_name, result.damage, damage_to_apply])
+		
+		# Remove GUARDED status after first hit (consumed on use)
+		target.remove_status_effect(Enums.StatusEffect.GUARDED)
 	
 	# Damage number
 	vfx_command.emit("spawn_damage_number", {
@@ -1152,38 +1165,49 @@ func _execute_defend(character: CharacterBase, target: CharacterBase = null) -> 
 	# If no target specified, defend self
 	var defend_target: CharacterBase = target if target != null else character
 	
-	# Check if target is already being defended by someone else
-	if defend_target != character and defend_target.has_meta("defended_by"):
-		var existing_defender: CharacterBase = defend_target.get_meta("defended_by")
-		if is_instance_valid(existing_defender) and existing_defender.is_defending:
-			# Target is already defended - defender can't double up
-			ui_command.emit("show_message", {"text": "%s is already being defended!" % defend_target.character_name})
-			return {"success": false, "reason": "already_defended"}
+	# Check if target already has GUARDED status (can't double-guard)
+	if defend_target != character and defend_target.has_status_effect(Enums.StatusEffect.GUARDED):
+		ui_command.emit("show_message", {"text": "%s is already being guarded!" % defend_target.character_name})
+		return {"success": false, "reason": "already_guarded"}
 	
+	# Set defender state
 	character.set_defending(true)
 	
-	# If defending an ally, mark the relationship
+	# If defending an ally, apply GUARDED status to them
 	if defend_target != character:
-		defend_target.set_meta("defended_by", character)
-		character.set_meta("defending_target", defend_target)
+		# Apply GUARDED status effect (duration 1 = lasts until end of round or first hit)
+		defend_target.add_status_effect(Enums.StatusEffect.GUARDED, 1, character)
+		
+		# Store the defender reference for damage redirection
+		defend_target.set_meta("guarded_by", character)
+		character.set_meta("guarding_target", defend_target)
 		
 		vfx_command.emit("defend_effect", {"position": defend_target.global_position})
 		audio_command.emit("play_sfx", {"sound": "defend"})
 		
 		ui_command.emit("show_status_popup", {
 			"target": character,
-			"status": "DEFENDING %s" % defend_target.character_name.to_upper(),
+			"status": "GUARDING %s" % defend_target.character_name.to_upper(),
 			"positive": true
 		})
 		
-		EventBus.emit_debug("%s is defending %s" % [character.character_name, defend_target.character_name])
+		ui_command.emit("show_status_popup", {
+			"target": defend_target,
+			"status": "GUARDED",
+			"positive": true
+		})
+		
+		EventBus.emit_debug("%s is guarding %s (30%% damage reduction)" % [character.character_name, defend_target.character_name])
 		return {
 			"success": true, 
 			"defense_boost": character.base_defense * 0.5,
-			"defending_ally": true,
+			"guarding_ally": true,
 			"target_name": defend_target.character_name
 		}
 	else:
+		# Self-defend: apply GUARDED to self for 30% reduction
+		character.add_status_effect(Enums.StatusEffect.GUARDED, 1, character)
+		
 		vfx_command.emit("defend_effect", {"position": character.global_position})
 		audio_command.emit("play_sfx", {"sound": "defend"})
 		
@@ -1193,7 +1217,7 @@ func _execute_defend(character: CharacterBase, target: CharacterBase = null) -> 
 			"positive": true
 		})
 		
-		EventBus.emit_debug("%s is defending" % character.character_name)
+		EventBus.emit_debug("%s is defending (30%% damage reduction)" % character.character_name)
 		return {"success": true, "defense_boost": character.base_defense * 0.5}
 
 func _execute_item(user: CharacterBase, target: CharacterBase, item_id: String) -> Dictionary:
@@ -1500,12 +1524,28 @@ func _decrement_forced_target_turns() -> void:
 				character.set_meta("forced_target_turns", turns)
 
 func _clear_all_defend_relationships() -> void:
-	"""Clear all defend meta data at end of round"""
+	"""Clear all defend/guard meta data and status effects at end of round"""
 	for character in turn_order:
+		# Clear old defend meta (legacy)
 		if character.has_meta("defended_by"):
 			character.remove_meta("defended_by")
 		if character.has_meta("defending_target"):
 			character.remove_meta("defending_target")
+		
+		# Clear new guard meta
+		if character.has_meta("guarded_by"):
+			character.remove_meta("guarded_by")
+		if character.has_meta("guarding_target"):
+			character.remove_meta("guarding_target")
+		
+		# Remove GUARDED status effect if still active (wasn't consumed by an attack)
+		if character.has_status_effect(Enums.StatusEffect.GUARDED):
+			character.remove_status_effect(Enums.StatusEffect.GUARDED)
+			EventBus.emit_debug("%s's GUARDED status expired at end of round" % character.character_name)
+		
+		# Reset defending state
+		if character.is_defending:
+			character.set_defending(false)
 
 func _apply_turn_mp_regen(character: CharacterBase) -> void:
 	"""Regenerate MP at start of turn - allows sustained combat"""
@@ -1757,7 +1797,13 @@ func get_valid_targets(action: Enums.BattleAction, skill_or_item: String = "") -
 					if player.is_alive():
 						targets.append(player)
 
-		Enums.BattleAction.DEFEND, Enums.BattleAction.FLEE:
+		Enums.BattleAction.DEFEND:
+			# Defend can target self or any ally
+			for player in player_party:
+				if player.is_alive():
+					targets.append(player)
+		
+		Enums.BattleAction.FLEE:
 			# No target needed
 			pass
 

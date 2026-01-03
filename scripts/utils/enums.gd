@@ -147,7 +147,8 @@ enum StatusEffect {
 	CORRUPTED,
 	PURIFYING,
 	SORROW,        # DREAD brand debuff - increased damage taken
-	UNTARGETABLE   # Cannot be targeted (underground, intangible, etc.)
+	UNTARGETABLE,  # Cannot be targeted (underground, intangible, etc.)
+	GUARDED        # Being protected by an ally - 30% damage reduction, consumed on first hit
 }
 
 # =============================================================================

@@ -679,10 +679,9 @@ func _on_defend_pressed() -> void:
 	_reset_combat_log_scroll()
 	pending_action = Enums.BattleAction.DEFEND
 	pending_skill = ""
-	# Basic defend = defend SELF immediately (no target selection needed)
-	# The character defends themselves, reducing incoming damage
-	action_selected.emit(pending_action, current_character, "")
-	set_ui_state(UIState.ANIMATING)
+	# Defend now allows targeting self OR any ally
+	# Start ally target selection (includes self)
+	_start_target_selection(true)  # true = target allies (BLUE highlighting)
 
 func _on_flee_pressed() -> void:
 	_reset_combat_log_scroll()
@@ -1574,6 +1573,8 @@ func _get_status_effect_icon_path(effect: Enums.StatusEffect) -> String:
 			return "res://assets/ui/icons/buffs/blessed.png"
 		Enums.StatusEffect.UNTARGETABLE:
 			return "res://assets/ui/icons/buffs/invisible.png"
+		Enums.StatusEffect.GUARDED:
+			return "res://assets/ui/icons/buffs/shield.png"  # Reuse shield icon for guarded
 		_:
 			return ""
 
@@ -1633,7 +1634,7 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 			Enums.StatusEffect.REGEN, Enums.StatusEffect.SHIELD,
 			Enums.StatusEffect.ATTACK_UP, Enums.StatusEffect.DEFENSE_UP,
 			Enums.StatusEffect.SPEED_UP, Enums.StatusEffect.PURIFYING,
-			Enums.StatusEffect.UNTARGETABLE
+			Enums.StatusEffect.UNTARGETABLE, Enums.StatusEffect.GUARDED
 		]
 		
 		if is_buff:
