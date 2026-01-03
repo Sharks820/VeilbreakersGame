@@ -84,6 +84,7 @@ var party_tooltip: PanelContainer = null
 
 # Combat log scroll state
 var user_scrolled_log: bool = false  # True if user manually scrolled
+var _is_auto_scrolling: bool = false  # True during programmatic scroll (ignore scroll events)
 var combat_log_expanded: bool = false  # False = small, True = expanded
 var combat_log_drag_handle: Button = null
 var _log_dragging: bool = false
@@ -670,8 +671,10 @@ func _on_defend_pressed() -> void:
 	_reset_combat_log_scroll()
 	pending_action = Enums.BattleAction.DEFEND
 	pending_skill = ""
-	# Start target selection for allies (defend ally feature)
-	_start_target_selection(true)  # Target allies with BLUE highlights
+	# Basic defend = defend SELF immediately (no target selection needed)
+	# The character defends themselves, reducing incoming damage
+	action_selected.emit(pending_action, current_character, "")
+	set_ui_state(UIState.ANIMATING)
 
 func _on_flee_pressed() -> void:
 	_reset_combat_log_scroll()
@@ -2004,7 +2007,7 @@ func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, g
 	var sep := HSeparator.new()
 	sep.name = "Separator"
 	sep.add_theme_constant_override("separation", 10)
-	sep.modulate = Color(0.4, 0.8, 0.4, 0.5)
+	sep.modulate = Color(0.6, 0.45, 0.25, 0.6)  # Golden amber to match theme
 	container.add_child(sep)
 	
 	# === GOLD & ITEMS ROW ===
@@ -2201,7 +2204,7 @@ func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: f
 	var xp_gained_label := Label.new()
 	xp_gained_label.text = "+%d XP" % xp_gained
 	xp_gained_label.add_theme_font_size_override("font_size", 12)
-	xp_gained_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
+	xp_gained_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))  # Golden to match theme
 	xp_text_row.add_child(xp_gained_label)
 	
 	# XP progress bar
@@ -2210,14 +2213,16 @@ func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: f
 	xp_bar.show_percentage = false
 	xp_section.add_child(xp_bar)
 	
-	# Style the progress bar
+	# Style the progress bar - golden/amber to match victory panel theme
 	var bar_bg := StyleBoxFlat.new()
-	bar_bg.bg_color = Color(0.1, 0.15, 0.1, 0.9)
+	bar_bg.bg_color = Color(0.08, 0.06, 0.04, 0.9)  # Dark brown/black
+	bar_bg.border_color = Color(0.4, 0.3, 0.15, 0.6)  # Subtle golden border
+	bar_bg.set_border_width_all(1)
 	bar_bg.set_corner_radius_all(4)
 	xp_bar.add_theme_stylebox_override("background", bar_bg)
 	
 	var bar_fill := StyleBoxFlat.new()
-	bar_fill.bg_color = Color(0.3, 0.7, 0.3, 1.0)
+	bar_fill.bg_color = Color(0.85, 0.65, 0.25, 1.0)  # Golden amber fill
 	bar_fill.set_corner_radius_all(4)
 	xp_bar.add_theme_stylebox_override("fill", bar_fill)
 	
@@ -3992,18 +3997,25 @@ func update_enemy_sidebar() -> void:
 					panel.modulate.a = 1.0  # Ensure alive enemies are fully visible
 
 func _auto_scroll_combat_log() -> void:
-	"""Auto-scroll combat log to bottom if user hasn't manually scrolled away"""
+	"""Auto-scroll combat log to bottom - ALWAYS scrolls to latest entry"""
 	if not combat_log_scroll:
 		return
-	if user_scrolled_log:
-		return  # User scrolled manually, don't auto-scroll until they interact
+	
 	var scrollbar := combat_log_scroll.get_v_scroll_bar()
 	if scrollbar:
+		# Set flag to ignore scroll events during programmatic scroll
+		_is_auto_scrolling = true
 		# Force scroll to absolute bottom
 		combat_log_scroll.scroll_vertical = int(scrollbar.max_value) + 100
+		# Reset flag after a frame to allow the scroll to complete
+		await get_tree().process_frame
+		_is_auto_scrolling = false
 
 func _on_combat_log_scrolled(_value: float) -> void:
 	"""Called when user manually scrolls the combat log"""
+	# Ignore scroll events triggered by auto-scroll
+	if _is_auto_scrolling:
+		return
 	if not combat_log_scroll:
 		return
 	var scrollbar := combat_log_scroll.get_v_scroll_bar()
@@ -4011,6 +4023,9 @@ func _on_combat_log_scrolled(_value: float) -> void:
 	var at_bottom := scrollbar.value >= scrollbar.max_value - 30
 	if not at_bottom:
 		user_scrolled_log = true
+	else:
+		# User scrolled back to bottom, resume auto-scroll
+		user_scrolled_log = false
 
 func _reset_combat_log_scroll() -> void:
 	"""Reset scroll state when user interacts with battle (button press, target select, etc.)"""

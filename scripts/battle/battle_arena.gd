@@ -1213,16 +1213,22 @@ func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> v
 			print("[BattleArena] Using sprite sheet death animation for %s" % character.character_name)
 			animated_sprite.play_death()
 			
-			# Wait for death animation to complete via signal
+			# Use a one-shot signal connection to hide sprite when animation completes
+			# This works even though we can't await in a signal handler
 			if animated_sprite.has_signal("death_animation_complete"):
-				await animated_sprite.death_animation_complete
+				var hide_callback := func():
+					if is_instance_valid(sprite):
+						sprite.visible = false
+						print("[BattleArena] Sprite sheet death animation complete, sprite hidden")
+				animated_sprite.death_animation_complete.connect(hide_callback, CONNECT_ONE_SHOT)
 			else:
-				# Fallback wait time if signal not available
-				await get_tree().create_timer(1.5).timeout
-			
-			# Hide sprite after animation
-			sprite.visible = false
-			print("[BattleArena] Sprite sheet death animation complete, sprite hidden")
+				# Fallback: use a timer to hide sprite
+				var timer := get_tree().create_timer(1.5)
+				timer.timeout.connect(func():
+					if is_instance_valid(sprite):
+						sprite.visible = false
+						print("[BattleArena] Fallback timer: sprite hidden")
+				)
 			return
 	
 	# Fallback: Clean tween-based death animation for non-sprite-sheet monsters

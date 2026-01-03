@@ -71,9 +71,8 @@ var back_button: Button = null
 var _selection_tween: Tween = null
 var _vera_tween: Tween = null
 
-# Breathing animation state (using _process for smooth per-frame animation)
-var _breathing_time: float = 0.0
-var _breathing_enabled: bool = false
+# Breathing animation tween (smoother than _process-based approach)
+var _breathing_tween: Tween = null
 
 # =============================================================================
 # LIFECYCLE
@@ -88,13 +87,7 @@ func _ready() -> void:
 	# Initial VERA greeting
 	_show_vera_dialogue("Welcome, Hunter. I am VERA - your Virtual Entity for Reconnaissance and Analysis. Choose your champion wisely. Each walks a different Path, and the monsters you capture will resonate with that choice.")
 
-func _process(delta: float) -> void:
-	# Smooth breathing animation using sine wave - no frame skipping
-	if _breathing_enabled and hero_portrait:
-		_breathing_time += delta
-		# Gentle sine wave: 1.5 Hz frequency, 2% amplitude
-		var breath: float = sin(_breathing_time * 1.5) * 0.02
-		hero_portrait.scale = Vector2(1.0 + breath, 1.0 + breath)
+
 
 func _load_all_data() -> void:
 	"""Load all hero and monster data"""
@@ -335,11 +328,11 @@ func _create_hero_card(hero_id: String, index: int) -> PanelContainer:
 	class_label.add_theme_color_override("font_color", class_color)
 	info.add_child(class_label)
 	
-	# Path indicator
+	# Path indicator - use PATH_COLORS for proper coloring
 	var path_label := Label.new()
 	path_label.text = Enums.get_path_name(data.primary_path)
 	path_label.add_theme_font_size_override("font_size", 11)
-	path_label.add_theme_color_override("font_color", Color(0.6, 0.55, 0.5))
+	path_label.add_theme_color_override("font_color", PATH_COLORS.get(data.primary_path, Color(0.6, 0.55, 0.5)))
 	info.add_child(path_label)
 	
 	# Connect signals
@@ -822,6 +815,9 @@ func _animate_hero_change(data: HeroData) -> void:
 	if _selection_tween and _selection_tween.is_valid():
 		_selection_tween.kill()
 	
+	# Stop breathing animation during hero change to avoid conflicts
+	_stop_breathing_animation()
+	
 	_selection_tween = create_tween()
 	
 	# Fade out
@@ -850,6 +846,9 @@ func _animate_hero_change(data: HeroData) -> void:
 	_selection_tween.tween_property(hero_portrait, "modulate:a", 1.0, 0.18)
 	_selection_tween.parallel().tween_property(hero_portrait, "scale", Vector2(1.08, 1.08), 0.12).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	_selection_tween.tween_property(hero_portrait, "scale", Vector2(1.0, 1.0), 0.08)
+	
+	# Restart breathing animation after hero change completes
+	_selection_tween.tween_callback(_start_breathing_animation)
 
 func _update_info_panel(data: HeroData) -> void:
 	"""Update the info panel with hero data"""
@@ -956,17 +955,27 @@ func _setup_animations() -> void:
 	_start_breathing_animation()
 
 func _start_breathing_animation() -> void:
+	"""Start smooth tween-based breathing animation on hero portrait"""
 	if not hero_portrait:
 		return
 	
-	# Enable smooth per-frame breathing animation via _process()
-	# This avoids the frame-skipping issues that tweens cause on small scale changes
-	_breathing_time = 0.0
-	_breathing_enabled = true
+	# Kill any existing breathing tween
+	if _breathing_tween and _breathing_tween.is_valid():
+		_breathing_tween.kill()
+	
 	hero_portrait.scale = Vector2(1.0, 1.0)
+	
+	# Smooth breathing: 3% amplitude, 3 second full cycle (inhale + exhale)
+	# Uses EASE_IN_OUT + TRANS_SINE for natural breathing motion
+	_breathing_tween = create_tween().set_loops()
+	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.03, 1.03), 1.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.0, 1.0), 1.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 func _stop_breathing_animation() -> void:
-	_breathing_enabled = false
+	"""Stop breathing animation and reset scale"""
+	if _breathing_tween and _breathing_tween.is_valid():
+		_breathing_tween.kill()
+	_breathing_tween = null
 	if hero_portrait:
 		hero_portrait.scale = Vector2(1.0, 1.0)
 
@@ -1077,21 +1086,29 @@ func _show_confirmation_popup(hero_name: String, hero_id: String) -> void:
 	if _confirmation_popup and is_instance_valid(_confirmation_popup):
 		_confirmation_popup.queue_free()
 	
-	# Create popup overlay
-	var overlay := ColorRect.new()
+	# Create popup overlay - use Control instead of ColorRect for proper child centering
+	var overlay := Control.new()
 	overlay.name = "ConfirmOverlay"
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	overlay.color = Color(0, 0, 0, 0.6)
 	add_child(overlay)
+	
+	# Add dark background
+	var bg := ColorRect.new()
+	bg.name = "Background"
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0, 0, 0, 0.6)
+	overlay.add_child(bg)
+	
+	# Use CenterContainer to properly center the popup
+	var center := CenterContainer.new()
+	center.name = "CenterContainer"
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
 	
 	# Create popup panel
 	_confirmation_popup = PanelContainer.new()
 	_confirmation_popup.name = "ConfirmationPopup"
-	_confirmation_popup.set_anchors_preset(Control.PRESET_CENTER)
-	_confirmation_popup.offset_left = -250
-	_confirmation_popup.offset_right = 250
-	_confirmation_popup.offset_top = -120
-	_confirmation_popup.offset_bottom = 120
+	_confirmation_popup.custom_minimum_size = Vector2(500, 240)
 	
 	var popup_style := StyleBoxFlat.new()
 	popup_style.bg_color = Color(0.06, 0.06, 0.09, 0.98)
@@ -1105,7 +1122,7 @@ func _show_confirmation_popup(hero_name: String, hero_id: String) -> void:
 	popup_style.content_margin_top = 25
 	popup_style.content_margin_bottom = 25
 	_confirmation_popup.add_theme_stylebox_override("panel", popup_style)
-	overlay.add_child(_confirmation_popup)
+	center.add_child(_confirmation_popup)
 	
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 20)
@@ -1149,7 +1166,8 @@ func _show_confirmation_popup(hero_name: String, hero_id: String) -> void:
 	# Animate popup entrance
 	_confirmation_popup.modulate.a = 0.0
 	_confirmation_popup.scale = Vector2(0.8, 0.8)
-	_confirmation_popup.pivot_offset = _confirmation_popup.size / 2
+	# Set pivot to center of the popup for proper scale animation
+	_confirmation_popup.pivot_offset = _confirmation_popup.custom_minimum_size / 2
 	
 	var tween := create_tween()
 	tween.set_parallel(true)
@@ -1200,9 +1218,11 @@ func _on_back_pressed() -> void:
 # =============================================================================
 
 func _exit_tree() -> void:
-	# Stop breathing animation (now handled via _process, not tween)
+	# Stop all animations
 	_stop_breathing_animation()
 	if _selection_tween and _selection_tween.is_valid():
 		_selection_tween.kill()
 	if _vera_tween and _vera_tween.is_valid():
 		_vera_tween.kill()
+	if _vera_portrait_tween and _vera_portrait_tween.is_valid():
+		_vera_portrait_tween.kill()

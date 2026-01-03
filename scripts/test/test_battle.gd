@@ -704,6 +704,14 @@ func _display_vera_tutorial(dialogue: Dictionary) -> void:
 	# Add darkening overlay behind the panel
 	_show_tutorial_overlay()
 	
+	# Show highlight and arrow FIRST (before text) so user sees what we're referring to
+	# This also ensures the UI elements are captured before any state changes
+	if dialogue.highlight != "":
+		_highlight_ui_element(dialogue.highlight)
+	
+	if dialogue.has("arrow_target") and dialogue.arrow_target != "":
+		_show_tutorial_arrow(dialogue.arrow_target)
+	
 	vera_tutorial_panel.visible = true
 	
 	# Update content - use new node paths
@@ -733,14 +741,6 @@ func _display_vera_tutorial(dialogue: Dictionary) -> void:
 		i = mini(i + chars_per_tick, full_text.length())
 		text_label.text = full_text.substr(0, i)
 		await get_tree().create_timer(0.008).timeout  # 8ms per tick (was 15ms per char)
-	
-	# Highlight relevant UI element if specified
-	if dialogue.highlight != "":
-		_highlight_ui_element(dialogue.highlight)
-	
-	# Show arrow indicator if specified
-	if dialogue.has("arrow_target") and dialogue.arrow_target != "":
-		_show_tutorial_arrow(dialogue.arrow_target)
 	
 	# Wait briefly then show continue button
 	await get_tree().create_timer(0.3).timeout
@@ -991,31 +991,47 @@ func _highlight_ui_element(element_name: String) -> void:
 	if battle_arena:
 		ui_controller = battle_arena.get_node_or_null("UILayer/BattleUI")
 	
+	if ui_controller:
+		print("[Tutorial] Found BattleUI at: %s" % ui_controller.get_path())
+	else:
+		print("[Tutorial] WARNING: Could not find UILayer/BattleUI!")
+	
 	var target_rect: Rect2 = Rect2()
 	var found := false
 	
 	match element_name:
 		"action_bar":
-			# Find the PartyPanel which contains action buttons
+			# Find the ActionMenu which contains action buttons
 			if ui_controller:
-				var party_panel := ui_controller.get_node_or_null("PartyPanel")
-				if party_panel and party_panel.visible:
-					target_rect = Rect2(party_panel.global_position, party_panel.size)
+				var action_menu := ui_controller.get_node_or_null("PartyPanel/VBoxContainer/ActionMenu")
+				if action_menu and action_menu.visible:
+					target_rect = Rect2(action_menu.global_position, action_menu.size)
 					found = true
+					print("[Tutorial] Found ActionMenu at global_pos: %s, size: %s" % [action_menu.global_position, action_menu.size])
+				else:
+					# Try PartyPanel as fallback
+					var party_panel := ui_controller.get_node_or_null("PartyPanel")
+					if party_panel and party_panel.visible:
+						target_rect = Rect2(party_panel.global_position, party_panel.size)
+						found = true
+						print("[Tutorial] Found PartyPanel at global_pos: %s, size: %s" % [party_panel.global_position, party_panel.size])
 			if not found:
 				# Fallback - bottom center area
 				var vs := get_viewport().get_visible_rect().size
 				target_rect = Rect2(Vector2(vs.x / 2 - 400, vs.y - 110), Vector2(800, 100))
+				print("[Tutorial] Using fallback rect for action_bar")
 		"enemies":
-			# Find the right enemy sidebar
+			# Find the EnemyPanel (NOT RightEnemySidebar - that doesn't exist!)
 			if ui_controller:
-				var enemy_sidebar := ui_controller.get_node_or_null("RightEnemySidebar")
-				if enemy_sidebar and enemy_sidebar.visible:
-					target_rect = Rect2(enemy_sidebar.global_position, enemy_sidebar.size)
+				var enemy_panel := ui_controller.get_node_or_null("EnemyPanel")
+				if enemy_panel and enemy_panel.visible:
+					target_rect = Rect2(enemy_panel.global_position, enemy_panel.size)
 					found = true
+					print("[Tutorial] Found EnemyPanel at global_pos: %s, size: %s" % [enemy_panel.global_position, enemy_panel.size])
 			if not found:
 				var vs := get_viewport().get_visible_rect().size
-				target_rect = Rect2(Vector2(vs.x - 180, 60), Vector2(170, 350))
+				target_rect = Rect2(Vector2(vs.x - 180, 280), Vector2(170, 350))
+				print("[Tutorial] Using fallback rect for enemies")
 		"purify_button":
 			# Find the actual purify button
 			if ui_controller:
@@ -1023,13 +1039,16 @@ func _highlight_ui_element(element_name: String) -> void:
 				if purify_btn and purify_btn.visible:
 					target_rect = Rect2(purify_btn.global_position, purify_btn.size)
 					found = true
+					print("[Tutorial] Found PurifyButton at global_pos: %s, size: %s" % [purify_btn.global_position, purify_btn.size])
 			if not found:
 				var vs := get_viewport().get_visible_rect().size
 				target_rect = Rect2(Vector2(vs.x / 2 - 60, vs.y - 95), Vector2(120, 70))
+				print("[Tutorial] Using fallback rect for purify_button")
 	
 	if target_rect.size.x > 0:
 		var highlight := _create_highlight_rect(target_rect.position, target_rect.size)
 		_highlight_panels.append(highlight)
+		print("[Tutorial] Created highlight at pos: %s, size: %s" % [target_rect.position, target_rect.size])
 
 func _create_highlight_rect(pos: Vector2, size: Vector2) -> Control:
 	"""Create a pulsing highlight rectangle"""
@@ -1093,38 +1112,51 @@ func _show_tutorial_arrow(target: String) -> void:
 	match target:
 		"action_buttons":
 			arrow_label.text = "▼"
-			# Find PartyPanel position
+			# Find ActionMenu position (the actual button container)
 			if ui_controller:
-				var party_panel := ui_controller.get_node_or_null("PartyPanel")
-				if party_panel and party_panel.visible:
-					arrow_pos = party_panel.global_position + Vector2(party_panel.size.x / 2 - 20, -50)
+				var action_menu := ui_controller.get_node_or_null("PartyPanel/VBoxContainer/ActionMenu")
+				if action_menu and action_menu.visible:
+					arrow_pos = action_menu.global_position + Vector2(action_menu.size.x / 2 - 20, -50)
+					print("[Tutorial] Arrow pointing to ActionMenu at: %s" % arrow_pos)
 				else:
-					arrow_pos = Vector2(viewport_size.x / 2 - 20, viewport_size.y - 130)
+					var party_panel := ui_controller.get_node_or_null("PartyPanel")
+					if party_panel and party_panel.visible:
+						arrow_pos = party_panel.global_position + Vector2(party_panel.size.x / 2 - 20, -50)
+						print("[Tutorial] Arrow pointing to PartyPanel at: %s" % arrow_pos)
+					else:
+						arrow_pos = Vector2(viewport_size.x / 2 - 20, viewport_size.y - 130)
+						print("[Tutorial] Arrow using fallback for action_buttons")
 			else:
 				arrow_pos = Vector2(viewport_size.x / 2 - 20, viewport_size.y - 130)
 		"enemy_sidebar":
 			arrow_label.text = "◀"  # Point LEFT toward enemies on right
+			# Find EnemyPanel (NOT RightEnemySidebar!)
 			if ui_controller:
-				var enemy_sidebar := ui_controller.get_node_or_null("RightEnemySidebar")
-				if enemy_sidebar and enemy_sidebar.visible:
-					arrow_pos = enemy_sidebar.global_position + Vector2(-50, enemy_sidebar.size.y / 2 - 20)
+				var enemy_panel := ui_controller.get_node_or_null("EnemyPanel")
+				if enemy_panel and enemy_panel.visible:
+					arrow_pos = enemy_panel.global_position + Vector2(-50, enemy_panel.size.y / 2 - 20)
+					print("[Tutorial] Arrow pointing to EnemyPanel at: %s" % arrow_pos)
 				else:
-					arrow_pos = Vector2(viewport_size.x - 200, viewport_size.y / 2 - 20)
+					arrow_pos = Vector2(viewport_size.x - 200, 400)
+					print("[Tutorial] Arrow using fallback for enemy_sidebar")
 			else:
-				arrow_pos = Vector2(viewport_size.x - 200, viewport_size.y / 2 - 20)
+				arrow_pos = Vector2(viewport_size.x - 200, 400)
 		"purify_button":
 			arrow_label.text = "▼"
 			if ui_controller:
 				var purify_btn := ui_controller.get_node_or_null("PartyPanel/VBoxContainer/ActionMenu/PurifyButton")
 				if purify_btn and purify_btn.visible:
 					arrow_pos = purify_btn.global_position + Vector2(purify_btn.size.x / 2 - 20, -50)
+					print("[Tutorial] Arrow pointing to PurifyButton at: %s" % arrow_pos)
 				else:
 					arrow_pos = Vector2(viewport_size.x / 2 - 60, viewport_size.y - 130)
+					print("[Tutorial] Arrow using fallback for purify_button")
 			else:
 				arrow_pos = Vector2(viewport_size.x / 2 - 60, viewport_size.y - 130)
 		_:
 			arrow_label.text = "▼"
 			arrow_pos = Vector2(viewport_size.x / 2 - 20, viewport_size.y / 2)
+			print("[Tutorial] Arrow using default position")
 	
 	_tutorial_arrow.position = arrow_pos
 	

@@ -396,8 +396,17 @@ func _on_animation_event(event_name: String, data: Dictionary) -> void:
 func _on_animation_finished(anim_name: String) -> void:
 	animation_finished.emit(anim_name)
 	
+	# Handle death animation completion
 	if anim_name == "death" or anim_name == "death_alt":
 		death_animation_complete.emit()
+		return  # Don't return to idle after death
+	
+	# Return to idle after non-looping combat animations
+	if anim_name in ["attack", "attack_heavy", "hurt", "hurt_heavy", "spawn"] or anim_name.begins_with("skill_"):
+		# Small delay before returning to idle for visual clarity
+		await get_tree().create_timer(0.1).timeout
+		if not _is_dead:
+			play_idle()
 
 func _on_hit_frame() -> void:
 	hit_frame_reached.emit()
