@@ -763,12 +763,7 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 	var is_enemy: bool = character is Monster and character.is_corrupted
 	if character is Monster:
 		var monster: Monster = character as Monster
-		print("[BattleArena] SPRITE SETUP: Monster %s (id: %s), has_sprite_sheets: %s, is_enemy: %s" % [
-			monster.character_name, monster.monster_id,
-			str(MonsterSpriteConfigScript.has_sprite_sheets(monster.monster_id)), str(is_enemy)
-		])
 		if MonsterSpriteConfigScript.has_sprite_sheets(monster.monster_id):
-			print("[BattleArena] Creating BattleMonsterSprite for %s" % monster.monster_id)
 			# Use the new BattleMonsterSprite with full animation support
 			var battle_sprite: Node2D = BattleMonsterSpriteScript.new()
 			battle_sprite.name = "BattleMonsterSprite"
@@ -798,9 +793,6 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 
 			# Store battle sprite reference for animations
 			character.set_meta("animated_battle_sprite", battle_sprite)
-			print("[BattleArena] SET animated_battle_sprite meta for %s - has_method play_attack: %s" % [
-				character.character_name, str(battle_sprite.has_method("play_attack"))
-			])
 
 	if not sprite_loaded and sprite_path != "" and ResourceLoader.exists(sprite_path):
 		var tex := load(sprite_path)
@@ -982,7 +974,7 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 	# Check if character has animated battle sprite (new system)
 	var animated_sprite: Node2D = character.get_meta("animated_battle_sprite", null)
 	
-	print("[BattleArena] Action animation: %s, action=%d, has_animated_sprite=%s" % [character.character_name, action, str(animated_sprite != null)])
+
 	
 	# Get original transform for ALL animations (both sprite sheet and tween-only)
 	var dir := -1.0 if is_enemy else 1.0  # Direction multiplier
@@ -997,15 +989,11 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 		var target_sprite: Node2D = current_target.get_meta("battle_sprite", null)
 		if target_sprite:
 			target_global_pos = target_sprite.global_position
-			print("[BattleArena] Target found: %s at global pos %s" % [current_target.character_name, target_global_pos])
 	
 	if animated_sprite and animated_sprite.has_method("play_attack"):
 		# Use the new sprite sheet animation system WITH movement tweens
-		print("[BattleArena] Using animated sprite for %s" % character.character_name)
 		match action:
 			Enums.BattleAction.ATTACK:
-				print("[BattleArena] Playing attack animation with movement")
-				# Play sprite sheet animation AND movement tween together
 				animated_sprite.play_attack()
 				_play_attack_movement_tween(sprite, original_global_pos, original_scale, original_rotation, target_global_pos)
 			
@@ -1015,11 +1003,10 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 					animated_sprite.play_skill(current_skill.skill_id)
 				else:
 					animated_sprite.play_attack()
-				# Add skill movement
 				_play_skill_movement_tween(sprite, original_global_pos, original_scale, target_global_pos)
 			
 			Enums.BattleAction.DEFEND:
-				animated_sprite.play_idle()  # Defend uses idle with effect
+				animated_sprite.play_idle()
 				_play_defend_tween(sprite, original_scale)
 			
 			Enums.BattleAction.PURIFY:
@@ -1033,31 +1020,23 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 				animated_sprite.play_idle()
 	else:
 		# Use simple, reliable tween animations directly (no sprite sheet)
-		print("[BattleArena] Using direct tween animation for %s" % character.character_name)
-		
 		match action:
 			Enums.BattleAction.ATTACK:
-				print("[BattleArena] Playing ATTACK animation from %s toward %s" % [original_global_pos, target_global_pos])
 				_play_attack_tween_global(sprite, original_global_pos, original_scale, original_rotation, target_global_pos)
 			
 			Enums.BattleAction.SKILL:
-				print("[BattleArena] Playing SKILL animation")
 				_play_skill_tween_global(sprite, original_global_pos, original_scale, target_global_pos)
 			
 			Enums.BattleAction.DEFEND:
-				print("[BattleArena] Playing DEFEND animation")
 				_play_defend_tween(sprite, original_scale)
 			
 			Enums.BattleAction.PURIFY:
-				print("[BattleArena] Playing PURIFY animation")
 				_play_purify_tween(sprite, original_scale)
 			
 			Enums.BattleAction.ITEM:
-				print("[BattleArena] Playing ITEM animation")
 				_play_item_tween_global(sprite, original_global_pos)
 			
 			Enums.BattleAction.FLEE:
-				print("[BattleArena] Playing FLEE animation")
 				_play_flee_tween_global(sprite, dir, original_global_pos)
 
 # =============================================================================
@@ -1071,8 +1050,6 @@ func _play_attack_movement_tween(sprite: Node2D, original_global_pos: Vector2, o
 	var distance := original_global_pos.distance_to(target_global_pos)
 	var strike_global_pos := original_global_pos + direction * (distance - 60)  # Stop 60px from target for contact
 	var pullback_global_pos := original_global_pos - direction * 40  # Pull back opposite direction
-	
-	print("[BattleArena] Attack movement tween: from %s to %s (distance=%d)" % [original_global_pos, strike_global_pos, int(distance)])
 	
 	var tween := create_tween()
 	# Anticipation - pull back (wind up the attack)
@@ -1124,7 +1101,7 @@ func _play_attack_tween_global(sprite: Node2D, original_global_pos: Vector2, ori
 	# Calculate rotation based on direction
 	var strike_rotation := rad_to_deg(direction.angle()) * 0.1  # Slight lean into attack
 	
-	print("[BattleArena] Attack tween: distance=%d, direction=%s" % [int(distance), direction])
+
 	
 	var tween := create_tween()
 	# Anticipation - pull back

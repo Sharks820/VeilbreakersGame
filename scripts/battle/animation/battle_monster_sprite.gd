@@ -73,23 +73,16 @@ func _ready() -> void:
 		_animator.animation_finished.connect(_on_animation_finished)
 		_animator.hit_frame_reached.connect(_on_hit_frame)
 	
-	print("[BattleMonsterSprite] _ready complete for %s, animator in tree: %s" % [monster_id, _animator.is_inside_tree() if _animator else false])
-
 func setup(p_monster_id: String, p_is_enemy: bool = true) -> void:
 	"""Initialize the battle sprite for a specific monster"""
 	monster_id = p_monster_id
 	is_enemy = p_is_enemy
-	
-	print("[BattleMonsterSprite] setup() called for %s, is_enemy=%s, animator exists=%s, in_tree=%s" % [
-		monster_id, is_enemy, _animator != null, is_inside_tree()
-	])
 	
 	# Ensure animator exists (may be called before _ready)
 	if not _animator:
 		_animator = SpriteSheetAnimatorScript.new()
 		_animator.name = "Animator"
 		add_child(_animator)
-		print("[BattleMonsterSprite] Created animator in setup(), in_tree=%s" % [_animator.is_inside_tree()])
 		# Connect signals
 		if _animator.has_signal("animation_event"):
 			_animator.animation_event.connect(_on_animation_event)
@@ -242,10 +235,8 @@ func play_idle() -> void:
 
 func play_attack(on_hit: Callable = Callable()) -> void:
 	"""Play attack animation"""
-	print("[BattleMonsterSprite] play_attack called for %s, is_dead=%s" % [monster_id, _is_dead])
 	if _is_dead:
 		return
-	print("[BattleMonsterSprite] Calling _animator.play_attack()")
 	_animator.play_attack(on_hit)
 
 func play_attack_heavy(on_hit: Callable = Callable()) -> void:
@@ -271,7 +262,6 @@ func play_skill(skill_name: String, on_cast: Callable = Callable()) -> void:
 
 func play_hurt(is_critical: bool = false) -> void:
 	"""Play hurt reaction"""
-	print("[BattleMonsterSprite] play_hurt called for %s, is_critical=%s, is_dead=%s" % [monster_id, is_critical, _is_dead])
 	if _is_dead:
 		return
 	
@@ -280,10 +270,8 @@ func play_hurt(is_critical: bool = false) -> void:
 	
 	# Screen shake handled by battle manager
 	if is_critical and _animator._animations.has("hurt_heavy"):
-		print("[BattleMonsterSprite] Playing hurt_heavy animation")
 		_animator.play("hurt_heavy")
 	else:
-		print("[BattleMonsterSprite] Playing standard hurt animation")
 		_animator.play_hurt(is_critical)
 
 func play_death() -> void:
