@@ -296,10 +296,12 @@ func _setup_battle_ui() -> void:
 
 func _setup_battle_manager() -> void:
 	# Connect battle manager signals
+	print("[BattleArena] Connecting battle_manager signals...")
 	battle_manager.battle_initialized.connect(_on_battle_initialized)
 	battle_manager.action_animation_started.connect(_on_action_animation_started)
 	battle_manager.battle_victory.connect(_on_battle_victory)
 	battle_manager.battle_defeat.connect(_on_battle_defeat)
+	print("[BattleArena] action_animation_started connected: %s" % battle_manager.action_animation_started.is_connected(_on_action_animation_started))
 
 	# Link subsystems
 	battle_manager.turn_manager = turn_manager

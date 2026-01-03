@@ -591,6 +591,7 @@ func _execute_next_party_action() -> void:
 
 	# Execute the queued action
 	is_executing_action = true
+	print("[BattleManager] Emitting action_animation_started for %s, action=%d" % [character.character_name, queued.action])
 	action_animation_started.emit(character, queued.action)
 
 	var result: Dictionary = {}

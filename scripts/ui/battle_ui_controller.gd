@@ -197,10 +197,15 @@ func _force_ui_layout() -> void:
 		if combat_log_scroll:
 			combat_log_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 			combat_log_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+			# Make sure mouse filter allows scrolling
+			combat_log_scroll.mouse_filter = Control.MOUSE_FILTER_STOP
 		if combat_log_text:
 			# Disable RichTextLabel's internal scrolling to prevent dual scrollbar
-			combat_log_text.scroll_active = false
+			# But keep scroll_active true so content can be scrolled via ScrollContainer
+			combat_log_text.scroll_active = true
 			combat_log_text.scroll_following = false
+			# Let mouse events pass through to ScrollContainer
+			combat_log_text.mouse_filter = Control.MOUSE_FILTER_PASS
 		# Add drag handle if not exists
 		_add_combat_log_drag_handle()
 
