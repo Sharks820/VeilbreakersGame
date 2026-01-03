@@ -1,6 +1,48 @@
 # VEILBREAKERS - Agent Instructions
 
-> Godot 4.5 | GDScript | Turn-Based Monster-Capturing RPG | **v0.75**
+> Godot 4.5 | GDScript | Turn-Based Monster-Capturing RPG | **v0.93**
+
+---
+
+## ⚠️ CRITICAL: MCP Tool Safety (READ FIRST)
+
+### DANGEROUS TOOLS - NEVER USE (Cause Infinite Hangs)
+
+| Tool | Why It Hangs |
+|------|--------------|
+| `godot-editor_run_project` | Launches Godot process, blocks forever |
+| `godot-editor_get_debug_output` | Blocks waiting for running game |
+| `godot-screenshots_run_project` | Same - launches Godot process |
+| `bash` with ANY `godot` command | **ALL Godot invocations hang** - even headless |
+| `godot --check-only --headless` | Still hangs - project scan takes too long |
+
+### SAFE TOOLS - Use These Instead
+
+| Tool | Purpose | Safe Because |
+|------|---------|--------------|
+| `read` / `write` / `edit` | Modify GDScript files | Pure file operations |
+| `glob` / `grep` | Find files and code | Pure file operations |
+| `bash` with `git` commands | Version control | No Godot involved |
+| `godot-editor_create_scene` | Create .tscn files | File operation only (use cautiously) |
+| `godot-editor_add_node` | Add nodes to scenes | File operation only (use cautiously) |
+
+### Testing Protocol
+
+```
+1. Make code changes using read/write/edit tools
+2. DO NOT attempt any Godot syntax validation via MCP
+3. Tell user: "Please test the game manually in Godot editor"
+4. Trust your code - follow GDScript patterns carefully
+5. User will report any errors they encounter
+```
+
+### If Claude/MCP Gets Stuck
+
+The user should:
+1. Kill any running Godot processes: `taskkill /F /IM Godot* 2>nul`
+2. Kill zombie node processes: `taskkill /F /IM node.exe 2>nul` (careful - kills all node)
+3. Restart Claude Code completely
+4. If still stuck, restart computer
 
 ---
 

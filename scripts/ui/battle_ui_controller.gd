@@ -3677,24 +3677,16 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 		brand_label.mouse_filter = Control.MOUSE_FILTER_PASS
 		vbox.add_child(brand_label)
 
-	# HP Bar
-	var hp_bar := ProgressBar.new()
+	# HP Bar - Animated with damage preview and gradient colors
+	var hp_bar := AnimatedStatBar.new()
 	hp_bar.name = "HPBar"
-	hp_bar.max_value = maxi(1, character.get_max_hp())
-	hp_bar.value = character.current_hp
-	hp_bar.show_percentage = false
-	hp_bar.custom_minimum_size = Vector2(85, 12)
+	hp_bar.bar_type = 0  # HP type - gradient green->yellow->red
+	hp_bar.bar_size = Vector2(85, 12)
+	hp_bar.max_value = float(maxi(1, character.get_max_hp()))
+	hp_bar.current_value = float(character.current_hp)
+	hp_bar.show_text = false  # We have a separate label
+	hp_bar.pulse_on_low_hp = true
 	hp_bar.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
-
-	var hp_fill := StyleBoxFlat.new()
-	hp_fill.bg_color = Color(0.3, 0.8, 0.35, 1.0)
-	hp_fill.set_corner_radius_all(2)
-	hp_bar.add_theme_stylebox_override("fill", hp_fill)
-
-	var hp_bg := StyleBoxFlat.new()
-	hp_bg.bg_color = Color(0.2, 0.15, 0.15, 0.9)
-	hp_bg.set_corner_radius_all(2)
-	hp_bar.add_theme_stylebox_override("background", hp_bg)
 	vbox.add_child(hp_bar)
 
 	# HP Label
@@ -3706,25 +3698,17 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	hp_label.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	vbox.add_child(hp_label)
 
-	# MP Bar (if character has MP)
+	# MP Bar (if character has MP) - Animated with blue gradient
 	if character.get_max_mp() > 0:
-		var mp_bar := ProgressBar.new()
+		var mp_bar := AnimatedStatBar.new()
 		mp_bar.name = "MPBar"
-		mp_bar.max_value = maxi(1, character.get_max_mp())
-		mp_bar.value = character.current_mp
-		mp_bar.show_percentage = false
-		mp_bar.custom_minimum_size = Vector2(85, 8)
+		mp_bar.bar_type = 1  # MP type - blue gradient
+		mp_bar.bar_size = Vector2(85, 8)
+		mp_bar.max_value = float(maxi(1, character.get_max_mp()))
+		mp_bar.current_value = float(character.current_mp)
+		mp_bar.show_text = false
+		mp_bar.pulse_on_low_hp = false  # No pulse for MP
 		mp_bar.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
-
-		var mp_fill := StyleBoxFlat.new()
-		mp_fill.bg_color = Color(0.3, 0.5, 0.9, 1.0)
-		mp_fill.set_corner_radius_all(2)
-		mp_bar.add_theme_stylebox_override("fill", mp_fill)
-
-		var mp_bg := StyleBoxFlat.new()
-		mp_bg.bg_color = Color(0.12, 0.12, 0.18, 0.9)
-		mp_bg.set_corner_radius_all(2)
-		mp_bar.add_theme_stylebox_override("background", mp_bg)
 		vbox.add_child(mp_bar)
 
 	# Status icons container - displays active buffs/debuffs
@@ -3742,23 +3726,23 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	return panel
 
 func update_party_sidebar() -> void:
-	"""Update HP/MP bars in the left party sidebar"""
+	"""Update HP/MP bars in the left party sidebar - uses AnimatedStatBar for smooth animations"""
 	for member in party_members:
 		if member.has_meta("sidebar_panel"):
 			var panel: PanelContainer = member.get_meta("sidebar_panel")
 			if is_instance_valid(panel):
-				var hp_bar := panel.find_child("HPBar", true, false) as ProgressBar
+				var hp_bar := panel.find_child("HPBar", true, false) as AnimatedStatBar
 				var hp_label := panel.find_child("HPLabel", true, false) as Label
-				var mp_bar := panel.find_child("MPBar", true, false) as ProgressBar
+				var mp_bar := panel.find_child("MPBar", true, false) as AnimatedStatBar
 
 				if hp_bar:
-					hp_bar.max_value = maxi(1, member.get_max_hp())
-					hp_bar.value = member.current_hp
+					hp_bar.set_max_value(float(maxi(1, member.get_max_hp())))
+					hp_bar.set_value(float(member.current_hp), true)  # Animate the change
 				if hp_label:
 					hp_label.text = "%d/%d" % [member.current_hp, member.get_max_hp()]
 				if mp_bar:
-					mp_bar.max_value = maxi(1, member.get_max_mp())
-					mp_bar.value = member.current_mp
+					mp_bar.set_max_value(float(maxi(1, member.get_max_mp())))
+					mp_bar.set_value(float(member.current_mp), true)  # Animate the change
 				
 				# Handle death state - fade out dead party members
 				if member.is_dead():
@@ -3905,24 +3889,21 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 		brand_label.mouse_filter = Control.MOUSE_FILTER_PASS
 		vbox.add_child(brand_label)
 
-	# HP Bar - red themed
-	var hp_bar := ProgressBar.new()
+	# HP Bar - Animated with damage preview (enemy red theme via custom colors)
+	var hp_bar := AnimatedStatBar.new()
 	hp_bar.name = "HPBar"
-	hp_bar.max_value = maxi(1, enemy.get_max_hp())
-	hp_bar.value = enemy.current_hp
-	hp_bar.show_percentage = false
-	hp_bar.custom_minimum_size = Vector2(85, 10)
+	hp_bar.bar_type = 0  # HP type
+	hp_bar.bar_size = Vector2(85, 10)
+	hp_bar.max_value = float(maxi(1, enemy.get_max_hp()))
+	hp_bar.current_value = float(enemy.current_hp)
+	hp_bar.show_text = false  # We have a separate label
+	hp_bar.pulse_on_low_hp = true
+	# Override colors for enemy red theme
+	hp_bar.hp_full_color = Color(0.85, 0.3, 0.25, 1.0)  # Red at full
+	hp_bar.hp_mid_color = Color(0.9, 0.5, 0.2, 1.0)  # Orange at mid
+	hp_bar.hp_low_color = Color(0.5, 0.15, 0.15, 1.0)  # Dark red at low
+	hp_bar.background_color = Color(0.2, 0.12, 0.12, 0.9)
 	hp_bar.mouse_filter = Control.MOUSE_FILTER_PASS
-
-	var hp_fill := StyleBoxFlat.new()
-	hp_fill.bg_color = Color(0.8, 0.25, 0.25, 1.0)  # Red for enemies
-	hp_fill.set_corner_radius_all(2)
-	hp_bar.add_theme_stylebox_override("fill", hp_fill)
-
-	var hp_bg := StyleBoxFlat.new()
-	hp_bg.bg_color = Color(0.2, 0.12, 0.12, 0.9)
-	hp_bg.set_corner_radius_all(2)
-	hp_bar.add_theme_stylebox_override("background", hp_bg)
 	vbox.add_child(hp_bar)
 
 	# HP Label (numeric) - matches party sidebar
@@ -3934,27 +3915,19 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	hp_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	vbox.add_child(hp_label)
 
-	# Corruption bar for monsters
+	# Corruption bar for monsters - Animated with purple theme
 	if enemy is Monster:
 		var monster := enemy as Monster
-		var corruption_bar := ProgressBar.new()
+		var corruption_bar := AnimatedStatBar.new()
 		corruption_bar.name = "CorruptionBar"
+		corruption_bar.bar_type = 2  # Corruption type - purple
+		corruption_bar.bar_size = Vector2(85, 6)
 		corruption_bar.max_value = 100.0
-		var corruption_percent := (monster.corruption_level / monster.max_corruption) * 100.0
-		corruption_bar.value = corruption_percent
-		corruption_bar.show_percentage = false
-		corruption_bar.custom_minimum_size = Vector2(85, 6)
+		var corruption_percent: float = (monster.corruption_level / monster.max_corruption) * 100.0
+		corruption_bar.current_value = corruption_percent
+		corruption_bar.show_text = false
+		corruption_bar.pulse_on_low_hp = false
 		corruption_bar.mouse_filter = Control.MOUSE_FILTER_PASS
-
-		var corr_fill := StyleBoxFlat.new()
-		corr_fill.bg_color = Color(0.6, 0.2, 0.7, 1.0)  # Purple for corruption
-		corr_fill.set_corner_radius_all(2)
-		corruption_bar.add_theme_stylebox_override("fill", corr_fill)
-
-		var corr_bg := StyleBoxFlat.new()
-		corr_bg.bg_color = Color(0.15, 0.1, 0.15, 0.9)
-		corr_bg.set_corner_radius_all(2)
-		corruption_bar.add_theme_stylebox_override("background", corr_bg)
 		vbox.add_child(corruption_bar)
 
 	# Store reference for updates
@@ -3963,24 +3936,24 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	return panel
 
 func update_enemy_sidebar() -> void:
-	"""Update HP/corruption bars in the right enemy sidebar"""
+	"""Update HP/corruption bars in the right enemy sidebar - uses AnimatedStatBar for smooth animations"""
 	for enemy in enemies:
 		if enemy.has_meta("enemy_sidebar_panel"):
 			var panel: PanelContainer = enemy.get_meta("enemy_sidebar_panel")
 			if is_instance_valid(panel):
-				var hp_bar := panel.find_child("HPBar", true, false) as ProgressBar
+				var hp_bar := panel.find_child("HPBar", true, false) as AnimatedStatBar
 				var hp_label := panel.find_child("HPLabel", true, false) as Label
-				var corruption_bar := panel.find_child("CorruptionBar", true, false) as ProgressBar
+				var corruption_bar := panel.find_child("CorruptionBar", true, false) as AnimatedStatBar
 
 				if hp_bar:
-					hp_bar.max_value = maxi(1, enemy.get_max_hp())
-					hp_bar.value = enemy.current_hp
+					hp_bar.set_max_value(float(maxi(1, enemy.get_max_hp())))
+					hp_bar.set_value(float(enemy.current_hp), true)  # Animate the change
 				if hp_label:
 					hp_label.text = "%d/%d" % [enemy.current_hp, enemy.get_max_hp()]
 				if corruption_bar and enemy is Monster:
 					var monster := enemy as Monster
-					var corruption_percent := (monster.corruption_level / monster.max_corruption) * 100.0
-					corruption_bar.value = corruption_percent
+					var corruption_percent: float = (monster.corruption_level / monster.max_corruption) * 100.0
+					corruption_bar.set_value(corruption_percent, true)  # Animate corruption changes
 				
 				# Handle death state - fade out dead enemies
 				if enemy.is_dead():
