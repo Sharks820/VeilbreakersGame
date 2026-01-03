@@ -234,18 +234,23 @@ func add_animation_event(anim_name: String, frame: int, event_name: String) -> v
 
 func play(anim_name: String, reversed: bool = false) -> void:
 	"""Play an animation by name"""
+	print("[SpriteSheetAnimator] play() called: anim=%s, monster=%s" % [anim_name, _monster_id])
+	
 	if not _animations.has(anim_name):
 		# Try to find a fallback
 		var fallback := _get_fallback_animation(anim_name)
 		if fallback == "":
 			push_warning("SpriteSheetAnimator: Unknown animation '%s' for %s" % [anim_name, _monster_id])
 			return
+		print("[SpriteSheetAnimator] Using fallback animation: %s -> %s" % [anim_name, fallback])
 		anim_name = fallback
 	
 	var anim: AnimationDef = _animations[anim_name]
+	print("[SpriteSheetAnimator] Animation found: sheet=%s, frames=%d-%d, fps=%s" % [anim.sheet_path, anim.start_frame, anim.end_frame, anim.fps])
 	
 	# Switch sprite sheet if needed (also updates h_frames/v_frames)
 	if anim.sheet_path != _current_sheet_path:
+		print("[SpriteSheetAnimator] Switching sheet from '%s' to '%s'" % [_current_sheet_path, anim.sheet_path])
 		_switch_sheet(anim.sheet_path, anim.sheet_index)
 	
 	_current_animation = anim_name
@@ -256,6 +261,9 @@ func play(anim_name: String, reversed: bool = false) -> void:
 	
 	if sprite:
 		sprite.frame = _current_frame
+		print("[SpriteSheetAnimator] Set sprite.frame=%d, sprite.texture=%s" % [_current_frame, sprite.texture.resource_path if sprite.texture else "NULL"])
+	else:
+		print("[SpriteSheetAnimator] ERROR: No sprite to animate!")
 
 func _get_fallback_animation(anim_name: String) -> String:
 	"""Get a fallback animation if the requested one doesn't exist"""
@@ -292,6 +300,7 @@ func get_current_animation() -> String:
 func _switch_sheet(sheet_path: String, sheet_index: int = 0) -> void:
 	"""Switch to a different sprite sheet"""
 	if not sprite:
+		print("[SpriteSheetAnimator] _switch_sheet: No sprite!")
 		return
 	
 	# Update grid configuration if sheet has different dimensions
@@ -300,11 +309,13 @@ func _switch_sheet(sheet_path: String, sheet_index: int = 0) -> void:
 		if sprite.hframes != sheet_config.h_frames or sprite.vframes != sheet_config.v_frames:
 			sprite.hframes = sheet_config.h_frames
 			sprite.vframes = sheet_config.v_frames
+			print("[SpriteSheetAnimator] Updated grid: hframes=%d, vframes=%d" % [sheet_config.h_frames, sheet_config.v_frames])
 	
 	if _loaded_sheets.has(sheet_path):
 		sprite.texture = _loaded_sheets[sheet_path]
 		_current_sheet_path = sheet_path
 		_current_sheet_index = sheet_index
+		print("[SpriteSheetAnimator] Sheet switched (cached): %s" % sheet_path)
 	else:
 		var texture: Texture2D = load(sheet_path)
 		if texture:
@@ -312,6 +323,9 @@ func _switch_sheet(sheet_path: String, sheet_index: int = 0) -> void:
 			sprite.texture = texture
 			_current_sheet_path = sheet_path
 			_current_sheet_index = sheet_index
+			print("[SpriteSheetAnimator] Sheet loaded and switched: %s" % sheet_path)
+		else:
+			print("[SpriteSheetAnimator] ERROR: Failed to load sheet: %s" % sheet_path)
 
 func _process(delta: float) -> void:
 	_process_animation(delta)
@@ -380,6 +394,7 @@ func _process_breathing(delta: float) -> void:
 
 func play_attack(on_hit: Callable = Callable()) -> void:
 	"""Play attack animation with hit callback"""
+	print("[SpriteSheetAnimator] play_attack() called for %s, has_attack=%s" % [_monster_id, _animations.has("attack")])
 	if _animations.has("attack"):
 		play("attack")
 		if on_hit.is_valid():
@@ -388,6 +403,7 @@ func play_attack(on_hit: Callable = Callable()) -> void:
 				on_hit.call()
 			hit_frame_reached.connect(connection, CONNECT_ONE_SHOT)
 	else:
+		print("[SpriteSheetAnimator] No attack animation, using procedural fallback")
 		# Fallback to procedural attack
 		await _procedural_attack()
 		if on_hit.is_valid():

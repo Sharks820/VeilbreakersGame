@@ -1197,7 +1197,7 @@ func _play_heal_animation(sprite: Node2D) -> void:
 	tween.tween_property(sprite, "modulate", Color.WHITE, 0.3)
 
 func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> void:
-	print("[BattleArena] _play_death_animation called for sprite: %s" % str(sprite))
+	print("[BattleArena] _play_death_animation called for sprite: %s, character: %s" % [str(sprite), character.character_name if character else "null"])
 	
 	if not sprite or not is_instance_valid(sprite):
 		print("[BattleArena] ERROR: Invalid sprite for death animation!")
@@ -1206,7 +1206,27 @@ func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> v
 	# Mark sprite as dead so hover/highlight code doesn't reset it
 	sprite.set_meta("is_dead_sprite", true)
 	
-	# Store original values
+	# Check if character has animated battle sprite with sprite sheet death animation
+	if character:
+		var animated_sprite: Node2D = character.get_meta("animated_battle_sprite", null)
+		if animated_sprite and animated_sprite.has_method("play_death"):
+			print("[BattleArena] Using sprite sheet death animation for %s" % character.character_name)
+			animated_sprite.play_death()
+			
+			# Wait for death animation to complete via signal
+			if animated_sprite.has_signal("death_animation_complete"):
+				await animated_sprite.death_animation_complete
+			else:
+				# Fallback wait time if signal not available
+				await get_tree().create_timer(1.5).timeout
+			
+			# Hide sprite after animation
+			sprite.visible = false
+			print("[BattleArena] Sprite sheet death animation complete, sprite hidden")
+			return
+	
+	# Fallback: Clean tween-based death animation for non-sprite-sheet monsters
+	print("[BattleArena] Using fallback tween death animation")
 	var original_scale := sprite.scale
 	var original_global_pos := sprite.global_position
 	
@@ -1238,7 +1258,7 @@ func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> v
 	
 	# Hide sprite completely
 	sprite.visible = false
-	print("[BattleArena] Death animation complete, sprite hidden")
+	print("[BattleArena] Fallback death animation complete, sprite hidden")
 
 # =============================================================================
 # DAMAGE NUMBERS
