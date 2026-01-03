@@ -464,12 +464,9 @@ func _start_battle(party: Array[CharacterBase], enemies: Array[CharacterBase]) -
 	# Note: Health bars are now handled by the real battle_ui.tscn loaded via battle_arena.gd
 
 	EventBus.emit_debug("Test battle started: %d party vs %d enemies" % [party.size(), enemies.size()])
-
-	# AUTO-TRIGGER: Attack after 2 seconds to test animation system
-	print("[TEST] Scheduling auto-attack in 2 seconds...")
-	await get_tree().create_timer(2.0).timeout
-	print("[TEST] Auto-attack timer fired, calling _debug_auto_attack()")
-	_debug_auto_attack()
+	
+	# Debug auto-attack removed - was causing both sides to attack at battle start
+	# Use F11 to manually trigger test attack if needed
 
 # =============================================================================
 # DEBUG CONTROLS
