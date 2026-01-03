@@ -963,8 +963,10 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 	
 	# Get character's brand for glow effects
 	var brand: Enums.Brand = Enums.Brand.NONE
-	if character is Monster and character.monster_data:
-		brand = character.monster_data.brand
+	if character is Monster:
+		var monster: Monster = character as Monster
+		if monster.monster_data:
+			brand = monster.monster_data.brand
 	
 	# Check if character has animated battle sprite (new system)
 	var animated_sprite: Node2D = character.get_meta("animated_battle_sprite", null)
