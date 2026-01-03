@@ -803,38 +803,31 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 			# Hero sprites are ~1800x2400px, monster sprites are ~1024x1024px
 			match character.character_type:
 				Enums.CharacterType.PLAYER:
-					# Hero sprites are large - scale to ~200px height
-					sprite.scale = Vector2(0.11, 0.11)  # ~200x260 pixels
-					sprite.position = Vector2(0, -130)
-					hitbox_size = Vector2(160, 240)
-					hitbox_offset = Vector2(0, -120)
-				Enums.CharacterType.MONSTER:
-					if character is Monster and character.is_corrupted:
-						# Enemy monsters - moderate size
-						sprite.scale = Vector2(0.10, 0.10)
-						sprite.position = Vector2(0, -60)
-						hitbox_size = Vector2(90, 130)
-						hitbox_offset = Vector2(0, -65)
-					else:
-						# Allied monsters - same as enemies
-						sprite.scale = Vector2(0.10, 0.10)
-						sprite.position = Vector2(0, -60)
-					hitbox_size = Vector2(90, 130)
-					hitbox_offset = Vector2(0, -65)
-				Enums.CharacterType.BOSS:
-					sprite.scale = Vector2(0.16, 0.16)  # Bosses are bigger
-					sprite.position = Vector2(0, -100)
+					# Hero - slightly smaller than before
+					sprite.scale = Vector2(0.10, 0.10)
+					sprite.position = Vector2(0, -115)
 					hitbox_size = Vector2(150, 220)
 					hitbox_offset = Vector2(0, -110)
+				Enums.CharacterType.MONSTER:
+					# Monsters - slightly bigger than before
+					sprite.scale = Vector2(0.12, 0.12)
+					sprite.position = Vector2(0, -70)
+					hitbox_size = Vector2(110, 160)
+					hitbox_offset = Vector2(0, -80)
+				Enums.CharacterType.BOSS:
+					sprite.scale = Vector2(0.18, 0.18)
+					sprite.position = Vector2(0, -110)
+					hitbox_size = Vector2(170, 250)
+					hitbox_offset = Vector2(0, -125)
 				_:
-					sprite.scale = Vector2(0.10, 0.10)
-					sprite.position = Vector2(0, -60)
+					sprite.scale = Vector2(0.11, 0.11)
+					sprite.position = Vector2(0, -65)
 
-			# Flip sprite to face enemies (allies face right, enemies face left)
-			if character is Monster and character.is_corrupted:
-				sprite.flip_h = false
-			else:
-				sprite.flip_h = true
+			# Flip sprite to face correct direction:
+			# - Enemies (right side, corrupted) face LEFT = flip_h = false (sprites drawn facing left)
+			# - Allies (left side, not corrupted) face RIGHT = flip_h = true
+			var is_enemy_char: bool = character is Monster and character.is_corrupted
+			sprite.flip_h = not is_enemy_char
 
 			container.add_child(sprite)
 			sprite_loaded = true
@@ -962,6 +955,7 @@ func _on_character_sprite_mouse_exited(character: CharacterBase, sprite_containe
 func _on_action_animation_started(character: CharacterBase, action: int) -> void:
 	var sprite: Node2D = character.get_meta("battle_sprite", null)
 	if not sprite:
+		push_warning("[BattleArena] No battle_sprite meta for %s" % character.character_name)
 		return
 	
 	# Determine if this is an enemy (for animation direction)
@@ -975,10 +969,14 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 	# Check if character has animated battle sprite (new system)
 	var animated_sprite: Node2D = character.get_meta("animated_battle_sprite", null)
 	
-	if animated_sprite:
+	print("[BattleArena] Action animation: %s, action=%d, has_animated_sprite=%s" % [character.character_name, action, str(animated_sprite != null)])
+	
+	if animated_sprite and animated_sprite.has_method("play_attack"):
 		# Use the new sprite sheet animation system
+		print("[BattleArena] Using animated sprite for %s" % character.character_name)
 		match action:
 			Enums.BattleAction.ATTACK:
+				print("[BattleArena] Playing attack animation")
 				animated_sprite.play_attack()
 			
 			Enums.BattleAction.SKILL:
@@ -1024,8 +1022,16 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 			Enums.BattleAction.FLEE:
 				CharacterBattleAnimator.play_flee(sprite)
 
-func _play_hit_animation(sprite: Node2D, is_critical: bool = false) -> void:
-	# Use the new CharacterBattleAnimator for hurt animations
+func _play_hit_animation(sprite: Node2D, is_critical: bool = false, character: CharacterBase = null) -> void:
+	# Check if character has animated battle sprite (new sprite sheet system)
+	if character:
+		var animated_sprite: Node2D = character.get_meta("animated_battle_sprite", null)
+		if animated_sprite and animated_sprite.has_method("play_hurt"):
+			print("[BattleArena] Playing hurt animation via animated sprite for %s" % character.character_name)
+			animated_sprite.play_hurt(is_critical)
+			return
+	
+	# Fallback to CharacterBattleAnimator for static sprites
 	CharacterBattleAnimator.play_hurt(sprite, is_critical)
 
 func _play_heal_animation(sprite: Node2D) -> void:
@@ -1182,8 +1188,8 @@ func _on_damage_dealt(source: Node, target: Node, amount: int, is_critical: bool
 		"brand": brand
 	})
 
-	# Play hit animation (with critical flag)
-	_play_hit_animation(sprite, is_critical)
+	# Play hit animation (with critical flag) - pass character for animated sprite support
+	_play_hit_animation(sprite, is_critical, character)
 	
 	# Spawn hit particle effect
 	var source_brand: Enums.Brand = Enums.Brand.NONE

@@ -941,32 +941,50 @@ func _highlight_ui_element(element_name: String) -> void:
 	"""Highlight a UI element for the tutorial with a glowing border"""
 	EventBus.emit_debug("Tutorial highlight: %s" % element_name)
 	
-	# Find the element to highlight based on name
-	var target_node: Control = null
-	var viewport_size := get_viewport().get_visible_rect().size
+	# Try to find actual UI elements from battle arena
+	var ui_controller: Control = null
+	if battle_arena:
+		ui_controller = battle_arena.get_node_or_null("UILayer/BattleUI")
+	
+	var target_rect: Rect2 = Rect2()
+	var found := false
 	
 	match element_name:
 		"action_bar":
-			# Highlight the action buttons area at bottom
-			target_node = _create_highlight_rect(
-				Vector2(viewport_size.x / 2 - 350, viewport_size.y - 100),
-				Vector2(700, 80)
-			)
+			# Find the PartyPanel which contains action buttons
+			if ui_controller:
+				var party_panel := ui_controller.get_node_or_null("PartyPanel")
+				if party_panel and party_panel.visible:
+					target_rect = Rect2(party_panel.global_position, party_panel.size)
+					found = true
+			if not found:
+				# Fallback - bottom center area
+				var vs := get_viewport().get_visible_rect().size
+				target_rect = Rect2(Vector2(vs.x / 2 - 400, vs.y - 110), Vector2(800, 100))
 		"enemies":
-			# Highlight the enemy area on the right
-			target_node = _create_highlight_rect(
-				Vector2(viewport_size.x - 180, 60),
-				Vector2(170, 350)
-			)
+			# Find the right enemy sidebar
+			if ui_controller:
+				var enemy_sidebar := ui_controller.get_node_or_null("RightEnemySidebar")
+				if enemy_sidebar and enemy_sidebar.visible:
+					target_rect = Rect2(enemy_sidebar.global_position, enemy_sidebar.size)
+					found = true
+			if not found:
+				var vs := get_viewport().get_visible_rect().size
+				target_rect = Rect2(Vector2(vs.x - 180, 60), Vector2(170, 350))
 		"purify_button":
-			# Highlight purify button specifically
-			target_node = _create_highlight_rect(
-				Vector2(viewport_size.x / 2 - 60, viewport_size.y - 95),
-				Vector2(120, 70)
-			)
+			# Find the actual purify button
+			if ui_controller:
+				var purify_btn := ui_controller.get_node_or_null("PartyPanel/VBoxContainer/ActionMenu/PurifyButton")
+				if purify_btn and purify_btn.visible:
+					target_rect = Rect2(purify_btn.global_position, purify_btn.size)
+					found = true
+			if not found:
+				var vs := get_viewport().get_visible_rect().size
+				target_rect = Rect2(Vector2(vs.x / 2 - 60, vs.y - 95), Vector2(120, 70))
 	
-	if target_node:
-		_highlight_panels.append(target_node)
+	if target_rect.size.x > 0:
+		var highlight := _create_highlight_rect(target_rect.position, target_rect.size)
+		_highlight_panels.append(highlight)
 
 func _create_highlight_rect(pos: Vector2, size: Vector2) -> Control:
 	"""Create a pulsing highlight rectangle"""
@@ -1005,55 +1023,85 @@ func _show_tutorial_arrow(target: String) -> void:
 	"""Show an animated arrow pointing to a UI element"""
 	_hide_tutorial_arrow()  # Clear any existing arrow
 	
+	# Try to find actual UI elements from battle arena
+	var ui_controller: Control = null
+	if battle_arena:
+		ui_controller = battle_arena.get_node_or_null("UILayer/BattleUI")
+	
 	# Create arrow indicator
 	_tutorial_arrow = Control.new()
 	_tutorial_arrow.name = "TutorialArrow"
 	_tutorial_arrow.z_index = 101
-	_tutorial_arrow.process_mode = Node.PROCESS_MODE_ALWAYS  # Work while paused
+	_tutorial_arrow.process_mode = Node.PROCESS_MODE_ALWAYS
 	
 	var arrow_label := Label.new()
 	arrow_label.name = "ArrowLabel"
-	arrow_label.add_theme_font_size_override("font_size", 48)  # Bigger arrow
-	arrow_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))  # Golden
-	# Add outline for visibility
+	arrow_label.add_theme_font_size_override("font_size", 48)
+	arrow_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
 	arrow_label.add_theme_color_override("font_outline_color", Color(0.2, 0.1, 0.0))
 	arrow_label.add_theme_constant_override("outline_size", 4)
 	_tutorial_arrow.add_child(arrow_label)
 	
-	# Position based on target
+	var arrow_pos := Vector2.ZERO
 	var viewport_size := get_viewport().get_visible_rect().size
+	
 	match target:
 		"action_buttons":
-			# Point down at action buttons (bottom center)
 			arrow_label.text = "▼"
-			_tutorial_arrow.position = Vector2(viewport_size.x / 2 - 20, viewport_size.y - 160)
+			# Find PartyPanel position
+			if ui_controller:
+				var party_panel := ui_controller.get_node_or_null("PartyPanel")
+				if party_panel and party_panel.visible:
+					arrow_pos = party_panel.global_position + Vector2(party_panel.size.x / 2 - 20, -50)
+				else:
+					arrow_pos = Vector2(viewport_size.x / 2 - 20, viewport_size.y - 130)
+			else:
+				arrow_pos = Vector2(viewport_size.x / 2 - 20, viewport_size.y - 130)
 		"enemy_sidebar":
-			# Point right at enemy sidebar
-			arrow_label.text = "▶"
-			_tutorial_arrow.position = Vector2(viewport_size.x - 220, viewport_size.y / 2 - 20)
+			arrow_label.text = "◀"  # Point LEFT toward enemies on right
+			if ui_controller:
+				var enemy_sidebar := ui_controller.get_node_or_null("RightEnemySidebar")
+				if enemy_sidebar and enemy_sidebar.visible:
+					arrow_pos = enemy_sidebar.global_position + Vector2(-50, enemy_sidebar.size.y / 2 - 20)
+				else:
+					arrow_pos = Vector2(viewport_size.x - 200, viewport_size.y / 2 - 20)
+			else:
+				arrow_pos = Vector2(viewport_size.x - 200, viewport_size.y / 2 - 20)
 		"purify_button":
-			# Point down at purify button (third button from left)
 			arrow_label.text = "▼"
-			_tutorial_arrow.position = Vector2(viewport_size.x / 2 - 60, viewport_size.y - 160)
+			if ui_controller:
+				var purify_btn := ui_controller.get_node_or_null("PartyPanel/VBoxContainer/ActionMenu/PurifyButton")
+				if purify_btn and purify_btn.visible:
+					arrow_pos = purify_btn.global_position + Vector2(purify_btn.size.x / 2 - 20, -50)
+				else:
+					arrow_pos = Vector2(viewport_size.x / 2 - 60, viewport_size.y - 130)
+			else:
+				arrow_pos = Vector2(viewport_size.x / 2 - 60, viewport_size.y - 130)
 		_:
-			# Default - center arrow pointing down
 			arrow_label.text = "▼"
-			_tutorial_arrow.position = Vector2(viewport_size.x / 2 - 20, viewport_size.y / 2)
+			arrow_pos = Vector2(viewport_size.x / 2 - 20, viewport_size.y / 2)
+	
+	_tutorial_arrow.position = arrow_pos
 	
 	# Add to high layer canvas that works while paused
 	var canvas := CanvasLayer.new()
 	canvas.name = "ArrowCanvas"
-	canvas.layer = 101  # Above tutorial panel
+	canvas.layer = 101
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(canvas)
 	canvas.add_child(_tutorial_arrow)
 	
-	# Animate the arrow (bobbing motion) - use process_always tween
+	# Animate the arrow (bobbing motion)
 	var tween := create_tween().set_loops()
-	tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)  # Works while paused
+	tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
 	var start_pos := _tutorial_arrow.position
-	tween.tween_property(_tutorial_arrow, "position:y", start_pos.y + 20, 0.5).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(_tutorial_arrow, "position:y", start_pos.y, 0.5).set_ease(Tween.EASE_IN_OUT)
+	# Bob in direction of arrow
+	if arrow_label.text == "▼":
+		tween.tween_property(_tutorial_arrow, "position:y", start_pos.y + 15, 0.4).set_ease(Tween.EASE_IN_OUT)
+		tween.tween_property(_tutorial_arrow, "position:y", start_pos.y, 0.4).set_ease(Tween.EASE_IN_OUT)
+	else:  # Horizontal arrow
+		tween.tween_property(_tutorial_arrow, "position:x", start_pos.x - 15, 0.4).set_ease(Tween.EASE_IN_OUT)
+		tween.tween_property(_tutorial_arrow, "position:x", start_pos.x, 0.4).set_ease(Tween.EASE_IN_OUT)
 
 func _hide_tutorial_arrow() -> void:
 	"""Hide and cleanup tutorial arrow"""

@@ -99,9 +99,10 @@ func setup(p_monster_id: String, p_is_enemy: bool = true) -> void:
 		# Setup animator with config
 		_animator.setup_from_config(main_sprite, monster_id, is_enemy)
 		
-		# Flip sprite for enemies (face left)
-		if is_enemy:
-			main_sprite.flip_h = true
+		# Flip sprites based on side:
+		# - Enemies (right side) face LEFT toward player = flip_h = false (sprites drawn facing left)
+		# - Allies (left side) face RIGHT toward enemies = flip_h = true
+		main_sprite.flip_h = not is_enemy
 	else:
 		# Fallback to static sprite with procedural animation
 		_setup_static_sprite()
@@ -125,8 +126,8 @@ func _setup_static_sprite() -> void:
 	# Setup animator for procedural animations
 	_animator.setup(main_sprite, is_enemy)
 	
-	if is_enemy:
-		main_sprite.flip_h = true
+	# Flip sprites based on side (same logic as sprite sheet monsters)
+	main_sprite.flip_h = not is_enemy
 
 func _create_shadow() -> void:
 	"""Create a simple shadow under the monster"""
@@ -233,8 +234,10 @@ func play_idle() -> void:
 
 func play_attack(on_hit: Callable = Callable()) -> void:
 	"""Play attack animation"""
+	print("[BattleMonsterSprite] play_attack called for %s, is_dead=%s" % [monster_id, _is_dead])
 	if _is_dead:
 		return
+	print("[BattleMonsterSprite] Calling _animator.play_attack()")
 	_animator.play_attack(on_hit)
 
 func play_attack_heavy(on_hit: Callable = Callable()) -> void:
@@ -260,6 +263,7 @@ func play_skill(skill_name: String, on_cast: Callable = Callable()) -> void:
 
 func play_hurt(is_critical: bool = false) -> void:
 	"""Play hurt reaction"""
+	print("[BattleMonsterSprite] play_hurt called for %s, is_critical=%s, is_dead=%s" % [monster_id, is_critical, _is_dead])
 	if _is_dead:
 		return
 	
@@ -268,8 +272,10 @@ func play_hurt(is_critical: bool = false) -> void:
 	
 	# Screen shake handled by battle manager
 	if is_critical and _animator._animations.has("hurt_heavy"):
+		print("[BattleMonsterSprite] Playing hurt_heavy animation")
 		_animator.play("hurt_heavy")
 	else:
+		print("[BattleMonsterSprite] Playing standard hurt animation")
 		_animator.play_hurt(is_critical)
 
 func play_death() -> void:

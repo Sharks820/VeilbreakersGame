@@ -602,65 +602,95 @@ func _create_monster_card(monster_id: String) -> PanelContainer:
 	return card
 
 func _create_vera_panel(parent: Control) -> void:
-	"""Create the VERA introduction panel at the bottom"""
+	"""Create the VERA introduction panel at the bottom - dynamic and engaging"""
 	vera_panel = PanelContainer.new()
 	vera_panel.name = "VERAPanel"
-	vera_panel.custom_minimum_size.y = 100
+	vera_panel.custom_minimum_size.y = 120
 	
+	# Dark panel with glowing purple border
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.05, 0.08, 0.95)
-	style.border_color = Color(0.4, 0.3, 0.5, 0.6)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(10)
-	style.content_margin_left = 20
-	style.content_margin_right = 20
-	style.content_margin_top = 12
-	style.content_margin_bottom = 12
+	style.bg_color = Color(0.03, 0.02, 0.06, 0.98)
+	style.border_color = Color(0.5, 0.3, 0.6, 0.9)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(12)
+	style.shadow_color = Color(0.4, 0.2, 0.5, 0.4)
+	style.shadow_size = 10
+	style.content_margin_left = 25
+	style.content_margin_right = 25
+	style.content_margin_top = 15
+	style.content_margin_bottom = 15
 	vera_panel.add_theme_stylebox_override("panel", style)
 	parent.add_child(vera_panel)
 	
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 20)
+	hbox.add_theme_constant_override("separation", 25)
 	vera_panel.add_child(hbox)
 	
-	# VERA portrait
+	# VERA portrait - larger with animated glow
 	var portrait_frame := PanelContainer.new()
-	portrait_frame.custom_minimum_size = Vector2(70, 70)
+	portrait_frame.name = "PortraitFrame"
+	portrait_frame.custom_minimum_size = Vector2(90, 90)
 	var frame_style := StyleBoxFlat.new()
-	frame_style.bg_color = Color(0.08, 0.06, 0.12)
-	frame_style.border_color = Color(0.5, 0.4, 0.6)
-	frame_style.set_border_width_all(2)
-	frame_style.set_corner_radius_all(35)
+	frame_style.bg_color = Color(0.06, 0.04, 0.1)
+	frame_style.border_color = Color(0.6, 0.4, 0.7)
+	frame_style.set_border_width_all(3)
+	frame_style.set_corner_radius_all(45)  # Circular
+	frame_style.shadow_color = Color(0.5, 0.3, 0.6, 0.5)
+	frame_style.shadow_size = 8
 	portrait_frame.add_theme_stylebox_override("panel", frame_style)
 	hbox.add_child(portrait_frame)
 	
 	vera_portrait = TextureRect.new()
-	vera_portrait.custom_minimum_size = Vector2(66, 66)
-	vera_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	vera_portrait.custom_minimum_size = Vector2(84, 84)
+	vera_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	vera_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	vera_portrait.pivot_offset = Vector2(42, 42)  # Center pivot for animations
 	if ResourceLoader.exists("res://assets/characters/vera/vera_interface.png"):
 		vera_portrait.texture = load("res://assets/characters/vera/vera_interface.png")
 	portrait_frame.add_child(vera_portrait)
 	
-	# VERA dialogue
+	# Start portrait pulse animation
+	_start_vera_portrait_animation()
+	
+	# VERA dialogue section
 	var dialogue_vbox := VBoxContainer.new()
-	dialogue_vbox.add_theme_constant_override("separation", 5)
+	dialogue_vbox.add_theme_constant_override("separation", 8)
 	dialogue_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(dialogue_vbox)
 	
+	# VERA name with glowing effect
 	var vera_name := Label.new()
-	vera_name.text = "V.E.R.A."
-	vera_name.add_theme_font_size_override("font_size", 14)
-	vera_name.add_theme_color_override("font_color", Color(0.6, 0.5, 0.7))
+	vera_name.name = "VERAName"
+	vera_name.text = "⬡ V.E.R.A. ⬡"
+	vera_name.add_theme_font_size_override("font_size", 16)
+	vera_name.add_theme_color_override("font_color", Color(0.7, 0.5, 0.8))
+	vera_name.add_theme_color_override("font_outline_color", Color(0.3, 0.2, 0.4))
+	vera_name.add_theme_constant_override("outline_size", 2)
 	dialogue_vbox.add_child(vera_name)
 	
 	vera_dialogue = RichTextLabel.new()
 	vera_dialogue.bbcode_enabled = true
 	vera_dialogue.fit_content = true
 	vera_dialogue.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vera_dialogue.add_theme_font_size_override("normal_font_size", 13)
-	vera_dialogue.add_theme_color_override("default_color", Color(0.75, 0.7, 0.65))
+	vera_dialogue.custom_minimum_size.y = 60
+	vera_dialogue.add_theme_font_size_override("normal_font_size", 14)
+	vera_dialogue.add_theme_color_override("default_color", Color(0.82, 0.78, 0.72))
 	dialogue_vbox.add_child(vera_dialogue)
+
+var _vera_portrait_tween: Tween = null
+
+func _start_vera_portrait_animation() -> void:
+	"""Animate VERA portrait with subtle pulse and glow"""
+	if _vera_portrait_tween and _vera_portrait_tween.is_valid():
+		_vera_portrait_tween.kill()
+	
+	if not vera_portrait:
+		return
+	
+	# Subtle breathing/pulse effect
+	_vera_portrait_tween = create_tween().set_loops()
+	_vera_portrait_tween.tween_property(vera_portrait, "scale", Vector2(1.03, 1.03), 2.0).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_vera_portrait_tween.tween_property(vera_portrait, "scale", Vector2(1.0, 1.0), 2.0).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 func _create_button_bar(parent: Control) -> void:
 	"""Create the bottom button bar"""
@@ -876,16 +906,28 @@ func _update_vera_dialogue(data: HeroData) -> void:
 	_show_vera_dialogue(dialogues.get(hero_id, "Choose wisely, Hunter."))
 
 func _show_vera_dialogue(text: String) -> void:
-	"""Show VERA dialogue with typing effect"""
+	"""Show VERA dialogue with dynamic typing effect and portrait reaction"""
 	if _vera_tween and _vera_tween.is_valid():
 		_vera_tween.kill()
 	
+	# Flash the portrait when speaking
+	if vera_portrait:
+		var flash_tween := create_tween()
+		flash_tween.tween_property(vera_portrait, "modulate", Color(1.3, 1.1, 1.4), 0.15)
+		flash_tween.tween_property(vera_portrait, "modulate", Color(1.0, 1.0, 1.0), 0.3)
+	
+	# Slide in effect for text
+	vera_dialogue.modulate.a = 0
 	vera_dialogue.text = ""
 	vera_dialogue.visible_characters = 0
 	vera_dialogue.text = text
 	
 	_vera_tween = create_tween()
-	_vera_tween.tween_property(vera_dialogue, "visible_characters", text.length(), text.length() * 0.02)
+	_vera_tween.set_parallel(false)
+	# Fade in
+	_vera_tween.tween_property(vera_dialogue, "modulate:a", 1.0, 0.2)
+	# Type out text (faster for better UX)
+	_vera_tween.tween_property(vera_dialogue, "visible_characters", text.length(), text.length() * 0.015)
 
 # =============================================================================
 # ANIMATIONS
