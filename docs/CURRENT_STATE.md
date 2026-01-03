@@ -1,6 +1,6 @@
 # VEILBREAKERS - Current State
 
-> **Version:** v0.65 | **Last Updated:** 2026-01-02
+> **Version:** v0.85 | **Last Updated:** 2026-01-02
 
 ---
 
@@ -54,6 +54,21 @@
 |-------|----------|------------|
 | Missing font: main_font.tres | Low | Uses fallback |
 | Some .uid files untracked | Low | Godot-generated, ignore |
+
+### Recent Fixes (v0.80-v0.85)
+
+| Fix | Version | Status |
+|-----|---------|--------|
+| Sprite sheet animations not playing | v0.80 | ✅ Fixed |
+| Heroes showing Brand instead of Path | v0.81 | ✅ Fixed |
+| Heroes only had 3 starting skills | v0.82 | ✅ Fixed |
+| Defend appearing in skills menu | v0.82 | ✅ Fixed |
+| Combat log not auto-scrolling | v0.82 | ✅ Fixed |
+| Taunt not working | v0.83 | ✅ Fixed |
+| DPS characters too OP (no MP) | v0.83 | ✅ Fixed |
+| Attack animations not making contact | v0.84 | ✅ Fixed |
+| Character select breathing glitch | v0.85 | ✅ Fixed |
+| Attack animation too fast (effects invisible) | v0.85 | ✅ Fixed |
 
 ---
 

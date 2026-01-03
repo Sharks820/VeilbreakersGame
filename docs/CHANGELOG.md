@@ -4,6 +4,85 @@
 
 ---
 
+## [v0.85] - 2026-01-02
+
+### Fixed
+- **Character Select Breathing Animation** - Fixed frame skipping/glitching
+  - Added `TWEEN_PROCESS_IDLE` for smoother frame timing
+  - Smooth scale transitions instead of abrupt resets
+  - Prevents visual jump when starting/stopping breathing animation
+- **Attack Animation Visibility** - Slowed sprite sheet attack animations
+  - Hollow attack: 12fps → 6fps (red beam effect now visible)
+  - Chainbound attack: 10fps → 7fps
+  - Mawling attack: 14fps → 8fps
+  - Effects like Hollow's red chest beam now display properly
+
+### Changed
+- Moved backup files to archive/ui_elements/
+
+---
+
+## [v0.84] - 2026-01-02
+
+### Fixed
+- **Attack Animations Not Making Contact** - Sprites now move toward targets
+  - Added `_play_attack_movement_tween()` for sprite sheet animations
+  - Added `_play_skill_movement_tween()` for skill animations
+  - Movement runs alongside sprite sheet animations
+  - Slowed movement timings: pullback 0.25s, strike 0.3s, hold 0.4s, recovery 0.5s
+
+---
+
+## [v0.83] - 2026-01-02
+
+### Fixed
+- **Taunt Not Working** - Implemented force_target_self special effect
+  - Added forced_target tracking in BattleManager
+  - AI now respects forced_target when selecting targets
+  - Forced target decrements at end of round
+
+### Changed
+- **DPS Balance** - Added MP management to prevent skill spam
+  - Rend MP: 8 → 20
+  - Mawling/Ravener MP: 0 → 15
+  - Added MP regeneration: 2 + 5% max MP per turn
+  - Defending grants +2 bonus MP regen
+
+---
+
+## [v0.82] - 2026-01-02
+
+### Fixed
+- **Heroes Only Had 3 Starting Skills** - Added 4th innate skill to each hero
+  - Bastion: +taunt
+  - Rend: +bloodletting
+  - Marrow: +siphon_heal
+  - Mirage: +fear_touch
+- **Defend Appearing in Skills Menu** - Filtered out attack_basic and defend
+- **Combat Log Not Auto-Scrolling** - Set scroll_following = true
+- **Combat Log Showing "Skill" Instead of Skill Name** - Fixed to show actual skill name
+
+---
+
+## [v0.81] - 2026-01-02
+
+### Fixed
+- **Heroes Showing "Brand" Instead of "Path"** - UI now correctly shows Path for heroes
+  - Removed Brand display from player character tooltips
+  - Fixed current_path not being set from hero_data.primary_path
+
+---
+
+## [v0.80] - 2026-01-02
+
+### Fixed
+- **Sprite Sheet Animations Not Playing** - Fixed animator creation issue
+  - Animator was being created twice (setup() and _ready())
+  - Added check in _ready() to only create if not already exists
+  - Animations now play correctly for Hollow, Mawling, Chainbound
+
+---
+
 ## [v0.79] - 2026-01-02
 
 ### Added

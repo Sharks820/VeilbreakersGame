@@ -975,8 +975,9 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 	var brand: Enums.Brand = Enums.Brand.NONE
 	if character is Monster:
 		var monster: Monster = character as Monster
-		if monster.monster_data:
-			brand = monster.monster_data.brand
+		brand = monster.brand  # Monster has brand directly, not via monster_data
+	elif character.has_method("get_brand"):
+		brand = character.get_brand()
 	
 	# Check if character has animated battle sprite (new system)
 	var animated_sprite: Node2D = character.get_meta("animated_battle_sprite", null)
@@ -1069,41 +1070,41 @@ func _play_attack_movement_tween(sprite: Node2D, original_global_pos: Vector2, o
 	var direction := (target_global_pos - original_global_pos).normalized()
 	var distance := original_global_pos.distance_to(target_global_pos)
 	var strike_global_pos := original_global_pos + direction * (distance - 60)  # Stop 60px from target for contact
-	var pullback_global_pos := original_global_pos - direction * 25  # Pull back opposite direction
+	var pullback_global_pos := original_global_pos - direction * 40  # Pull back opposite direction
 	
 	print("[BattleArena] Attack movement tween: from %s to %s (distance=%d)" % [original_global_pos, strike_global_pos, int(distance)])
 	
 	var tween := create_tween()
-	# Anticipation - pull back slightly
-	tween.tween_property(sprite, "global_position", pullback_global_pos, 0.1).set_ease(Tween.EASE_OUT)
+	# Anticipation - pull back (wind up the attack)
+	tween.tween_property(sprite, "global_position", pullback_global_pos, 0.25).set_ease(Tween.EASE_OUT)
 	
 	# Strike - RUSH toward target (this is where contact happens!)
-	tween.tween_property(sprite, "global_position", strike_global_pos, 0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(sprite, "global_position", strike_global_pos, 0.3).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 	
-	# Hold at impact briefly
-	tween.tween_interval(0.15)
+	# Hold at impact - let the attack animation play out
+	tween.tween_interval(0.4)
 	
-	# Recovery - return to original position
-	tween.tween_property(sprite, "global_position", original_global_pos, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	# Recovery - return to original position (slower, more deliberate)
+	tween.tween_property(sprite, "global_position", original_global_pos, 0.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 
 func _play_skill_movement_tween(sprite: Node2D, original_global_pos: Vector2, original_scale: Vector2, target_global_pos: Vector2) -> void:
 	"""Movement tween for skills - used alongside sprite sheet animations"""
 	# Calculate direction toward target
 	var direction := (target_global_pos - original_global_pos).normalized()
-	var thrust_global_pos := original_global_pos + direction * 50  # Move partway toward target
+	var thrust_global_pos := original_global_pos + direction * 70  # Move partway toward target
 	
 	var tween := create_tween()
-	# Channel - rise up
-	tween.tween_property(sprite, "global_position", original_global_pos + Vector2(0, -20), 0.2)
+	# Channel - rise up and charge (let skill animation wind up)
+	tween.tween_property(sprite, "global_position", original_global_pos + Vector2(0, -30), 0.35)
 	
 	# Release - thrust toward target
-	tween.tween_property(sprite, "global_position", thrust_global_pos, 0.12).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(sprite, "global_position", thrust_global_pos, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	
-	# Hold briefly
-	tween.tween_interval(0.12)
+	# Hold - let skill animation play out
+	tween.tween_interval(0.35)
 	
 	# Return
-	tween.tween_property(sprite, "global_position", original_global_pos, 0.25).set_ease(Tween.EASE_OUT)
+	tween.tween_property(sprite, "global_position", original_global_pos, 0.4).set_ease(Tween.EASE_OUT)
 
 # =============================================================================
 # SIMPLE TWEEN ANIMATIONS (Reliable, no async issues)

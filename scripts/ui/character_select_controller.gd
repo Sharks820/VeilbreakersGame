@@ -367,7 +367,9 @@ func _create_hero_display() -> Control:
 	hero_portrait.offset_bottom = 200
 	hero_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	hero_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	hero_portrait.pivot_offset = Vector2(200, 225)
+	# Pivot at exact center of the rect (400x450) for smooth scale animations
+	# This ensures breathing animation scales uniformly from center
+	hero_portrait.pivot_offset = Vector2(200, 225)  # Center: width/2, height/2
 	container.add_child(hero_portrait)
 	
 	# Name overlay at bottom
@@ -962,22 +964,38 @@ func _start_breathing_animation() -> void:
 	# Kill any existing breathing tween
 	if _breathing_tween and _breathing_tween.is_valid():
 		_breathing_tween.kill()
+		_breathing_tween = null
 	
-	hero_portrait.scale = Vector2(1.0, 1.0)
+	# Get current scale to avoid visual jump - only reset if significantly off
+	var current_scale: Vector2 = hero_portrait.scale
+	if current_scale.x < 0.95 or current_scale.x > 1.1:
+		hero_portrait.scale = Vector2(1.0, 1.0)
+		current_scale = Vector2(1.0, 1.0)
 	
 	# Smooth breathing: 3% amplitude, 3 second full cycle (inhale + exhale)
 	# Uses EASE_IN_OUT + TRANS_SINE for natural breathing motion
+	# TWEEN_PROCESS_IDLE ensures smooth frame timing independent of physics
 	_breathing_tween = create_tween().set_loops()
+	_breathing_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
+	
+	# Start from current scale to avoid jump, then normalize
+	if current_scale != Vector2(1.0, 1.0):
+		_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.0, 1.0), 0.2).set_ease(Tween.EASE_OUT)
+	
 	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.03, 1.03), 1.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.0, 1.0), 1.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 func _stop_breathing_animation() -> void:
-	"""Stop breathing animation and reset scale"""
+	"""Stop breathing animation and smoothly reset scale"""
 	if _breathing_tween and _breathing_tween.is_valid():
 		_breathing_tween.kill()
 	_breathing_tween = null
-	if hero_portrait:
-		hero_portrait.scale = Vector2(1.0, 1.0)
+	
+	# Smoothly return to base scale instead of abrupt reset
+	if hero_portrait and hero_portrait.scale != Vector2(1.0, 1.0):
+		var reset_tween := create_tween()
+		reset_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
+		reset_tween.tween_property(hero_portrait, "scale", Vector2(1.0, 1.0), 0.15).set_ease(Tween.EASE_OUT)
 
 # =============================================================================
 # INPUT HANDLING

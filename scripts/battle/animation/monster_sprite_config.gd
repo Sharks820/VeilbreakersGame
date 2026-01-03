@@ -75,7 +75,8 @@ static func _get_hollow_config() -> Dictionary:
 	# Row 1 (frames 0-3): Idle poses
 	sheet1.add_animation("idle", 0, 3, 6.0, true)
 	# Row 2 (frames 4-7): Attack with red burst - frame 5-6 are the impact
-	sheet1.add_animation("attack", 4, 7, 12.0, false, 5)
+	# Slowed from 12fps to 6fps so the red beam effect is visible longer (~0.67s total)
+	sheet1.add_animation("attack", 4, 7, 6.0, false, 5)
 	# Row 3 (frames 8-11): Combat poses - use for skill
 	sheet1.add_animation("skill_empty_grasp", 8, 11, 10.0, false, 10)
 	# Row 4 (frames 12-15): Death dissolve
@@ -91,8 +92,8 @@ static func _get_hollow_config() -> Dictionary:
 	sheet2.v_frames = 4
 	# Row 1: Idle with floating debris
 	sheet2.add_animation("idle_alt", 0, 3, 5.0, true)
-	# Row 2: Attack with different burst
-	sheet2.add_animation("attack_heavy", 4, 7, 14.0, false, 5)
+	# Row 2: Attack with different burst - slowed to match primary attack
+	sheet2.add_animation("attack_heavy", 4, 7, 6.0, false, 5)
 	# Row 3: Combat poses
 	sheet2.add_animation("skill_hollow_wail", 8, 11, 8.0, false, 9)
 	# Row 4: Death
@@ -138,8 +139,8 @@ static func _get_chainbound_config() -> Dictionary:
 	sheet1.v_frames = 4
 	# Row 1: Idle standing menacingly
 	sheet1.add_animation("idle", 0, 3, 5.0, true)
-	# Row 2: Attack lunge
-	sheet1.add_animation("attack", 4, 7, 10.0, false, 6)
+	# Row 2: Attack lunge - slowed to 7fps for visible impact
+	sheet1.add_animation("attack", 4, 7, 7.0, false, 6)
 	# Row 3: Combat stances with glowing core
 	sheet1.add_animation("skill_iron_bind", 8, 11, 8.0, false, 10)
 	# Row 4: Death crumble
@@ -155,8 +156,8 @@ static func _get_chainbound_config() -> Dictionary:
 	# Row 1: Power-up with chains spreading
 	sheet2.add_animation("idle_alt", 0, 3, 6.0, true)
 	sheet2.add_animation("skill_chain_wall", 0, 3, 8.0, false, 2)
-	# Row 2: Heavy attack
-	sheet2.add_animation("attack_heavy", 4, 7, 12.0, false, 6)
+	# Row 2: Heavy attack - slowed to 7fps
+	sheet2.add_animation("attack_heavy", 4, 7, 7.0, false, 6)
 	# Row 3: Hurt reactions
 	sheet2.add_animation("hurt_heavy", 8, 11, 10.0, false)
 	sheet2.add_animation("skill_shackle_slam", 8, 11, 10.0, false, 10)
@@ -192,10 +193,10 @@ static func _get_mawling_config() -> Dictionary:
 	sheet1.v_frames = 4
 	# Row 1: Idle floating with mouth open, frames 2-3 have slash marks (attack impact)
 	sheet1.add_animation("idle", 0, 1, 6.0, true)
-	sheet1.add_animation("attack", 0, 3, 14.0, false, 2)  # Slash on frame 2-3
+	sheet1.add_animation("attack", 0, 3, 8.0, false, 2)  # Slash on frame 2-3, slowed to 8fps
 	# Row 2: Lunge attack with purple trail - frame 5 is the big lunge!
 	sheet1.add_animation("skill_desperate_lunge", 4, 7, 12.0, false, 5)
-	sheet1.add_animation("attack_heavy", 4, 7, 14.0, false, 5)
+	sheet1.add_animation("attack_heavy", 4, 7, 8.0, false, 5)  # Slowed to 8fps
 	# Row 3: Various poses, hurt reactions - frame 10 shows splatter
 	sheet1.add_animation("hurt", 8, 10, 12.0, false)
 	sheet1.add_animation("skill_gnaw", 8, 11, 10.0, false, 10)
