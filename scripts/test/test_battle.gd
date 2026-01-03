@@ -116,16 +116,6 @@ func _ready() -> void:
 	if fake_arena:
 		fake_arena.queue_free()
 
-func _process(delta: float) -> void:
-	# Smooth VERA portrait breathing animation using sine wave - no frame skipping
-	# This runs even when paused because process_mode = PROCESS_MODE_ALWAYS
-	if _vera_breathing_enabled and _vera_breathing_portrait and is_instance_valid(_vera_breathing_portrait):
-		_vera_breathing_time += delta
-		# Gentle sine wave pulse on modulate for smooth glow effect
-		var pulse: float = sin(_vera_breathing_time * 2.0) * 0.5 + 0.5  # 0 to 1 range
-		var glow_intensity: float = 1.0 + pulse * 0.15  # 1.0 to 1.15 range
-		_vera_breathing_portrait.modulate = Color(glow_intensity, glow_intensity * 0.95, glow_intensity * 1.05, 1.0)
-
 	# Remove the fake placeholder BattleUI - it has disconnected TextureButtons
 	# The real battle_ui.tscn is loaded by battle_arena.gd with connected buttons
 	var fake_ui = get_node_or_null("BattleUI")
@@ -153,6 +143,16 @@ func _process(delta: float) -> void:
 		_connect_tutorial_signals()
 		await get_tree().create_timer(0.5).timeout
 		_show_tutorial_step("battle_start")
+
+func _process(delta: float) -> void:
+	# Smooth VERA portrait breathing animation using sine wave - no frame skipping
+	# This runs even when paused because process_mode = PROCESS_MODE_ALWAYS
+	if _vera_breathing_enabled and _vera_breathing_portrait and is_instance_valid(_vera_breathing_portrait):
+		_vera_breathing_time += delta
+		# Gentle sine wave pulse on modulate for smooth glow effect
+		var pulse: float = sin(_vera_breathing_time * 2.0) * 0.5 + 0.5  # 0 to 1 range
+		var glow_intensity: float = 1.0 + pulse * 0.15  # 1.0 to 1.15 range
+		_vera_breathing_portrait.modulate = Color(glow_intensity, glow_intensity * 0.95, glow_intensity * 1.05, 1.0)
 
 func _setup_test_battle() -> void:
 	# Set up VERA state

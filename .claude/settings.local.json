@@ -58,7 +58,10 @@
       "Bash(findstr:*)",
       "Bash(cat:*)",
       "mcp__godot-editor__launch_editor",
-      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\Conner\\\\Desktop\\\\Godot Editor.lnk.ps1\")"
+      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\Conner\\\\Desktop\\\\Godot Editor.lnk.ps1\")",
+      "Bash(powershell:*)",
+      "WebFetch(domain:onlinedegreeblogs.com)",
+      "WebFetch(domain:www.studocu.com)"
     ]
   },
   "enableAllProjectMcpServers": true,

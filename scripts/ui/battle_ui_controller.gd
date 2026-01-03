@@ -237,6 +237,7 @@ func set_battle_manager(manager: BattleManager) -> void:
 	clear_combat_log()
 
 func _on_action_started(character: CharacterBase, action: int) -> void:
+	print("[COMBAT_LOG] _on_action_started called - character: %s, action: %d" % [character.character_name, action])
 	var action_name := ""
 	match action:
 		Enums.BattleAction.ATTACK:
@@ -252,21 +253,29 @@ func _on_action_started(character: CharacterBase, action: int) -> void:
 		Enums.BattleAction.FLEE:
 			action_name = "Flee"
 
+	print("[COMBAT_LOG] Logging action: %s uses %s" % [character.character_name, action_name])
 	log_action(character.character_name, action_name)
 
 func _on_action_executed(character: CharacterBase, action: int, result: Dictionary) -> void:
 	# NOTE: Action name is already logged by _on_action_started() - only log results here
+	print("[COMBAT_LOG] _on_action_executed called - character: %s, action: %d, result: %s" % [character.character_name, action, result])
+	
 	var attacker_name: String = result.get("attacker_name", character.character_name)
 	var target_name: String = result.get("target_name", "target")
 	
 	# Log the result (damage, miss, heal, etc.)
 	if result.has("is_miss") and result.is_miss:
+		print("[COMBAT_LOG] Logging MISS: %s -> %s" % [attacker_name, target_name])
 		log_miss(attacker_name, target_name)
 	elif result.has("damage") and result.damage > 0:
 		var is_crit: bool = result.get("is_critical", false)
+		print("[COMBAT_LOG] Logging DAMAGE: %s took %d damage (crit: %s)" % [target_name, result.damage, is_crit])
 		log_damage(target_name, result.damage, is_crit)
 	elif result.has("heal") and result.heal > 0:
+		print("[COMBAT_LOG] Logging HEAL: %s healed %d" % [target_name, result.heal])
 		log_heal(target_name, result.heal)
+	else:
+		print("[COMBAT_LOG] No loggable result - keys: %s" % result.keys())
 
 func _on_action_selected(action: Enums.BattleAction, target: CharacterBase, skill_id: String) -> void:
 	if battle_manager:

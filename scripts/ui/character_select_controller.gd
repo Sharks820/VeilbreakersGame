@@ -1177,8 +1177,8 @@ func _on_back_pressed() -> void:
 # =============================================================================
 
 func _exit_tree() -> void:
-	if _breathing_tween and _breathing_tween.is_valid():
-		_breathing_tween.kill()
+	# Stop breathing animation (now handled via _process, not tween)
+	_stop_breathing_animation()
 	if _selection_tween and _selection_tween.is_valid():
 		_selection_tween.kill()
 	if _vera_tween and _vera_tween.is_valid():
