@@ -24,7 +24,7 @@ battle_sprite_path = "res://assets/characters/heroes/rend_battle.png"
 color_palette = Color(0.55, 0.16, 0.16, 1)
 
 base_hp = 42
-base_mp = 8
+base_mp = 20
 base_attack = 18
 base_defense = 8
 base_magic = 4

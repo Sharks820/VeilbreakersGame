@@ -397,6 +397,9 @@ func _start_next_turn() -> void:
 
 	EventBus.turn_started.emit(current_character)
 	turn_started_signal.emit(current_character)
+	
+	# MP Regeneration at start of turn (2 MP base + 5% of max MP)
+	_apply_turn_mp_regen(current_character)
 
 	# Camera: Focus on active entity
 	camera_command.emit("focus", {"target": current_character, "duration": camera_focus_time})
@@ -1503,6 +1506,26 @@ func _clear_all_defend_relationships() -> void:
 			character.remove_meta("defended_by")
 		if character.has_meta("defending_target"):
 			character.remove_meta("defending_target")
+
+func _apply_turn_mp_regen(character: CharacterBase) -> void:
+	"""Regenerate MP at start of turn - allows sustained combat"""
+	if character.is_dead():
+		return
+	
+	var max_mp := character.get_max_mp()
+	if max_mp <= 0:
+		return
+	
+	# Base regen: 2 MP + 5% of max MP (rounded down)
+	var regen_amount := 2 + int(max_mp * 0.05)
+	
+	# Bonus regen if defending
+	if character.is_defending:
+		regen_amount += 2
+	
+	var actual_regen := character.restore_mp(regen_amount)
+	if actual_regen > 0:
+		EventBus.emit_debug("%s regenerated %d MP" % [character.character_name, actual_regen])
 
 # =============================================================================
 # BATTLE END CONDITIONS

@@ -553,10 +553,10 @@ func _debug_auto_attack() -> void:
 	if attacker and target:
 		EventBus.emit_debug("Auto-attacking %s with %s" % [target.character_name, attacker.character_name])
 		print("[TEST] Attacking %s (HP: %d) with %s" % [target.character_name, target.current_hp, attacker.character_name])
-		# Directly deal damage to test the system
-		var result = target.take_damage(50, attacker, false)
-		print("[TEST] Damage result: %s" % str(result))
-		print("[TEST] Target HP after: %d" % target.current_hp)
+		# Use proper battle system to trigger full animation flow
+		# This calls execute_action which emits action_animation_started signal
+		bm.execute_action(attacker, Enums.BattleAction.ATTACK, target, "")
+		print("[TEST] Attack action submitted via battle manager")
 	else:
 		print("[TEST] attacker or target is null: attacker=%s, target=%s" % [str(attacker), str(target)])
 

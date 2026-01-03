@@ -27,7 +27,7 @@ weaknesses = [8, 10]
 resistances = [1, 9]
 
 base_hp = 38
-base_mp = 0
+base_mp = 15
 base_attack = 22
 base_defense = 5
 base_magic = 2
