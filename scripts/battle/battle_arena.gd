@@ -1002,31 +1002,129 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 			Enums.BattleAction.FLEE:
 				animated_sprite.play_idle()
 	else:
-		# Fallback to CharacterBattleAnimator for non-sprite-sheet characters
-		print("[BattleArena] Using CharacterBattleAnimator fallback for %s" % character.character_name)
+		# Use simple, reliable tween animations directly
+		# The static CharacterBattleAnimator functions have issues with await
+		print("[BattleArena] Using direct tween animation for %s" % character.character_name)
+		var dir := -1.0 if is_enemy else 1.0  # Direction multiplier
+		var original_pos := sprite.position
+		var original_scale := sprite.scale
+		var original_rotation := sprite.rotation_degrees
+		
 		match action:
 			Enums.BattleAction.ATTACK:
-				print("[BattleArena] Calling CharacterBattleAnimator.play_attack on sprite: %s" % str(sprite))
-				CharacterBattleAnimator.play_attack(sprite, brand, is_enemy)
+				print("[BattleArena] Playing ATTACK animation")
+				_play_attack_tween(sprite, dir, original_pos, original_scale, original_rotation)
 			
 			Enums.BattleAction.SKILL:
-				var current_skill: SkillData = character.get_meta("current_skill", null)
-				if current_skill:
-					CharacterBattleAnimator.play_skill_with_data(sprite, current_skill, brand, Vector2.ZERO, is_enemy)
-				else:
-					CharacterBattleAnimator.play_skill(sprite, SkillData.SkillType.DAMAGE, brand, is_enemy)
+				print("[BattleArena] Playing SKILL animation")
+				_play_skill_tween(sprite, dir, original_pos, original_scale, original_rotation)
 			
 			Enums.BattleAction.DEFEND:
-				CharacterBattleAnimator.play_defend(sprite)
+				print("[BattleArena] Playing DEFEND animation")
+				_play_defend_tween(sprite, original_scale)
 			
 			Enums.BattleAction.PURIFY:
-				CharacterBattleAnimator.play_purify(sprite)
+				print("[BattleArena] Playing PURIFY animation")
+				_play_purify_tween(sprite, original_scale)
 			
 			Enums.BattleAction.ITEM:
-				CharacterBattleAnimator.play_item(sprite)
+				print("[BattleArena] Playing ITEM animation")
+				_play_item_tween(sprite, original_pos)
 			
 			Enums.BattleAction.FLEE:
-				CharacterBattleAnimator.play_flee(sprite)
+				print("[BattleArena] Playing FLEE animation")
+				_play_flee_tween(sprite, dir, original_pos)
+
+# =============================================================================
+# SIMPLE TWEEN ANIMATIONS (Reliable, no async issues)
+# =============================================================================
+
+func _play_attack_tween(sprite: Node2D, dir: float, original_pos: Vector2, original_scale: Vector2, original_rot: float) -> void:
+	var tween := create_tween()
+	# Anticipation - pull back
+	tween.tween_property(sprite, "position", original_pos + Vector2(-15 * dir, 0), 0.1)
+	tween.parallel().tween_property(sprite, "scale", original_scale * Vector2(0.95, 1.05), 0.1)
+	tween.parallel().tween_property(sprite, "rotation_degrees", original_rot - 5 * dir, 0.1)
+	# Strike - lunge forward
+	tween.tween_property(sprite, "position", original_pos + Vector2(60 * dir, 0), 0.08)
+	tween.parallel().tween_property(sprite, "scale", original_scale * Vector2(1.1, 0.95), 0.08)
+	tween.parallel().tween_property(sprite, "rotation_degrees", original_rot + 8 * dir, 0.08)
+	# Flash white on impact
+	tween.tween_property(sprite, "modulate", Color(1.5, 1.5, 1.5, 1.0), 0.03)
+	tween.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.05)
+	# Recovery - return to original
+	tween.tween_property(sprite, "position", original_pos, 0.15)
+	tween.parallel().tween_property(sprite, "scale", original_scale, 0.15)
+	tween.parallel().tween_property(sprite, "rotation_degrees", original_rot, 0.15)
+
+func _play_skill_tween(sprite: Node2D, dir: float, original_pos: Vector2, original_scale: Vector2, original_rot: float) -> void:
+	var tween := create_tween()
+	# Channel - rise and glow
+	tween.tween_property(sprite, "position", original_pos + Vector2(0, -15), 0.2)
+	tween.parallel().tween_property(sprite, "scale", original_scale * Vector2(1.05, 1.05), 0.2)
+	tween.parallel().tween_property(sprite, "modulate", Color(1.3, 1.2, 1.4, 1.0), 0.2)
+	# Release - thrust forward
+	tween.tween_property(sprite, "position", original_pos + Vector2(40 * dir, -5), 0.1)
+	tween.parallel().tween_property(sprite, "modulate", Color(1.5, 1.4, 1.6, 1.0), 0.1)
+	# Flash
+	tween.tween_property(sprite, "modulate", Color(2.0, 1.8, 2.2, 1.0), 0.05)
+	# Recovery
+	tween.tween_property(sprite, "position", original_pos, 0.2)
+	tween.parallel().tween_property(sprite, "scale", original_scale, 0.2)
+	tween.parallel().tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.2)
+
+func _play_defend_tween(sprite: Node2D, original_scale: Vector2) -> void:
+	var tween := create_tween()
+	# Brace - crouch and glow blue
+	tween.tween_property(sprite, "scale", original_scale * Vector2(1.05, 0.95), 0.15)
+	tween.parallel().tween_property(sprite, "modulate", Color(0.8, 0.9, 1.3, 1.0), 0.15)
+	# Hold
+	tween.tween_interval(0.3)
+	# Return
+	tween.tween_property(sprite, "scale", original_scale, 0.15)
+	tween.parallel().tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
+
+func _play_purify_tween(sprite: Node2D, original_scale: Vector2) -> void:
+	var tween := create_tween()
+	# Raise hands - glow purple/white
+	tween.tween_property(sprite, "scale", original_scale * Vector2(1.0, 1.1), 0.2)
+	tween.parallel().tween_property(sprite, "modulate", Color(1.2, 1.0, 1.4, 1.0), 0.2)
+	# Pulse
+	tween.tween_property(sprite, "modulate", Color(1.5, 1.3, 1.8, 1.0), 0.15)
+	tween.tween_property(sprite, "modulate", Color(1.2, 1.0, 1.4, 1.0), 0.15)
+	# Return
+	tween.tween_property(sprite, "scale", original_scale, 0.2)
+	tween.parallel().tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.2)
+
+func _play_item_tween(sprite: Node2D, original_pos: Vector2) -> void:
+	var tween := create_tween()
+	# Reach up
+	tween.tween_property(sprite, "position", original_pos + Vector2(0, -10), 0.15)
+	# Use item - green flash
+	tween.tween_property(sprite, "modulate", Color(0.8, 1.4, 0.8, 1.0), 0.1)
+	tween.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
+	# Return
+	tween.tween_property(sprite, "position", original_pos, 0.15)
+
+func _play_flee_tween(sprite: Node2D, dir: float, original_pos: Vector2) -> void:
+	var tween := create_tween()
+	# Turn and run
+	tween.tween_property(sprite, "position", original_pos + Vector2(-100 * dir, 0), 0.3)
+	tween.parallel().tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 0.5), 0.3)
+
+func _play_hurt_tween(sprite: Node2D, is_critical: bool) -> void:
+	var tween := create_tween()
+	var shake_amount := 15.0 if is_critical else 8.0
+	var flash_color := Color(1.8, 0.3, 0.3, 1.0) if is_critical else Color(1.5, 0.5, 0.5, 1.0)
+	var original_pos := sprite.position
+	
+	# Flash red and shake
+	tween.tween_property(sprite, "modulate", flash_color, 0.05)
+	tween.parallel().tween_property(sprite, "position", original_pos + Vector2(shake_amount, 0), 0.05)
+	tween.tween_property(sprite, "position", original_pos + Vector2(-shake_amount, 0), 0.05)
+	tween.tween_property(sprite, "position", original_pos + Vector2(shake_amount * 0.5, 0), 0.05)
+	tween.tween_property(sprite, "position", original_pos, 0.05)
+	tween.parallel().tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.1)
 
 func _play_hit_animation(sprite: Node2D, is_critical: bool = false, character: CharacterBase = null) -> void:
 	# Check if character has animated battle sprite (new sprite sheet system)
@@ -1037,8 +1135,8 @@ func _play_hit_animation(sprite: Node2D, is_critical: bool = false, character: C
 			animated_sprite.play_hurt(is_critical)
 			return
 	
-	# Fallback to CharacterBattleAnimator for static sprites
-	CharacterBattleAnimator.play_hurt(sprite, is_critical)
+	# Use simple tween animation
+	_play_hurt_tween(sprite, is_critical)
 
 func _play_heal_animation(sprite: Node2D) -> void:
 	var tween := create_tween()
@@ -1046,20 +1144,42 @@ func _play_heal_animation(sprite: Node2D) -> void:
 	tween.tween_property(sprite, "modulate", Color.WHITE, 0.3)
 
 func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> void:
+	print("[BattleArena] _play_death_animation called for sprite: %s" % str(sprite))
+	
+	if not sprite or not is_instance_valid(sprite):
+		print("[BattleArena] ERROR: Invalid sprite for death animation!")
+		return
+	
 	# Mark sprite as dead so hover/highlight code doesn't reset it
 	sprite.set_meta("is_dead_sprite", true)
 	
-	# Get brand for death effect color
-	var brand: Enums.Brand = Enums.Brand.NONE
-	if character and character is Monster and character.monster_data:
-		brand = character.monster_data.brand
+	# Store original values
+	var original_pos := sprite.position
+	var original_scale := sprite.scale
 	
-	# Use the new CharacterBattleAnimator for dramatic death
-	CharacterBattleAnimator.play_death(sprite, brand)
+	# Simple, reliable death animation using tweens directly
+	var tween := create_tween()
 	
-	# Hide sprite after animation completes (animator handles the fade)
-	await get_tree().create_timer(1.2).timeout
+	# Phase 1: Flash red
+	tween.tween_property(sprite, "modulate", Color(1.5, 0.3, 0.3, 1.0), 0.1)
+	
+	# Phase 2: Stagger back
+	tween.tween_property(sprite, "position", original_pos + Vector2(-30, 0), 0.2)
+	tween.parallel().tween_property(sprite, "rotation_degrees", -15.0, 0.2)
+	tween.parallel().tween_property(sprite, "modulate", Color(1.0, 0.5, 0.5, 1.0), 0.2)
+	
+	# Phase 3: Fall down and fade out
+	tween.tween_property(sprite, "position", original_pos + Vector2(-60, 50), 0.4)
+	tween.parallel().tween_property(sprite, "rotation_degrees", -70.0, 0.4)
+	tween.parallel().tween_property(sprite, "scale", original_scale * Vector2(1.0, 0.6), 0.4)
+	tween.parallel().tween_property(sprite, "modulate", Color(0.3, 0.3, 0.3, 0.0), 0.4)
+	
+	# Wait for animation to complete
+	await tween.finished
+	
+	# Hide sprite completely
 	sprite.visible = false
+	print("[BattleArena] Death animation complete, sprite hidden")
 
 # =============================================================================
 # DAMAGE NUMBERS

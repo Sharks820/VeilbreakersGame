@@ -199,6 +199,21 @@ func _force_ui_layout() -> void:
 			combat_log_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 			# Make sure mouse filter allows scrolling
 			combat_log_scroll.mouse_filter = Control.MOUSE_FILTER_STOP
+			# Style the scrollbar to be visible
+			var scrollbar := combat_log_scroll.get_v_scroll_bar()
+			if scrollbar:
+				scrollbar.custom_minimum_size.x = 8  # Make scrollbar wider/visible
+				# Create a visible style for the scrollbar
+				var grabber_style := StyleBoxFlat.new()
+				grabber_style.bg_color = Color(0.5, 0.45, 0.4, 0.8)
+				grabber_style.set_corner_radius_all(4)
+				scrollbar.add_theme_stylebox_override("grabber", grabber_style)
+				scrollbar.add_theme_stylebox_override("grabber_highlight", grabber_style)
+				scrollbar.add_theme_stylebox_override("grabber_pressed", grabber_style)
+				var scroll_bg := StyleBoxFlat.new()
+				scroll_bg.bg_color = Color(0.15, 0.12, 0.1, 0.6)
+				scroll_bg.set_corner_radius_all(4)
+				scrollbar.add_theme_stylebox_override("scroll", scroll_bg)
 		if combat_log_text:
 			# Disable RichTextLabel's internal scrolling to prevent dual scrollbar
 			# But keep scroll_active true so content can be scrolled via ScrollContainer
