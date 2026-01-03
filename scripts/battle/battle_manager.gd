@@ -591,7 +591,12 @@ func _execute_next_party_action() -> void:
 
 	# Execute the queued action
 	is_executing_action = true
-	print("[BattleManager] Emitting action_animation_started for %s, action=%d" % [character.character_name, queued.action])
+	
+	# Set current_target meta for animation system to know where to animate toward
+	if queued.target:
+		character.set_meta("current_target", queued.target)
+	
+	print("[BattleManager] Emitting action_animation_started for %s, action=%d, target=%s" % [character.character_name, queued.action, queued.target.character_name if queued.target else "none"])
 	action_animation_started.emit(character, queued.action)
 
 	var result: Dictionary = {}
@@ -717,6 +722,11 @@ func _execute_next_enemy_attack() -> void:
 
 	# Execute enemy action
 	is_executing_action = true
+	
+	# Set current_target meta for animation system
+	if ai_decision.target:
+		attacker.set_meta("current_target", ai_decision.target)
+	
 	action_animation_started.emit(attacker, ai_decision.action)
 
 	var result: Dictionary = {}
@@ -777,6 +787,10 @@ func execute_action(character: CharacterBase, action: Enums.BattleAction, target
 
 	is_executing_action = true
 	battle_state = Enums.BattleState.EXECUTING_ACTION
+	
+	# Set current_target meta for animation system to know where to animate toward
+	if target:
+		character.set_meta("current_target", target)
 	
 	# Set current skill metadata for animation system (if using a skill)
 	if action == Enums.BattleAction.SKILL and skill != "":
