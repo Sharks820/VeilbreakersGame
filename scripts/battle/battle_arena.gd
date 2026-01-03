@@ -803,29 +803,29 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 			# Hero sprites are ~1800x2400px, monster sprites are ~1024x1024px
 			match character.character_type:
 				Enums.CharacterType.PLAYER:
-					# Hero sprites are very large - scale down more
-					sprite.scale = Vector2(0.08, 0.08)  # ~144x190 pixels
-					sprite.position = Vector2(0, -95)
-					hitbox_size = Vector2(120, 180)
-					hitbox_offset = Vector2(0, -90)
+					# Hero sprites are large - scale to ~200px height
+					sprite.scale = Vector2(0.11, 0.11)  # ~200x260 pixels
+					sprite.position = Vector2(0, -130)
+					hitbox_size = Vector2(160, 240)
+					hitbox_offset = Vector2(0, -120)
 				Enums.CharacterType.MONSTER:
 					if character is Monster and character.is_corrupted:
 						# Enemy monsters - moderate size
-						sprite.scale = Vector2(0.12, 0.12)
-						sprite.position = Vector2(0, -70)
-						hitbox_size = Vector2(100, 150)
-						hitbox_offset = Vector2(0, -75)
+						sprite.scale = Vector2(0.10, 0.10)
+						sprite.position = Vector2(0, -60)
+						hitbox_size = Vector2(90, 130)
+						hitbox_offset = Vector2(0, -65)
 					else:
 						# Allied monsters - same as enemies
-						sprite.scale = Vector2(0.12, 0.12)
-						sprite.position = Vector2(0, -70)
-					hitbox_size = Vector2(100, 150)
-					hitbox_offset = Vector2(0, -75)
+						sprite.scale = Vector2(0.10, 0.10)
+						sprite.position = Vector2(0, -60)
+					hitbox_size = Vector2(90, 130)
+					hitbox_offset = Vector2(0, -65)
 				Enums.CharacterType.BOSS:
-					sprite.scale = Vector2(0.18, 0.18)  # Bosses are bigger
+					sprite.scale = Vector2(0.16, 0.16)  # Bosses are bigger
 					sprite.position = Vector2(0, -100)
-					hitbox_size = Vector2(160, 240)
-					hitbox_offset = Vector2(0, -120)
+					hitbox_size = Vector2(150, 220)
+					hitbox_offset = Vector2(0, -110)
 				_:
 					sprite.scale = Vector2(0.10, 0.10)
 					sprite.position = Vector2(0, -60)
@@ -1153,10 +1153,16 @@ func _on_damage_dealt(source: Node, target: Node, amount: int, is_critical: bool
 	if hp_bar:
 		hp_bar.value = character.current_hp
 
-	# Update sidebar HP bar
+	# Update sidebar HP bar (legacy)
 	var sidebar_hp_bar: ProgressBar = character.get_meta("sidebar_hp_bar", null)
 	if sidebar_hp_bar and is_instance_valid(sidebar_hp_bar):
 		sidebar_hp_bar.value = character.current_hp
+	
+	# Update battle UI sidebars (both party and enemy)
+	if battle_ui and is_instance_valid(battle_ui):
+		battle_ui.update_enemy_sidebar()
+		if battle_ui.has_method("update_party_sidebar"):
+			battle_ui.update_party_sidebar()
 
 	# Update screen effects with health percent for vignette
 	if screen_effects and character in battle_manager.player_party:

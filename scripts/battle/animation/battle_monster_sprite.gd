@@ -77,6 +77,19 @@ func setup(p_monster_id: String, p_is_enemy: bool = true) -> void:
 	monster_id = p_monster_id
 	is_enemy = p_is_enemy
 	
+	# Ensure animator exists (may be called before _ready)
+	if not _animator:
+		_animator = SpriteSheetAnimatorScript.new()
+		_animator.name = "Animator"
+		add_child(_animator)
+		# Connect signals
+		if _animator.has_signal("animation_event"):
+			_animator.animation_event.connect(_on_animation_event)
+		if _animator.has_signal("animation_finished"):
+			_animator.animation_finished.connect(_on_animation_finished)
+		if _animator.has_signal("hit_frame_reached"):
+			_animator.hit_frame_reached.connect(_on_hit_frame)
+	
 	# Check if monster has sprite sheet config
 	if MonsterSpriteConfigScript.has_sprite_sheets(monster_id):
 		_monster_config = MonsterSpriteConfigScript.get_config(monster_id)

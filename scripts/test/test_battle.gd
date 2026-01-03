@@ -674,10 +674,17 @@ func _show_tutorial_step(trigger: String) -> void:
 			return
 
 func _display_vera_tutorial(dialogue: Dictionary) -> void:
-	"""Display VERA tutorial panel with the given dialogue"""
+	"""Display VERA tutorial panel with the given dialogue - PAUSES GAME"""
 	# Create or get the tutorial panel
 	if not vera_tutorial_panel:
 		_create_vera_tutorial_panel()
+	
+	# PAUSE THE GAME during tutorial
+	get_tree().paused = true
+	vera_tutorial_panel.process_mode = Node.PROCESS_MODE_ALWAYS  # Panel works while paused
+	
+	# Add darkening overlay behind the panel
+	_show_tutorial_overlay()
 	
 	vera_tutorial_panel.visible = true
 	
@@ -733,6 +740,10 @@ func _display_vera_tutorial(dialogue: Dictionary) -> void:
 	vera_tutorial_panel.visible = false
 	_clear_highlights()
 	_hide_tutorial_arrow()
+	_hide_tutorial_overlay()
+	
+	# UNPAUSE THE GAME
+	get_tree().paused = false
 
 var _tutorial_continue_pressed: bool = false
 
@@ -741,21 +752,20 @@ func _on_tutorial_continue_pressed() -> void:
 	_tutorial_continue_pressed = true
 
 func _create_vera_tutorial_panel() -> void:
-	"""Create the VERA tutorial panel UI - positioned ABOVE action buttons"""
+	"""Create the VERA tutorial panel UI - positioned in CENTER of screen"""
 	vera_tutorial_panel = PanelContainer.new()
 	vera_tutorial_panel.name = "VERATutorialPanel"
 	
-	# Position ABOVE the action buttons (center-bottom, but higher up)
-	# Action buttons are at bottom ~100px, so we position this at ~220px from bottom
-	vera_tutorial_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	# Position in CENTER of screen - not at bottom where buttons are
+	vera_tutorial_panel.set_anchors_preset(Control.PRESET_CENTER)
 	vera_tutorial_panel.anchor_left = 0.5
 	vera_tutorial_panel.anchor_right = 0.5
-	vera_tutorial_panel.anchor_top = 1.0
-	vera_tutorial_panel.anchor_bottom = 1.0
+	vera_tutorial_panel.anchor_top = 0.5
+	vera_tutorial_panel.anchor_bottom = 0.5
 	vera_tutorial_panel.offset_left = -450
 	vera_tutorial_panel.offset_right = 450
-	vera_tutorial_panel.offset_top = -320  # Above action buttons
-	vera_tutorial_panel.offset_bottom = -130  # Leave space for action buttons below
+	vera_tutorial_panel.offset_top = -120  # Center vertically
+	vera_tutorial_panel.offset_bottom = 120
 	
 	# Style - dark fantasy horror theme
 	var style := StyleBoxFlat.new()
@@ -893,16 +903,103 @@ func _wait_for_tutorial_continue() -> void:
 			break
 
 var _tutorial_arrow: Control = null
+var _tutorial_overlay: ColorRect = null
+var _tutorial_overlay_canvas: CanvasLayer = null
+var _highlight_panels: Array[Control] = []
+
+func _show_tutorial_overlay() -> void:
+	"""Show a dark overlay behind the tutorial panel to focus attention"""
+	if _tutorial_overlay_canvas:
+		return  # Already showing
+	
+	_tutorial_overlay_canvas = CanvasLayer.new()
+	_tutorial_overlay_canvas.name = "TutorialOverlayCanvas"
+	_tutorial_overlay_canvas.layer = 98  # Below tutorial panel (100) but above game
+	_tutorial_overlay_canvas.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_tutorial_overlay_canvas)
+	
+	_tutorial_overlay = ColorRect.new()
+	_tutorial_overlay.name = "TutorialOverlay"
+	_tutorial_overlay.color = Color(0, 0, 0, 0.7)  # Dark semi-transparent
+	_tutorial_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_tutorial_overlay.mouse_filter = Control.MOUSE_FILTER_STOP  # Block clicks
+	_tutorial_overlay_canvas.add_child(_tutorial_overlay)
+	
+	# Fade in
+	_tutorial_overlay.modulate.a = 0
+	var tween := create_tween()
+	tween.tween_property(_tutorial_overlay, "modulate:a", 1.0, 0.3)
+
+func _hide_tutorial_overlay() -> void:
+	"""Hide the tutorial overlay"""
+	if _tutorial_overlay_canvas and is_instance_valid(_tutorial_overlay_canvas):
+		_tutorial_overlay_canvas.queue_free()
+		_tutorial_overlay_canvas = null
+		_tutorial_overlay = null
 
 func _highlight_ui_element(element_name: String) -> void:
-	"""Highlight a UI element for the tutorial"""
-	# This would add a glow/pulse effect to the specified element
-	# For now, just log it
+	"""Highlight a UI element for the tutorial with a glowing border"""
 	EventBus.emit_debug("Tutorial highlight: %s" % element_name)
+	
+	# Find the element to highlight based on name
+	var target_node: Control = null
+	var viewport_size := get_viewport().get_visible_rect().size
+	
+	match element_name:
+		"action_bar":
+			# Highlight the action buttons area at bottom
+			target_node = _create_highlight_rect(
+				Vector2(viewport_size.x / 2 - 350, viewport_size.y - 100),
+				Vector2(700, 80)
+			)
+		"enemies":
+			# Highlight the enemy area on the right
+			target_node = _create_highlight_rect(
+				Vector2(viewport_size.x - 180, 60),
+				Vector2(170, 350)
+			)
+		"purify_button":
+			# Highlight purify button specifically
+			target_node = _create_highlight_rect(
+				Vector2(viewport_size.x / 2 - 60, viewport_size.y - 95),
+				Vector2(120, 70)
+			)
+	
+	if target_node:
+		_highlight_panels.append(target_node)
+
+func _create_highlight_rect(pos: Vector2, size: Vector2) -> Control:
+	"""Create a pulsing highlight rectangle"""
+	var highlight := Panel.new()
+	highlight.position = pos
+	highlight.size = size
+	highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0)  # Transparent background
+	style.border_color = Color(1.0, 0.9, 0.3, 1.0)  # Golden border
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(8)
+	highlight.add_theme_stylebox_override("panel", style)
+	
+	# Add to overlay canvas so it's visible during pause
+	if _tutorial_overlay_canvas:
+		_tutorial_overlay_canvas.add_child(highlight)
+		highlight.z_index = 5  # Above overlay
+	
+	# Pulsing animation
+	var tween := create_tween().set_loops()
+	tween.tween_property(highlight, "modulate:a", 0.5, 0.5)
+	tween.tween_property(highlight, "modulate:a", 1.0, 0.5)
+	
+	return highlight
 
 func _clear_highlights() -> void:
 	"""Clear all tutorial highlights"""
-	pass
+	for panel in _highlight_panels:
+		if is_instance_valid(panel):
+			panel.queue_free()
+	_highlight_panels.clear()
 
 func _show_tutorial_arrow(target: String) -> void:
 	"""Show an animated arrow pointing to a UI element"""
@@ -912,11 +1009,15 @@ func _show_tutorial_arrow(target: String) -> void:
 	_tutorial_arrow = Control.new()
 	_tutorial_arrow.name = "TutorialArrow"
 	_tutorial_arrow.z_index = 101
+	_tutorial_arrow.process_mode = Node.PROCESS_MODE_ALWAYS  # Work while paused
 	
 	var arrow_label := Label.new()
 	arrow_label.name = "ArrowLabel"
-	arrow_label.add_theme_font_size_override("font_size", 36)
-	arrow_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
+	arrow_label.add_theme_font_size_override("font_size", 48)  # Bigger arrow
+	arrow_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))  # Golden
+	# Add outline for visibility
+	arrow_label.add_theme_color_override("font_outline_color", Color(0.2, 0.1, 0.0))
+	arrow_label.add_theme_constant_override("outline_size", 4)
 	_tutorial_arrow.add_child(arrow_label)
 	
 	# Position based on target
@@ -925,32 +1026,34 @@ func _show_tutorial_arrow(target: String) -> void:
 		"action_buttons":
 			# Point down at action buttons (bottom center)
 			arrow_label.text = "▼"
-			_tutorial_arrow.position = Vector2(viewport_size.x / 2 - 20, viewport_size.y - 140)
+			_tutorial_arrow.position = Vector2(viewport_size.x / 2 - 20, viewport_size.y - 160)
 		"enemy_sidebar":
 			# Point right at enemy sidebar
 			arrow_label.text = "▶"
-			_tutorial_arrow.position = Vector2(viewport_size.x - 200, viewport_size.y / 2)
+			_tutorial_arrow.position = Vector2(viewport_size.x - 220, viewport_size.y / 2 - 20)
 		"purify_button":
 			# Point down at purify button (third button from left)
 			arrow_label.text = "▼"
-			_tutorial_arrow.position = Vector2(viewport_size.x / 2 - 50, viewport_size.y - 140)
+			_tutorial_arrow.position = Vector2(viewport_size.x / 2 - 60, viewport_size.y - 160)
 		_:
 			# Default - center arrow pointing down
 			arrow_label.text = "▼"
 			_tutorial_arrow.position = Vector2(viewport_size.x / 2 - 20, viewport_size.y / 2)
 	
-	# Add to high layer canvas
+	# Add to high layer canvas that works while paused
 	var canvas := CanvasLayer.new()
 	canvas.name = "ArrowCanvas"
-	canvas.layer = 99
+	canvas.layer = 101  # Above tutorial panel
+	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(canvas)
 	canvas.add_child(_tutorial_arrow)
 	
-	# Animate the arrow (bobbing motion)
+	# Animate the arrow (bobbing motion) - use process_always tween
 	var tween := create_tween().set_loops()
+	tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)  # Works while paused
 	var start_pos := _tutorial_arrow.position
-	tween.tween_property(_tutorial_arrow, "position:y", start_pos.y + 15, 0.4).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(_tutorial_arrow, "position:y", start_pos.y, 0.4).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(_tutorial_arrow, "position:y", start_pos.y + 20, 0.5).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(_tutorial_arrow, "position:y", start_pos.y, 0.5).set_ease(Tween.EASE_IN_OUT)
 
 func _hide_tutorial_arrow() -> void:
 	"""Hide and cleanup tutorial arrow"""

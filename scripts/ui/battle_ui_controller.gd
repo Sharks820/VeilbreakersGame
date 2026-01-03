@@ -708,11 +708,19 @@ func _style_action_buttons() -> void:
 		disabled_style.set_border_width_all(1)
 		disabled_style.set_corner_radius_all(6)
 		
+		# Focus style - same as hover so focus indicator matches hover
+		var focus_style := StyleBoxFlat.new()
+		focus_style.bg_color = Color(0.18, 0.14, 0.22, 0.95)
+		focus_style.border_color = Color(0.7, 0.55, 0.4, 1.0)
+		focus_style.set_border_width_all(2)
+		focus_style.set_corner_radius_all(6)
+		
 		# Apply styles
 		button.add_theme_stylebox_override("normal", normal_style)
 		button.add_theme_stylebox_override("hover", hover_style)
 		button.add_theme_stylebox_override("pressed", pressed_style)
 		button.add_theme_stylebox_override("disabled", disabled_style)
+		button.add_theme_stylebox_override("focus", focus_style)  # Match hover style
 		
 		# Text styling
 		button.add_theme_color_override("font_color", Color(0.95, 0.9, 0.8))
@@ -738,6 +746,9 @@ func _style_action_buttons() -> void:
 
 func _on_action_button_hover(button: Button) -> void:
 	"""Highlight button on hover/focus with scale and color tween"""
+	# Grab focus when mouse hovers - this syncs the focus indicator with mouse
+	button.grab_focus()
+	
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(button, "scale", Vector2(1.08, 1.08), 0.12)
