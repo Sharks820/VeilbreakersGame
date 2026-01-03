@@ -4,6 +4,32 @@
 
 ---
 
+## [v0.93] - 2026-01-03
+
+### Added
+- **Test Battle Starter Items** - Test battles now include starter inventory
+  - 5x Minor Potion, 3x Standard Potion, 1x Greater Potion
+  - 3x Ether (MP restore)
+  - 2x Antidote, 1x Remedy (status cures)
+  - 1x Phoenix Down (revival)
+  - 5x Capture Orb, 2x Greater Capture Orb, 1x Master Capture Orb
+  - 2x each Attack/Defense/Speed Tonic (buffs)
+
+---
+
+## [v0.92] - 2026-01-03
+
+### Added
+- **Defend System Overhaul** - Defend can now target self OR any ally
+  - Added GUARDED status effect (30% damage reduction)
+  - Defend button opens ally target selection (blue highlights)
+  - Self-defend: Character gets GUARDED status
+  - Guard ally: Ally gets GUARDED, damage redirects to guardian
+  - GUARDED consumed after 1 hit OR at end of round
+  - Cannot double-guard (can't guard someone already guarded)
+
+---
+
 ## [v0.85] - 2026-01-02
 
 ### Fixed

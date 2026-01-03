@@ -157,6 +157,9 @@ func _process(delta: float) -> void:
 func _setup_test_battle() -> void:
 	# Set up VERA state
 	_setup_vera()
+	
+	# Add starter items to inventory for testing
+	_add_starter_items()
 
 	# Create party
 	var party := _create_test_party()
@@ -166,6 +169,33 @@ func _setup_test_battle() -> void:
 
 	# Start the battle
 	_start_battle(party, enemies)
+
+func _add_starter_items() -> void:
+	"""Add starter items to inventory for testing battle mechanics"""
+	# Healing items
+	InventorySystem.add_item("potion_minor", 5)      # Minor Potion - 30 HP
+	InventorySystem.add_item("potion_standard", 3)   # Standard Potion - 75 HP
+	InventorySystem.add_item("potion_greater", 1)    # Greater Potion - 150 HP
+	InventorySystem.add_item("ether", 3)             # Ether - MP restore
+	
+	# Status cure items
+	InventorySystem.add_item("antidote", 2)          # Cures poison
+	InventorySystem.add_item("remedy", 1)            # Cures multiple status effects
+	
+	# Revival item
+	InventorySystem.add_item("phoenix_down", 1)      # Revive fallen ally
+	
+	# Capture orbs (Soul Vessels)
+	InventorySystem.add_item("capture_orb", 5)       # Basic capture orb
+	InventorySystem.add_item("greater_capture_orb", 2)  # Enhanced capture orb
+	InventorySystem.add_item("master_capture_orb", 1)   # Master capture orb
+	
+	# Buff items
+	InventorySystem.add_item("attack_tonic", 2)      # Temporary ATK boost
+	InventorySystem.add_item("defense_tonic", 2)     # Temporary DEF boost
+	InventorySystem.add_item("speed_tonic", 2)       # Temporary SPD boost
+	
+	EventBus.emit_debug("Added starter items to inventory for testing")
 
 # =============================================================================
 # VERA SETUP
