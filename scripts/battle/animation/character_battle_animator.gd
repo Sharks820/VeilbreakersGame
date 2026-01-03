@@ -995,7 +995,14 @@ static func play_action_animation(
 	target_position: Vector2 = Vector2.ZERO,
 	is_enemy: bool = false
 ) -> void:
+	print("[CharacterBattleAnimator] play_action_animation called: action=%s, sprite=%s, brand=%d" % [action_type, str(sprite), brand])
+	
+	if not sprite or not is_instance_valid(sprite):
+		print("[CharacterBattleAnimator] ERROR: Invalid sprite!")
+		return
+	
 	var config: Dictionary = ANIMATION_CONFIGS.get(action_type, ANIMATION_CONFIGS["ATTACK"])
+	print("[CharacterBattleAnimator] Using config with %d phases" % config.get("phases", []).size())
 	var phases: Array = config.get("phases", [])
 	
 	# Store original state

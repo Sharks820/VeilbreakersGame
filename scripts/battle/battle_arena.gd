@@ -1001,8 +1001,10 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 				animated_sprite.play_idle()
 	else:
 		# Fallback to CharacterBattleAnimator for non-sprite-sheet characters
+		print("[BattleArena] Using CharacterBattleAnimator fallback for %s" % character.character_name)
 		match action:
 			Enums.BattleAction.ATTACK:
+				print("[BattleArena] Calling CharacterBattleAnimator.play_attack on sprite: %s" % str(sprite))
 				CharacterBattleAnimator.play_attack(sprite, brand, is_enemy)
 			
 			Enums.BattleAction.SKILL:
