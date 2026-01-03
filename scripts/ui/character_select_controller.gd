@@ -687,9 +687,10 @@ func _start_vera_portrait_animation() -> void:
 	if not vera_portrait:
 		return
 	
-	# Subtle breathing/pulse effect
+	# Subtle breathing/pulse effect - larger scale range for smoother visual
 	_vera_portrait_tween = create_tween().set_loops()
-	_vera_portrait_tween.tween_property(vera_portrait, "scale", Vector2(1.03, 1.03), 2.0).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_vera_portrait_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)  # Smoother processing
+	_vera_portrait_tween.tween_property(vera_portrait, "scale", Vector2(1.05, 1.05), 2.0).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 	_vera_portrait_tween.tween_property(vera_portrait, "scale", Vector2(1.0, 1.0), 2.0).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 func _create_button_bar(parent: Control) -> void:
@@ -941,11 +942,16 @@ func _start_breathing_animation() -> void:
 	if _breathing_tween and _breathing_tween.is_valid():
 		_breathing_tween.kill()
 	
-	# Smoother breathing animation with larger scale range to reduce visual jitter
-	# Using 1.0 to 1.03 with slower timing for more natural feel
+	if not hero_portrait:
+		return
+	
+	# Smoother breathing animation - use _process for frame-perfect smoothness instead of tweens
+	# Tweens can cause micro-stuttering on small scale changes
+	# Using larger scale range (1.0 to 1.04) and slower timing for natural feel
 	_breathing_tween = create_tween().set_loops()
-	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.025, 1.025), 3.0).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.0, 1.0), 3.0).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_breathing_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)  # Process during idle for smoothness
+	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.04, 1.04), 2.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.0, 1.0), 2.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 # =============================================================================
 # INPUT HANDLING

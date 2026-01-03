@@ -27,6 +27,7 @@ var is_tutorial: bool = false
 var tutorial_step: int = 0
 var tutorial_dialogue_shown: bool = false
 var vera_tutorial_panel: Control = null
+var _vera_portrait_breathing_tween: Tween = null
 
 # Tutorial progress tracking
 var _tutorial_shown_turn_start: bool = false
@@ -704,11 +705,17 @@ func _display_vera_tutorial(dialogue: Dictionary) -> void:
 	if ResourceLoader.exists("res://assets/characters/vera/vera_interface.png"):
 		portrait.texture = load("res://assets/characters/vera/vera_interface.png")
 	
-	# Typewriter effect (faster for better UX)
+	# Start smooth breathing animation on portrait
+	_start_vera_tutorial_breathing(portrait)
+	
+	# Typewriter effect - FAST for snappy UX (3-4 chars at a time)
 	var full_text: String = dialogue.text
-	for i in range(full_text.length()):
-		text_label.text = full_text.substr(0, i + 1)
-		await get_tree().create_timer(0.015).timeout
+	var chars_per_tick := 3  # Show 3 characters at a time for speed
+	var i := 0
+	while i < full_text.length():
+		i = mini(i + chars_per_tick, full_text.length())
+		text_label.text = full_text.substr(0, i)
+		await get_tree().create_timer(0.008).timeout  # 8ms per tick (was 15ms per char)
 	
 	# Highlight relevant UI element if specified
 	if dialogue.highlight != "":
@@ -738,6 +745,7 @@ func _display_vera_tutorial(dialogue: Dictionary) -> void:
 	continue_button.visible = false
 	hint_label.visible = false
 	vera_tutorial_panel.visible = false
+	_stop_vera_tutorial_breathing()
 	_clear_highlights()
 	_hide_tutorial_arrow()
 	_hide_tutorial_overlay()
@@ -890,6 +898,36 @@ func _create_vera_tutorial_panel() -> void:
 	canvas.layer = 100
 	add_child(canvas)
 	canvas.add_child(vera_tutorial_panel)
+
+func _start_vera_tutorial_breathing(portrait: TextureRect) -> void:
+	"""Start smooth breathing animation on VERA portrait"""
+	# Kill existing tween
+	if _vera_portrait_breathing_tween and _vera_portrait_breathing_tween.is_valid():
+		_vera_portrait_breathing_tween.kill()
+	
+	if not portrait:
+		return
+	
+	# Set pivot to center for proper scaling
+	portrait.pivot_offset = portrait.size / 2.0
+	
+	# Smooth breathing using modulate brightness instead of scale
+	# This avoids the frame-skipping issue with small scale changes
+	_vera_portrait_breathing_tween = create_tween().set_loops()
+	_vera_portrait_breathing_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
+	
+	# Pulse brightness slightly - more visible than tiny scale changes
+	var bright := Color(1.15, 1.1, 1.2, 1.0)  # Slight purple-ish glow
+	var normal := Color(1.0, 1.0, 1.0, 1.0)
+	
+	_vera_portrait_breathing_tween.tween_property(portrait, "modulate", bright, 1.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_vera_portrait_breathing_tween.tween_property(portrait, "modulate", normal, 1.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+func _stop_vera_tutorial_breathing() -> void:
+	"""Stop the breathing animation"""
+	if _vera_portrait_breathing_tween and _vera_portrait_breathing_tween.is_valid():
+		_vera_portrait_breathing_tween.kill()
+		_vera_portrait_breathing_tween = null
 
 func _wait_for_tutorial_continue() -> void:
 	"""Wait for player to press continue (button click OR keyboard)"""
