@@ -460,3 +460,11 @@ static func get_total_xp_for_level(level: int) -> int:
 	for i in range(1, level + 1):
 		total += get_xp_for_level(i)
 	return total
+
+# =============================================================================
+# COLOR CONSTANTS
+# =============================================================================
+
+# Transparent/Basic
+const COLOR_TRANSPARENT := Color(0.0, 0.0, 0.0, 0.0)
+const COLOR_NORMAL := Color(1.0, 1.0, 1.0, 1.0)
