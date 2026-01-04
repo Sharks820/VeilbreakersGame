@@ -1,6 +1,6 @@
 # VEILBREAKERS - Current State
 
-> **Version:** v0.97 | **Last Updated:** 2026-01-04
+> **Version:** v1.00 | **Last Updated:** 2026-01-04
 
 ---
 

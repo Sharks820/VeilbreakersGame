@@ -2820,7 +2820,7 @@ func _get_brand_name(brand: Enums.Brand) -> String:
 
 func _get_brand_color(brand: Enums.Brand) -> Color:
 	"""Get color for monster brand display - delegates to Helpers for consistency"""
-	return Helpers.get_brand_color(brand)
+	return BrandSystem.get_brand_color(brand)
 
 func _create_brand_icon(brand: Enums.Brand) -> PanelContainer:
 	"""Create a colored icon indicator for the brand"""

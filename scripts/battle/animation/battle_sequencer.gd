@@ -1170,7 +1170,7 @@ func _resolve_hybrid_brand(brand: String) -> String:
 
 func _get_brand_color(brand: String) -> Color:
 	## Delegate to centralized Helpers to avoid color duplication
-	return Helpers.get_brand_color_by_name(brand)
+	return BrandSystem.get_brand_color_by_name(brand)
 
 func _calculate_exp() -> int:
 	# Placeholder

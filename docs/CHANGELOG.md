@@ -4,6 +4,24 @@
 
 ---
 
+## [v1.00] - 2026-01-04
+
+### Fixed
+- **CRITICAL: Broken Helpers references** - `helpers.gd` was archived in v0.95 but 5 files still referenced it
+  - Migrated brand color functions to `BrandSystem` class:
+    - `get_brand_color(brand: Enums.Brand) -> Color`
+    - `get_brand_color_by_name(brand_name: String) -> Color`
+    - `get_brand_glow_color(brand: Enums.Brand) -> Color`
+  - Updated all references from `Helpers.get_brand_color*()` to `BrandSystem.get_brand_color*()`
+  - Files fixed: `animation_effects.gd`, `battle_sequencer.gd`, `battle_ui_animator.gd`, `battle_ui_controller.gd`, `character_select_controller.gd`, `damage_number_spawner.gd`
+
+### Fixed (v0.99)
+- **Duplicate `_exit_tree()` functions** causing signal leaks
+  - `battle_arena.gd` - Removed duplicate at line 2022 (first one at line 64 was correct)
+  - `main_menu_controller.gd` - Removed duplicate at line 480 (first one at line 146 was correct)
+
+---
+
 ## [v0.97] - 2026-01-04
 
 ### Added

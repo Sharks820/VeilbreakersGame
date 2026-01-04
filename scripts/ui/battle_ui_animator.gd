@@ -43,7 +43,7 @@ signal target_selection_ready
 static func _get_brand_color(brand_name: String) -> Color:
 	if brand_name == "NEUTRAL" or brand_name.is_empty():
 		return Color.WHITE
-	return Helpers.get_brand_color_by_name(brand_name)
+	return BrandSystem.get_brand_color_by_name(brand_name)
 
 # -----------------------------------------------------------------------------
 # STATE

@@ -232,3 +232,62 @@ static func apply_brand_bonus(base_value: float, brand: Enums.Brand, stat_key: S
 	if bonuses.has(stat_key):
 		return base_value * bonuses[stat_key]
 	return base_value
+
+# =============================================================================
+# BRAND COLORS (moved from deprecated Helpers class)
+# =============================================================================
+
+## Get color for a Brand - primary color for UI and effects
+static func get_brand_color(brand: Enums.Brand) -> Color:
+	match brand:
+		# Pure Brands
+		Enums.Brand.SAVAGE:
+			return Color("c73e3e")  # Red - Raw destruction
+		Enums.Brand.IRON:
+			return Color("7b8794")  # Steel gray - Unyielding defense
+		Enums.Brand.VENOM:
+			return Color("6b9b37")  # Green - Precision poison
+		Enums.Brand.SURGE:
+			return Color("4a90d9")  # Blue - Lightning speed
+		Enums.Brand.DREAD:
+			return Color("5d3e8c")  # Purple - Terror incarnate
+		Enums.Brand.LEECH:
+			return Color("c75b8a")  # Pink - Life drain
+		# Hybrid Brands - use primary brand color
+		Enums.Brand.BLOODIRON:
+			return Color("c73e3e")  # SAVAGE primary (70%)
+		Enums.Brand.CORROSIVE:
+			return Color("7b8794")  # IRON primary (70%)
+		Enums.Brand.VENOMSTRIKE:
+			return Color("6b9b37")  # VENOM primary (70%)
+		Enums.Brand.TERRORFLUX:
+			return Color("4a90d9")  # SURGE primary (70%)
+		Enums.Brand.NIGHTLEECH:
+			return Color("5d3e8c")  # DREAD primary (70%)
+		Enums.Brand.RAVENOUS:
+			return Color("c75b8a")  # LEECH primary (70%)
+		Enums.Brand.NONE, _:
+			return Color.WHITE
+
+## Get brand color from string name (convenience method)
+static func get_brand_color_by_name(brand_name: String) -> Color:
+	var brand := get_brand_from_name(brand_name)
+	return get_brand_color(brand)
+
+## Get brand glow color (secondary/highlight color for effects)
+static func get_brand_glow_color(brand: Enums.Brand) -> Color:
+	match brand:
+		Enums.Brand.SAVAGE, Enums.Brand.BLOODIRON, Enums.Brand.RAVENOUS:
+			return Color("ff6b6b")
+		Enums.Brand.IRON, Enums.Brand.CORROSIVE:
+			return Color("a8b5c4")
+		Enums.Brand.VENOM, Enums.Brand.VENOMSTRIKE:
+			return Color("9acd32")
+		Enums.Brand.SURGE, Enums.Brand.TERRORFLUX:
+			return Color("87ceeb")
+		Enums.Brand.DREAD, Enums.Brand.NIGHTLEECH:
+			return Color("9370db")
+		Enums.Brand.LEECH:
+			return Color("ff91af")
+		_:
+			return Color.GRAY

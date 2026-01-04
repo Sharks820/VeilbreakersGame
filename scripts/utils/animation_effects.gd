@@ -69,7 +69,7 @@ static func apply_glow(sprite: Node2D, color: Color, intensity: float, duration:
 
 ## Apply a brand-colored glow
 static func apply_brand_glow(sprite: Node2D, brand: Enums.Brand, intensity: float = 1.5, duration: float = 0.3) -> Tween:
-	var color := Helpers.get_brand_glow_color(brand)
+	var color := BrandSystem.get_brand_glow_color(brand)
 	return apply_glow(sprite, color, intensity, duration)
 
 # =============================================================================

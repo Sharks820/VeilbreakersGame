@@ -22,7 +22,7 @@ const CLASS_COLORS: Dictionary = {
 
 # Path and Brand colors now use centralized systems:
 # - PathSystem.get_path_color() for path colors
-# - Helpers.get_brand_color() for brand colors
+# - BrandSystem.get_brand_color() for brand colors
 
 # =============================================================================
 # STATE
@@ -845,7 +845,7 @@ func _update_info_panel(data: HeroData) -> void:
 	path_label.text = Enums.get_path_name(data.primary_path)
 	path_label.add_theme_color_override("font_color", path_color)
 
-	var brand_color: Color = Helpers.get_brand_color(data.primary_brand)
+	var brand_color: Color = BrandSystem.get_brand_color(data.primary_brand)
 	brand_label.text = Enums.get_brand_name(data.primary_brand)
 	brand_label.add_theme_color_override("font_color", brand_color)
 	
