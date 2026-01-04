@@ -4,6 +4,28 @@
 
 ---
 
+## [v0.97] - 2026-01-04
+
+### Added
+- **COLOR_TRANSPARENT constant** - `Color(0, 0, 0, 0)` for consistent transparency
+- **COLOR_NORMAL constant** - `Color(1, 1, 1, 1)` for resetting modulation
+- Both constants added to `scripts/utils/constants.gd` for use across codebase
+
+---
+
+## [v0.96] - 2026-01-04
+
+### Added
+- **Style validation tool** (`tools/validate_style_constants.py`) - Analyzes codebase for hardcoded colors and styles
+
+### Changed
+- **StyleManager autoload** - Added then reverted (caused issues)
+  - Attempted to centralize color/style management
+  - Reverted due to integration complexity
+  - Constants approach (v0.97) used instead
+
+---
+
 ## [v0.95] - 2026-01-04
 
 ### Removed (Dead Code Cleanup)

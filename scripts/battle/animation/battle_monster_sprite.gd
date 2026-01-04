@@ -142,7 +142,7 @@ func _create_shadow() -> void:
 	
 	# Create a simple ellipse texture for shadow
 	var shadow_image := Image.create(64, 32, false, Image.FORMAT_RGBA8)
-	shadow_image.fill(Color(0, 0, 0, 0))
+	shadow_image.fill(Constants.COLOR_TRANSPARENT)
 	
 	# Draw ellipse shadow with optional color
 	for x in range(64):
