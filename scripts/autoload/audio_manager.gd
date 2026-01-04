@@ -22,10 +22,11 @@ var current_ambience_track: String = ""
 var is_crossfading: bool = false
 var _crossfade_tween: Tween
 
-# Audio caches
+# Audio caches (prevents reloading from disk on every play)
 var _music_cache: Dictionary = {}
 var _sfx_cache: Dictionary = {}
 var _voice_cache: Dictionary = {}
+var _ambience_cache: Dictionary = {}  # Added: cache for ambience tracks
 
 # =============================================================================
 # LIFECYCLE
@@ -270,14 +271,9 @@ func play_ambience(track_id: String, fade_duration: float = 2.0) -> void:
 	if track_id == current_ambience_track:
 		return
 
-	var path := "res://assets/audio/music/ambience_%s.ogg" % track_id
-	if not ResourceLoader.exists(path):
-		path = "res://assets/audio/music/ambience_%s.wav" % track_id
-
-	if not ResourceLoader.exists(path):
+	var stream := _load_ambience(track_id)
+	if not stream:
 		return
-
-	var stream: AudioStream = load(path)
 
 	if _ambience_player.playing and fade_duration > 0:
 		var fade_out_tween := create_tween()
@@ -292,6 +288,22 @@ func play_ambience(track_id: String, fade_duration: float = 2.0) -> void:
 	fade_in_tween.tween_property(_ambience_player, "volume_db", -6.0, fade_duration / 2)
 
 	current_ambience_track = track_id
+
+func _load_ambience(track_id: String) -> AudioStream:
+	## Load ambience track with caching (prevents disk reload on every play)
+	if _ambience_cache.has(track_id):
+		return _ambience_cache[track_id]
+
+	var path := "res://assets/audio/music/ambience_%s.ogg" % track_id
+	if not ResourceLoader.exists(path):
+		path = "res://assets/audio/music/ambience_%s.wav" % track_id
+
+	if ResourceLoader.exists(path):
+		var stream: AudioStream = load(path)
+		_ambience_cache[track_id] = stream
+		return stream
+
+	return null
 
 func stop_ambience(fade_duration: float = 2.0) -> void:
 	if fade_duration > 0:
@@ -363,3 +375,4 @@ func clear_cache() -> void:
 	_music_cache.clear()
 	_sfx_cache.clear()
 	_voice_cache.clear()
+	_ambience_cache.clear()

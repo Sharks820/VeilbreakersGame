@@ -196,55 +196,8 @@ func _calculate_target_score(attacker: CharacterBase, target: CharacterBase, _is
 
 func _get_brand_effectiveness(attacker_brand: Enums.Brand, defender_brand: Enums.Brand) -> float:
 	## Get brand effectiveness multiplier
-	if damage_calculator:
-		return damage_calculator.get_brand_effectiveness(attacker_brand, defender_brand)
-	
-	# Fallback: manual calculation if no damage calculator
-	if attacker_brand == Enums.Brand.NONE or defender_brand == Enums.Brand.NONE:
-		return 1.0
-	
-	# Brand wheel: SAVAGE > IRON > VENOM > SURGE > DREAD > LEECH > SAVAGE
-	var effectiveness_map := {
-		Enums.Brand.SAVAGE: Enums.Brand.IRON,
-		Enums.Brand.IRON: Enums.Brand.VENOM,
-		Enums.Brand.VENOM: Enums.Brand.SURGE,
-		Enums.Brand.SURGE: Enums.Brand.DREAD,
-		Enums.Brand.DREAD: Enums.Brand.LEECH,
-		Enums.Brand.LEECH: Enums.Brand.SAVAGE,
-	}
-	
-	# Get primary brand for hybrids
-	var attacker_primary := _get_primary_brand(attacker_brand)
-	var defender_primary := _get_primary_brand(defender_brand)
-	
-	if effectiveness_map.has(attacker_primary):
-		if effectiveness_map[attacker_primary] == defender_primary:
-			return Constants.BRAND_STRONG  # 1.5x
-	
-	# Check reverse (weakness)
-	if effectiveness_map.has(defender_primary):
-		if effectiveness_map[defender_primary] == attacker_primary:
-			return Constants.BRAND_WEAK  # 0.75x
-	
-	return 1.0
-
-func _get_primary_brand(brand: Enums.Brand) -> Enums.Brand:
-	## Get the primary brand for hybrid brands
-	match brand:
-		Enums.Brand.BLOODIRON:
-			return Enums.Brand.SAVAGE
-		Enums.Brand.CORROSIVE:
-			return Enums.Brand.IRON
-		Enums.Brand.VENOMSTRIKE:
-			return Enums.Brand.VENOM
-		Enums.Brand.TERRORFLUX:
-			return Enums.Brand.SURGE
-		Enums.Brand.NIGHTLEECH:
-			return Enums.Brand.DREAD
-		Enums.Brand.RAVENOUS:
-			return Enums.Brand.LEECH
-		_:
-			return brand
+	## Delegated to BrandSystem for single source of truth
+	return BrandSystem.get_effectiveness(attacker_brand, defender_brand)
 
 func _calculate_threat(target: CharacterBase) -> float:
 	## Calculate threat score based on attack power and role
