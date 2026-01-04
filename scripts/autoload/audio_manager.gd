@@ -84,6 +84,20 @@ func _connect_signals() -> void:
 	EventBus.voice_play_requested.connect(play_voice)
 	EventBus.audio_settings_changed.connect(_on_audio_settings_changed)
 
+func _exit_tree() -> void:
+	# Disconnect EventBus signals to prevent memory leaks
+	if EventBus.music_change_requested.is_connected(play_music):
+		EventBus.music_change_requested.disconnect(play_music)
+	if EventBus.sfx_play_requested.is_connected(play_sfx):
+		EventBus.sfx_play_requested.disconnect(play_sfx)
+	if EventBus.voice_play_requested.is_connected(play_voice):
+		EventBus.voice_play_requested.disconnect(play_voice)
+	if EventBus.audio_settings_changed.is_connected(_on_audio_settings_changed):
+		EventBus.audio_settings_changed.disconnect(_on_audio_settings_changed)
+	# Kill any active crossfade tween
+	if _crossfade_tween:
+		_crossfade_tween.kill()
+
 # =============================================================================
 # MUSIC
 # =============================================================================

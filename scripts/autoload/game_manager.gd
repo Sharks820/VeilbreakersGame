@@ -128,6 +128,19 @@ func _connect_signals() -> void:
 	EventBus.purification_failed.connect(_on_purification_failed)
 	EventBus.path_alignment_changed.connect(_on_path_alignment_changed)
 
+func _exit_tree() -> void:
+	# Disconnect EventBus signals to prevent memory leaks
+	if EventBus.battle_started.is_connected(_on_battle_started):
+		EventBus.battle_started.disconnect(_on_battle_started)
+	if EventBus.battle_ended.is_connected(_on_battle_ended):
+		EventBus.battle_ended.disconnect(_on_battle_ended)
+	if EventBus.purification_succeeded.is_connected(_on_purification_succeeded):
+		EventBus.purification_succeeded.disconnect(_on_purification_succeeded)
+	if EventBus.purification_failed.is_connected(_on_purification_failed):
+		EventBus.purification_failed.disconnect(_on_purification_failed)
+	if EventBus.path_alignment_changed.is_connected(_on_path_alignment_changed):
+		EventBus.path_alignment_changed.disconnect(_on_path_alignment_changed)
+
 # =============================================================================
 # STATE MANAGEMENT
 # =============================================================================

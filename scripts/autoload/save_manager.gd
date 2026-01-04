@@ -28,6 +28,13 @@ func _ready() -> void:
 	EventBus.load_requested.connect(_on_load_requested)
 	EventBus.emit_debug("SaveManager initialized")
 
+func _exit_tree() -> void:
+	# Disconnect EventBus signals to prevent memory leaks
+	if EventBus.save_requested.is_connected(_on_save_requested):
+		EventBus.save_requested.disconnect(_on_save_requested)
+	if EventBus.load_requested.is_connected(_on_load_requested):
+		EventBus.load_requested.disconnect(_on_load_requested)
+
 func _ensure_save_directory() -> void:
 	var dir := DirAccess.open("user://")
 	if dir and not dir.dir_exists("saves"):
