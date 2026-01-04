@@ -770,3 +770,120 @@ static func create_sprite_rect(size: Vector2 = Vector2(48, 48)) -> TextureRect:
 	rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	rect.custom_minimum_size = size
 	return rect
+
+# =============================================================================
+# MOUSE FILTER HELPERS (v1.03 - Consolidate 48+ mouse_filter patterns)
+# =============================================================================
+
+## Set mouse filter to PASS (allows parent to receive events)
+static func set_mouse_pass(control: Control) -> void:
+	control.mouse_filter = Control.MOUSE_FILTER_PASS
+
+## Set mouse filter to STOP (blocks events from passing through)
+static func set_mouse_stop(control: Control) -> void:
+	control.mouse_filter = Control.MOUSE_FILTER_STOP
+
+## Set mouse filter to IGNORE (completely ignores mouse events)
+static func set_mouse_ignore(control: Control) -> void:
+	control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+## Apply PASS filter to multiple controls (common pattern for tooltip internals)
+static func set_all_mouse_pass(controls: Array) -> void:
+	for control in controls:
+		if control is Control:
+			control.mouse_filter = Control.MOUSE_FILTER_PASS
+
+## Create a control with IGNORE filter (for overlays, flashes)
+static func create_overlay_rect() -> ColorRect:
+	var rect := ColorRect.new()
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.anchors_preset = Control.PRESET_FULL_RECT
+	return rect
+
+# =============================================================================
+# BUTTON CREATION HELPERS (v1.03 - Consolidate 9+ Button patterns)
+# =============================================================================
+
+## Create a styled button with text
+static func create_button(
+	text: String,
+	font_size: int = FONT_SUBHEADING,
+	min_size: Vector2 = Vector2(100, 40)
+) -> Button:
+	var button := Button.new()
+	button.text = text
+	button.custom_minimum_size = min_size
+	button.add_theme_font_size_override("font_size", font_size)
+	button.add_theme_color_override("font_color", COLOR_PARCHMENT)
+	button.add_theme_color_override("font_hover_color", Color.WHITE)
+	button.add_theme_color_override("font_pressed_color", Color.WHITE)
+	button.add_theme_color_override("font_disabled_color", COLOR_DISABLED)
+	apply_button_style(button)
+	return button
+
+## Create a menu button (for pause menu, main menu)
+static func create_menu_button(text: String) -> Button:
+	return create_button(text, FONT_SUBHEADING, Vector2(200, 50))
+
+## Create a small action button
+static func create_action_button(text: String) -> Button:
+	return create_button(text, FONT_NORMAL, Vector2(80, 32))
+
+## Create a continue/confirm button
+static func create_continue_button(text: String = "Continue") -> Button:
+	var button := create_button(text, FONT_TITLE, Vector2(150, 45))
+	button.add_theme_color_override("font_color", COLOR_CREAM)
+	return button
+
+# =============================================================================
+# COMMON LAYOUT PATTERNS (v1.03)
+# =============================================================================
+
+## Create a horizontal stat row (name: value)
+static func create_stat_row(name_text: String, value_text: String, value_color: Color = Color.WHITE) -> HBoxContainer:
+	var hbox := create_hbox(8)
+	var name_label := create_stat_name_label(name_text + ":")
+	var value_label := create_stat_value_label(value_text, value_color)
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(name_label)
+	hbox.add_child(value_label)
+	return hbox
+
+## Create character info header (name + level)
+static func create_character_header(name_text: String, level: int, is_enemy: bool = false) -> VBoxContainer:
+	var vbox := create_vbox(2)
+	var name_label := create_name_label(name_text, is_enemy)
+	var level_label := create_level_label(level)
+	vbox.add_child(name_label)
+	vbox.add_child(level_label)
+	return vbox
+
+# =============================================================================
+# SIZE FLAGS HELPERS (v1.03 - Consolidate 20+ size_flags patterns)
+# =============================================================================
+
+## Set control to expand horizontally
+static func expand_horizontal(control: Control) -> void:
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+## Set control to expand vertically
+static func expand_vertical(control: Control) -> void:
+	control.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+## Set control to expand in both directions
+static func expand_both(control: Control) -> void:
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	control.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+## Create a spacer control (expands to fill space)
+static func create_spacer() -> Control:
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return spacer
+
+## Create a vertical spacer
+static func create_vspacer() -> Control:
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	return spacer
