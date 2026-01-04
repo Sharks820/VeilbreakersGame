@@ -9,7 +9,7 @@ extends CharacterBase
 # SIGNALS
 # =============================================================================
 
-signal experience_changed(old_value: int, new_value: int)
+# experience_changed signal inherited from CharacterBase
 signal brand_changed(old_brand: int, new_brand: int)
 signal equipment_changed(slot: int, old_item: String, new_item: String)
 signal brand_alignment_changed(brand: Enums.Brand, old_value: float, new_value: float)
@@ -25,9 +25,7 @@ signal equipment_shattered(slot: int, item_id: String)
 @export var current_brand: Enums.Brand = Enums.Brand.NONE
 @export var unlocked_brands: Array[Enums.Brand] = [Enums.Brand.NONE]
 
-@export_group("Experience")
-@export var current_experience: int = 0
-@export var total_experience: int = 0
+# Experience (current_experience, total_experience) inherited from CharacterBase
 
 @export_group("Brand Affinity")
 @export var brand_affinity: Dictionary = {}  # {brand: affinity_level}
@@ -329,49 +327,8 @@ func get_equipment_decay_stage(slot: Enums.EquipmentSlot) -> String:
 
 # =============================================================================
 # EXPERIENCE & LEVELING
+# Inherits add_experience(), get_xp_for_next_level(), get_level_progress() from CharacterBase
 # =============================================================================
-
-func add_experience(amount: int) -> Dictionary:
-	var old_exp := current_experience
-	var old_level := level
-	var levels_gained := 0
-	var all_stat_gains := {}
-
-	current_experience += amount
-	total_experience += amount
-
-	experience_changed.emit(old_exp, current_experience)
-	EventBus.experience_gained.emit(self, amount)
-
-	# Check for level ups
-	while current_experience >= get_xp_for_next_level() and level < Constants.MAX_LEVEL:
-		current_experience -= get_xp_for_next_level()
-		var stat_gains := level_up()
-		levels_gained += 1
-
-		# Merge stat gains
-		for stat in stat_gains:
-			if all_stat_gains.has(stat):
-				all_stat_gains[stat] += stat_gains[stat]
-			else:
-				all_stat_gains[stat] = stat_gains[stat]
-
-	return {
-		"old_level": old_level,
-		"new_level": level,
-		"levels_gained": levels_gained,
-		"stat_gains": all_stat_gains,
-		"experience_added": amount
-	}
-
-func get_xp_for_next_level() -> int:
-	return Constants.get_xp_for_level(level + 1)
-
-func get_level_progress() -> float:
-	var required := get_xp_for_next_level()
-	if required == 0:
-		return 1.0
-	return float(current_experience) / float(required)
 
 # =============================================================================
 # EQUIPMENT

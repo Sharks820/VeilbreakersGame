@@ -27,6 +27,39 @@ const BUTTON_HOVER_BG := Color(0.2, 0.2, 0.28, 0.95)
 const BUTTON_PRESSED_BG := Color(0.12, 0.12, 0.16, 0.95)
 const BUTTON_DISABLED_BG := Color(0.1, 0.1, 0.12, 0.6)
 
+## Text colors
+const TEXT_WHITE := Color(1.0, 1.0, 1.0, 1.0)
+const TEXT_GRAY := Color(0.7, 0.7, 0.7, 1.0)
+const TEXT_DIM := Color(0.5, 0.5, 0.5, 1.0)
+const TEXT_DAMAGE := Color(1.0, 0.3, 0.3, 1.0)
+const TEXT_HEAL := Color(0.3, 1.0, 0.3, 1.0)
+const TEXT_CRITICAL := Color(1.0, 0.8, 0.2, 1.0)
+const TEXT_MISS := Color(0.6, 0.6, 0.6, 1.0)
+const TEXT_MP := Color(0.4, 0.6, 1.0, 1.0)
+
+## Status effect colors
+const STATUS_POISON := Color(0.4, 0.8, 0.2, 1.0)
+const STATUS_BURN := Color(1.0, 0.5, 0.2, 1.0)
+const STATUS_FREEZE := Color(0.4, 0.8, 1.0, 1.0)
+const STATUS_PARALYSIS := Color(1.0, 1.0, 0.3, 1.0)
+const STATUS_BLEED := Color(0.8, 0.1, 0.1, 1.0)
+const STATUS_REGEN := Color(0.3, 1.0, 0.5, 1.0)
+const STATUS_BUFF := Color(0.3, 0.8, 1.0, 1.0)
+const STATUS_DEBUFF := Color(0.8, 0.3, 0.8, 1.0)
+
+## Brand colors (matching BrandSystem)
+const BRAND_SAVAGE := Color(0.9, 0.2, 0.2, 1.0)
+const BRAND_IRON := Color(0.6, 0.6, 0.7, 1.0)
+const BRAND_VENOM := Color(0.4, 0.8, 0.3, 1.0)
+const BRAND_SURGE := Color(1.0, 0.9, 0.3, 1.0)
+const BRAND_DREAD := Color(0.5, 0.2, 0.6, 1.0)
+const BRAND_LEECH := Color(0.6, 0.2, 0.3, 1.0)
+
+## Effectiveness colors
+const EFFECTIVE_STRONG := Color(0.3, 1.0, 0.3, 1.0)
+const EFFECTIVE_WEAK := Color(1.0, 0.4, 0.4, 1.0)
+const EFFECTIVE_NEUTRAL := Color(1.0, 1.0, 1.0, 1.0)
+
 ## Standard sizes
 const BORDER_WIDTH_THIN := 1
 const BORDER_WIDTH_NORMAL := 2

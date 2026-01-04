@@ -9,6 +9,7 @@ extends Node2D
 signal stats_changed()
 signal hp_changed(old_value: int, new_value: int)
 signal mp_changed(old_value: int, new_value: int)
+signal experience_changed(old_value: int, new_value: int)
 signal status_effect_added(effect: int)
 signal status_effect_removed(effect: int)
 signal died()
@@ -49,6 +50,8 @@ signal revived()
 
 var current_hp: int = 100
 var current_mp: int = 50
+var current_experience: int = 0
+var total_experience: int = 0
 var status_effects: Dictionary = {}  # {effect_id: {duration, stacks, source}}
 var stat_modifiers: Dictionary = {}  # {stat: [{value, duration, source}]}
 
@@ -499,6 +502,55 @@ func level_up() -> Dictionary:
 	EventBus.level_up.emit(self, level, stat_gains)
 
 	return stat_gains
+
+# =============================================================================
+# EXPERIENCE SYSTEM (shared by Monster and PlayerCharacter)
+# =============================================================================
+
+func add_experience(amount: int) -> Dictionary:
+	## Adds experience and handles level ups. Returns level up info.
+	var old_exp := current_experience
+	var old_level := level
+	var levels_gained := 0
+	var all_stat_gains := {}
+
+	current_experience += amount
+	total_experience += amount
+
+	experience_changed.emit(old_exp, current_experience)
+	EventBus.experience_gained.emit(self, amount)
+
+	# Check for level ups
+	while current_experience >= get_xp_for_next_level() and level < Constants.MAX_LEVEL:
+		current_experience -= get_xp_for_next_level()
+		var stat_gains := level_up()
+		levels_gained += 1
+
+		# Merge stat gains
+		for stat in stat_gains:
+			if all_stat_gains.has(stat):
+				all_stat_gains[stat] += stat_gains[stat]
+			else:
+				all_stat_gains[stat] = stat_gains[stat]
+
+	return {
+		"old_level": old_level,
+		"new_level": level,
+		"levels_gained": levels_gained,
+		"stat_gains": all_stat_gains,
+		"experience_added": amount
+	}
+
+func get_xp_for_next_level() -> int:
+	## Virtual function - override in subclasses for custom XP curves
+	return Constants.get_xp_for_level(level + 1)
+
+func get_level_progress() -> float:
+	## Returns progress to next level as 0.0 to 1.0
+	var required := get_xp_for_next_level()
+	if required == 0:
+		return 1.0
+	return float(current_experience) / float(required)
 
 # =============================================================================
 # ANIMATION INTERFACE (Override in subclasses for actual animations)

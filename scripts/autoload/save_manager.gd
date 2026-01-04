@@ -33,6 +33,47 @@ func _ensure_save_directory() -> void:
 	if dir and not dir.dir_exists("saves"):
 		dir.make_dir("saves")
 
+
+# =============================================================================
+# JSON FILE HELPERS (eliminates duplicate file reading/parsing)
+# =============================================================================
+
+func _read_json_file(path: String) -> Dictionary:
+	## Generic JSON file reader with error handling
+	## Returns empty Dictionary on any error
+	if not FileAccess.file_exists(path):
+		return {}
+
+	var file := FileAccess.open(path, FileAccess.READ)
+	if not file:
+		push_error("Failed to open file: %s" % path)
+		return {}
+
+	var json_string := file.get_as_text()
+	file.close()
+
+	var json := JSON.new()
+	var parse_result := json.parse(json_string)
+	if parse_result != OK:
+		push_error("Failed to parse JSON in %s: %s" % [path, json.get_error_message()])
+		return {}
+
+	return json.data
+
+
+func _write_json_file(path: String, data: Dictionary) -> bool:
+	## Generic JSON file writer with error handling
+	var json_string := JSON.stringify(data, "  ")
+
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if not file:
+		push_error("Failed to open file for writing: %s" % path)
+		return false
+
+	file.store_string(json_string)
+	file.close()
+	return true
+
 # =============================================================================
 # SLOT MANAGEMENT
 # =============================================================================
@@ -45,22 +86,11 @@ func _load_slot_metadata() -> void:
 
 func _get_slot_metadata(slot: int) -> Dictionary:
 	var path := _get_save_path(slot)
-	if not FileAccess.file_exists(path):
+	var data := _read_json_file(path)
+
+	if data.is_empty():
 		return {"empty": true, "slot": slot}
 
-	var file := FileAccess.open(path, FileAccess.READ)
-	if not file:
-		return {"empty": true, "slot": slot, "error": "Could not open file"}
-
-	var json_string := file.get_as_text()
-	file.close()
-
-	var json := JSON.new()
-	var parse_result := json.parse(json_string)
-	if parse_result != OK:
-		return {"empty": true, "slot": slot, "error": "Invalid JSON"}
-
-	var data: Dictionary = json.data
 	return {
 		"empty": false,
 		"slot": slot,
@@ -162,18 +192,10 @@ func _get_party_save_data() -> Array:
 
 func _write_save_file(slot: int, data: Dictionary) -> bool:
 	var path := _get_save_path(slot)
-	var json_string := JSON.stringify(data, "  ")
-
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	if not file:
-		push_error("Failed to open save file for writing: %s" % path)
-		return false
-
-	file.store_string(json_string)
-	file.close()
-
-	EventBus.emit_debug("Game saved to: %s" % path)
-	return true
+	var success := _write_json_file(path, data)
+	if success:
+		EventBus.emit_debug("Game saved to: %s" % path)
+	return success
 
 # =============================================================================
 # LOAD OPERATIONS
@@ -212,26 +234,7 @@ func load_game(slot: int) -> bool:
 
 func _read_save_file(slot: int) -> Dictionary:
 	var path := _get_save_path(slot)
-
-	if not FileAccess.file_exists(path):
-		push_error("Save file does not exist: %s" % path)
-		return {}
-
-	var file := FileAccess.open(path, FileAccess.READ)
-	if not file:
-		push_error("Failed to open save file: %s" % path)
-		return {}
-
-	var json_string := file.get_as_text()
-	file.close()
-
-	var json := JSON.new()
-	var parse_result := json.parse(json_string)
-	if parse_result != OK:
-		push_error("Failed to parse save file: %s" % json.get_error_message())
-		return {}
-
-	return json.data
+	return _read_json_file(path)
 
 func _apply_save_data(data: Dictionary) -> bool:
 	# Version check

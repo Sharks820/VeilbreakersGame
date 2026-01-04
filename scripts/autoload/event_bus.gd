@@ -190,5 +190,7 @@ func emit_warning(message: String) -> void:
 		push_warning("[WARN] " + message)
 
 func emit_error(message: String) -> void:
-	debug_log.emit(message, 2)
+	# Always emit signal in debug builds, always push_error in all builds
+	if OS.is_debug_build():
+		debug_log.emit(message, 2)
 	push_error("[ERROR] " + message)

@@ -161,22 +161,44 @@ func resume_music() -> void:
 func is_music_playing() -> bool:
 	return _music_player.playing and not _music_player.stream_paused
 
-func _load_music(track_id: String) -> AudioStream:
-	if _music_cache.has(track_id):
-		return _music_cache[track_id]
+# =============================================================================
+# GENERIC AUDIO LOADER (eliminates duplicate file extension checking)
+# =============================================================================
 
-	var path := "res://assets/audio/music/%s.ogg" % track_id
-	if not ResourceLoader.exists(path):
-		path = "res://assets/audio/music/%s.mp3" % track_id
-	if not ResourceLoader.exists(path):
-		path = "res://assets/audio/music/%s.wav" % track_id
+func _load_audio(audio_id: String, base_path: String, extensions: Array[String], cache: Dictionary) -> AudioStream:
+	## Generic audio loader with caching and multi-extension support
+	## @param audio_id: The ID of the audio file (without extension)
+	## @param base_path: Base directory path (e.g., "res://assets/audio/music/")
+	## @param extensions: Array of extensions to try in order (e.g., [".ogg", ".wav"])
+	## @param cache: Dictionary to cache loaded streams
+	if cache.has(audio_id):
+		return cache[audio_id]
 
-	if ResourceLoader.exists(path):
-		var stream: AudioStream = load(path)
-		_music_cache[track_id] = stream
-		return stream
+	for ext in extensions:
+		var path := base_path + audio_id + ext
+		if ResourceLoader.exists(path):
+			var stream: AudioStream = load(path)
+			cache[audio_id] = stream
+			return stream
 
 	return null
+
+
+func _load_music(track_id: String) -> AudioStream:
+	return _load_audio(track_id, "res://assets/audio/music/", [".ogg", ".mp3", ".wav"], _music_cache)
+
+
+func _load_sfx(sfx_id: String) -> AudioStream:
+	return _load_audio(sfx_id, "res://assets/audio/sfx/", [".wav", ".ogg"], _sfx_cache)
+
+
+func _load_voice(voice_id: String) -> AudioStream:
+	return _load_audio(voice_id, "res://assets/audio/voice/", [".wav", ".ogg"], _voice_cache)
+
+
+func _load_ambience(track_id: String) -> AudioStream:
+	return _load_audio("ambience_" + track_id, "res://assets/audio/music/", [".ogg", ".wav"], _ambience_cache)
+
 
 # =============================================================================
 # SOUND EFFECTS
@@ -214,21 +236,6 @@ func _get_available_sfx_player() -> AudioStreamPlayer:
 	_sfx_pool[0].pitch_scale = 1.0
 	return _sfx_pool[0]
 
-func _load_sfx(sfx_id: String) -> AudioStream:
-	if _sfx_cache.has(sfx_id):
-		return _sfx_cache[sfx_id]
-
-	var path := "res://assets/audio/sfx/%s.wav" % sfx_id
-	if not ResourceLoader.exists(path):
-		path = "res://assets/audio/sfx/%s.ogg" % sfx_id
-
-	if ResourceLoader.exists(path):
-		var stream: AudioStream = load(path)
-		_sfx_cache[sfx_id] = stream
-		return stream
-
-	return null
-
 # =============================================================================
 # VOICE
 # =============================================================================
@@ -247,21 +254,6 @@ func stop_voice() -> void:
 
 func is_voice_playing() -> bool:
 	return _voice_player.playing
-
-func _load_voice(voice_id: String) -> AudioStream:
-	if _voice_cache.has(voice_id):
-		return _voice_cache[voice_id]
-
-	var path := "res://assets/audio/voice/%s.wav" % voice_id
-	if not ResourceLoader.exists(path):
-		path = "res://assets/audio/voice/%s.ogg" % voice_id
-
-	if ResourceLoader.exists(path):
-		var stream: AudioStream = load(path)
-		_voice_cache[voice_id] = stream
-		return stream
-
-	return null
 
 # =============================================================================
 # AMBIENCE
@@ -288,22 +280,6 @@ func play_ambience(track_id: String, fade_duration: float = 2.0) -> void:
 	fade_in_tween.tween_property(_ambience_player, "volume_db", -6.0, fade_duration / 2)
 
 	current_ambience_track = track_id
-
-func _load_ambience(track_id: String) -> AudioStream:
-	## Load ambience track with caching (prevents disk reload on every play)
-	if _ambience_cache.has(track_id):
-		return _ambience_cache[track_id]
-
-	var path := "res://assets/audio/music/ambience_%s.ogg" % track_id
-	if not ResourceLoader.exists(path):
-		path = "res://assets/audio/music/ambience_%s.wav" % track_id
-
-	if ResourceLoader.exists(path):
-		var stream: AudioStream = load(path)
-		_ambience_cache[track_id] = stream
-		return stream
-
-	return null
 
 func stop_ambience(fade_duration: float = 2.0) -> void:
 	if fade_duration > 0:
