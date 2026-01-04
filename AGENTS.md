@@ -1,6 +1,45 @@
 # VEILBREAKERS - Agent Instructions
 
-> Godot 4.5 | GDScript | Turn-Based Monster-Capturing RPG | **v0.93**
+> Godot 4.5 | GDScript | Turn-Based Monster-Capturing RPG | **v1.05**
+
+---
+
+## ⚠️ MANDATORY: Code Utilities (5,285 lines - MUST USE)
+
+**ALL new code MUST use these utilities. NO exceptions. NO manual implementations.**
+
+### Quick Reference Table
+
+| Task | ❌ DON'T | ✅ USE INSTEAD |
+|------|----------|----------------|
+| Create styled label | `Label.new()` + font overrides | `UIStyleFactory.create_label()` |
+| Create progress bar | `ProgressBar.new()` + styling | `UIStyleFactory.create_hp_bar()` |
+| Create StyleBoxFlat | `StyleBoxFlat.new()` + setup | `UIStyleFactory.create_dark_panel()` |
+| Font sizes | Hardcoded `14`, `16`, etc. | `UIStyleFactory.FONT_NORMAL`, `FONT_HEADING` |
+| Text colors | `Color(0.95, 0.9, 0.8)` | `UIStyleFactory.COLOR_PARCHMENT` |
+| Popup animation | Manual fade+scale tween | `AnimationEffects.popup_entrance()` |
+| Button hover | Manual scale+modulate | `AnimationEffects.button_hover()` |
+| Flash effects | `node.modulate = Color(...)` | `AnimationEffects.flash_white()` |
+| Easing setup | `.set_ease().set_trans()` | `AnimationEffects.ease_out_back()` |
+| Safe queue_free | `if is_instance_valid(): queue_free()` | `NodeHelpers.safe_free()` |
+| Clear children | Loop + queue_free | `NodeHelpers.clear_children()` |
+| Format HP | `"%d/%d" % [hp, max]` | `StringHelpers.format_hp()` |
+| Format percent | `"%.0f%%" % (val * 100)` | `StringHelpers.format_percent()` |
+| HP percent | `float(hp) / float(max)` | `MathHelpers.get_hp_percent()` |
+| Wait timers | `await timer(0.3).timeout` | `await timer(Constants.WAIT_SHORT).timeout` |
+
+### Utility Files (scripts/utils/)
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `ui_style_factory.gd` | 889 | UI creation, styling, fonts, colors |
+| `animation_effects.gd` | 783 | Tweens, flashes, fades, popups |
+| `constants.gd` | 635 | All magic numbers, timings, multipliers |
+| `node_helpers.gd` | 385 | Node operations, validity, children |
+| `string_helpers.gd` | 304 | Formatting, BBCode, pluralization |
+| `math_helpers.gd` | 228 | Calculations, percentages, clamping |
+
+**Full documentation:** See `VEILBREAKERS.md` → "MANDATORY UTILITIES" section
 
 ---
 
@@ -263,8 +302,8 @@ IRONBOUND, FANGBORN, VOIDTOUCHED, UNCHAINED, NONE
 # Emit
 EventBus.damage_dealt.emit(source, target, amount, is_critical)
 
-# Connect
-EventBus.damage_dealt.connect(_on_damage_dealt)
+# Connect (use NodeHelpers for safe connection)
+NodeHelpers.safe_connect(EventBus, "damage_dealt", _on_damage_dealt)
 ```
 
 ### Using Constants
@@ -272,6 +311,10 @@ EventBus.damage_dealt.connect(_on_damage_dealt)
 # Access via class name
 var max_hp := Constants.MAX_PARTY_SIZE
 var threshold := Constants.CORRUPTION_ASCENDED_MAX
+
+# Wait timers - USE CONSTANTS
+await get_tree().create_timer(Constants.WAIT_SHORT).timeout
+await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 
 # DON'T use Constants in const declarations (load order issues)
 const BAD := [Constants.SOME_VALUE]  # Parse error!
@@ -282,6 +325,54 @@ const GOOD: Array[float] = [75.0, 50.0, 25.0]  # Hardcode instead
 ```gdscript
 var state: Enums.BattleState = Enums.BattleState.INITIALIZING
 var brand: Enums.Brand = Enums.Brand.SAVAGE
+```
+
+### Using UIStyleFactory (for ALL UI creation)
+```gdscript
+# Labels
+var label := UIStyleFactory.create_label("Text", UIStyleFactory.FONT_HEADING, UIStyleFactory.COLOR_GOLD)
+var centered := UIStyleFactory.create_centered_label("Centered", UIStyleFactory.FONT_TITLE)
+
+# Bars
+var hp_bar := UIStyleFactory.create_hp_bar()
+var mp_bar := UIStyleFactory.create_mp_bar()
+
+# Containers
+var vbox := UIStyleFactory.create_vbox(8)  # 8px spacing
+var panel := UIStyleFactory.create_styled_panel()
+
+# Buttons
+var button := UIStyleFactory.create_button("Click Me")
+```
+
+### Using NodeHelpers (for ALL node operations)
+```gdscript
+# Safe cleanup
+NodeHelpers.safe_free(node)
+NodeHelpers.clear_children(container)
+
+# Safe visibility
+NodeHelpers.show(node)
+NodeHelpers.hide(node)
+
+# Children operations
+var labels := NodeHelpers.get_children_of_type(parent, Label)
+NodeHelpers.for_each_child(parent, func(child): child.queue_free())
+
+# Safe instantiation
+var instance := NodeHelpers.instantiate_to(my_scene, parent)
+```
+
+### Using StringHelpers (for ALL formatting)
+```gdscript
+# Stats
+var hp_text := StringHelpers.format_hp(current_hp, max_hp)  # "45/100"
+var change := StringHelpers.format_stat_change(5)  # "+5"
+var pct := StringHelpers.format_percent(0.75)  # "75%"
+
+# Display
+var level := StringHelpers.format_level(10)  # "Lv. 10"
+var name := StringHelpers.enum_to_display("SAVAGE_BRAND")  # "Savage Brand"
 ```
 
 ---
@@ -383,26 +474,52 @@ ALL screenshots go to: `screenshots/` folder (not project root, not assets/)
 
 ---
 
-## Animation Patterns
+## Animation Patterns (USE AnimationEffects!)
 
-### Button Hover (Working)
+### Button Hover (USE UTILITY)
 ```gdscript
+# ❌ OLD WAY - DON'T DO THIS
 func _on_button_hover(button: BaseButton) -> void:
     create_tween().tween_property(button, "scale", Vector2(1.05, 1.05), 0.15)
-    create_tween().tween_property(button, "modulate", Color(1.4, 0.9, 0.9, 1.0), 0.15)
+
+# ✅ NEW WAY - USE THIS
+func _on_button_hover(button: BaseButton) -> void:
+    AnimationEffects.button_hover(button)
 
 func _on_button_unhover(button: BaseButton) -> void:
-    create_tween().tween_property(button, "scale", Vector2(1.0, 1.0), 0.15)
-    create_tween().tween_property(button, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
+    AnimationEffects.button_unhover(button)
 ```
 
-### Standard Timings
-| Animation | Duration |
+### Common Animations (USE UTILITIES)
+```gdscript
+# Popups
+AnimationEffects.popup_entrance(popup)
+AnimationEffects.popup_exit(popup)
+
+# Flashes
+AnimationEffects.flash_white(node)
+AnimationEffects.flash_color(node, color)
+AnimationEffects.death_animation(sprite)
+
+# Movement
+AnimationEffects.move_to(node, target_pos)
+AnimationEffects.knockback(node, direction)
+AnimationEffects.jump(node)
+
+# Easing (chain to tween)
+AnimationEffects.ease_out_back(tween)
+AnimationEffects.ease_out(tween)
+```
+
+### Standard Timings (USE Constants)
+| Animation | Constant |
 |-----------|----------|
-| Button hover | 0.15s |
-| Button press | 0.1s |
-| Scene fade | 0.3s |
-| Menu slide | 0.25s |
+| Button hover | `Constants.UI_BUTTON_HOVER` (0.15) |
+| Button press | `Constants.UI_BUTTON_PRESS` (0.1) |
+| Scene fade | `Constants.UI_SCENE_FADE` (0.3) |
+| Menu slide | `Constants.UI_MENU_SLIDE` (0.25) |
+| Wait short | `Constants.WAIT_SHORT` (0.3) |
+| Wait standard | `Constants.WAIT_STANDARD` (0.5) |
 
 ---
 
