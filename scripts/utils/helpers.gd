@@ -176,6 +176,23 @@ static func get_rarity_color(rarity: Enums.Rarity) -> Color:
 			return Color.GOLD
 	return Color.WHITE
 
+## Convert brand name string to Brand enum
+static func string_to_brand(brand_name: String) -> Enums.Brand:
+	match brand_name.to_upper():
+		"SAVAGE": return Enums.Brand.SAVAGE
+		"IRON": return Enums.Brand.IRON
+		"VENOM": return Enums.Brand.VENOM
+		"SURGE": return Enums.Brand.SURGE
+		"DREAD": return Enums.Brand.DREAD
+		"LEECH": return Enums.Brand.LEECH
+		"BLOODIRON": return Enums.Brand.BLOODIRON
+		"CORROSIVE": return Enums.Brand.CORROSIVE
+		"VENOMSTRIKE": return Enums.Brand.VENOMSTRIKE
+		"TERRORFLUX": return Enums.Brand.TERRORFLUX
+		"NIGHTLEECH": return Enums.Brand.NIGHTLEECH
+		"RAVENOUS": return Enums.Brand.RAVENOUS
+		_: return Enums.Brand.NONE
+
 ## Get color for a Brand
 ## Returns the brand's primary color for UI and effects
 static func get_brand_color(brand: Enums.Brand) -> Color:
@@ -210,20 +227,10 @@ static func get_brand_color(brand: Enums.Brand) -> Color:
 			return Color.WHITE
 
 ## Get brand color from string name (convenience method)
+## Delegates to get_brand_color() to avoid color duplication
 static func get_brand_color_by_name(brand_name: String) -> Color:
-	match brand_name.to_upper():
-		"SAVAGE": return Color("c73e3e")
-		"IRON": return Color("7b8794")
-		"VENOM": return Color("6b9b37")
-		"SURGE": return Color("4a90d9")
-		"DREAD": return Color("5d3e8c")
-		"LEECH": return Color("c75b8a")
-		"BLOODIRON", "RAVENOUS": return Color("c73e3e")  # SAVAGE-based
-		"CORROSIVE": return Color("7b8794")  # IRON-based
-		"VENOMSTRIKE": return Color("6b9b37")  # VENOM-based
-		"TERRORFLUX": return Color("4a90d9")  # SURGE-based
-		"NIGHTLEECH": return Color("5d3e8c")  # DREAD-based
-		_: return Color.WHITE
+	var brand := string_to_brand(brand_name)
+	return get_brand_color(brand)
 
 ## Get brand glow color (secondary/highlight color for effects)
 static func get_brand_glow_color(brand: Enums.Brand) -> Color:
