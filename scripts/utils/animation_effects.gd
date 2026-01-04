@@ -283,3 +283,177 @@ static func kill_tweens(tweens: Array) -> void:
 	for tween in tweens:
 		kill_tween(tween)
 	tweens.clear()
+
+# =============================================================================
+# POPUP ANIMATIONS (v0.98 - Consolidate 17+ duplicate patterns)
+# =============================================================================
+
+## Animate popup entrance (fade in + scale pop)
+## Standard pattern used across battle_ui_controller, pause_menu, settings_menu, etc.
+static func popup_entrance(popup: Control, duration: float = Constants.UI_POPUP_ENTER) -> Tween:
+	if not is_instance_valid(popup):
+		return null
+	popup.visible = true
+	popup.modulate.a = 0.0
+	popup.scale = Vector2(0.8, 0.8)
+
+	var tween := popup.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(popup, "modulate:a", 1.0, duration)
+	tween.tween_property(popup, "scale", Vector2.ONE, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	return tween
+
+## Animate popup exit (fade out + scale shrink)
+static func popup_exit(popup: Control, duration: float = Constants.UI_POPUP_EXIT, destroy: bool = false) -> Tween:
+	if not is_instance_valid(popup):
+		return null
+
+	var tween := popup.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(popup, "modulate:a", 0.0, duration)
+	tween.tween_property(popup, "scale", Vector2(0.9, 0.9), duration)
+
+	if destroy:
+		tween.chain().tween_callback(popup.queue_free)
+	else:
+		tween.chain().tween_callback(func(): popup.visible = false)
+	return tween
+
+## Fade out and destroy node (common pattern for damage numbers, status popups)
+static func fade_out_destroy(node: CanvasItem, duration: float = 0.2) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var tween := node.create_tween()
+	tween.tween_property(node, "modulate:a", 0.0, duration)
+	tween.tween_callback(node.queue_free)
+	return tween
+
+## Floating text animation (rise + fade out + destroy)
+## Used for damage numbers, status text, etc.
+static func floating_text(node: CanvasItem, rise_distance: float = 40.0, duration: float = 1.0) -> Tween:
+	if not is_instance_valid(node):
+		return null
+
+	var start_pos = node.position if node is Node2D else node.global_position
+	var end_pos = start_pos - Vector2(0, rise_distance)
+
+	var tween := node.create_tween()
+	tween.set_parallel(true)
+
+	# Rise and fade
+	if node is Node2D:
+		tween.tween_property(node, "position:y", end_pos.y, duration).set_ease(Tween.EASE_OUT)
+	else:
+		tween.tween_property(node, "global_position:y", end_pos.y, duration).set_ease(Tween.EASE_OUT)
+
+	# Hold then fade
+	tween.chain().tween_interval(duration * 0.6)
+	tween.chain().tween_property(node, "modulate:a", 0.0, duration * 0.4)
+	tween.chain().tween_callback(node.queue_free)
+	return tween
+
+# =============================================================================
+# BUTTON CLICK BOUNCE (v0.98 - Consolidate 3+ duplicate patterns)
+# =============================================================================
+
+## Full button click animation (press down, bounce up, settle)
+static func button_click_bounce(button: Control, duration: float = 0.26) -> Tween:
+	if not is_instance_valid(button):
+		return null
+	var tween := button.create_tween()
+	tween.tween_property(button, "scale", Vector2(0.9, 0.9), duration * 0.3).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(button, "scale", Vector2(1.05, 1.05), duration * 0.4).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(button, "scale", Vector2.ONE, duration * 0.3).set_trans(Tween.TRANS_CUBIC)
+	return tween
+
+# =============================================================================
+# TURN ORDER ANIMATIONS
+# =============================================================================
+
+## Turn icon entrance animation (slide down + fade in)
+static func turn_icon_entrance(icon: Control, index: int, slide_time: float = 0.3) -> Tween:
+	if not is_instance_valid(icon):
+		return null
+
+	icon.modulate.a = 0.0
+	icon.position.y -= 50
+
+	var tween := icon.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(icon, "modulate:a", 1.0, slide_time).set_delay(index * 0.1)
+	tween.tween_property(icon, "position:y", 0, slide_time).set_delay(index * 0.1).set_ease(Tween.EASE_OUT)
+	return tween
+
+## Turn icon exit animation (slide up + fade out)
+static func turn_icon_exit(icon: Control, duration: float = 0.2) -> Tween:
+	if not is_instance_valid(icon):
+		return null
+
+	var tween := icon.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(icon, "modulate:a", 0.0, duration)
+	tween.tween_property(icon, "position:y", icon.position.y - 30, duration)
+	tween.chain().tween_callback(icon.queue_free)
+	return tween
+
+# =============================================================================
+# MENU ANIMATIONS
+# =============================================================================
+
+## Standard action menu show animation
+static func action_menu_show(menu: Control, duration: float = 0.25) -> Tween:
+	if not is_instance_valid(menu):
+		return null
+
+	menu.visible = true
+	menu.modulate.a = 0.0
+	menu.scale = Vector2(0.8, 0.8)
+
+	var tween := menu.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(menu, "modulate:a", 1.0, duration)
+	tween.tween_property(menu, "scale", Vector2.ONE, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	return tween
+
+## Standard action menu hide animation
+static func action_menu_hide(menu: Control, duration: float = 0.15) -> Tween:
+	if not is_instance_valid(menu):
+		return null
+
+	var tween := menu.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(menu, "modulate:a", 0.0, duration)
+	tween.tween_property(menu, "scale", Vector2(0.9, 0.9), duration)
+	tween.chain().tween_callback(func(): menu.visible = false)
+	return tween
+
+# =============================================================================
+# SKILL ANNOUNCEMENT
+# =============================================================================
+
+## Skill name dramatic entrance (pop in, hold, fade out)
+static func skill_announcement(display: Control, hold_time: float = Constants.BATTLE_SKILL_ANNOUNCE) -> Tween:
+	if not is_instance_valid(display):
+		return null
+
+	display.visible = true
+	display.modulate.a = 0.0
+	display.scale = Vector2(0.5, 0.5)
+
+	var tween := display.create_tween()
+
+	# Pop in
+	tween.tween_property(display, "modulate:a", 1.0, 0.1)
+	tween.parallel().tween_property(display, "scale", Vector2(1.2, 1.2), 0.15).set_ease(Tween.EASE_OUT)
+
+	# Settle
+	tween.tween_property(display, "scale", Vector2.ONE, 0.1)
+
+	# Hold
+	tween.tween_interval(hold_time)
+
+	# Fade out
+	tween.tween_property(display, "modulate:a", 0.0, 0.2)
+	tween.tween_callback(func(): display.visible = false)
+
+	return tween

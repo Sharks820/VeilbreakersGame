@@ -461,3 +461,153 @@ static func get_total_xp_for_level(level: int) -> int:
 	for i in range(1, level + 1):
 		total += get_xp_for_level(i)
 	return total
+
+# =============================================================================
+# ANIMATION TIMING CONSTANTS (v0.98 - Eliminate 700+ hardcoded values)
+# =============================================================================
+
+# Standard Duration Tiers (sorted by duration)
+const ANIM_INSTANT: float = 0.0           # No animation
+const ANIM_HITSTOP: float = 0.05          # Freeze frames, impact pause
+const ANIM_FLASH: float = 0.1             # Quick feedback, button press
+const ANIM_SNAP: float = 0.15             # Button hover, quick transitions
+const ANIM_QUICK: float = 0.2             # Rapid animations, attack phases
+const ANIM_QUARTER: float = 0.25          # Quarter-second transitions
+const ANIM_MEDIUM: float = 0.3            # Standard transition (scene fade)
+const ANIM_EXTENDED: float = 0.4          # Longer animations
+const ANIM_HALF: float = 0.5              # Half-second (capture, skills)
+const ANIM_SLOW: float = 0.8              # Slow transitions
+const ANIM_STANDARD: float = 1.0          # One second (common fade)
+const ANIM_PULSE: float = 1.2             # Pulse/breathing cycles
+const ANIM_DRAMATIC: float = 1.5          # Skill announcements, entrances
+const ANIM_CINEMATIC: float = 2.0         # Boss phases, cinematics
+const ANIM_EPIC: float = 3.0              # Boss intros, major events
+
+# UI Animation Presets (from CLAUDE.md)
+const UI_BUTTON_HOVER: float = 0.15       # Button hover state
+const UI_BUTTON_PRESS: float = 0.1        # Button press feedback
+const UI_SCENE_FADE: float = 0.3          # Scene transitions
+const UI_MENU_SLIDE: float = 0.25         # Menu slide animations
+const UI_POPUP_ENTER: float = 0.25        # Popup entrance
+const UI_POPUP_EXIT: float = 0.2          # Popup exit
+const UI_TOOLTIP_DELAY: float = 0.3       # Tooltip show delay
+
+# Battle Animation Presets
+const BATTLE_ATTACK_WINDUP: float = 0.2   # Attack preparation
+const BATTLE_HIT_IMPACT: float = 0.1      # Hit impact flash
+const BATTLE_DAMAGE_NUMBER: float = 1.0   # Damage number display
+const BATTLE_BETWEEN_HITS: float = 0.15   # Multi-hit delay
+const BATTLE_TURN_END: float = 0.3        # Turn end delay
+const BATTLE_SKILL_ANNOUNCE: float = 1.5  # Skill name display
+
+# =============================================================================
+# COMBAT MULTIPLIER CONSTANTS (v0.98 - Eliminate 72+ hardcoded values)
+# =============================================================================
+
+# Damage Calculation
+const DAMAGE_LEVEL_SCALE: float = 0.02          # 1% per level difference
+const DAMAGE_BASE_RATIO: float = 0.8            # 80% of power as base damage
+const DAMAGE_DEFENSE_FACTOR: float = 0.3        # 30% of DEF applies to reduction
+const DAMAGE_STAT_SCALE: float = 0.5            # ATK-DEF scaling multiplier
+const DAMAGE_FLOOR_RATIO: float = 0.5           # Minimum 50% of power as damage
+const DAMAGE_SORROW_MULT: float = 1.15          # DREAD brand SORROW debuff
+
+# Accuracy and Evasion
+const ACCURACY_BLIND_PENALTY: float = 0.5       # -50% accuracy when blinded
+const EVASION_SPEED_FACTOR: float = 0.002       # +0.2% evasion per SPD point
+
+# Healing
+const HEALING_LEVEL_SCALE: float = 0.1          # Level / 10 bonus
+const HEALING_VARIANCE: float = 0.05            # ±5% healing variance
+const HEALING_REGEN_MULT: float = 1.2           # +20% with REGEN status
+
+# Status Effects
+const STATUS_MAGIC_CHANCE_FACTOR: float = 0.002   # +0.2% per MAGIC stat
+const STATUS_LUCK_DIFF_FACTOR: float = 0.01       # +1% per luck difference
+const STATUS_RESIST_FACTOR: float = 0.001         # -0.1% per resistance
+
+# Skill Effect Multipliers
+const SKILL_BONUS_VS_BLEED: float = 1.25        # +25% vs bleeding targets
+const SKILL_BONUS_LOW_HP_30: float = 1.3        # +30% vs low HP targets
+const SKILL_BONUS_LOW_HP_50: float = 1.5        # +50% vs very low HP targets
+const SKILL_BONUS_PER_ALLY: float = 0.15        # +15% per ally of same type
+const SKILL_BONUS_TRAINER_HURT: float = 1.4     # +40% when trainer is hurt
+const SKILL_BONUS_VS_SORROW: float = 1.5        # +50% vs SORROW debuff
+const SKILL_BONUS_VS_CASTING: float = 1.5       # +50% vs casting enemies
+const SKILL_PENALTY_DOUBLE_ACTION: float = 0.6  # 40% penalty for weak double
+
+# Lifesteal Values
+const SKILL_LIFESTEAL_50: float = 0.5           # 50% of damage healed
+const SKILL_LIFESTEAL_25: float = 0.25          # 25% of damage healed
+
+# HP Thresholds
+const HP_THRESHOLD_10: float = 0.1              # 10% HP trigger
+const HP_THRESHOLD_25: float = 0.25             # 25% HP (low)
+const HP_THRESHOLD_30: float = 0.3              # 30% HP (very low)
+const HP_THRESHOLD_50: float = 0.5              # 50% HP (medium)
+
+# Combat Actions
+const SKILL_CONSUME_CORPSE_HEAL: float = 0.3    # 30% max HP from corpse
+const SKILL_EVASION_BOOST_1TURN: float = 0.3    # +30% SPD for 1 turn
+const SKILL_EVASION_BOOST_2TURN: float = 0.2    # +20% SPD for 2 turns
+const SKILL_DAMAGE_REFLECT: float = 0.3         # 30% damage reflected
+const SKILL_POWER_PER_DEAD: float = 0.1         # +10% power per dead ally
+const SKILL_REVIVE_HEALTH: float = 0.25         # 25% HP on revive
+const SKILL_HEAL_ON_CONSUME: float = 0.2        # 20% HP on consume buff
+const SKILL_UNDERGROUND_BONUS: float = 1.5      # +50% after underground
+const SKILL_REDIRECT_REDUCTION: float = 0.25    # 25% reduction on redirect
+const SKILL_BONUS_PER_SOUL: float = 0.2         # +20% per harvested soul
+const SKILL_PASSIVE_EVASION: float = 0.3        # 30% passive evasion
+const SKILL_ATTACK_PER_ALLY: float = 0.1        # +10% ATK per ally passive
+const SKILL_HARVEST_DEF_BONUS: float = 0.1      # +10% DEF on harvest
+
+# Defend Action
+const DEFEND_BOOST_RATIO: float = 0.5           # +50% base DEF when defending
+const GUARDED_DAMAGE_REDUCTION: float = 0.3     # 30% damage reduction (GUARDED)
+
+# Battle Actions Speed Modifiers (for turn order)
+const ACTION_SPEED_ATTACK: float = 1.0          # Normal speed
+const ACTION_SPEED_SKILL: float = 0.8           # Skills are slower
+const ACTION_SPEED_DEFEND: float = 1.5          # Defending is faster
+const ACTION_SPEED_ITEM: float = 1.2            # Items are quick
+const ACTION_SPEED_FLEE: float = 1.3            # Fleeing is fast
+const ACTION_SPEED_PURIFY: float = 0.5          # Purification is slowest
+
+# Flee Calculation
+const FLEE_SPEED_MODIFIER: float = 0.01         # +1% per SPD difference
+
+# MP Regeneration
+const MP_REGEN_PER_TURN: float = 0.05           # 5% max MP per turn
+
+# AI Scoring Weights
+const AI_BRAND_EFFECTIVE_WEIGHT: float = 1.5    # Super effective bonus
+const AI_VERY_LOW_HP_WEIGHT: float = 2.0        # Priority on very low HP
+const AI_MEDIUM_HP_WEIGHT: float = 0.5          # Reduced priority
+const AI_THREAT_SCALE: float = 0.01             # Threat per 100 damage
+
+# Siphon Heal
+const SKILL_SIPHON_HEAL_MULT: float = 1.5       # 150% heal on siphon
+
+# =============================================================================
+# PURIFICATION MULTIPLIERS
+# =============================================================================
+
+const PURIFY_MAGIC_SCALE: float = 0.5           # magic/50 + 0.5
+const PURIFY_LEVEL_SCALE: float = 0.05          # 5% per level difference
+const PURIFY_HP_THRESHOLD_MULT: float = 2.0     # 2x bonus for HP threshold
+const PURIFY_IRON_BRAND_BONUS: float = 1.25     # +25% for IRON brand
+const PURIFY_DARK_BRAND_PENALTY: float = 0.75   # -25% for dark brands
+const PURIFY_ALIGNMENT_FACTOR: float = 0.3      # Up to 15% alignment bonus
+const PURIFY_SUCCESS_LEVEL_SCALE: float = 0.02  # 2% per level modifier
+const PURIFY_SUCCESS_HP_BONUS: float = 0.2      # +20% for HP bonus
+const CORRUPTION_TICK_DAMAGE: float = 0.05      # 5% max HP per turn
+const CORRUPTION_TICK_HEAL: float = 0.03        # 3% max HP heal per turn
+const PURIFY_POWER_MULT: float = 2.0            # Double purification power
+
+# =============================================================================
+# CAPTURE SYSTEM MULTIPLIERS
+# =============================================================================
+
+const CAPTURE_HP_REDUCTION_FAIL: float = 0.15   # -15% HP on failed capture
+const CAPTURE_ESCAPE_CHANCE: float = 0.3        # 30% escape factor
+const CAPTURE_LEVEL_MODIFIER: float = 0.02      # 2% per level difference
