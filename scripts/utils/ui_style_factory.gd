@@ -370,3 +370,520 @@ static func create_portrait_frame_style(border_color: Color = BORDER_DEFAULT) ->
 	style.set_border_width_all(BORDER_WIDTH_NORMAL)
 	style.set_corner_radius_all(3)
 	return style
+
+# =============================================================================
+# FONT SIZE PRESETS (v1.02 - Consolidate 120+ add_theme_font_size_override)
+# =============================================================================
+
+const FONT_TINY := 9           # Brand indicators, small badges
+const FONT_SMALL := 10         # Secondary info, stat labels
+const FONT_CAPTION := 11       # Captions, level labels
+const FONT_BODY := 12          # Body text, stat rows
+const FONT_NORMAL := 14        # Standard text
+const FONT_SUBHEADING := 16    # Subheadings, names
+const FONT_HEADING := 18       # Section headers
+const FONT_TITLE := 20         # Titles
+const FONT_SUBTITLE := 22      # Subtitles
+const FONT_LARGE_TITLE := 24   # Dialog titles
+const FONT_HUGE := 32          # Victory/defeat text
+const FONT_DISPLAY := 36       # Large display text
+const FONT_HERO := 42          # Hero name display
+const FONT_ARROW := 48         # Navigation arrows
+
+# =============================================================================
+# COMMON TEXT COLORS (v1.02 - Consolidate 150+ add_theme_color_override)
+# =============================================================================
+
+# UI Colors
+const COLOR_PARCHMENT := Color(0.95, 0.9, 0.8)        # Default light text
+const COLOR_CREAM := Color(0.9, 0.85, 0.7)            # Warmer light text
+const COLOR_SUBTITLE := Color(0.7, 0.65, 0.55)        # Subtitle gray
+const COLOR_DIM_LABEL := Color(0.6, 0.6, 0.6)         # Dim label text
+const COLOR_MUTED := Color(0.5, 0.45, 0.4)            # Muted decorative
+const COLOR_GOLD := Color(1.0, 0.85, 0.4)             # Gold highlights
+const COLOR_AGED_GOLD := Color(0.85, 0.7, 0.45)       # Aged gold headers
+
+# Health/Resource Colors
+const COLOR_HP_TITLE := Color(0.6, 0.8, 0.6)          # HP title green
+const COLOR_HP_VALUE := Color(0.4, 0.9, 0.4)          # HP value bright green
+const COLOR_MP_TITLE := Color(0.6, 0.6, 0.8)          # MP title blue
+const COLOR_MP_VALUE := Color(0.4, 0.6, 1.0)          # MP value bright blue
+const COLOR_ENEMY_HP := Color(0.9, 0.4, 0.4)          # Enemy HP red
+
+# State Colors
+const COLOR_LEVEL := Color(0.7, 0.7, 0.7)             # Level text
+const COLOR_XP := Color(0.7, 0.9, 0.7)                # XP text
+const COLOR_SEPARATOR := Color(0.4, 0.3, 0.35)        # Separator lines
+const COLOR_GREEN_SEP := Color(0.3, 0.4, 0.35)        # Green separator
+
+# =============================================================================
+# LABEL CREATION HELPERS (v1.02 - Consolidate 100+ Label.new() patterns)
+# =============================================================================
+
+## Create a styled label with font size and color
+static func create_label(
+	text: String,
+	font_size: int = FONT_NORMAL,
+	color: Color = COLOR_PARCHMENT
+) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+	return label
+
+## Create a styled label with outline
+static func create_outlined_label(
+	text: String,
+	font_size: int = FONT_NORMAL,
+	color: Color = COLOR_PARCHMENT,
+	outline_color: Color = Color(0.1, 0.1, 0.1)
+) -> Label:
+	var label := create_label(text, font_size, color)
+	label.add_theme_color_override("font_outline_color", outline_color)
+	label.add_theme_constant_override("outline_size", 2)
+	return label
+
+## Create a title label (large, gold)
+static func create_title_label(text: String, font_size: int = FONT_LARGE_TITLE) -> Label:
+	return create_label(text, font_size, COLOR_CREAM)
+
+## Create a subtitle label (smaller, muted)
+static func create_subtitle_label(text: String, font_size: int = FONT_CAPTION) -> Label:
+	return create_label(text, font_size, COLOR_SUBTITLE)
+
+## Create a header label (medium, highlighted)
+static func create_header_label(text: String, font_size: int = FONT_HEADING) -> Label:
+	return create_label(text, font_size, COLOR_AGED_GOLD)
+
+## Create a stat name label (small, dim)
+static func create_stat_name_label(text: String) -> Label:
+	return create_label(text, FONT_SMALL, COLOR_DIM_LABEL)
+
+## Create a stat value label (colored)
+static func create_stat_value_label(text: String, color: Color = Color.WHITE) -> Label:
+	return create_label(text, FONT_SMALL, color)
+
+## Create an HP label (value + title style)
+static func create_hp_label_pair(title_text: String = "HP", value_text: String = "") -> Dictionary:
+	return {
+		"title": create_label(title_text, FONT_CAPTION, COLOR_HP_TITLE),
+		"value": create_label(value_text, FONT_CAPTION, COLOR_HP_VALUE)
+	}
+
+## Create an MP label (value + title style)
+static func create_mp_label_pair(title_text: String = "MP", value_text: String = "") -> Dictionary:
+	return {
+		"title": create_label(title_text, FONT_CAPTION, COLOR_MP_TITLE),
+		"value": create_label(value_text, FONT_CAPTION, COLOR_MP_VALUE)
+	}
+
+## Create a character name label
+static func create_name_label(text: String, is_enemy: bool = false) -> Label:
+	var color := COLOR_PARCHMENT if not is_enemy else Color(1.0, 0.85, 0.7)
+	return create_label(text, FONT_SUBHEADING, color)
+
+## Create a level label
+static func create_level_label(level: int) -> Label:
+	return create_label("Lv. %d" % level, FONT_CAPTION, COLOR_LEVEL)
+
+## Create a brand label with brand color
+static func create_brand_label(brand_name: String, brand_color: Color, font_size: int = FONT_TINY) -> Label:
+	return create_label(brand_name, font_size, brand_color)
+
+# =============================================================================
+# RICH TEXT LABEL HELPERS
+# =============================================================================
+
+## Create a styled RichTextLabel
+static func create_rich_text_label(
+	font_size: int = FONT_BODY,
+	color: Color = COLOR_PARCHMENT,
+	scroll_active: bool = false
+) -> RichTextLabel:
+	var rtl := RichTextLabel.new()
+	rtl.bbcode_enabled = true
+	rtl.fit_content = not scroll_active
+	rtl.scroll_active = scroll_active
+	rtl.add_theme_font_size_override("normal_font_size", font_size)
+	rtl.add_theme_color_override("default_color", color)
+	return rtl
+
+# =============================================================================
+# SEPARATOR HELPERS
+# =============================================================================
+
+## Create a styled HSeparator
+static func create_separator(color: Color = COLOR_SEPARATOR) -> HSeparator:
+	var sep := HSeparator.new()
+	sep.add_theme_color_override("separator", color)
+	return sep
+
+## Create a styled VSeparator
+static func create_vseparator(color: Color = COLOR_SEPARATOR) -> VSeparator:
+	var sep := VSeparator.new()
+	sep.add_theme_color_override("separator", color)
+	return sep
+
+# =============================================================================
+# APPLY LABEL STYLE HELPERS
+# =============================================================================
+
+## Apply font size and color to existing label
+static func style_label(label: Label, font_size: int, color: Color) -> void:
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+
+## Apply outline to existing label
+static func add_label_outline(label: Label, outline_color: Color, outline_size: int = 2) -> void:
+	label.add_theme_color_override("font_outline_color", outline_color)
+	label.add_theme_constant_override("outline_size", outline_size)
+
+## Apply gold style to label (for important text)
+static func style_label_gold(label: Label, font_size: int = FONT_HEADING) -> void:
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", COLOR_GOLD)
+	label.add_theme_color_override("font_outline_color", Color(0.3, 0.2, 0.1))
+	label.add_theme_constant_override("outline_size", 2)
+
+# =============================================================================
+# CENTERED LABEL HELPERS (v1.03 - Consolidate 32+ alignment patterns)
+# =============================================================================
+
+## Create a centered label
+static func create_centered_label(
+	text: String,
+	font_size: int = FONT_NORMAL,
+	color: Color = COLOR_PARCHMENT
+) -> Label:
+	var label := create_label(text, font_size, color)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return label
+
+## Create a centered title label
+static func create_centered_title(text: String, font_size: int = FONT_LARGE_TITLE) -> Label:
+	var label := create_label(text, font_size, COLOR_CREAM)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return label
+
+## Create a centered header label
+static func create_centered_header(text: String, font_size: int = FONT_HEADING) -> Label:
+	var label := create_label(text, font_size, COLOR_AGED_GOLD)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return label
+
+## Create a right-aligned stat value
+static func create_right_aligned_value(text: String, color: Color = Color.WHITE) -> Label:
+	var label := create_label(text, FONT_BODY, color)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	return label
+
+## Apply center alignment to existing label
+static func center_label(label: Label) -> void:
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+## Apply both center alignments to label (for overlays)
+static func center_label_full(label: Label) -> void:
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+# =============================================================================
+# ADDITIONAL COLOR CONSTANTS (v1.03 - More common colors found in codebase)
+# =============================================================================
+
+# Disabled/inactive states
+const COLOR_DISABLED := Color(0.5, 0.5, 0.5, 0.8)     # Disabled button/text
+const COLOR_INACTIVE := Color(0.5, 0.5, 0.5, 0.7)     # Inactive elements
+
+# Alert colors
+const COLOR_WARNING := Color(1.0, 0.7, 0.3)           # Warning orange
+const COLOR_ERROR := Color(1.0, 0.4, 0.4)             # Error red
+const COLOR_SUCCESS := Color(0.4, 1.0, 0.4)           # Success green
+
+# Combat log colors
+const COLOR_DAMAGE := Color(1.0, 0.3, 0.3)            # Damage text
+const COLOR_HEAL := Color(0.3, 1.0, 0.3)              # Heal text
+const COLOR_MISS := Color(0.6, 0.6, 0.6)              # Miss text
+const COLOR_CRITICAL := Color(1.0, 0.8, 0.2)          # Critical hit
+
+# Brand indicator colors (for labels, not brand system)
+const COLOR_BRAND_TITLE := Color(0.6, 0.6, 0.6)       # "Brand:" label
+const COLOR_CORRUPTION := Color(0.6, 0.2, 0.7)        # Corruption value
+
+# Panel accent colors
+const COLOR_ALLY_ACCENT := Color(0.3, 0.6, 0.4)       # Ally panel border
+const COLOR_ENEMY_ACCENT := Color(0.6, 0.3, 0.3)      # Enemy panel border
+
+# =============================================================================
+# STAT COLOR DICTIONARY (v1.03 - For stat display consistency)
+# =============================================================================
+
+const STAT_COLORS := {
+	"hp": Color(0.4, 0.9, 0.4),
+	"max_hp": Color(0.4, 0.9, 0.4),
+	"mp": Color(0.4, 0.6, 1.0),
+	"max_mp": Color(0.4, 0.6, 1.0),
+	"attack": Color(1.0, 0.5, 0.4),
+	"atk": Color(1.0, 0.5, 0.4),
+	"defense": Color(0.6, 0.7, 0.9),
+	"def": Color(0.6, 0.7, 0.9),
+	"magic": Color(0.8, 0.5, 1.0),
+	"mag": Color(0.8, 0.5, 1.0),
+	"resistance": Color(0.7, 0.6, 0.9),
+	"res": Color(0.7, 0.6, 0.9),
+	"speed": Color(0.5, 0.9, 0.8),
+	"spd": Color(0.5, 0.9, 0.8),
+	"luck": Color(1.0, 0.85, 0.4),
+	"luk": Color(1.0, 0.85, 0.4)
+}
+
+## Get stat color by name (case-insensitive)
+static func get_stat_color(stat_name: String) -> Color:
+	return STAT_COLORS.get(stat_name.to_lower(), Color.WHITE)
+
+# =============================================================================
+# CONTAINER HELPERS (v1.03 - Common container setup patterns)
+# =============================================================================
+
+## Create a VBoxContainer with standard settings
+static func create_vbox(separation: int = 4) -> VBoxContainer:
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", separation)
+	return vbox
+
+## Create an HBoxContainer with standard settings
+static func create_hbox(separation: int = 4) -> HBoxContainer:
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", separation)
+	return hbox
+
+## Create a MarginContainer with all margins set
+static func create_margin_container(margin: int = 8) -> MarginContainer:
+	var container := MarginContainer.new()
+	container.add_theme_constant_override("margin_left", margin)
+	container.add_theme_constant_override("margin_top", margin)
+	container.add_theme_constant_override("margin_right", margin)
+	container.add_theme_constant_override("margin_bottom", margin)
+	return container
+
+## Create a PanelContainer with dark style
+static func create_styled_panel(style: StyleBoxFlat = null) -> PanelContainer:
+	var panel := PanelContainer.new()
+	if style:
+		panel.add_theme_stylebox_override("panel", style)
+	else:
+		panel.add_theme_stylebox_override("panel", create_dark_panel())
+	return panel
+
+# =============================================================================
+# PROGRESS BAR HELPERS (v1.03 - Consolidate 14+ ProgressBar patterns)
+# =============================================================================
+
+## Create a styled HP bar
+static func create_hp_bar(min_size: Vector2 = Vector2(80, 8)) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.custom_minimum_size = min_size
+	bar.add_theme_stylebox_override("background", create_hp_bar_bg())
+	bar.add_theme_stylebox_override("fill", create_hp_bar_fill())
+	return bar
+
+## Create a styled MP bar
+static func create_mp_bar(min_size: Vector2 = Vector2(60, 6)) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.custom_minimum_size = min_size
+	bar.add_theme_stylebox_override("background", create_mp_bar_bg())
+	bar.add_theme_stylebox_override("fill", create_mp_bar_fill())
+	return bar
+
+## Create an enemy HP bar (red fill)
+static func create_enemy_hp_bar(min_size: Vector2 = Vector2(80, 8)) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.custom_minimum_size = min_size
+	bar.add_theme_stylebox_override("background", create_hp_bar_bg())
+	bar.add_theme_stylebox_override("fill", create_enemy_hp_bar_fill())
+	return bar
+
+## Create a corruption bar (purple)
+static func create_corruption_bar(min_size: Vector2 = Vector2(60, 4)) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.custom_minimum_size = min_size
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.1, 0.05, 0.12, 0.9)
+	bg.set_corner_radius_all(2)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(0.6, 0.2, 0.7, 1.0)
+	fill.set_corner_radius_all(2)
+	bar.add_theme_stylebox_override("background", bg)
+	bar.add_theme_stylebox_override("fill", fill)
+	return bar
+
+## Create an XP bar (gold)
+static func create_xp_bar(min_size: Vector2 = Vector2(100, 6)) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.custom_minimum_size = min_size
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.1, 0.08, 0.05, 0.9)
+	bg.set_corner_radius_all(2)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(0.9, 0.75, 0.3, 1.0)
+	fill.set_corner_radius_all(2)
+	bar.add_theme_stylebox_override("background", bg)
+	bar.add_theme_stylebox_override("fill", fill)
+	return bar
+
+# =============================================================================
+# TEXTURE RECT HELPERS (v1.03 - Consolidate 14+ TextureRect patterns)
+# =============================================================================
+
+## Create a portrait TextureRect (ignore size, stretch)
+static func create_portrait(size: Vector2 = Vector2(64, 64)) -> TextureRect:
+	var rect := TextureRect.new()
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.custom_minimum_size = size
+	return rect
+
+## Create an icon TextureRect (smaller, for turn order etc.)
+static func create_icon(size: Vector2 = Vector2(32, 32)) -> TextureRect:
+	var rect := TextureRect.new()
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.custom_minimum_size = size
+	return rect
+
+## Create a background TextureRect (fills container)
+static func create_background_texture() -> TextureRect:
+	var rect := TextureRect.new()
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_SCALE
+	rect.anchors_preset = Control.PRESET_FULL_RECT
+	return rect
+
+## Create a sprite TextureRect (proportional width)
+static func create_sprite_rect(size: Vector2 = Vector2(48, 48)) -> TextureRect:
+	var rect := TextureRect.new()
+	rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	rect.custom_minimum_size = size
+	return rect
+
+# =============================================================================
+# MOUSE FILTER HELPERS (v1.03 - Consolidate 48+ mouse_filter patterns)
+# =============================================================================
+
+## Set mouse filter to PASS (allows parent to receive events)
+static func set_mouse_pass(control: Control) -> void:
+	control.mouse_filter = Control.MOUSE_FILTER_PASS
+
+## Set mouse filter to STOP (blocks events from passing through)
+static func set_mouse_stop(control: Control) -> void:
+	control.mouse_filter = Control.MOUSE_FILTER_STOP
+
+## Set mouse filter to IGNORE (completely ignores mouse events)
+static func set_mouse_ignore(control: Control) -> void:
+	control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+## Apply PASS filter to multiple controls (common pattern for tooltip internals)
+static func set_all_mouse_pass(controls: Array) -> void:
+	for control in controls:
+		if control is Control:
+			control.mouse_filter = Control.MOUSE_FILTER_PASS
+
+## Create a control with IGNORE filter (for overlays, flashes)
+static func create_overlay_rect() -> ColorRect:
+	var rect := ColorRect.new()
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.anchors_preset = Control.PRESET_FULL_RECT
+	return rect
+
+# =============================================================================
+# BUTTON CREATION HELPERS (v1.03 - Consolidate 9+ Button patterns)
+# =============================================================================
+
+## Create a styled button with text
+static func create_button(
+	text: String,
+	font_size: int = FONT_SUBHEADING,
+	min_size: Vector2 = Vector2(100, 40)
+) -> Button:
+	var button := Button.new()
+	button.text = text
+	button.custom_minimum_size = min_size
+	button.add_theme_font_size_override("font_size", font_size)
+	button.add_theme_color_override("font_color", COLOR_PARCHMENT)
+	button.add_theme_color_override("font_hover_color", Color.WHITE)
+	button.add_theme_color_override("font_pressed_color", Color.WHITE)
+	button.add_theme_color_override("font_disabled_color", COLOR_DISABLED)
+	apply_button_style(button)
+	return button
+
+## Create a menu button (for pause menu, main menu)
+static func create_menu_button(text: String) -> Button:
+	return create_button(text, FONT_SUBHEADING, Vector2(200, 50))
+
+## Create a small action button
+static func create_action_button(text: String) -> Button:
+	return create_button(text, FONT_NORMAL, Vector2(80, 32))
+
+## Create a continue/confirm button
+static func create_continue_button(text: String = "Continue") -> Button:
+	var button := create_button(text, FONT_TITLE, Vector2(150, 45))
+	button.add_theme_color_override("font_color", COLOR_CREAM)
+	return button
+
+# =============================================================================
+# COMMON LAYOUT PATTERNS (v1.03)
+# =============================================================================
+
+## Create a horizontal stat row (name: value)
+static func create_stat_row(name_text: String, value_text: String, value_color: Color = Color.WHITE) -> HBoxContainer:
+	var hbox := create_hbox(8)
+	var name_label := create_stat_name_label(name_text + ":")
+	var value_label := create_stat_value_label(value_text, value_color)
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(name_label)
+	hbox.add_child(value_label)
+	return hbox
+
+## Create character info header (name + level)
+static func create_character_header(name_text: String, level: int, is_enemy: bool = false) -> VBoxContainer:
+	var vbox := create_vbox(2)
+	var name_label := create_name_label(name_text, is_enemy)
+	var level_label := create_level_label(level)
+	vbox.add_child(name_label)
+	vbox.add_child(level_label)
+	return vbox
+
+# =============================================================================
+# SIZE FLAGS HELPERS (v1.03 - Consolidate 20+ size_flags patterns)
+# =============================================================================
+
+## Set control to expand horizontally
+static func expand_horizontal(control: Control) -> void:
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+## Set control to expand vertically
+static func expand_vertical(control: Control) -> void:
+	control.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+## Set control to expand in both directions
+static func expand_both(control: Control) -> void:
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	control.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+## Create a spacer control (expands to fill space)
+static func create_spacer() -> Control:
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return spacer
+
+## Create a vertical spacer
+static func create_vspacer() -> Control:
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	return spacer

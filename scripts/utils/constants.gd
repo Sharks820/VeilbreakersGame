@@ -509,6 +509,28 @@ const BATTLE_TURN_END: float = 0.3        # Turn end delay
 const BATTLE_SKILL_ANNOUNCE: float = 1.5  # Skill name display
 
 # =============================================================================
+# WAIT/DELAY CONSTANTS (v1.02 - Consolidate 46+ await duplicates)
+# =============================================================================
+
+# Standard wait durations (await get_tree().create_timer(X).timeout)
+const WAIT_INSTANT: float = 0.1          # Quick pause (6 occurrences)
+const WAIT_QUICK: float = 0.2            # Short delay (7 occurrences)
+const WAIT_SHORT: float = 0.3            # Common short wait (22 occurrences)
+const WAIT_STANDARD: float = 0.5         # Standard wait (24 occurrences)
+const WAIT_LONG: float = 0.8             # Longer delay
+const WAIT_EXTENDED: float = 1.0         # One second delay
+
+# Battle-specific delays
+const WAIT_BATTLE_ACTION: float = 0.3    # Between battle actions
+const WAIT_BATTLE_PHASE: float = 0.5     # Between battle phases
+const WAIT_BATTLE_TURN: float = 0.5      # Turn transition
+const WAIT_BATTLE_RESULT: float = 0.3    # After action result
+
+# Animation sync delays
+const WAIT_ANIM_SYNC: float = 0.3        # Sync with animation
+const WAIT_EFFECT_SYNC: float = 0.5      # Sync with visual effect
+
+# =============================================================================
 # COMBAT MULTIPLIER CONSTANTS (v0.98 - Eliminate 72+ hardcoded values)
 # =============================================================================
 
