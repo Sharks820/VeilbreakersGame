@@ -32,6 +32,7 @@ InventorySystem="*res://scripts/systems/inventory_system.gd"
 PathSystem="*res://scripts/autoload/path_system.gd"
 CrashHandler="*res://scripts/autoload/crash_handler.gd"
 UIStyleCache="*res://scripts/autoload/ui_style_cache.gd"
+StyleManager="*res://scripts/autoload/style_manager.gd"
 PauseMenu="*res://scenes/ui/pause_menu.tscn"
 
 [display]

@@ -66,74 +66,75 @@ func _ready() -> void:
 
 func _create_predefined_styles() -> void:
 	## Create all commonly-used styles once at startup
+	## Uses Constants.COLOR_* for consistency across the codebase
 	
 	# Panel backgrounds
 	panel_dark = _create_flat(
-		Color(0.1, 0.1, 0.15, 0.85),
-		Color(0.3, 0.25, 0.4, 1.0),
+		Constants.COLOR_PANEL_DARK,
+		Constants.COLOR_BORDER_PURPLE,
 		2, 8
 	)
 	
 	panel_dark_red = _create_flat(
-		Color(0.15, 0.1, 0.1, 0.85),
-		Color(0.5, 0.25, 0.25, 1.0),
+		Constants.COLOR_PANEL_DARK_RED,
+		Constants.COLOR_BORDER_ENEMY,
 		2, 8
 	)
 	
 	panel_dark_blue = _create_flat(
-		Color(0.1, 0.1, 0.18, 0.85),
-		Color(0.25, 0.3, 0.5, 1.0),
+		Constants.COLOR_PANEL_DARK_BLUE,
+		Color(0.25, 0.3, 0.5, 1.0),  # Unique border, not in constants yet
 		2, 8
 	)
 	
 	panel_transparent = _create_flat(
-		Color(0, 0, 0, 0),
-		Color(0, 0, 0, 0),
+		Constants.COLOR_TRANSPARENT,
+		Constants.COLOR_TRANSPARENT,
 		0, 0
 	)
 	
 	# HP bars
 	hp_fill_ally = _create_flat(
-		Color(0.2, 0.8, 0.3, 1.0),
-		Color(0, 0, 0, 0),
+		Constants.COLOR_HP_FILL_ALLY,
+		Constants.COLOR_TRANSPARENT,
 		0, 2
 	)
 	
 	hp_fill_enemy = _create_flat(
-		Color(0.8, 0.2, 0.2, 1.0),
-		Color(0, 0, 0, 0),
+		Constants.COLOR_HP_FILL_ENEMY,
+		Constants.COLOR_TRANSPARENT,
 		0, 2
 	)
 	
 	hp_bg = _create_flat(
-		Color(0.15, 0.1, 0.1, 0.9),
-		Color(0, 0, 0, 0),
+		Constants.COLOR_HP_BG,
+		Constants.COLOR_TRANSPARENT,
 		0, 2
 	)
 	
 	# MP bars
 	mp_fill = _create_flat(
-		Color(0.2, 0.4, 0.9, 1.0),
-		Color(0, 0, 0, 0),
+		Constants.COLOR_MP_FILL,
+		Constants.COLOR_TRANSPARENT,
 		0, 2
 	)
 	
 	mp_bg = _create_flat(
-		Color(0.1, 0.1, 0.15, 0.9),
-		Color(0, 0, 0, 0),
+		Constants.COLOR_MP_BG,
+		Constants.COLOR_TRANSPARENT,
 		0, 2
 	)
 	
 	# Corruption bars
 	corruption_fill = _create_flat(
-		Color(0.5, 0.1, 0.6, 1.0),
-		Color(0, 0, 0, 0),
+		Constants.COLOR_CORRUPTION_FILL,
+		Constants.COLOR_TRANSPARENT,
 		0, 2
 	)
 	
 	corruption_bg = _create_flat(
-		Color(0.1, 0.05, 0.1, 0.9),
-		Color(0, 0, 0, 0),
+		Constants.COLOR_CORRUPTION_BG,
+		Constants.COLOR_TRANSPARENT,
 		0, 2
 	)
 	

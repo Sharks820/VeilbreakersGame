@@ -460,3 +460,241 @@ static func get_total_xp_for_level(level: int) -> int:
 	for i in range(1, level + 1):
 		total += get_xp_for_level(i)
 	return total
+
+# =============================================================================
+# COLOR CONSTANTS
+# =============================================================================
+
+# HP/MP/Resource Bar Colors
+const COLOR_HP_FILL_ALLY := Color(0.2, 0.8, 0.3, 1.0)       # Green - ally HP
+const COLOR_HP_FILL_ENEMY := Color(0.8, 0.2, 0.2, 1.0)      # Red - enemy HP
+const COLOR_HP_BG := Color(0.15, 0.1, 0.1, 0.9)             # Dark red-tinted background
+const COLOR_MP_FILL := Color(0.2, 0.4, 0.9, 1.0)            # Blue - MP/SP
+const COLOR_MP_FILL_ALT := Color(0.3, 0.5, 0.9, 1.0)        # Lighter blue variant
+const COLOR_MP_BG := Color(0.1, 0.1, 0.15, 0.9)             # Dark blue-tinted background
+const COLOR_CORRUPTION_FILL := Color(0.5, 0.1, 0.6, 1.0)    # Purple - corruption
+const COLOR_CORRUPTION_BG := Color(0.1, 0.05, 0.1, 0.9)     # Dark purple background
+
+# Text Colors
+const COLOR_TEXT_GOLD := Color(1.0, 0.85, 0.4)              # Golden text (victory, important)
+const COLOR_TEXT_PARCHMENT := Color(0.95, 0.9, 0.8)         # Parchment/name text
+const COLOR_TEXT_DISABLED := Color(0.5, 0.5, 0.5)           # Disabled/inactive text
+const COLOR_TEXT_ALLY := Color(0.85, 1.0, 0.9)              # Ally name text (greenish)
+const COLOR_TEXT_ENEMY := Color(0.95, 0.85, 0.8)            # Enemy name text (reddish)
+const COLOR_TEXT_DAMAGE := Color(1.0, 0.3, 0.3)             # Damage number text
+const COLOR_TEXT_HEAL := Color(0.3, 1.0, 0.5)               # Heal number text
+const COLOR_TEXT_CRITICAL := Color(1.0, 0.9, 0.2)           # Critical hit text
+
+# Brand Colors (Pure - 6)
+const COLOR_BRAND_SAVAGE := Color(1.0, 0.4, 0.3)            # Fiery red-orange
+const COLOR_BRAND_IRON := Color(0.6, 0.7, 0.8)              # Steel gray-blue
+const COLOR_BRAND_VENOM := Color(0.4, 0.9, 0.3)             # Toxic green
+const COLOR_BRAND_SURGE := Color(0.3, 0.8, 1.0)             # Electric cyan
+const COLOR_BRAND_DREAD := Color(0.6, 0.3, 0.8)             # Dark purple
+const COLOR_BRAND_LEECH := Color(0.8, 0.2, 0.4)             # Blood crimson
+
+# Brand Colors (Hybrid - 6)
+const COLOR_BRAND_BLOODIRON := Color(0.85, 0.5, 0.4)        # SAVAGE + IRON
+const COLOR_BRAND_CORROSIVE := Color(0.5, 0.8, 0.5)         # IRON + VENOM
+const COLOR_BRAND_VENOMSTRIKE := Color(0.35, 0.85, 0.65)    # VENOM + SURGE
+const COLOR_BRAND_TERRORFLUX := Color(0.45, 0.55, 0.9)      # SURGE + DREAD
+const COLOR_BRAND_NIGHTLEECH := Color(0.7, 0.25, 0.6)       # DREAD + LEECH
+const COLOR_BRAND_RAVENOUS := Color(0.9, 0.3, 0.35)         # LEECH + SAVAGE
+
+# Animation/Effect Colors
+const COLOR_FLASH_WHITE := Color(1.8, 1.8, 1.8, 1.0)        # Impact flash (>1.0 for bloom)
+const COLOR_FLASH_DAMAGE := Color(1.5, 0.3, 0.3, 1.0)       # Damage flash red
+const COLOR_FLASH_HEAL := Color(0.5, 1.5, 0.5, 1.0)         # Heal flash green
+const COLOR_HOVER_BRIGHTEN := Color(1.3, 1.3, 1.3, 1.0)     # Hover highlight
+const COLOR_NORMAL := Color(1.0, 1.0, 1.0, 1.0)             # Reset/normal (Color.WHITE)
+const COLOR_TRANSPARENT := Color(0.0, 0.0, 0.0, 0.0)        # Fully transparent
+
+# Panel/UI Background Colors
+const COLOR_PANEL_DARK := Color(0.1, 0.1, 0.15, 0.85)       # Standard dark panel
+const COLOR_PANEL_DARK_RED := Color(0.15, 0.1, 0.1, 0.85)   # Enemy-tinted panel
+const COLOR_PANEL_DARK_BLUE := Color(0.1, 0.1, 0.18, 0.85)  # Ally-tinted panel
+
+# Border Colors
+const COLOR_BORDER_ALLY := Color(0.3, 0.5, 0.4, 1.0)        # Ally frame border
+const COLOR_BORDER_ENEMY := Color(0.5, 0.25, 0.25, 1.0)     # Enemy frame border
+const COLOR_BORDER_GOLD := Color(0.6, 0.5, 0.3, 1.0)        # Golden border
+const COLOR_BORDER_PURPLE := Color(0.4, 0.35, 0.5, 1.0)     # Purple accent border
+
+# Target Highlight Colors
+const COLOR_TARGET_ALLY := Color(0.4, 0.7, 1.0)             # Blue target highlight
+const COLOR_TARGET_ENEMY := Color(1.0, 0.4, 0.4)            # Red target highlight
+const COLOR_TARGET_SELF := Color(0.4, 1.0, 0.7)             # Green self-target
+
+# Status Effect Colors
+const COLOR_STATUS_BUFF := Color(0.4, 0.8, 1.0)             # Buff indicator (cyan)
+const COLOR_STATUS_DEBUFF := Color(1.0, 0.4, 0.4)           # Debuff indicator (red)
+const COLOR_STATUS_POISON := Color(0.6, 0.2, 0.8)           # Poison (purple)
+const COLOR_STATUS_BURN := Color(1.0, 0.5, 0.2)             # Burn (orange)
+const COLOR_STATUS_FREEZE := Color(0.5, 0.8, 1.0)           # Freeze (ice blue)
+const COLOR_STATUS_STUN := Color(1.0, 1.0, 0.4)             # Stun (yellow)
+
+# Button Colors
+const COLOR_BTN_NORMAL_BG := Color(0.12, 0.12, 0.15, 0.95)
+const COLOR_BTN_HOVER_BG := Color(0.18, 0.18, 0.22, 0.98)
+const COLOR_BTN_PRESSED_BG := Color(0.08, 0.08, 0.1, 0.98)
+const COLOR_BTN_DISABLED_BG := Color(0.08, 0.08, 0.1, 0.7)
+const COLOR_BTN_FOCUS_BG := Color(0.18, 0.14, 0.22, 0.95)
+const COLOR_BTN_BORDER := Color(0.4, 0.35, 0.3, 0.8)
+const COLOR_BTN_BORDER_HOVER := Color(0.6, 0.5, 0.4, 1.0)
+const COLOR_BTN_BORDER_DISABLED := Color(0.3, 0.3, 0.3, 0.5)
+const COLOR_BTN_BORDER_FOCUS := Color(0.7, 0.55, 0.4, 1.0)
+const COLOR_BTN_SHADOW := Color(0.0, 0.0, 0.0, 0.5)
+
+# Action Button Colors (Attack, Skill, etc.)
+const COLOR_ACTION_ATTACK := Color(0.9, 0.3, 0.3)
+const COLOR_ACTION_SKILL := Color(0.3, 0.5, 0.9)
+const COLOR_ACTION_SPECIAL := Color(0.8, 0.6, 0.9)
+const COLOR_ACTION_ITEM := Color(0.3, 0.8, 0.4)
+const COLOR_ACTION_DEFEND := Color(0.6, 0.6, 0.7)
+const COLOR_ACTION_FLEE := Color(0.8, 0.7, 0.3)
+
+# Font Colors
+const COLOR_FONT_NORMAL := Color(0.95, 0.9, 0.8)
+const COLOR_FONT_HOVER := Color(1.0, 0.95, 0.85)
+const COLOR_FONT_PRESSED := Color(1.0, 1.0, 1.0)
+const COLOR_FONT_DISABLED := Color(0.5, 0.5, 0.5)
+const COLOR_FONT_MUTED := Color(0.6, 0.6, 0.6)
+const COLOR_FONT_LABEL := Color(0.7, 0.7, 0.7)
+const COLOR_FONT_LABEL_ENEMY := Color(0.7, 0.6, 0.6, 1.0)  # Reddish-gray for enemy HP labels
+const COLOR_FONT_SUBDUED := Color(0.7, 0.65, 0.55)
+
+# Portrait Frame Colors
+const COLOR_PORTRAIT_BG_ALLY := Color(0.15, 0.15, 0.2, 1.0)
+const COLOR_PORTRAIT_BORDER_ALLY := Color(0.4, 0.35, 0.5, 1.0)
+const COLOR_PORTRAIT_BG_ENEMY := Color(0.2, 0.1, 0.1, 1.0)
+const COLOR_PORTRAIT_BORDER_ENEMY := Color(0.6, 0.3, 0.3, 1.0)
+
+# Scrollbar Colors
+const COLOR_SCROLLBAR_GRABBER := Color(0.5, 0.45, 0.4, 0.8)
+const COLOR_SCROLLBAR_BG := Color(0.15, 0.12, 0.1, 0.6)
+
+# Highlight/Glow Colors
+const COLOR_HIGHLIGHT_ALLY := Color(0.3, 0.5, 1.0, 1.0)
+const COLOR_HIGHLIGHT_ENEMY := Color(1.0, 0.3, 0.3, 1.0)
+const COLOR_GLOW_ALLY := Color(0.0, 0.5, 1.0, 0.6)
+const COLOR_GLOW_ENEMY := Color(1.0, 0.0, 0.0, 0.6)
+const COLOR_GLOW_GOLD := Color(1.3, 1.2, 0.9, 1.0)
+const COLOR_GLOW_HEAL := Color(0.9, 1.2, 0.9, 1.0)
+const COLOR_GLOW_DAMAGE := Color(1.2, 0.9, 0.9, 1.0)
+
+# Buff/Debuff Panel Colors
+const COLOR_BUFF_PANEL_BG := Color(0.1, 0.3, 0.1, 0.8)
+const COLOR_BUFF_PANEL_BORDER := Color(0.3, 0.7, 0.3, 0.9)
+const COLOR_DEBUFF_PANEL_BG := Color(0.3, 0.1, 0.1, 0.8)
+const COLOR_DEBUFF_PANEL_BORDER := Color(0.7, 0.3, 0.3, 0.9)
+
+# Victory/Results Screen Colors
+const COLOR_VICTORY_GOLD := Color(0.85, 0.7, 0.45)
+const COLOR_VICTORY_OUTLINE := Color(0.2, 0.15, 0.1)
+const COLOR_VICTORY_SEPARATOR := Color(0.6, 0.45, 0.25, 0.6)
+const COLOR_STATS_HEADER := Color(0.7, 0.85, 1.0)
+const COLOR_STATS_DAMAGE := Color(1.0, 0.6, 0.4)
+const COLOR_STATS_DEFENSE := Color(0.6, 0.8, 1.0)
+const COLOR_STATS_CAPTURE := Color(0.8, 0.5, 1.0)
+
+# XP Bar Colors
+const COLOR_XP_BAR_BG := Color(0.08, 0.06, 0.04, 0.9)
+const COLOR_XP_BAR_BORDER := Color(0.4, 0.3, 0.15, 0.6)
+const COLOR_XP_BAR_FILL := Color(0.4, 0.7, 0.3, 1.0)
+const COLOR_XP_TEXT := Color(0.7, 0.9, 0.7)
+const COLOR_XP_GAINED := Color(1.0, 0.85, 0.4)
+
+# Monster Row Colors (Victory Screen)
+const COLOR_MONSTER_ROW_BG := Color(0.05, 0.08, 0.05, 0.8)
+const COLOR_MONSTER_ROW_BORDER := Color(0.3, 0.5, 0.3, 0.6)
+const COLOR_MONSTER_NAME := Color(0.9, 0.95, 0.9)
+const COLOR_MONSTER_LEVEL := Color(0.6, 0.8, 0.6)
+
+# Tooltip Colors
+const COLOR_TOOLTIP_BG := Color(0.08, 0.08, 0.12, 0.95)
+const COLOR_TOOLTIP_BORDER := Color(0.4, 0.35, 0.5, 1.0)
+
+# Animation Modulate Colors
+const COLOR_MODULATE_HOVER := Color(1.3, 1.1, 0.9, 1.0)
+const COLOR_MODULATE_DISABLED := Color(0.5, 0.5, 0.5, 0.8)
+const COLOR_MODULATE_DEATH_START := Color(2.0, 0.4, 0.4, 1.0)
+const COLOR_MODULATE_DEATH_MID := Color(1.5, 0.3, 0.3, 1.0)
+const COLOR_MODULATE_DEATH_FADE := Color(0.4, 0.4, 0.4, 0.7)
+const COLOR_MODULATE_DEATH_END := Color(0.2, 0.2, 0.2, 0.0)
+const COLOR_MODULATE_CAPTURE_GLOW := Color(1.4, 1.3, 1.6, 1.0)
+const COLOR_MODULATE_CAPTURE_FLASH := Color(2.5, 2.2, 2.8, 1.0)
+const COLOR_MODULATE_HEAL := Color(0.8, 1.4, 0.8, 1.0)
+const COLOR_MODULATE_BUFF := Color(0.8, 0.9, 1.3, 1.0)
+const COLOR_MODULATE_DEBUFF := Color(1.2, 1.0, 1.4, 1.0)
+
+# Sidebar Panel Colors
+const COLOR_SIDEBAR_ALLY_BG := Color(0.08, 0.1, 0.14, 0.92)
+const COLOR_SIDEBAR_ALLY_BORDER := Color(0.25, 0.4, 0.35, 1.0)
+const COLOR_SIDEBAR_ALLY_HEADER := Color(0.5, 0.85, 0.65, 1.0)
+const COLOR_SIDEBAR_ALLY_SLOT_BG := Color(0.12, 0.15, 0.18, 0.9)
+const COLOR_SIDEBAR_ALLY_SLOT_BORDER := Color(0.3, 0.45, 0.4, 1.0)
+const COLOR_SIDEBAR_ENEMY_BG := Color(0.14, 0.08, 0.08, 0.92)
+const COLOR_SIDEBAR_ENEMY_BORDER := Color(0.5, 0.25, 0.25, 1.0)
+const COLOR_SIDEBAR_ENEMY_HEADER := Color(0.9, 0.4, 0.4, 1.0)
+const COLOR_SIDEBAR_ENEMY_SLOT_BG := Color(0.18, 0.12, 0.12, 0.9)
+const COLOR_SIDEBAR_ENEMY_SLOT_BORDER := Color(0.5, 0.3, 0.3, 1.0)
+
+# Target Indicator Colors (Sprites)
+const COLOR_INDICATOR_ALLY := Color(0.2, 0.6, 1.0, 0.9)
+const COLOR_INDICATOR_ENEMY := Color(0.8, 0.2, 0.2, 0.9)
+const COLOR_INDICATOR_CAPTURE := Color(0.6, 0.1, 0.6, 0.9)
+const COLOR_INDICATOR_NEUTRAL := Color(0.5, 0.5, 0.5, 0.9)
+
+# =============================================================================
+# COLOR HELPER FUNCTIONS
+# =============================================================================
+
+static func get_brand_color(brand: String) -> Color:
+	## Returns the color associated with a brand name
+	match brand.to_upper():
+		"SAVAGE": return COLOR_BRAND_SAVAGE
+		"IRON": return COLOR_BRAND_IRON
+		"VENOM": return COLOR_BRAND_VENOM
+		"SURGE": return COLOR_BRAND_SURGE
+		"DREAD": return COLOR_BRAND_DREAD
+		"LEECH": return COLOR_BRAND_LEECH
+		"BLOODIRON": return COLOR_BRAND_BLOODIRON
+		"CORROSIVE": return COLOR_BRAND_CORROSIVE
+		"VENOMSTRIKE": return COLOR_BRAND_VENOMSTRIKE
+		"TERRORFLUX": return COLOR_BRAND_TERRORFLUX
+		"NIGHTLEECH": return COLOR_BRAND_NIGHTLEECH
+		"RAVENOUS": return COLOR_BRAND_RAVENOUS
+		_: return COLOR_TEXT_PARCHMENT  # Default fallback
+
+static func get_hp_color(is_enemy: bool) -> Color:
+	## Returns HP bar color based on team
+	return COLOR_HP_FILL_ENEMY if is_enemy else COLOR_HP_FILL_ALLY
+
+static func get_highlight_color(is_enemy: bool) -> Color:
+	## Returns highlight color based on team
+	return COLOR_HIGHLIGHT_ENEMY if is_enemy else COLOR_HIGHLIGHT_ALLY
+
+static func get_glow_color(is_enemy: bool) -> Color:
+	## Returns glow color based on team
+	return COLOR_GLOW_ENEMY if is_enemy else COLOR_GLOW_ALLY
+
+static func get_panel_color(is_enemy: bool) -> Color:
+	## Returns panel background color based on team
+	return COLOR_PANEL_DARK_RED if is_enemy else COLOR_PANEL_DARK_BLUE
+
+static func get_border_color(is_enemy: bool) -> Color:
+	## Returns border color based on team
+	return COLOR_BORDER_ENEMY if is_enemy else COLOR_BORDER_ALLY
+
+static func get_indicator_color(is_enemy: bool) -> Color:
+	## Returns target indicator color based on team
+	return COLOR_INDICATOR_ENEMY if is_enemy else COLOR_INDICATOR_ALLY
+
+static func get_status_color(status: String) -> Color:
+	## Returns color for a status effect
+	match status.to_lower():
+		"poison", "poisoned": return COLOR_STATUS_POISON
+		"burn", "burning": return COLOR_STATUS_BURN
+		"freeze", "frozen": return COLOR_STATUS_FREEZE
+		"stun", "stunned": return COLOR_STATUS_STUN
+		_: return COLOR_NORMAL

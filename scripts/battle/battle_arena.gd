@@ -176,7 +176,7 @@ func _check_arena_sprite_hover(mouse_pos: Vector2) -> void:
 		if _arena_hovered_character and not _arena_hovered_character.is_dead():
 			var sprite: Node2D = _arena_hovered_character.get_meta("battle_sprite", null)
 			if sprite:
-				sprite.modulate = Color(1.3, 1.3, 1.3, 1.0)  # Brighten on hover
+				sprite.modulate = Constants.COLOR_HOVER_BRIGHTEN
 			EventBus.character_hovered.emit(_arena_hovered_character)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -427,11 +427,8 @@ func _create_party_sidebar(players: Array[CharacterBase]) -> void:
 	sidebar.position = Vector2(10, 70)
 	sidebar.custom_minimum_size = Vector2(170, 0)
 
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.1, 0.14, 0.92)
-	style.border_color = Color(0.25, 0.4, 0.35, 1.0)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
+	# Use StyleManager for sidebar styling
+	var style := StyleManager.sidebar_ally()
 	style.content_margin_left = 8
 	style.content_margin_right = 8
 	style.content_margin_top = 8
@@ -446,7 +443,7 @@ func _create_party_sidebar(players: Array[CharacterBase]) -> void:
 	var header := Label.new()
 	header.text = "Party"
 	header.add_theme_font_size_override("font_size", 14)
-	header.add_theme_color_override("font_color", Color(0.5, 0.85, 0.65, 1.0))
+	header.add_theme_color_override("font_color", Constants.COLOR_SIDEBAR_ALLY_HEADER)
 	vbox.add_child(header)
 
 	# Add each party member
@@ -461,11 +458,8 @@ func _create_party_slot(character: CharacterBase) -> PanelContainer:
 	var slot := PanelContainer.new()
 	slot.custom_minimum_size = Vector2(154, 50)
 
-	var slot_style := StyleBoxFlat.new()
-	slot_style.bg_color = Color(0.12, 0.15, 0.18, 0.9)
-	slot_style.border_color = Color(0.3, 0.45, 0.4, 1.0)
-	slot_style.set_border_width_all(1)
-	slot_style.set_corner_radius_all(3)
+	# Use StyleManager for slot styling
+	var slot_style := StyleManager.sidebar_slot_ally()
 	slot_style.content_margin_left = 4
 	slot_style.content_margin_right = 4
 	slot_style.content_margin_top = 4
@@ -491,7 +485,7 @@ func _create_party_slot(character: CharacterBase) -> PanelContainer:
 	var name_lbl := Label.new()
 	name_lbl.text = character.character_name
 	name_lbl.add_theme_font_size_override("font_size", 10)
-	name_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.85, 1.0))
+	name_lbl.add_theme_color_override("font_color", Constants.COLOR_TEXT_PARCHMENT)
 	vbox.add_child(name_lbl)
 
 	# HP Bar
@@ -526,12 +520,8 @@ func _create_portrait(character: CharacterBase, size: int) -> Control:
 	var container := PanelContainer.new()
 	container.custom_minimum_size = Vector2(size, size)
 
-	# Portrait frame style
-	var frame_style := StyleBoxFlat.new()
-	frame_style.bg_color = Color(0.08, 0.08, 0.1, 1.0)
-	frame_style.border_color = Color(0.4, 0.5, 0.45, 1.0)
-	frame_style.set_border_width_all(1)
-	frame_style.set_corner_radius_all(2)
+	# Use StyleManager for portrait frame
+	var frame_style := StyleManager.portrait_frame(false)  # false = ally
 	container.add_theme_stylebox_override("panel", frame_style)
 
 	# Load sprite texture
@@ -549,28 +539,14 @@ func _create_portrait(character: CharacterBase, size: int) -> Control:
 	return container
 
 func _style_hp_bar(bar: ProgressBar) -> void:
-	"""Style HP bar with green fill"""
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.15, 0.1, 0.1, 1.0)
-	bg.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("background", bg)
-
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.2, 0.75, 0.3, 1.0)
-	fill.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("fill", fill)
+	"""Style HP bar with green fill using StyleManager"""
+	bar.add_theme_stylebox_override("background", StyleManager.hp_bg())
+	bar.add_theme_stylebox_override("fill", StyleManager.hp_fill(false))  # false = ally
 
 func _style_mp_bar(bar: ProgressBar) -> void:
-	"""Style MP bar with blue fill"""
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.1, 0.1, 0.15, 1.0)
-	bg.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("background", bg)
-
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.3, 0.5, 0.9, 1.0)
-	fill.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("fill", fill)
+	"""Style MP bar with blue fill using StyleManager"""
+	bar.add_theme_stylebox_override("background", StyleManager.mp_bg())
+	bar.add_theme_stylebox_override("fill", StyleManager.mp_fill())
 
 func _create_enemy_sidebar(enemies: Array[CharacterBase]) -> void:
 	"""Create enemy sidebar with HP bars - matches party sidebar but RED"""
@@ -588,11 +564,8 @@ func _create_enemy_sidebar(enemies: Array[CharacterBase]) -> void:
 	sidebar.offset_top = 70.0
 	sidebar.custom_minimum_size = Vector2(170, 0)
 
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.14, 0.08, 0.08, 0.92)
-	style.border_color = Color(0.5, 0.25, 0.25, 1.0)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
+	# Use StyleManager for enemy sidebar styling
+	var style := StyleManager.sidebar_enemy()
 	style.content_margin_left = 8
 	style.content_margin_right = 8
 	style.content_margin_top = 8
@@ -607,7 +580,7 @@ func _create_enemy_sidebar(enemies: Array[CharacterBase]) -> void:
 	var header := Label.new()
 	header.text = "Enemies"
 	header.add_theme_font_size_override("font_size", 14)
-	header.add_theme_color_override("font_color", Color(0.9, 0.4, 0.4, 1.0))
+	header.add_theme_color_override("font_color", Constants.COLOR_SIDEBAR_ENEMY_HEADER)
 	vbox.add_child(header)
 
 	# Add each enemy
@@ -622,11 +595,8 @@ func _create_enemy_slot(character: CharacterBase) -> PanelContainer:
 	var slot := PanelContainer.new()
 	slot.custom_minimum_size = Vector2(154, 50)
 
-	var slot_style := StyleBoxFlat.new()
-	slot_style.bg_color = Color(0.18, 0.12, 0.12, 0.9)
-	slot_style.border_color = Color(0.5, 0.3, 0.3, 1.0)
-	slot_style.set_border_width_all(1)
-	slot_style.set_corner_radius_all(3)
+	# Use StyleManager for enemy slot styling
+	var slot_style := StyleManager.sidebar_slot_enemy()
 	slot_style.content_margin_left = 4
 	slot_style.content_margin_right = 4
 	slot_style.content_margin_top = 4
@@ -652,7 +622,7 @@ func _create_enemy_slot(character: CharacterBase) -> PanelContainer:
 	var name_lbl := Label.new()
 	name_lbl.text = character.character_name
 	name_lbl.add_theme_font_size_override("font_size", 10)
-	name_lbl.add_theme_color_override("font_color", Color(0.95, 0.85, 0.85, 1.0))
+	name_lbl.add_theme_color_override("font_color", Constants.COLOR_TEXT_ENEMY)
 	vbox.add_child(name_lbl)
 
 	# HP Bar (red)
@@ -674,12 +644,8 @@ func _create_enemy_portrait(character: CharacterBase, size: int) -> Control:
 	var container := PanelContainer.new()
 	container.custom_minimum_size = Vector2(size, size)
 
-	# Red portrait frame style
-	var frame_style := StyleBoxFlat.new()
-	frame_style.bg_color = Color(0.1, 0.06, 0.06, 1.0)
-	frame_style.border_color = Color(0.6, 0.3, 0.3, 1.0)
-	frame_style.set_border_width_all(1)
-	frame_style.set_corner_radius_all(2)
+	# Use StyleManager for enemy portrait frame
+	var frame_style := StyleManager.portrait_frame(true)  # true = enemy
 	container.add_theme_stylebox_override("panel", frame_style)
 
 	# Load sprite texture
@@ -697,16 +663,9 @@ func _create_enemy_portrait(character: CharacterBase, size: int) -> Control:
 	return container
 
 func _style_enemy_hp_bar(bar: ProgressBar) -> void:
-	"""Style enemy HP bar with red fill"""
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.1, 0.08, 0.08, 1.0)
-	bg.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("background", bg)
-
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.85, 0.25, 0.2, 1.0)
-	fill.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("fill", fill)
+	"""Style enemy HP bar with red fill using StyleManager"""
+	bar.add_theme_stylebox_override("background", StyleManager.hp_bg())
+	bar.add_theme_stylebox_override("fill", StyleManager.hp_fill(true))  # true = enemy
 
 func _place_characters(characters: Array[CharacterBase], positions_node: Node2D, container: Node2D, sprite_array: Array[Node2D]) -> void:
 	sprite_array.clear()
@@ -913,25 +872,25 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 			Enums.CharacterType.PLAYER:
 				sprite.size = Vector2(100, 150)
 				sprite.position = Vector2(-50, -150)
-				sprite.color = Color(0.2, 0.6, 1.0, 0.9)
+				sprite.color = Constants.COLOR_HIGHLIGHT_ALLY  # Blue for player
 				hitbox_size = Vector2(100, 150)
 				hitbox_offset = Vector2(0, -75)
 			Enums.CharacterType.MONSTER:
 				sprite.size = Vector2(50, 75)
 				sprite.position = Vector2(-25, -75)
-				sprite.color = Color(0.8, 0.2, 0.2, 0.9)
+				sprite.color = Constants.COLOR_HP_FILL_ENEMY  # Red for enemy monster
 				hitbox_size = Vector2(50, 75)
 				hitbox_offset = Vector2(0, -37)
 			Enums.CharacterType.BOSS:
 				sprite.size = Vector2(80, 120)
 				sprite.position = Vector2(-40, -120)
-				sprite.color = Color(0.6, 0.1, 0.6, 0.9)
+				sprite.color = Constants.COLOR_BRAND_DREAD  # Purple for boss
 				hitbox_size = Vector2(80, 120)
 				hitbox_offset = Vector2(0, -60)
 			_:
 				sprite.size = Vector2(50, 75)
 				sprite.position = Vector2(-25, -75)
-				sprite.color = Color(0.5, 0.5, 0.5, 0.9)
+				sprite.color = Constants.COLOR_TEXT_DISABLED  # Gray default
 		container.add_child(sprite)
 
 	# Store hitbox info for mouse detection (will be updated when container is positioned)
@@ -953,26 +912,16 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 	hp_bar.show_percentage = false
 	hp_bar.name = "HPBar"
 
-	# Style the HP bar to be visible
-	var fill_style := StyleBoxFlat.new()
-	fill_style.bg_color = Color(0.2, 0.8, 0.3, 1.0)  # Green fill
-	fill_style.corner_radius_top_left = 2
-	fill_style.corner_radius_top_right = 2
-	fill_style.corner_radius_bottom_left = 2
-	fill_style.corner_radius_bottom_right = 2
-	hp_bar.add_theme_stylebox_override("fill", fill_style)
-
-	var bg_style := StyleBoxFlat.new()
-	bg_style.bg_color = Color(0.15, 0.1, 0.1, 0.9)  # Dark background
-	bg_style.border_color = Color(0.3, 0.25, 0.2, 1.0)  # Border
+	# Style the HP bar using StyleManager
+	hp_bar.add_theme_stylebox_override("fill", StyleManager.hp_fill(is_enemy))
+	
+	# Create background style with border
+	var bg_style := StyleManager.hp_bg()
+	bg_style.border_color = Constants.COLOR_BORDER_GOLD
 	bg_style.border_width_top = 1
 	bg_style.border_width_bottom = 1
 	bg_style.border_width_left = 1
 	bg_style.border_width_right = 1
-	bg_style.corner_radius_top_left = 2
-	bg_style.corner_radius_top_right = 2
-	bg_style.corner_radius_bottom_left = 2
-	bg_style.corner_radius_bottom_right = 2
 	hp_bar.add_theme_stylebox_override("background", bg_style)
 
 	container.add_child(hp_bar)
@@ -1006,7 +955,7 @@ func _on_character_sprite_mouse_entered(character: CharacterBase, sprite_contain
 	# Highlight the sprite on hover
 	var sprite_node: Node = sprite_container.get_node_or_null("CharacterSprite")
 	if sprite_node and sprite_node is Sprite2D:
-		sprite_node.modulate = Color(1.3, 1.3, 1.3, 1.0)  # Brighten
+		sprite_node.modulate = Constants.COLOR_HOVER_BRIGHTEN
 	
 	# Emit signal for UI to show character info
 	EventBus.character_hovered.emit(character)
@@ -1045,8 +994,8 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 	
 	# Check if character has animated battle sprite (new system)
 	var animated_sprite: Node2D = character.get_meta("animated_battle_sprite", null)
-	
 
+	
 	
 	# Get original transform for ALL animations (both sprite sheet and tween-only)
 	var dir := -1.0 if is_enemy else 1.0  # Direction multiplier
@@ -1172,8 +1121,8 @@ func _play_attack_tween_global(sprite: Node2D, original_global_pos: Vector2, ori
 	
 	# Calculate rotation based on direction
 	var strike_rotation := rad_to_deg(direction.angle()) * 0.1  # Slight lean into attack
-	
 
+	
 	
 	var tween := create_tween()
 	# Anticipation - pull back
@@ -1187,8 +1136,8 @@ func _play_attack_tween_global(sprite: Node2D, original_global_pos: Vector2, ori
 	tween.parallel().tween_property(sprite, "rotation_degrees", original_rot + strike_rotation * 2, 0.12)
 	
 	# Impact flash
-	tween.tween_property(sprite, "modulate", Color(1.8, 1.8, 1.8, 1.0), 0.03)
-	tween.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.05)
+	tween.tween_property(sprite, "modulate", Constants.COLOR_FLASH_WHITE, 0.03)
+	tween.tween_property(sprite, "modulate", Color.WHITE, 0.05)
 	
 	# Hold at impact briefly
 	tween.tween_interval(0.08)
@@ -1211,14 +1160,15 @@ func _play_skill_tween_global(sprite: Node2D, original_global_pos: Vector2, orig
 	# Channel - rise and glow
 	tween.tween_property(sprite, "global_position", original_global_pos + Vector2(0, -25), 0.25)
 	tween.parallel().tween_property(sprite, "scale", original_scale * Vector2(1.1, 1.1), 0.25)
-	tween.parallel().tween_property(sprite, "modulate", Color(1.4, 1.3, 1.6, 1.0), 0.25)
+	tween.parallel().tween_property(sprite, "modulate", Constants.COLOR_MODULATE_CAPTURE_GLOW, 0.25)
 	
 	# Release - thrust toward target
 	tween.tween_property(sprite, "global_position", thrust_global_pos, 0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	tween.parallel().tween_property(sprite, "modulate", Color(1.8, 1.6, 2.0, 1.0), 0.15)
+	tween.parallel().tween_property(sprite, "modulate", Constants.COLOR_MODULATE_CAPTURE_FLASH, 0.15)
 	
-	# Flash on release
-	tween.tween_property(sprite, "modulate", Color(2.5, 2.2, 2.8, 1.0), 0.05)
+	# Flash on release - use even brighter flash
+	var ultra_flash := Color(2.5, 2.2, 2.8, 1.0)  # TODO: Add to Constants if used often
+	tween.tween_property(sprite, "modulate", ultra_flash, 0.05)
 	
 	# Hold briefly
 	tween.tween_interval(0.08)
@@ -1226,30 +1176,31 @@ func _play_skill_tween_global(sprite: Node2D, original_global_pos: Vector2, orig
 	# Recovery
 	tween.tween_property(sprite, "global_position", original_global_pos, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	tween.parallel().tween_property(sprite, "scale", original_scale, 0.3)
-	tween.parallel().tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.3)
+	tween.parallel().tween_property(sprite, "modulate", Color.WHITE, 0.3)
 
 func _play_defend_tween(sprite: Node2D, original_scale: Vector2) -> void:
 	var tween := create_tween()
 	# Brace - crouch and glow blue
 	tween.tween_property(sprite, "scale", original_scale * Vector2(1.05, 0.95), 0.15)
-	tween.parallel().tween_property(sprite, "modulate", Color(0.8, 0.9, 1.3, 1.0), 0.15)
+	tween.parallel().tween_property(sprite, "modulate", Constants.COLOR_MODULATE_BUFF, 0.15)
 	# Hold
 	tween.tween_interval(0.3)
 	# Return
 	tween.tween_property(sprite, "scale", original_scale, 0.15)
-	tween.parallel().tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
+	tween.parallel().tween_property(sprite, "modulate", Color.WHITE, 0.15)
 
 func _play_purify_tween(sprite: Node2D, original_scale: Vector2) -> void:
 	var tween := create_tween()
 	# Raise hands - glow purple/white
 	tween.tween_property(sprite, "scale", original_scale * Vector2(1.0, 1.1), 0.2)
-	tween.parallel().tween_property(sprite, "modulate", Color(1.2, 1.0, 1.4, 1.0), 0.2)
-	# Pulse
-	tween.tween_property(sprite, "modulate", Color(1.5, 1.3, 1.8, 1.0), 0.15)
-	tween.tween_property(sprite, "modulate", Color(1.2, 1.0, 1.4, 1.0), 0.15)
+	tween.parallel().tween_property(sprite, "modulate", Constants.COLOR_MODULATE_DEBUFF, 0.2)
+	# Pulse - brighter
+	var pulse_color := Color(1.5, 1.3, 1.8, 1.0)  # TODO: Add to Constants if used often
+	tween.tween_property(sprite, "modulate", pulse_color, 0.15)
+	tween.tween_property(sprite, "modulate", Constants.COLOR_MODULATE_DEBUFF, 0.15)
 	# Return
 	tween.tween_property(sprite, "scale", original_scale, 0.2)
-	tween.parallel().tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.2)
+	tween.parallel().tween_property(sprite, "modulate", Color.WHITE, 0.2)
 
 func _play_item_tween(sprite: Node2D, original_pos: Vector2) -> void:
 	# DEPRECATED: Use _play_item_tween_global instead
@@ -1260,8 +1211,8 @@ func _play_item_tween_global(sprite: Node2D, original_global_pos: Vector2) -> vo
 	# Reach up
 	tween.tween_property(sprite, "global_position", original_global_pos + Vector2(0, -15), 0.15)
 	# Use item - green flash
-	tween.tween_property(sprite, "modulate", Color(0.8, 1.4, 0.8, 1.0), 0.1)
-	tween.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
+	tween.tween_property(sprite, "modulate", Constants.COLOR_MODULATE_HEAL, 0.1)
+	tween.tween_property(sprite, "modulate", Color.WHITE, 0.15)
 	# Return
 	tween.tween_property(sprite, "global_position", original_global_pos, 0.15)
 
@@ -1272,13 +1223,14 @@ func _play_flee_tween(sprite: Node2D, dir: float, original_pos: Vector2) -> void
 func _play_flee_tween_global(sprite: Node2D, dir: float, original_global_pos: Vector2) -> void:
 	var tween := create_tween()
 	# Turn and run
+	var fade_color := Color(1.0, 1.0, 1.0, 0.5)  # Half transparent white
 	tween.tween_property(sprite, "global_position", original_global_pos + Vector2(-150 * dir, 0), 0.3)
-	tween.parallel().tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 0.5), 0.3)
+	tween.parallel().tween_property(sprite, "modulate", fade_color, 0.3)
 
 func _play_hurt_tween(sprite: Node2D, is_critical: bool) -> void:
 	var tween := create_tween()
 	var shake_amount := 15.0 if is_critical else 8.0
-	var flash_color := Color(1.8, 0.3, 0.3, 1.0) if is_critical else Color(1.5, 0.5, 0.5, 1.0)
+	var flash_color: Color = Constants.COLOR_MODULATE_DEATH_START if is_critical else Constants.COLOR_FLASH_DAMAGE
 	var original_pos := sprite.position
 	
 	# Flash red and shake
@@ -1287,7 +1239,7 @@ func _play_hurt_tween(sprite: Node2D, is_critical: bool) -> void:
 	tween.tween_property(sprite, "position", original_pos + Vector2(-shake_amount, 0), 0.05)
 	tween.tween_property(sprite, "position", original_pos + Vector2(shake_amount * 0.5, 0), 0.05)
 	tween.tween_property(sprite, "position", original_pos, 0.05)
-	tween.parallel().tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.1)
+	tween.parallel().tween_property(sprite, "modulate", Color.WHITE, 0.1)
 
 func _play_hit_animation(sprite: Node2D, is_critical: bool = false, character: CharacterBase = null) -> void:
 	# Check if character has animated battle sprite (new sprite sheet system)
@@ -1303,7 +1255,7 @@ func _play_hit_animation(sprite: Node2D, is_critical: bool = false, character: C
 
 func _play_heal_animation(sprite: Node2D) -> void:
 	var tween := create_tween()
-	tween.tween_property(sprite, "modulate", Color(0.5, 1.5, 0.5), 0.2)
+	tween.tween_property(sprite, "modulate", Constants.COLOR_FLASH_HEAL, 0.2)
 	tween.tween_property(sprite, "modulate", Color.WHITE, 0.3)
 
 func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> void:
@@ -1350,7 +1302,7 @@ func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> v
 	var tween := create_tween()
 	
 	# Phase 1: Flash bright red (hit confirmation)
-	tween.tween_property(sprite, "modulate", Color(2.0, 0.4, 0.4, 1.0), 0.08)
+	tween.tween_property(sprite, "modulate", Constants.COLOR_MODULATE_DEATH_START, 0.08)
 	
 	# Phase 2: Quick shake (death impact)
 	tween.tween_property(sprite, "global_position", original_global_pos + Vector2(8, 0), 0.04)
@@ -1359,14 +1311,14 @@ func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> v
 	tween.tween_property(sprite, "global_position", original_global_pos, 0.04)
 	
 	# Phase 3: Hold red briefly
-	tween.tween_property(sprite, "modulate", Color(1.5, 0.3, 0.3, 1.0), 0.15)
+	tween.tween_property(sprite, "modulate", Constants.COLOR_MODULATE_DEATH_MID, 0.15)
 	
 	# Phase 4: Dissolve effect - desaturate and fade out while shrinking slightly
-	tween.tween_property(sprite, "modulate", Color(0.4, 0.4, 0.4, 0.7), 0.25)
+	tween.tween_property(sprite, "modulate", Constants.COLOR_MODULATE_DEATH_FADE, 0.25)
 	tween.parallel().tween_property(sprite, "scale", original_scale * 0.95, 0.25)
 	
 	# Phase 5: Final fade to invisible
-	tween.tween_property(sprite, "modulate", Color(0.2, 0.2, 0.2, 0.0), 0.35)
+	tween.tween_property(sprite, "modulate", Constants.COLOR_MODULATE_DEATH_END, 0.35)
 	tween.parallel().tween_property(sprite, "scale", original_scale * 0.85, 0.35)
 	
 	# Wait for animation to complete
@@ -1390,11 +1342,11 @@ func _spawn_damage_number(pos: Vector2, amount: int, is_critical: bool, is_heal:
 	var font_size := 32 if is_critical else 24
 	label.add_theme_font_size_override("font_size", font_size)
 
-	var color := Color.WHITE
+	var color: Color
 	if is_heal:
-		color = Color.LIME_GREEN
+		color = Constants.COLOR_TEXT_HEAL
 	elif is_critical:
-		color = Color.YELLOW
+		color = Constants.COLOR_TEXT_CRITICAL
 	else:
 		color = Color.WHITE
 	label.add_theme_color_override("font_color", color)
@@ -1881,11 +1833,11 @@ func _on_target_highlight_changed(target: CharacterBase) -> void:
 			var base_color: Color
 			var glow_color: Color
 			if is_ally:
-				base_color = Color(0.7, 1.2, 0.7, 1.0)  # Blue-green tint for ally
-				glow_color = Color(0.5, 1.4, 0.5, 1.0)  # Brighter glow
+				base_color = Constants.COLOR_GLOW_HEAL  # Green tint for ally
+				glow_color = Color(0.5, 1.4, 0.5, 1.0)  # Brighter glow - TODO: Add to Constants
 			else:
-				base_color = Color(1.2, 0.6, 0.6, 1.0)  # Red tint for enemy
-				glow_color = Color(1.4, 0.4, 0.4, 1.0)  # Brighter red glow
+				base_color = Constants.COLOR_GLOW_DAMAGE  # Red tint for enemy
+				glow_color = Color(1.4, 0.4, 0.4, 1.0)  # Brighter red glow - TODO: Add to Constants
 
 			sprite.modulate = base_color
 			_currently_highlighted_sprite = sprite

@@ -1169,14 +1169,8 @@ func _resolve_hybrid_brand(brand: String) -> String:
 	return upper_brand
 
 func _get_brand_color(brand: String) -> Color:
-	match brand.to_upper():
-		"SAVAGE": return Color("c73e3e")
-		"IRON": return Color("7b8794")
-		"VENOM": return Color("6b9b37")
-		"SURGE": return Color("4a90d9")
-		"DREAD": return Color("5d3e8c")
-		"LEECH": return Color("c75b8a")
-		_: return Color.WHITE
+	## Get brand color - uses centralized Constants
+	return Constants.get_brand_color(brand)
 
 func _calculate_exp() -> int:
 	# Placeholder

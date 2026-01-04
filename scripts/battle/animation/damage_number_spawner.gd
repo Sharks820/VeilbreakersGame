@@ -219,14 +219,17 @@ func _on_number_finished(number: Node) -> void:
 	_return_to_pool(number)
 
 func _get_brand_color(brand: String) -> Color:
+	## Get brand color - uses centralized Constants with export overrides
+	var const_color := Constants.get_brand_color(brand)
+	# Allow export overrides for customization in editor
 	match brand.to_upper():
-		"SAVAGE": return savage_color
-		"IRON": return iron_color
-		"VENOM": return venom_color
-		"SURGE": return surge_color
-		"DREAD": return dread_color
-		"LEECH": return leech_color
-		_: return neutral_color
+		"SAVAGE": return savage_color if savage_color != Color("c73e3e") else const_color
+		"IRON": return iron_color if iron_color != Color("7b8794") else const_color
+		"VENOM": return venom_color if venom_color != Color("6b9b37") else const_color
+		"SURGE": return surge_color if surge_color != Color("4a90d9") else const_color
+		"DREAD": return dread_color if dread_color != Color("5d3e8c") else const_color
+		"LEECH": return leech_color if leech_color != Color("c75b8a") else const_color
+		_: return const_color
 
 func _get_status_color(status: String) -> Color:
 	match status.to_lower():
