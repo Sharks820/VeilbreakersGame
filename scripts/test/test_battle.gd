@@ -992,6 +992,8 @@ var _tutorial_arrow: Control = null
 var _tutorial_overlay: ColorRect = null
 var _tutorial_overlay_canvas: CanvasLayer = null
 var _highlight_panels: Array[Control] = []
+var _highlight_tweens: Array[Tween] = []  # Store highlight tweens to prevent memory leaks
+var _arrow_tween: Tween = null  # Store arrow tween to prevent memory leaks
 
 func _show_tutorial_overlay() -> void:
 	"""Show a dark overlay behind the tutorial panel to focus attention"""
@@ -1110,15 +1112,22 @@ func _create_highlight_rect(pos: Vector2, size: Vector2) -> Control:
 		_tutorial_overlay_canvas.add_child(highlight)
 		highlight.z_index = 5  # Above overlay
 	
-	# Pulsing animation
+	# Pulsing animation - store tween to prevent memory leak
 	var tween := create_tween().set_loops()
 	tween.tween_property(highlight, "modulate:a", 0.5, 0.5)
 	tween.tween_property(highlight, "modulate:a", 1.0, 0.5)
-	
+	_highlight_tweens.append(tween)
+
 	return highlight
 
 func _clear_highlights() -> void:
 	"""Clear all tutorial highlights"""
+	# Kill all highlight tweens first to prevent memory leaks
+	for tween in _highlight_tweens:
+		if tween and tween.is_valid():
+			tween.kill()
+	_highlight_tweens.clear()
+
 	for panel in _highlight_panels:
 		if is_instance_valid(panel):
 			panel.queue_free()
@@ -1209,20 +1218,25 @@ func _show_tutorial_arrow(target: String) -> void:
 	add_child(canvas)
 	canvas.add_child(_tutorial_arrow)
 	
-	# Animate the arrow (bobbing motion)
-	var tween := create_tween().set_loops()
-	tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
+	# Animate the arrow (bobbing motion) - store tween to prevent memory leak
+	_arrow_tween = create_tween().set_loops()
+	_arrow_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
 	var start_pos := _tutorial_arrow.position
 	# Bob in direction of arrow
 	if arrow_label.text == "▼":
-		tween.tween_property(_tutorial_arrow, "position:y", start_pos.y + 15, 0.4).set_ease(Tween.EASE_IN_OUT)
-		tween.tween_property(_tutorial_arrow, "position:y", start_pos.y, 0.4).set_ease(Tween.EASE_IN_OUT)
+		_arrow_tween.tween_property(_tutorial_arrow, "position:y", start_pos.y + 15, 0.4).set_ease(Tween.EASE_IN_OUT)
+		_arrow_tween.tween_property(_tutorial_arrow, "position:y", start_pos.y, 0.4).set_ease(Tween.EASE_IN_OUT)
 	else:  # Horizontal arrow
-		tween.tween_property(_tutorial_arrow, "position:x", start_pos.x - 15, 0.4).set_ease(Tween.EASE_IN_OUT)
-		tween.tween_property(_tutorial_arrow, "position:x", start_pos.x, 0.4).set_ease(Tween.EASE_IN_OUT)
+		_arrow_tween.tween_property(_tutorial_arrow, "position:x", start_pos.x - 15, 0.4).set_ease(Tween.EASE_IN_OUT)
+		_arrow_tween.tween_property(_tutorial_arrow, "position:x", start_pos.x, 0.4).set_ease(Tween.EASE_IN_OUT)
 
 func _hide_tutorial_arrow() -> void:
 	"""Hide and cleanup tutorial arrow"""
+	# Kill arrow tween first to prevent memory leak
+	if _arrow_tween and _arrow_tween.is_valid():
+		_arrow_tween.kill()
+		_arrow_tween = null
+
 	if _tutorial_arrow and is_instance_valid(_tutorial_arrow):
 		var canvas := _tutorial_arrow.get_parent()
 		_tutorial_arrow.queue_free()

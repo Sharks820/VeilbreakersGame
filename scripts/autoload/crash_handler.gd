@@ -39,6 +39,12 @@ func _connect_error_logger() -> void:
 		if not ErrorLogger.crash_detected.is_connected(_on_crash_detected):
 			ErrorLogger.crash_detected.connect(_on_crash_detected)
 
+func _exit_tree() -> void:
+	# Disconnect ErrorLogger signals to prevent memory leaks
+	if has_node("/root/ErrorLogger"):
+		if ErrorLogger.crash_detected.is_connected(_on_crash_detected):
+			ErrorLogger.crash_detected.disconnect(_on_crash_detected)
+
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:

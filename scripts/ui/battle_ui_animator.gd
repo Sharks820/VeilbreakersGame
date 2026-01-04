@@ -37,17 +37,13 @@ signal target_selection_ready
 @export var message_display_time: float = 1.5
 
 # -----------------------------------------------------------------------------
-# BRAND COLORS (for UI theming)
+# BRAND COLORS (delegate to Helpers for single source of truth)
 # -----------------------------------------------------------------------------
-const BRAND_COLORS = {
-	"SAVAGE": Color("c73e3e"),
-	"IRON": Color("7b8794"),
-	"VENOM": Color("6b9b37"),
-	"SURGE": Color("4a90d9"),
-	"DREAD": Color("5d3e8c"),
-	"LEECH": Color("c75b8a"),
-	"NEUTRAL": Color.WHITE,
-}
+## Get brand color by name string - delegates to Helpers
+static func _get_brand_color(brand_name: String) -> Color:
+	if brand_name == "NEUTRAL" or brand_name.is_empty():
+		return Color.WHITE
+	return Helpers.get_brand_color_by_name(brand_name)
 
 # -----------------------------------------------------------------------------
 # STATE
@@ -55,6 +51,26 @@ const BRAND_COLORS = {
 var turn_icons: Array = []  # Current turn order icons
 var active_popups: Array = []
 var _current_turn_tween: Tween = null  # Track infinite pulse tween to prevent leaks
+
+# -----------------------------------------------------------------------------
+# CLEANUP
+# -----------------------------------------------------------------------------
+func _exit_tree() -> void:
+	# Kill any active tweens to prevent memory leaks
+	if _current_turn_tween and _current_turn_tween.is_valid():
+		_current_turn_tween.kill()
+
+	# Clear turn icons
+	for icon in turn_icons:
+		if is_instance_valid(icon):
+			icon.queue_free()
+	turn_icons.clear()
+
+	# Clear active popups
+	for popup in active_popups:
+		if is_instance_valid(popup):
+			popup.queue_free()
+	active_popups.clear()
 
 # -----------------------------------------------------------------------------
 # TURN ORDER BAR
@@ -103,7 +119,7 @@ func _setup_turn_icon(icon: Control, entity: Node, index: int) -> void:
 
 	if icon.has_node("BrandIndicator") and entity.has_method("get_brand"):
 		var brand = entity.get_brand()
-		icon.get_node("BrandIndicator").modulate = BRAND_COLORS.get(brand, Color.WHITE)
+		icon.get_node("BrandIndicator").modulate = _get_brand_color(brand)
 
 	# First in order gets highlight
 	if index == 0 and icon.has_node("ActiveHighlight"):
@@ -201,10 +217,10 @@ func show_skill_name(skill_name: String, brand: String = "NEUTRAL") -> void:
 		label.text = skill_name
 
 		# Brand color
-		label.add_theme_color_override("font_color", BRAND_COLORS.get(brand, Color.WHITE))
+		label.add_theme_color_override("font_color", _get_brand_color(brand))
 
 	if skill_name_display.has_node("BrandGlow"):
-		skill_name_display.get_node("BrandGlow").modulate = BRAND_COLORS.get(brand, Color.WHITE)
+		skill_name_display.get_node("BrandGlow").modulate = _get_brand_color(brand)
 
 	# Animate in
 	skill_name_display.visible = true

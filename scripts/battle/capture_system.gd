@@ -119,7 +119,7 @@ func can_use_method(monster: Node, captor: Node, method: Enums.CaptureMethod) ->
 			result.available = true
 			result.capture_chance = calculate_purify_chance(monster, captor)
 			result.cost = {"sanctum_energy": energy_cost}
-			if corruption > 75:
+			if corruption > Constants.CORRUPTION_CORRUPTED_MAX:
 				result.reason = "Warning: -30% chance at high corruption, costs double energy"
 
 		Enums.CaptureMethod.DOMINATE:
@@ -317,7 +317,7 @@ func calculate_purify_chance(monster: Node, captor: Node) -> float:
 	var corruption_mod := 0.0
 	if corruption < 25:
 		corruption_mod = Constants.PURIFY_LOW_CORRUPTION_BONUS
-	elif corruption > 75:
+	elif corruption > Constants.CORRUPTION_CORRUPTED_MAX:
 		corruption_mod = -Constants.PURIFY_HIGH_CORRUPTION_PENALTY
 	
 	# Level difference
@@ -328,7 +328,7 @@ func calculate_purify_chance(monster: Node, captor: Node) -> float:
 func _calculate_purify_energy_cost(corruption: float) -> float:
 	var cost := Constants.PURIFY_ENERGY_BASE + (corruption * Constants.PURIFY_ENERGY_CORRUPTION_MULT)
 	# Double cost at high corruption
-	if corruption > 75:
+	if corruption > Constants.CORRUPTION_CORRUPTED_MAX:
 		cost *= 2.0
 	return cost
 
@@ -377,7 +377,7 @@ func _execute_dominate() -> void:
 			"method": "dominate",
 			"hp_cost": hp_cost,
 			"has_instability": true,
-			"instability_amount": 0.20 if corruption > 75 else 0.10
+			"instability_amount": Constants.INSTABILITY_ABYSSAL if corruption > Constants.CORRUPTION_CORRUPTED_MAX else Constants.INSTABILITY_CORRUPTED
 		})
 	else:
 		# On fail, monster gets enraged
@@ -399,7 +399,7 @@ func calculate_dominate_chance(monster: Node, captor: Node) -> float:
 	
 	# DOMINATE bonus at high corruption
 	var corruption_mod := 0.0
-	if corruption > 75:
+	if corruption > Constants.CORRUPTION_CORRUPTED_MAX:
 		corruption_mod = Constants.DOMINATE_HIGH_CORRUPTION_BONUS
 	
 	# Level difference

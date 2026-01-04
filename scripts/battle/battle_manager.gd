@@ -241,6 +241,25 @@ func _on_corruption_reduced(monster: Node, old_val: float, new_val: float) -> vo
 	EventBus.emit_debug("%s corruption: %.0f%% -> %.0f%%" % [monster_name, old_val, new_val])
 
 # =============================================================================
+# STATUS EFFECT HELPERS
+# =============================================================================
+
+func _process_turn_status_effects(character: CharacterBase) -> void:
+	## Process start-of-turn status effects and stat modifiers
+	## Logs any damage taken from status effects (poison, burn, etc.)
+	var tick_results := character.tick_status_effects()
+	character.tick_stat_modifiers()
+
+	# Log status effect damage
+	for result in tick_results:
+		if result.has("damage"):
+			EventBus.emit_debug("%s took %d damage from %s" % [
+				character.character_name,
+				result.damage,
+				Enums.StatusEffect.keys()[result.effect]
+			])
+
+# =============================================================================
 # BATTLE FLOW
 # =============================================================================
 
@@ -362,26 +381,16 @@ func _start_next_turn() -> void:
 	# Skip dead characters
 	if current_character.is_dead():
 		current_turn_index += 1
-		_start_next_turn()
+		await _start_next_turn()
 		return
 
 	# Process start-of-turn effects
-	var tick_results := current_character.tick_status_effects()
-	current_character.tick_stat_modifiers()
-
-	# Log status effect damage
-	for result in tick_results:
-		if result.has("damage"):
-			EventBus.emit_debug("%s took %d damage from %s" % [
-				current_character.character_name,
-				result.damage,
-				Enums.StatusEffect.keys()[result.effect]
-			])
+	_process_turn_status_effects(current_character)
 
 	# Check if character is still alive after status ticks
 	if current_character.is_dead():
 		current_turn_index += 1
-		_start_next_turn()
+		await _start_next_turn()
 		return
 
 	# Check if character can act (stunned, frozen, etc.)
@@ -451,17 +460,7 @@ func _prompt_next_party_member() -> void:
 			continue
 
 		# Process start-of-turn effects for this character
-		var tick_results := character.tick_status_effects()
-		character.tick_stat_modifiers()
-
-		# Log status effect damage
-		for result in tick_results:
-			if result.has("damage"):
-				EventBus.emit_debug("%s took %d damage from %s" % [
-					character.character_name,
-					result.damage,
-					Enums.StatusEffect.keys()[result.effect]
-				])
+		_process_turn_status_effects(character)
 
 		# Check if character died from status effects
 		if character.is_dead():
@@ -685,21 +684,12 @@ func _execute_next_enemy_attack() -> void:
 	var is_boss := attacker in active_bosses
 
 	# Process status effects for the attacker
-	var tick_results := attacker.tick_status_effects()
-	attacker.tick_stat_modifiers()
-
-	for result in tick_results:
-		if result.has("damage"):
-			EventBus.emit_debug("%s took %d damage from %s" % [
-				attacker.character_name,
-				result.damage,
-				Enums.StatusEffect.keys()[result.effect]
-			])
+	_process_turn_status_effects(attacker)
 
 	if attacker.is_dead():
 		enemy_attacks_remaining -= 1
 		enemy_attack_index += 1
-		_execute_next_enemy_attack()
+		await _execute_next_enemy_attack()
 		return
 
 	# Check if enemy can act
@@ -1828,3 +1818,20 @@ func get_battle_summary() -> Dictionary:
 		"current_character": get_current_character().character_name if get_current_character() else "None",
 		"stats": battle_stats
 	}
+
+func _exit_tree() -> void:
+	# Disconnect capture_system signals to prevent memory leaks
+	if capture_system:
+		if capture_system.capture_succeeded.is_connected(_on_capture_succeeded):
+			capture_system.capture_succeeded.disconnect(_on_capture_succeeded)
+		if capture_system.capture_failed.is_connected(_on_capture_failed):
+			capture_system.capture_failed.disconnect(_on_capture_failed)
+		if capture_system.corruption_battle_pass.is_connected(_on_capture_shake):
+			capture_system.corruption_battle_pass.disconnect(_on_capture_shake)
+		if capture_system.corruption_reduced.is_connected(_on_corruption_reduced):
+			capture_system.corruption_reduced.disconnect(_on_corruption_reduced)
+
+	# Disconnect character died signals
+	for character in player_party + enemy_party:
+		if is_instance_valid(character) and character.died.is_connected(_on_character_died):
+			character.died.disconnect(_on_character_died)

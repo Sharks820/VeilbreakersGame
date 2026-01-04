@@ -113,3 +113,60 @@ static func scene_exists(path: String) -> bool:
 
 static func resource_exists(path: String) -> bool:
 	return ResourceLoader.exists(path)
+
+# =============================================================================
+# SAFE LOADING METHODS (v0.98 - Consolidate 61+ duplicate load patterns)
+# =============================================================================
+
+## Load resource safely, returning null if not found
+static func load_resource(path: String) -> Resource:
+	if ResourceLoader.exists(path):
+		return load(path)
+	return null
+
+## Load monster data by ID
+static func load_monster_data(monster_id: String) -> Resource:
+	return load_resource(get_monster_data_path(monster_id))
+
+## Load skill data by ID
+static func load_skill_data(skill_id: String) -> Resource:
+	return load_resource(get_skill_data_path(skill_id))
+
+## Load item data by ID
+static func load_item_data(item_id: String) -> Resource:
+	return load_resource(get_item_data_path(item_id))
+
+## Load monster sprite texture by ID
+static func load_monster_sprite(monster_id: String) -> Texture2D:
+	var path := get_monster_sprite_path(monster_id)
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return null
+
+## Load character sprite texture by ID
+static func load_character_sprite(character_id: String) -> Texture2D:
+	var path := get_character_sprite_path(character_id)
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return null
+
+## Load portrait texture by path
+static func load_portrait(portrait_path: String) -> Texture2D:
+	if ResourceLoader.exists(portrait_path):
+		return load(portrait_path) as Texture2D
+	return null
+
+## Load hero data by ID
+static func get_hero_data_path(hero_id: String) -> String:
+	return "res://data/heroes/" + hero_id + ".tres"
+
+static func load_hero_data(hero_id: String) -> Resource:
+	return load_resource(get_hero_data_path(hero_id))
+
+## Get dialogue data path
+static func get_dialogue_path(dialogue_id: String) -> String:
+	return DATA_DIALOGUE + dialogue_id + ".json"
+
+## Get map data path
+static func get_map_path(map_id: String) -> String:
+	return DATA_MAPS + map_id + ".tres"
