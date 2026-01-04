@@ -204,12 +204,16 @@ func _force_ui_layout() -> void:
 			var scrollbar := combat_log_scroll.get_v_scroll_bar()
 			if scrollbar:
 				scrollbar.custom_minimum_size.x = 8  # Make scrollbar wider/visible
-			# Create a visible style for the scrollbar - use StyleManager
-				var grabber_style := StyleManager.scrollbar_grabber()
+				# Create a visible style for the scrollbar
+				var grabber_style := StyleBoxFlat.new()
+				grabber_style.bg_color = Color(0.5, 0.45, 0.4, 0.8)
+				grabber_style.set_corner_radius_all(4)
 				scrollbar.add_theme_stylebox_override("grabber", grabber_style)
 				scrollbar.add_theme_stylebox_override("grabber_highlight", grabber_style)
 				scrollbar.add_theme_stylebox_override("grabber_pressed", grabber_style)
-				var scroll_bg := StyleManager.scrollbar_bg()
+				var scroll_bg := StyleBoxFlat.new()
+				scroll_bg.bg_color = Color(0.15, 0.12, 0.1, 0.6)
+				scroll_bg.set_corner_radius_all(4)
 				scrollbar.add_theme_stylebox_override("scroll", scroll_bg)
 		if combat_log_text:
 			combat_log_text.bbcode_enabled = true
@@ -693,12 +697,12 @@ func _on_flee_pressed() -> void:
 func _style_action_buttons() -> void:
 	"""Apply polished AAA styling to action buttons with icons"""
 	var button_data := {
-		attack_button: {"icon": "res://assets/ui/icons/actions/attack.png", "color": Constants.COLOR_ACTION_ATTACK},
-		skill_button: {"icon": "res://assets/ui/icons/actions/skill.png", "color": Constants.COLOR_ACTION_SKILL},
-		purify_button: {"icon": "res://assets/ui/icons/actions/special.png", "color": Constants.COLOR_ACTION_SPECIAL},
-		item_button: {"icon": "res://assets/ui/icons/actions/item.png", "color": Constants.COLOR_ACTION_ITEM},
-		defend_button: {"icon": "res://assets/ui/icons/actions/defend.png", "color": Constants.COLOR_ACTION_DEFEND},
-		flee_button: {"icon": "res://assets/ui/icons/actions/flee.png", "color": Constants.COLOR_ACTION_FLEE}
+		attack_button: {"icon": "res://assets/ui/icons/actions/attack.png", "color": Color(0.9, 0.3, 0.3)},
+		skill_button: {"icon": "res://assets/ui/icons/actions/skill.png", "color": Color(0.3, 0.5, 0.9)},
+		purify_button: {"icon": "res://assets/ui/icons/actions/special.png", "color": Color(0.8, 0.6, 0.9)},
+		item_button: {"icon": "res://assets/ui/icons/actions/item.png", "color": Color(0.3, 0.8, 0.4)},
+		defend_button: {"icon": "res://assets/ui/icons/actions/defend.png", "color": Color(0.6, 0.6, 0.7)},
+		flee_button: {"icon": "res://assets/ui/icons/actions/flee.png", "color": Color(0.8, 0.7, 0.3)}
 	}
 	
 	for button in button_data.keys():
@@ -708,8 +712,60 @@ func _style_action_buttons() -> void:
 		var data: Dictionary = button_data[button]
 		var accent_color: Color = data.color
 		
-		# Apply all action button styles via StyleManager
-		StyleManager.apply_action_button_styles(button, accent_color)
+		# Create custom stylebox for normal state
+		var normal_style := StyleBoxFlat.new()
+		normal_style.bg_color = Color(0.12, 0.12, 0.15, 0.95)
+		normal_style.border_color = accent_color.darkened(0.3)
+		normal_style.set_border_width_all(2)
+		normal_style.set_corner_radius_all(6)
+		normal_style.shadow_color = Color(0, 0, 0, 0.5)
+		normal_style.shadow_size = 4
+		normal_style.shadow_offset = Vector2(2, 2)
+		
+		# Hover style - brighter
+		var hover_style := StyleBoxFlat.new()
+		hover_style.bg_color = Color(0.18, 0.18, 0.22, 0.98)
+		hover_style.border_color = accent_color
+		hover_style.set_border_width_all(2)
+		hover_style.set_corner_radius_all(6)
+		hover_style.shadow_color = accent_color.darkened(0.5)
+		hover_style.shadow_color.a = 0.6
+		hover_style.shadow_size = 8
+		hover_style.shadow_offset = Vector2(0, 0)
+		
+		# Pressed style
+		var pressed_style := StyleBoxFlat.new()
+		pressed_style.bg_color = accent_color.darkened(0.4)
+		pressed_style.border_color = accent_color.lightened(0.2)
+		pressed_style.set_border_width_all(2)
+		pressed_style.set_corner_radius_all(6)
+		
+		# Disabled style
+		var disabled_style := StyleBoxFlat.new()
+		disabled_style.bg_color = Color(0.08, 0.08, 0.1, 0.7)
+		disabled_style.border_color = Color(0.3, 0.3, 0.3, 0.5)
+		disabled_style.set_border_width_all(1)
+		disabled_style.set_corner_radius_all(6)
+		
+		# Focus style - same as hover so focus indicator matches hover
+		var focus_style := StyleBoxFlat.new()
+		focus_style.bg_color = Color(0.18, 0.14, 0.22, 0.95)
+		focus_style.border_color = Color(0.7, 0.55, 0.4, 1.0)
+		focus_style.set_border_width_all(2)
+		focus_style.set_corner_radius_all(6)
+		
+		# Apply styles
+		button.add_theme_stylebox_override("normal", normal_style)
+		button.add_theme_stylebox_override("hover", hover_style)
+		button.add_theme_stylebox_override("pressed", pressed_style)
+		button.add_theme_stylebox_override("disabled", disabled_style)
+		button.add_theme_stylebox_override("focus", focus_style)  # Match hover style
+		
+		# Text styling
+		button.add_theme_color_override("font_color", Color(0.95, 0.9, 0.8))
+		button.add_theme_color_override("font_hover_color", Color(1.0, 0.95, 0.85))
+		button.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0))
+		button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
 		button.add_theme_font_size_override("font_size", 16)
 		
 		# Add icon if texture exists
@@ -735,7 +791,7 @@ func _on_action_button_hover(button: Button) -> void:
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(button, "scale", Vector2(1.08, 1.08), 0.12)
-	tween.tween_property(button, "modulate", Constants.COLOR_MODULATE_HOVER, 0.12)
+	tween.tween_property(button, "modulate", Color(1.3, 1.1, 0.9, 1.0), 0.12)
 	# Ensure pivot is centered for proper scaling
 	button.pivot_offset = button.size / 2
 
@@ -744,7 +800,7 @@ func _on_action_button_unhover(button: Button) -> void:
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(button, "scale", Vector2(1.0, 1.0), 0.1)
-	tween.tween_property(button, "modulate", Constants.COLOR_NORMAL, 0.1)
+	tween.tween_property(button, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.1)
 
 # =============================================================================
 # SKILL MENU
@@ -781,7 +837,7 @@ func _populate_skill_list() -> void:
 			button.pressed.connect(_on_skill_selected.bind(skill_id))
 		else:
 			button.disabled = true
-			button.modulate = Constants.COLOR_MODULATE_DISABLED
+			button.modulate = Color(0.5, 0.5, 0.5, 0.8)
 		skill_list.add_child(button)
 
 func _get_skill_display_name(skill_id: String) -> String:
@@ -840,7 +896,7 @@ func _populate_item_list() -> void:
 	if battle_items.is_empty():
 		var label := Label.new()
 		label.text = "No usable items"
-		label.add_theme_color_override("font_color", Constants.COLOR_FONT_MUTED)
+		label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 		item_list.add_child(label)
 		return
 
@@ -953,7 +1009,7 @@ func _update_target_display() -> void:
 
 	# Determine if target is ally or enemy
 	var is_ally := target in party_members
-	var highlight_color := Constants.COLOR_TARGET_ALLY if is_ally else Constants.COLOR_TARGET_ENEMY  # BLUE for ally, RED for enemy
+	var highlight_color := Color(0.4, 0.7, 1.0) if is_ally else Color(1.0, 0.4, 0.4)  # BLUE for ally, RED for enemy
 
 	# Update target name with appropriate color highlight
 	target_name_label.text = "► " + target.character_name + " ◄"
@@ -1014,18 +1070,38 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(180, 60)
 
-	# Style the panel - uses centralized StyleManager
-	var panel_style := StyleManager.custom_panel(Constants.COLOR_PANEL_DARK, Constants.COLOR_BORDER_PURPLE, 1, 4)
+	# Style the panel
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.1, 0.1, 0.15, 0.85)
+	panel_style.border_color = Color(0.3, 0.25, 0.4, 1.0)
+	panel_style.border_width_top = 1
+	panel_style.border_width_bottom = 1
+	panel_style.border_width_left = 1
+	panel_style.border_width_right = 1
+	panel_style.corner_radius_top_left = 4
+	panel_style.corner_radius_top_right = 4
+	panel_style.corner_radius_bottom_left = 4
+	panel_style.corner_radius_bottom_right = 4
 	panel.add_theme_stylebox_override("panel", panel_style)
 
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 8)
 	panel.add_child(hbox)
 
-	# Portrait container - uses portrait frame style with custom corner radius
+	# Portrait container
 	var portrait_container := PanelContainer.new()
 	portrait_container.custom_minimum_size = Vector2(50, 50)
-	var portrait_style := StyleManager.custom_panel(Constants.COLOR_PORTRAIT_BG_ALLY, Constants.COLOR_PORTRAIT_BORDER_ALLY, 2, 3)
+	var portrait_style := StyleBoxFlat.new()
+	portrait_style.bg_color = Color(0.15, 0.15, 0.2, 1.0)
+	portrait_style.border_color = Color(0.4, 0.35, 0.5, 1.0)
+	portrait_style.border_width_top = 2
+	portrait_style.border_width_bottom = 2
+	portrait_style.border_width_left = 2
+	portrait_style.border_width_right = 2
+	portrait_style.corner_radius_top_left = 3
+	portrait_style.corner_radius_top_right = 3
+	portrait_style.corner_radius_bottom_left = 3
+	portrait_style.corner_radius_bottom_right = 3
 	portrait_container.add_theme_stylebox_override("panel", portrait_style)
 	hbox.add_child(portrait_container)
 
@@ -1053,28 +1129,42 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 	var name_label := Label.new()
 	name_label.text = character.character_name
 	name_label.add_theme_font_size_override("font_size", 12)
-	name_label.add_theme_color_override("font_color", Constants.COLOR_TEXT_PARCHMENT)
+	name_label.add_theme_color_override("font_color", Color(0.95, 0.9, 0.8, 1.0))
 	vbox.add_child(name_label)
 
-	# HP Bar with styling - uses StyleManager
+	# HP Bar with styling
 	var hp_bar := ProgressBar.new()
 	hp_bar.max_value = character.get_max_hp()
 	hp_bar.value = character.current_hp
 	hp_bar.show_percentage = false
 	hp_bar.custom_minimum_size = Vector2(110, 14)
 	hp_bar.name = "HPBar"
-	hp_bar.add_theme_stylebox_override("fill", StyleManager.hp_fill(false))
-	hp_bar.add_theme_stylebox_override("background", StyleManager.hp_bg())
+
+	var hp_fill := StyleBoxFlat.new()
+	hp_fill.bg_color = Color(0.2, 0.8, 0.3, 1.0)
+	hp_fill.corner_radius_top_left = 2
+	hp_fill.corner_radius_top_right = 2
+	hp_fill.corner_radius_bottom_left = 2
+	hp_fill.corner_radius_bottom_right = 2
+	hp_bar.add_theme_stylebox_override("fill", hp_fill)
+
+	var hp_bg := StyleBoxFlat.new()
+	hp_bg.bg_color = Color(0.15, 0.1, 0.1, 0.9)
+	hp_bg.corner_radius_top_left = 2
+	hp_bg.corner_radius_top_right = 2
+	hp_bg.corner_radius_bottom_left = 2
+	hp_bg.corner_radius_bottom_right = 2
+	hp_bar.add_theme_stylebox_override("background", hp_bg)
 	vbox.add_child(hp_bar)
 
 	var hp_label := Label.new()
 	hp_label.text = "%d/%d" % [character.current_hp, character.get_max_hp()]
 	hp_label.add_theme_font_size_override("font_size", 10)
-	hp_label.add_theme_color_override("font_color", Constants.COLOR_FONT_LABEL)
+	hp_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 1.0))
 	hp_label.name = "HPLabel"
 	vbox.add_child(hp_label)
 
-	# MP Bar if character has MP - uses StyleManager
+	# MP Bar if character has MP
 	if character.get_max_mp() > 0:
 		var mp_bar := ProgressBar.new()
 		mp_bar.max_value = character.get_max_mp()
@@ -1082,8 +1172,22 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 		mp_bar.show_percentage = false
 		mp_bar.custom_minimum_size = Vector2(110, 10)
 		mp_bar.name = "MPBar"
-		mp_bar.add_theme_stylebox_override("fill", StyleManager.mp_fill())
-		mp_bar.add_theme_stylebox_override("background", StyleManager.mp_bg())
+
+		var mp_fill := StyleBoxFlat.new()
+		mp_fill.bg_color = Color(0.2, 0.4, 0.9, 1.0)
+		mp_fill.corner_radius_top_left = 2
+		mp_fill.corner_radius_top_right = 2
+		mp_fill.corner_radius_bottom_left = 2
+		mp_fill.corner_radius_bottom_right = 2
+		mp_bar.add_theme_stylebox_override("fill", mp_fill)
+
+		var mp_bg := StyleBoxFlat.new()
+		mp_bg.bg_color = Color(0.1, 0.1, 0.15, 0.9)
+		mp_bg.corner_radius_top_left = 2
+		mp_bg.corner_radius_top_right = 2
+		mp_bg.corner_radius_bottom_left = 2
+		mp_bg.corner_radius_bottom_right = 2
+		mp_bar.add_theme_stylebox_override("background", mp_bg)
 		vbox.add_child(mp_bar)
 
 	# Brand display for monsters
@@ -1144,8 +1248,12 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	panel.custom_minimum_size = Vector2(190, 80)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 
-	# Style the panel with red-tinted border for enemies - uses StyleManager
-	var panel_style := StyleManager.custom_panel(Constants.COLOR_PANEL_DARK_RED, Constants.COLOR_BORDER_ENEMY, 1, 4)
+	# Style the panel with red-tinted border for enemies
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.15, 0.1, 0.1, 0.85)
+	panel_style.border_color = Color(0.5, 0.25, 0.25, 1.0)
+	panel_style.set_border_width_all(1)
+	panel_style.set_corner_radius_all(4)
 	panel.add_theme_stylebox_override("panel", panel_style)
 
 	# Connect hover signals for tooltip
@@ -1157,11 +1265,15 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	hbox.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	panel.add_child(hbox)
 
-	# Portrait container - uses portrait frame style
+	# Portrait container
 	var portrait_container := PanelContainer.new()
 	portrait_container.custom_minimum_size = Vector2(45, 45)
 	portrait_container.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
-	var portrait_style := StyleManager.custom_panel(Constants.COLOR_PORTRAIT_BG_ENEMY, Constants.COLOR_PORTRAIT_BORDER_ENEMY, 2, 3)
+	var portrait_style := StyleBoxFlat.new()
+	portrait_style.bg_color = Color(0.2, 0.1, 0.1, 1.0)
+	portrait_style.border_color = Color(0.6, 0.3, 0.3, 1.0)
+	portrait_style.set_border_width_all(2)
+	portrait_style.set_corner_radius_all(3)
 	portrait_container.add_theme_stylebox_override("panel", portrait_style)
 	hbox.add_child(portrait_container)
 
@@ -2707,8 +2819,36 @@ func _get_brand_name(brand: Enums.Brand) -> String:
 			return "— UNKNOWN"
 
 func _get_brand_color(brand: Enums.Brand) -> Color:
-	"""Get color for monster brand display - uses centralized Constants"""
-	return Constants.get_brand_color(Enums.Brand.keys()[brand])
+	"""Get color for monster brand display"""
+	match brand:
+		# Pure Brands
+		Enums.Brand.SAVAGE:
+			return Color(1.0, 0.4, 0.3)  # Red-orange - raw power
+		Enums.Brand.IRON:
+			return Color(0.6, 0.7, 0.8)  # Steel blue - defense
+		Enums.Brand.VENOM:
+			return Color(0.4, 0.9, 0.3)  # Toxic green - poison/debuffs
+		Enums.Brand.SURGE:
+			return Color(0.3, 0.8, 1.0)  # Electric blue - speed/energy
+		Enums.Brand.DREAD:
+			return Color(0.6, 0.3, 0.8)  # Dark purple - fear/mental
+		Enums.Brand.LEECH:
+			return Color(0.8, 0.2, 0.4)  # Blood red - life drain
+		# Hybrid Brands
+		Enums.Brand.BLOODIRON:
+			return Color(0.85, 0.5, 0.4)  # Red-steel blend
+		Enums.Brand.CORROSIVE:
+			return Color(0.5, 0.8, 0.5)  # Steel-green blend
+		Enums.Brand.VENOMSTRIKE:
+			return Color(0.35, 0.85, 0.65)  # Green-blue blend
+		Enums.Brand.TERRORFLUX:
+			return Color(0.45, 0.55, 0.9)  # Blue-purple blend
+		Enums.Brand.NIGHTLEECH:
+			return Color(0.7, 0.25, 0.6)  # Purple-red blend
+		Enums.Brand.RAVENOUS:
+			return Color(0.9, 0.3, 0.35)  # Red-orange blend
+		_:
+			return Color(0.5, 0.5, 0.5)  # Gray for none
 
 func _create_brand_icon(brand: Enums.Brand) -> PanelContainer:
 	"""Create a colored icon indicator for the brand"""
