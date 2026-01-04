@@ -25,6 +25,7 @@ const CRITICAL_HIT_MULTIPLIER: float = 1.5
 const ELEMENTAL_WEAKNESS_MULTIPLIER: float = 1.5
 const ELEMENTAL_RESISTANCE_MULTIPLIER: float = 0.5
 const DAMAGE_VARIANCE: float = 0.1  # +/-10%
+const STATUS_BUFF_DEBUFF_MULTIPLIER: float = 0.25  # Standard ±25% for ATK/DEF/SPD buffs/debuffs
 
 # Purification (Legacy - see CORRUPTION SYSTEM below)
 const PURIFICATION_BASE_CHANCE: float = 0.3

@@ -145,20 +145,21 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	var variance := randf_range(1.0 - Constants.DAMAGE_VARIANCE, 1.0 + Constants.DAMAGE_VARIANCE)
 
 	# Defender status effects
+	var buff_mult := Constants.STATUS_BUFF_DEBUFF_MULTIPLIER  # 0.25 = ±25%
 	var defender_mod := 1.0
 	if defender.has_status_effect(Enums.StatusEffect.DEFENSE_DOWN):
-		defender_mod *= 1.25
+		defender_mod *= 1.0 + buff_mult  # 1.25x damage taken
 	if defender.has_status_effect(Enums.StatusEffect.DEFENSE_UP):
-		defender_mod *= 0.75
+		defender_mod *= 1.0 - buff_mult  # 0.75x damage taken
 	if defender.has_status_effect(Enums.StatusEffect.SORROW):
 		defender_mod *= 1.15  # DREAD brand debuff - +15% damage taken
 
 	# Attacker status effects
 	var attacker_mod := 1.0
 	if attacker.has_status_effect(Enums.StatusEffect.ATTACK_UP):
-		attacker_mod *= 1.25
+		attacker_mod *= 1.0 + buff_mult  # 1.25x damage dealt
 	if attacker.has_status_effect(Enums.StatusEffect.ATTACK_DOWN):
-		attacker_mod *= 0.75
+		attacker_mod *= 1.0 - buff_mult  # 0.75x damage dealt
 
 	# Final damage (minimum 1)
 	result.damage = maxi(1, int(raw_damage * brand_mod * variance * defender_mod * attacker_mod))

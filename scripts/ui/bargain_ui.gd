@@ -138,6 +138,24 @@ func _connect_buttons() -> void:
 		break_button.pressed.connect(_on_break_pressed)
 		break_button.mouse_entered.connect(_on_choice_hovered.bind(2))
 
+func _exit_tree() -> void:
+	# Disconnect button signals to prevent memory leaks
+	if dominate_button:
+		if dominate_button.pressed.is_connected(_on_dominate_pressed):
+			dominate_button.pressed.disconnect(_on_dominate_pressed)
+		if dominate_button.mouse_entered.is_connected(_on_choice_hovered):
+			dominate_button.mouse_entered.disconnect(_on_choice_hovered)
+	if promise_button:
+		if promise_button.pressed.is_connected(_on_promise_pressed):
+			promise_button.pressed.disconnect(_on_promise_pressed)
+		if promise_button.mouse_entered.is_connected(_on_choice_hovered):
+			promise_button.mouse_entered.disconnect(_on_choice_hovered)
+	if break_button:
+		if break_button.pressed.is_connected(_on_break_pressed):
+			break_button.pressed.disconnect(_on_break_pressed)
+		if break_button.mouse_entered.is_connected(_on_choice_hovered):
+			break_button.mouse_entered.disconnect(_on_choice_hovered)
+
 # -----------------------------------------------------------------------------
 # PUBLIC API - Called by BargainSystem
 # -----------------------------------------------------------------------------

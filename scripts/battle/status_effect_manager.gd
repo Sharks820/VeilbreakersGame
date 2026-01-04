@@ -246,19 +246,20 @@ func _check_immunity(target: CharacterBase, effect: Enums.StatusEffect) -> bool:
 	return false
 
 func _apply_effect_modifiers(target: CharacterBase, effect: Enums.StatusEffect) -> void:
+	var mult := Constants.STATUS_BUFF_DEBUFF_MULTIPLIER
 	match effect:
 		Enums.StatusEffect.ATTACK_UP:
-			target.add_stat_modifier(Enums.Stat.ATTACK, target.base_attack * 0.25, 999, "status_atk_up")
+			target.add_stat_modifier(Enums.Stat.ATTACK, target.base_attack * mult, 999, "status_atk_up")
 		Enums.StatusEffect.ATTACK_DOWN:
-			target.add_stat_modifier(Enums.Stat.ATTACK, -target.base_attack * 0.25, 999, "status_atk_down")
+			target.add_stat_modifier(Enums.Stat.ATTACK, -target.base_attack * mult, 999, "status_atk_down")
 		Enums.StatusEffect.DEFENSE_UP:
-			target.add_stat_modifier(Enums.Stat.DEFENSE, target.base_defense * 0.25, 999, "status_def_up")
+			target.add_stat_modifier(Enums.Stat.DEFENSE, target.base_defense * mult, 999, "status_def_up")
 		Enums.StatusEffect.DEFENSE_DOWN:
-			target.add_stat_modifier(Enums.Stat.DEFENSE, -target.base_defense * 0.25, 999, "status_def_down")
+			target.add_stat_modifier(Enums.Stat.DEFENSE, -target.base_defense * mult, 999, "status_def_down")
 		Enums.StatusEffect.SPEED_UP:
-			target.add_stat_modifier(Enums.Stat.SPEED, target.base_speed * 0.25, 999, "status_spd_up")
+			target.add_stat_modifier(Enums.Stat.SPEED, target.base_speed * mult, 999, "status_spd_up")
 		Enums.StatusEffect.SPEED_DOWN:
-			target.add_stat_modifier(Enums.Stat.SPEED, -target.base_speed * 0.25, 999, "status_spd_down")
+			target.add_stat_modifier(Enums.Stat.SPEED, -target.base_speed * mult, 999, "status_spd_down")
 
 func _remove_effect_modifiers(target: CharacterBase, effect: Enums.StatusEffect) -> void:
 	# Clear modifiers with matching source

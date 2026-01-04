@@ -177,21 +177,9 @@ static func get_rarity_color(rarity: Enums.Rarity) -> Color:
 	return Color.WHITE
 
 ## Convert brand name string to Brand enum
+## Delegates to BrandSystem for single source of truth
 static func string_to_brand(brand_name: String) -> Enums.Brand:
-	match brand_name.to_upper():
-		"SAVAGE": return Enums.Brand.SAVAGE
-		"IRON": return Enums.Brand.IRON
-		"VENOM": return Enums.Brand.VENOM
-		"SURGE": return Enums.Brand.SURGE
-		"DREAD": return Enums.Brand.DREAD
-		"LEECH": return Enums.Brand.LEECH
-		"BLOODIRON": return Enums.Brand.BLOODIRON
-		"CORROSIVE": return Enums.Brand.CORROSIVE
-		"VENOMSTRIKE": return Enums.Brand.VENOMSTRIKE
-		"TERRORFLUX": return Enums.Brand.TERRORFLUX
-		"NIGHTLEECH": return Enums.Brand.NIGHTLEECH
-		"RAVENOUS": return Enums.Brand.RAVENOUS
-		_: return Enums.Brand.NONE
+	return BrandSystem.get_brand_from_name(brand_name)
 
 ## Get color for a Brand
 ## Returns the brand's primary color for UI and effects
