@@ -370,3 +370,178 @@ static func create_portrait_frame_style(border_color: Color = BORDER_DEFAULT) ->
 	style.set_border_width_all(BORDER_WIDTH_NORMAL)
 	style.set_corner_radius_all(3)
 	return style
+
+# =============================================================================
+# FONT SIZE PRESETS (v1.02 - Consolidate 120+ add_theme_font_size_override)
+# =============================================================================
+
+const FONT_TINY := 9           # Brand indicators, small badges
+const FONT_SMALL := 10         # Secondary info, stat labels
+const FONT_CAPTION := 11       # Captions, level labels
+const FONT_BODY := 12          # Body text, stat rows
+const FONT_NORMAL := 14        # Standard text
+const FONT_SUBHEADING := 16    # Subheadings, names
+const FONT_HEADING := 18       # Section headers
+const FONT_TITLE := 20         # Titles
+const FONT_SUBTITLE := 22      # Subtitles
+const FONT_LARGE_TITLE := 24   # Dialog titles
+const FONT_HUGE := 32          # Victory/defeat text
+const FONT_DISPLAY := 36       # Large display text
+const FONT_HERO := 42          # Hero name display
+const FONT_ARROW := 48         # Navigation arrows
+
+# =============================================================================
+# COMMON TEXT COLORS (v1.02 - Consolidate 150+ add_theme_color_override)
+# =============================================================================
+
+# UI Colors
+const COLOR_PARCHMENT := Color(0.95, 0.9, 0.8)        # Default light text
+const COLOR_CREAM := Color(0.9, 0.85, 0.7)            # Warmer light text
+const COLOR_SUBTITLE := Color(0.7, 0.65, 0.55)        # Subtitle gray
+const COLOR_DIM_LABEL := Color(0.6, 0.6, 0.6)         # Dim label text
+const COLOR_MUTED := Color(0.5, 0.45, 0.4)            # Muted decorative
+const COLOR_GOLD := Color(1.0, 0.85, 0.4)             # Gold highlights
+const COLOR_AGED_GOLD := Color(0.85, 0.7, 0.45)       # Aged gold headers
+
+# Health/Resource Colors
+const COLOR_HP_TITLE := Color(0.6, 0.8, 0.6)          # HP title green
+const COLOR_HP_VALUE := Color(0.4, 0.9, 0.4)          # HP value bright green
+const COLOR_MP_TITLE := Color(0.6, 0.6, 0.8)          # MP title blue
+const COLOR_MP_VALUE := Color(0.4, 0.6, 1.0)          # MP value bright blue
+const COLOR_ENEMY_HP := Color(0.9, 0.4, 0.4)          # Enemy HP red
+
+# State Colors
+const COLOR_LEVEL := Color(0.7, 0.7, 0.7)             # Level text
+const COLOR_XP := Color(0.7, 0.9, 0.7)                # XP text
+const COLOR_SEPARATOR := Color(0.4, 0.3, 0.35)        # Separator lines
+const COLOR_GREEN_SEP := Color(0.3, 0.4, 0.35)        # Green separator
+
+# =============================================================================
+# LABEL CREATION HELPERS (v1.02 - Consolidate 100+ Label.new() patterns)
+# =============================================================================
+
+## Create a styled label with font size and color
+static func create_label(
+	text: String,
+	font_size: int = FONT_NORMAL,
+	color: Color = COLOR_PARCHMENT
+) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+	return label
+
+## Create a styled label with outline
+static func create_outlined_label(
+	text: String,
+	font_size: int = FONT_NORMAL,
+	color: Color = COLOR_PARCHMENT,
+	outline_color: Color = Color(0.1, 0.1, 0.1)
+) -> Label:
+	var label := create_label(text, font_size, color)
+	label.add_theme_color_override("font_outline_color", outline_color)
+	label.add_theme_constant_override("outline_size", 2)
+	return label
+
+## Create a title label (large, gold)
+static func create_title_label(text: String, font_size: int = FONT_LARGE_TITLE) -> Label:
+	return create_label(text, font_size, COLOR_CREAM)
+
+## Create a subtitle label (smaller, muted)
+static func create_subtitle_label(text: String, font_size: int = FONT_CAPTION) -> Label:
+	return create_label(text, font_size, COLOR_SUBTITLE)
+
+## Create a header label (medium, highlighted)
+static func create_header_label(text: String, font_size: int = FONT_HEADING) -> Label:
+	return create_label(text, font_size, COLOR_AGED_GOLD)
+
+## Create a stat name label (small, dim)
+static func create_stat_name_label(text: String) -> Label:
+	return create_label(text, FONT_SMALL, COLOR_DIM_LABEL)
+
+## Create a stat value label (colored)
+static func create_stat_value_label(text: String, color: Color = Color.WHITE) -> Label:
+	return create_label(text, FONT_SMALL, color)
+
+## Create an HP label (value + title style)
+static func create_hp_label_pair(title_text: String = "HP", value_text: String = "") -> Dictionary:
+	return {
+		"title": create_label(title_text, FONT_CAPTION, COLOR_HP_TITLE),
+		"value": create_label(value_text, FONT_CAPTION, COLOR_HP_VALUE)
+	}
+
+## Create an MP label (value + title style)
+static func create_mp_label_pair(title_text: String = "MP", value_text: String = "") -> Dictionary:
+	return {
+		"title": create_label(title_text, FONT_CAPTION, COLOR_MP_TITLE),
+		"value": create_label(value_text, FONT_CAPTION, COLOR_MP_VALUE)
+	}
+
+## Create a character name label
+static func create_name_label(text: String, is_enemy: bool = false) -> Label:
+	var color := COLOR_PARCHMENT if not is_enemy else Color(1.0, 0.85, 0.7)
+	return create_label(text, FONT_SUBHEADING, color)
+
+## Create a level label
+static func create_level_label(level: int) -> Label:
+	return create_label("Lv. %d" % level, FONT_CAPTION, COLOR_LEVEL)
+
+## Create a brand label with brand color
+static func create_brand_label(brand_name: String, brand_color: Color, font_size: int = FONT_TINY) -> Label:
+	return create_label(brand_name, font_size, brand_color)
+
+# =============================================================================
+# RICH TEXT LABEL HELPERS
+# =============================================================================
+
+## Create a styled RichTextLabel
+static func create_rich_text_label(
+	font_size: int = FONT_BODY,
+	color: Color = COLOR_PARCHMENT,
+	scroll_active: bool = false
+) -> RichTextLabel:
+	var rtl := RichTextLabel.new()
+	rtl.bbcode_enabled = true
+	rtl.fit_content = not scroll_active
+	rtl.scroll_active = scroll_active
+	rtl.add_theme_font_size_override("normal_font_size", font_size)
+	rtl.add_theme_color_override("default_color", color)
+	return rtl
+
+# =============================================================================
+# SEPARATOR HELPERS
+# =============================================================================
+
+## Create a styled HSeparator
+static func create_separator(color: Color = COLOR_SEPARATOR) -> HSeparator:
+	var sep := HSeparator.new()
+	sep.add_theme_color_override("separator", color)
+	return sep
+
+## Create a styled VSeparator
+static func create_vseparator(color: Color = COLOR_SEPARATOR) -> VSeparator:
+	var sep := VSeparator.new()
+	sep.add_theme_color_override("separator", color)
+	return sep
+
+# =============================================================================
+# APPLY LABEL STYLE HELPERS
+# =============================================================================
+
+## Apply font size and color to existing label
+static func style_label(label: Label, font_size: int, color: Color) -> void:
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+
+## Apply outline to existing label
+static func add_label_outline(label: Label, outline_color: Color, outline_size: int = 2) -> void:
+	label.add_theme_color_override("font_outline_color", outline_color)
+	label.add_theme_constant_override("outline_size", outline_size)
+
+## Apply gold style to label (for important text)
+static func style_label_gold(label: Label, font_size: int = FONT_HEADING) -> void:
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", COLOR_GOLD)
+	label.add_theme_color_override("font_outline_color", Color(0.3, 0.2, 0.1))
+	label.add_theme_constant_override("outline_size", 2)

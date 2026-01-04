@@ -457,3 +457,146 @@ static func skill_announcement(display: Control, hold_time: float = Constants.BA
 	tween.tween_callback(func(): display.visible = false)
 
 	return tween
+
+# =============================================================================
+# MODULATE PULSE PATTERNS (v1.02 - Consolidate 60+ duplicate patterns)
+# =============================================================================
+
+## Quick white flash and back (hit confirmation, button press)
+static func flash_white(node: CanvasItem, flash_duration: float = 0.03, return_duration: float = 0.05) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var tween := node.create_tween()
+	tween.tween_property(node, "modulate", Color(1.8, 1.8, 1.8, 1.0), flash_duration)
+	tween.tween_property(node, "modulate", Color.WHITE, return_duration)
+	return tween
+
+## Flash to color and back (general purpose)
+static func flash_color(node: CanvasItem, color: Color, return_duration: float = 0.15) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var tween := node.create_tween()
+	node.modulate = color
+	tween.tween_property(node, "modulate", Color.WHITE, return_duration)
+	return tween
+
+## Pulse glow (brighten then return) - common for level up, unlock
+static func pulse_glow(node: CanvasItem, glow_color: Color, duration: float = 0.4) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var tween := node.create_tween()
+	tween.tween_property(node, "modulate", glow_color, duration * 0.5)
+	tween.tween_property(node, "modulate", Color.WHITE, duration * 0.5)
+	return tween
+
+## Double pulse (flash, return, flash again) - victory, special events
+static func double_pulse(node: CanvasItem, color: Color, duration: float = 0.8) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var tween := node.create_tween()
+	tween.tween_property(node, "modulate", color, duration * 0.2)
+	tween.tween_property(node, "modulate", Color.WHITE, duration * 0.3)
+	tween.tween_property(node, "modulate", color.lerp(Color.WHITE, 0.5), duration * 0.2)
+	tween.tween_property(node, "modulate", Color.WHITE, duration * 0.3)
+	return tween
+
+## Looping color pulse (for active turn, selection highlighting)
+static func color_pulse_loop(node: CanvasItem, glow_color: Color, base_color: Color = Color.WHITE, cycle_time: float = 1.6) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var tween := node.create_tween().set_loops()
+	tween.tween_property(node, "modulate", glow_color, cycle_time * 0.5).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(node, "modulate", base_color, cycle_time * 0.5).set_ease(Tween.EASE_IN_OUT)
+	return tween
+
+## Low HP pulse (red warning)
+static func low_hp_pulse_loop(node: CanvasItem, pulse_speed: float = 1.0) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var tween := node.create_tween().set_loops()
+	tween.tween_property(node, "modulate", Color(1.4, 0.8, 0.8, 1.0), 0.5 / pulse_speed)
+	tween.tween_property(node, "modulate", Color.WHITE, 0.5 / pulse_speed)
+	return tween
+
+## Corruption pulse (purple)
+static func corruption_pulse_loop(node: CanvasItem) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var tween := node.create_tween().set_loops()
+	tween.tween_property(node, "modulate", Color(1.4, 1.0, 1.4, 1.0), 0.3)
+	tween.tween_property(node, "modulate", Color.WHITE, 0.3)
+	return tween
+
+# =============================================================================
+# DEATH ANIMATIONS (v1.02 - Consolidate 4+ duplicate patterns)
+# =============================================================================
+
+## Standard death animation (flash red, fade gray, fade out)
+static func death_animation(sprite: CanvasItem, duration: float = 0.8) -> Tween:
+	if not is_instance_valid(sprite):
+		return null
+	var tween := sprite.create_tween()
+	# Initial flash
+	tween.tween_property(sprite, "modulate", Color(2.0, 0.4, 0.4, 1.0), duration * 0.1)
+	# Hold red
+	tween.tween_property(sprite, "modulate", Color(1.5, 0.3, 0.3, 1.0), duration * 0.2)
+	# Fade to gray
+	tween.tween_property(sprite, "modulate", Color(0.4, 0.4, 0.4, 0.7), duration * 0.3)
+	# Fade out
+	tween.tween_property(sprite, "modulate", Color(0.2, 0.2, 0.2, 0.0), duration * 0.4)
+	return tween
+
+## Critical death animation (more dramatic)
+static func critical_death_animation(sprite: CanvasItem, duration: float = 1.0) -> Tween:
+	if not is_instance_valid(sprite):
+		return null
+	var tween := sprite.create_tween()
+	tween.tween_property(sprite, "modulate", Color(2.5, 2.2, 2.8, 1.0), duration * 0.05)
+	tween.tween_property(sprite, "modulate", Color(1.5, 1.3, 1.8, 1.0), duration * 0.15)
+	tween.tween_property(sprite, "modulate", Color(1.2, 1.0, 1.4, 1.0), duration * 0.15)
+	tween.tween_property(sprite, "modulate", Color(0.3, 0.3, 0.3, 0.0), duration * 0.65)
+	return tween
+
+# =============================================================================
+# BUTTON HOVER COLORS (v1.02 - Consolidate 25+ duplicate patterns)
+# =============================================================================
+
+## Standard warm hover glow
+static func button_warm_hover(button: Control, duration: float = 0.12) -> Tween:
+	if not is_instance_valid(button):
+		return null
+	var tween := button.create_tween()
+	tween.tween_property(button, "modulate", Color(1.3, 1.1, 0.9, 1.0), duration)
+	return tween
+
+## Standard hover exit
+static func button_unhover_modulate(button: Control, duration: float = 0.1) -> Tween:
+	if not is_instance_valid(button):
+		return null
+	var tween := button.create_tween()
+	tween.tween_property(button, "modulate", Color.WHITE, duration)
+	return tween
+
+## Flash highlight (for selection changes)
+static func flash_highlight(node: CanvasItem, color: Color = Color(1.5, 1.5, 1.0, 1.0), duration: float = 0.45) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var tween := node.create_tween()
+	tween.tween_property(node, "modulate", color, duration * 0.33)
+	tween.tween_property(node, "modulate", Color.WHITE, duration * 0.67)
+	return tween
+
+# =============================================================================
+# COMMON COLOR CONSTANTS FOR MODULATE
+# =============================================================================
+
+const MOD_WHITE := Color(1.0, 1.0, 1.0, 1.0)
+const MOD_BRIGHT := Color(1.8, 1.8, 1.8, 1.0)
+const MOD_WARM := Color(1.3, 1.1, 0.9, 1.0)
+const MOD_COOL := Color(0.9, 1.0, 1.2, 1.0)
+const MOD_HIT_RED := Color(2.0, 0.4, 0.4, 1.0)
+const MOD_HEAL_GREEN := Color(0.5, 1.5, 0.5, 1.0)
+const MOD_MAGIC_PURPLE := Color(1.5, 1.3, 1.8, 1.0)
+const MOD_GOLD := Color(1.5, 1.3, 0.8, 1.0)
+const MOD_LOW_HP := Color(1.4, 0.8, 0.8, 1.0)
+const MOD_CORRUPTION := Color(1.4, 1.0, 1.4, 1.0)
