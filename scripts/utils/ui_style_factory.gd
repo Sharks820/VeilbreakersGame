@@ -212,13 +212,33 @@ static func create_enemy_hp_bar_fill() -> StyleBoxFlat:
 # SPECIALTY STYLES
 # =============================================================================
 
-## Create tooltip style
+## Create tooltip style (default)
 static func create_tooltip_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.05, 0.05, 0.08, 0.95)
 	style.border_color = Color(0.4, 0.4, 0.5, 1.0)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
+	style.set_content_margin_all(8)
+	return style
+
+## Create enemy tooltip style (red tint)
+static func create_enemy_tooltip_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.06, 0.1, 0.95)
+	style.border_color = Color(0.6, 0.3, 0.4, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(8)
+	return style
+
+## Create ally tooltip style (green tint)
+static func create_ally_tooltip_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.06, 0.1, 0.08, 0.95)
+	style.border_color = Color(0.3, 0.6, 0.4, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
 	style.set_content_margin_all(8)
 	return style
 
@@ -279,3 +299,74 @@ static func apply_dark_panel(panel: Control) -> void:
 ## Apply transparent panel style quickly
 static func apply_transparent_panel(panel: Control) -> void:
 	apply_to_panel(panel, create_transparent_panel())
+
+# =============================================================================
+# BUTTON STATE SETS (v0.98 - Consolidate 17+ duplicate patterns)
+# =============================================================================
+
+## Create all button states with an accent color (for skill/action buttons)
+static func create_accent_button_states(accent_color: Color) -> Dictionary:
+	return {
+		"normal": create_button_state(Color(0.12, 0.12, 0.15, 0.95), accent_color),
+		"hover": create_button_state(Color(0.18, 0.18, 0.22, 0.98), accent_color.lightened(0.1)),
+		"pressed": create_button_state(accent_color.darkened(0.4), accent_color),
+		"disabled": create_button_state(Color(0.08, 0.08, 0.1, 0.7), accent_color, 0.5),
+		"focus": create_button_state(Color(0.18, 0.14, 0.22, 0.95), accent_color)
+	}
+
+## Apply accent button states to a button
+static func apply_accent_button_style(button: Button, accent_color: Color) -> void:
+	var states := create_accent_button_states(accent_color)
+	button.add_theme_stylebox_override("normal", states["normal"])
+	button.add_theme_stylebox_override("hover", states["hover"])
+	button.add_theme_stylebox_override("pressed", states["pressed"])
+	button.add_theme_stylebox_override("disabled", states["disabled"])
+	button.add_theme_stylebox_override("focus", states["focus"])
+
+## Create hero card button states (for character select screen)
+static func create_hero_card_states(base_color: Color) -> Dictionary:
+	return {
+		"normal": create_panel_style(base_color.darkened(0.3), base_color, BORDER_WIDTH_NORMAL, CORNER_RADIUS_NORMAL),
+		"hover": create_panel_style(base_color.darkened(0.1), base_color.lightened(0.2), BORDER_WIDTH_NORMAL, CORNER_RADIUS_NORMAL),
+		"pressed": create_panel_style(base_color.darkened(0.4), base_color, BORDER_WIDTH_THICK, CORNER_RADIUS_NORMAL)
+	}
+
+## Apply hero card button states
+static func apply_hero_card_style(button: Button, base_color: Color) -> void:
+	var states := create_hero_card_states(base_color)
+	button.add_theme_stylebox_override("normal", states["normal"])
+	button.add_theme_stylebox_override("hover", states["hover"])
+	button.add_theme_stylebox_override("pressed", states["pressed"])
+
+# =============================================================================
+# CHARACTER PANEL STYLES
+# =============================================================================
+
+## Create player character panel style
+static func create_player_panel_style() -> StyleBoxFlat:
+	return create_panel_style(
+		Color(0.06, 0.08, 0.12, 0.95),
+		Color(0.3, 0.5, 0.4, 0.8),
+		BORDER_WIDTH_NORMAL,
+		CORNER_RADIUS_SMALL,
+		CONTENT_MARGIN_SMALL
+	)
+
+## Create enemy character panel style
+static func create_enemy_panel_style() -> StyleBoxFlat:
+	return create_panel_style(
+		Color(0.12, 0.06, 0.08, 0.95),
+		Color(0.5, 0.3, 0.3, 0.8),
+		BORDER_WIDTH_NORMAL,
+		CORNER_RADIUS_SMALL,
+		CONTENT_MARGIN_SMALL
+	)
+
+## Create portrait frame style
+static func create_portrait_frame_style(border_color: Color = BORDER_DEFAULT) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.05, 0.08, 0.95)
+	style.border_color = border_color
+	style.set_border_width_all(BORDER_WIDTH_NORMAL)
+	style.set_corner_radius_all(3)
+	return style
