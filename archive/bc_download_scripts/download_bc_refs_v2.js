@@ -89,13 +89,22 @@ async function collectArtStationImages(page, baseUrl) {
                     // Get all images and convert to largest size
                     document.querySelectorAll('img').forEach(img => {
                         let src = img.src || '';
-                        if (src.includes('artstation.com') && src.includes('/assets/')) {
-                            // Try to get the largest version
-                            // Pattern: .../large/xxx.jpg or .../4k/xxx.jpg
-                            src = src.replace(/\/smaller_square\/|\/small\/|\/medium\//, '/large/');
-                            if (!src.includes('/covers/') && !src.includes('avatar')) {
-                                imgs.push(src);
+                        try {
+                            const urlObj = new URL(src);
+                            const hostname = urlObj.hostname || '';
+                            const isArtStationHost =
+                                hostname === 'artstation.com' ||
+                                hostname.endsWith('.artstation.com');
+                            if (isArtStationHost && urlObj.pathname.includes('/assets/')) {
+                                // Try to get the largest version
+                                // Pattern: .../large/xxx.jpg or .../4k/xxx.jpg
+                                src = src.replace(/\/smaller_square\/|\/small\/|\/medium\//, '/large/');
+                                if (!src.includes('/covers/') && !src.includes('avatar')) {
+                                    imgs.push(src);
+                                }
                             }
+                        } catch (e) {
+                            // Ignore invalid URLs
                         }
                     });
 
