@@ -23,11 +23,36 @@ const RANDOM_WEIGHT := 10.0           # Small random factor for unpredictability
 # REFERENCES
 # =============================================================================
 
+## Reference to DamageCalculator - obtained from parent BattleManager to avoid duplication
 var damage_calculator: DamageCalculator = null
 
 func _ready() -> void:
-	# Get damage calculator reference for brand effectiveness
+	# Get damage calculator reference from parent (BattleManager) to avoid creating duplicate
+	# The BattleManager creates and owns the DamageCalculator instance
+	_acquire_damage_calculator()
+
+func _acquire_damage_calculator() -> void:
+	## Try to get DamageCalculator from parent BattleManager, with fallback
+	var parent := get_parent()
+	
+	# Check if parent is BattleManager and has damage_calculator
+	if parent and parent.has_method("get") and "damage_calculator" in parent:
+		damage_calculator = parent.damage_calculator
+		if damage_calculator:
+			return
+	
+	# Try to find it as a sibling node (in case we're a child of BattleManager)
+	if parent:
+		var sibling := parent.get_node_or_null("DamageCalculator")
+		if sibling is DamageCalculator:
+			damage_calculator = sibling
+			return
+	
+	# Fallback: Only create our own if we truly can't find one (shouldn't happen in normal flow)
+	# This prevents crashes if AIController is used standalone for testing
+	push_warning("AIController: Could not find parent's DamageCalculator, creating fallback instance")
 	damage_calculator = DamageCalculator.new()
+	damage_calculator.name = "AIController_DamageCalculator_Fallback"
 	add_child(damage_calculator)
 
 # =============================================================================

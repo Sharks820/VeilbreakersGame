@@ -4570,7 +4570,26 @@ func animate_corruption_change(monster: Node, new_corruption: float) -> void:
 # =============================================================================
 
 func _exit_tree() -> void:
+	# Disconnect BattleManager signals (connected in set_battle_manager)
+	if battle_manager:
+		if battle_manager.waiting_for_player_input.is_connected(_on_waiting_for_input):
+			battle_manager.waiting_for_player_input.disconnect(_on_waiting_for_input)
+		if battle_manager.round_started.is_connected(_on_round_started):
+			battle_manager.round_started.disconnect(_on_round_started)
+		if battle_manager.turn_started_signal.is_connected(_on_turn_started_update_order):
+			battle_manager.turn_started_signal.disconnect(_on_turn_started_update_order)
+		if battle_manager.battle_victory.is_connected(_on_victory):
+			battle_manager.battle_victory.disconnect(_on_victory)
+		if battle_manager.battle_defeat.is_connected(_on_defeat):
+			battle_manager.battle_defeat.disconnect(_on_defeat)
+		if battle_manager.action_animation_started.is_connected(_on_action_started):
+			battle_manager.action_animation_started.disconnect(_on_action_started)
+	
 	# Disconnect EventBus signals to prevent errors after scene is freed
+	if EventBus.action_executed.is_connected(_on_action_executed):
+		EventBus.action_executed.disconnect(_on_action_executed)
+	if EventBus.level_up.is_connected(_on_level_up):
+		EventBus.level_up.disconnect(_on_level_up)
 	if EventBus.status_effect_applied.is_connected(_on_status_effect_changed):
 		EventBus.status_effect_applied.disconnect(_on_status_effect_changed)
 	if EventBus.status_effect_removed.is_connected(_on_status_effect_changed):
@@ -4591,6 +4610,10 @@ func _exit_tree() -> void:
 		EventBus.corruption_battle_started.disconnect(_on_corruption_battle_started_event)
 	if EventBus.corruption_battle_pass_completed.is_connected(_on_corruption_battle_pass_event):
 		EventBus.corruption_battle_pass_completed.disconnect(_on_corruption_battle_pass_event)
+	
+	# Disconnect viewport size changed signal
+	if get_viewport() and get_viewport().size_changed.is_connected(_on_viewport_size_changed):
+		get_viewport().size_changed.disconnect(_on_viewport_size_changed)
 	
 	# Kill any running tweens
 	for tween in _turn_order_tweens:

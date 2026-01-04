@@ -172,10 +172,48 @@ func _setup_subsystems() -> void:
 			push_error("Failed to load capture_system.gd")
 
 func _connect_capture_signals() -> void:
-	capture_system.capture_succeeded.connect(_on_capture_succeeded)
-	capture_system.capture_failed.connect(_on_capture_failed)
-	capture_system.corruption_battle_pass.connect(_on_capture_shake)
-	capture_system.corruption_reduced.connect(_on_corruption_reduced)
+	# Guard against duplicate signal connections
+	if not capture_system.capture_succeeded.is_connected(_on_capture_succeeded):
+		capture_system.capture_succeeded.connect(_on_capture_succeeded)
+	if not capture_system.capture_failed.is_connected(_on_capture_failed):
+		capture_system.capture_failed.connect(_on_capture_failed)
+	if not capture_system.corruption_battle_pass.is_connected(_on_capture_shake):
+		capture_system.corruption_battle_pass.connect(_on_capture_shake)
+	if not capture_system.corruption_reduced.is_connected(_on_corruption_reduced):
+		capture_system.corruption_reduced.connect(_on_corruption_reduced)
+
+func _disconnect_capture_signals() -> void:
+	# Disconnect capture signals to prevent memory leaks
+	if capture_system:
+		if capture_system.capture_succeeded.is_connected(_on_capture_succeeded):
+			capture_system.capture_succeeded.disconnect(_on_capture_succeeded)
+		if capture_system.capture_failed.is_connected(_on_capture_failed):
+			capture_system.capture_failed.disconnect(_on_capture_failed)
+		if capture_system.corruption_battle_pass.is_connected(_on_capture_shake):
+			capture_system.corruption_battle_pass.disconnect(_on_capture_shake)
+		if capture_system.corruption_reduced.is_connected(_on_corruption_reduced):
+			capture_system.corruption_reduced.disconnect(_on_corruption_reduced)
+
+func _cleanup_battle_signals() -> void:
+	## Disconnect all battle-related signals to prevent memory leaks
+	## Called at end of battle (victory or defeat)
+	
+	# Disconnect capture system signals
+	_disconnect_capture_signals()
+	
+	# Disconnect character died signals from all participants
+	for character in player_party:
+		if is_instance_valid(character) and character.died.is_connected(_on_character_died):
+			character.died.disconnect(_on_character_died)
+	
+	for character in enemy_party:
+		if is_instance_valid(character) and character.died.is_connected(_on_character_died):
+			character.died.disconnect(_on_character_died)
+	
+	# Also check turn_order in case characters were added there but not in parties
+	for character in turn_order:
+		if is_instance_valid(character) and character.died.is_connected(_on_character_died):
+			character.died.disconnect(_on_character_died)
 
 func _on_capture_succeeded(monster: Node, method: int, bonus_data: Dictionary) -> void:
 	battle_stats.captures_successful += 1
@@ -1604,6 +1642,9 @@ func _check_battle_end() -> bool:
 func _on_battle_victory() -> void:
 	battle_state = Enums.BattleState.VICTORY
 	EventBus.emit_debug("Battle Victory!")
+	
+	# Clean up signal connections to prevent memory leaks
+	_cleanup_battle_signals()
 
 	ui_command.emit("hide_action_menu", {})
 
@@ -1665,6 +1706,9 @@ func _on_battle_defeat() -> void:
 	battle_state = Enums.BattleState.DEFEAT
 	GameManager.defeat_count += 1
 	EventBus.emit_debug("Battle Defeat!")
+	
+	# Clean up signal connections to prevent memory leaks
+	_cleanup_battle_signals()
 
 	ui_command.emit("hide_action_menu", {})
 

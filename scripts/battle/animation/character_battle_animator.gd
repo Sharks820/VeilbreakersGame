@@ -983,6 +983,47 @@ const BRAND_GLOW_COLORS := {
 }
 
 # =============================================================================
+# TWEEN TRACKING - Prevents memory leaks from orphaned tweens
+# =============================================================================
+
+## Kill any existing animation tweens on a sprite before starting new ones
+static func _kill_existing_tweens(sprite: Node2D) -> void:
+	if not is_instance_valid(sprite):
+		return
+	
+	# Check for tracked tweens in sprite metadata
+	if sprite.has_meta("_battle_anim_tweens"):
+		var tweens: Array = sprite.get_meta("_battle_anim_tweens")
+		for tween in tweens:
+			if tween is Tween and tween.is_valid():
+				tween.kill()
+		sprite.remove_meta("_battle_anim_tweens")
+
+## Track a tween on a sprite for later cleanup
+static func _track_tween(sprite: Node2D, tween: Tween) -> void:
+	if not is_instance_valid(sprite) or not tween:
+		return
+	
+	var tweens: Array = []
+	if sprite.has_meta("_battle_anim_tweens"):
+		tweens = sprite.get_meta("_battle_anim_tweens")
+	
+	# Clean up any dead tweens from the list
+	var valid_tweens: Array = []
+	for t in tweens:
+		if t is Tween and t.is_valid():
+			valid_tweens.append(t)
+	
+	valid_tweens.append(tween)
+	sprite.set_meta("_battle_anim_tweens", valid_tweens)
+
+## Create a tracked tween on a sprite
+static func _create_tracked_tween(sprite: Node2D) -> Tween:
+	var tween := sprite.create_tween()
+	_track_tween(sprite, tween)
+	return tween
+
+# =============================================================================
 # ANIMATION PLAYBACK
 # =============================================================================
 
@@ -1000,6 +1041,9 @@ static func play_action_animation(
 	if not sprite or not is_instance_valid(sprite):
 		print("[CharacterBattleAnimator] ERROR: Invalid sprite!")
 		return
+	
+	# Kill any existing animation tweens to prevent conflicts/leaks
+	_kill_existing_tweens(sprite)
 	
 	var config: Dictionary = ANIMATION_CONFIGS.get(action_type, ANIMATION_CONFIGS["ATTACK"])
 	print("[CharacterBattleAnimator] Using config with %d phases" % config.get("phases", []).size())
@@ -1025,7 +1069,7 @@ static func play_action_animation(
 		if duration <= 0:
 			continue
 		
-		var tween := sprite.create_tween()
+		var tween := _create_tracked_tween(sprite)
 		tween.set_parallel(true)
 		
 		# Scale animation
@@ -1078,7 +1122,7 @@ static func play_action_animation(
 	
 	# Reset to original state (except for death)
 	if action_type != "DEATH":
-		var reset_tween := sprite.create_tween()
+		var reset_tween := _create_tracked_tween(sprite)
 		reset_tween.set_parallel(true)
 		reset_tween.tween_property(sprite, "position", original_position, 0.1)
 		reset_tween.tween_property(sprite, "scale", original_scale, 0.1)

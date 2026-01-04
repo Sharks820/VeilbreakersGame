@@ -143,6 +143,28 @@ func _ready() -> void:
 
 	EventBus.emit_debug("Main menu ready - Demon eyes tracking active")
 
+func _exit_tree() -> void:
+	# Kill infinite logo pulse tween
+	if logo_tween and logo_tween.is_valid():
+		logo_tween.kill()
+		logo_tween = null
+	
+	# Disconnect button signals
+	for button in [new_game_button, continue_button, settings_button, quit_button]:
+		if button:
+			if button.mouse_entered.is_connected(_on_button_hover):
+				button.mouse_entered.disconnect(_on_button_hover)
+			if button.mouse_exited.is_connected(_on_button_unhover):
+				button.mouse_exited.disconnect(_on_button_unhover)
+			if button.focus_entered.is_connected(_on_button_hover):
+				button.focus_entered.disconnect(_on_button_hover)
+			if button.focus_exited.is_connected(_on_button_unhover):
+				button.focus_exited.disconnect(_on_button_unhover)
+	
+	# Disconnect settings menu signal
+	if settings_menu and settings_menu.settings_closed.is_connected(_on_settings_closed):
+		settings_menu.settings_closed.disconnect(_on_settings_closed)
+
 func _hide_all_elements() -> void:
 	# Logo - starts invisible
 	logo.modulate.a = 0.0
