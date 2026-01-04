@@ -20,23 +20,9 @@ const CLASS_COLORS: Dictionary = {
 	"VOIDWALKER": Color(0.3, 0.7, 0.9)      # Ethereal cyan
 }
 
-# Path colors
-const PATH_COLORS: Dictionary = {
-	0: Color(0.6, 0.65, 0.75),  # IRONBOUND - Steel
-	1: Color(0.85, 0.4, 0.3),   # FANGBORN - Blood
-	2: Color(0.6, 0.3, 0.7),    # VOIDTOUCHED - Void
-	3: Color(0.9, 0.8, 0.3)     # UNCHAINED - Lightning
-}
-
-# Brand colors
-const BRAND_COLORS: Dictionary = {
-	0: Color(1.0, 0.4, 0.3),    # SAVAGE - Red
-	1: Color(0.6, 0.7, 0.8),    # IRON - Steel
-	2: Color(0.4, 0.9, 0.3),    # VENOM - Green
-	3: Color(0.3, 0.8, 1.0),    # SURGE - Blue
-	4: Color(0.6, 0.3, 0.8),    # DREAD - Purple
-	5: Color(0.8, 0.2, 0.4)     # LEECH - Dark red
-}
+# Path and Brand colors now use centralized systems:
+# - PathSystem.get_path_color() for path colors
+# - Helpers.get_brand_color() for brand colors
 
 # =============================================================================
 # STATE
@@ -328,11 +314,11 @@ func _create_hero_card(hero_id: String, index: int) -> PanelContainer:
 	class_label.add_theme_color_override("font_color", class_color)
 	info.add_child(class_label)
 	
-	# Path indicator - use PATH_COLORS for proper coloring
+	# Path indicator - use PathSystem for centralized colors
 	var path_label := Label.new()
 	path_label.text = Enums.get_path_name(data.primary_path)
 	path_label.add_theme_font_size_override("font_size", 11)
-	path_label.add_theme_color_override("font_color", PATH_COLORS.get(data.primary_path, Color(0.6, 0.55, 0.5)))
+	path_label.add_theme_color_override("font_color", PathSystem.get_path_color(data.primary_path))
 	info.add_child(path_label)
 	
 	# Connect signals
@@ -854,12 +840,12 @@ func _animate_hero_change(data: HeroData) -> void:
 
 func _update_info_panel(data: HeroData) -> void:
 	"""Update the info panel with hero data"""
-	# Path & Brand
-	var path_color: Color = PATH_COLORS.get(data.primary_path, Color.WHITE)
+	# Path & Brand - use centralized color systems
+	var path_color: Color = PathSystem.get_path_color(data.primary_path)
 	path_label.text = Enums.get_path_name(data.primary_path)
 	path_label.add_theme_color_override("font_color", path_color)
-	
-	var brand_color: Color = BRAND_COLORS.get(data.primary_brand, Color.WHITE)
+
+	var brand_color: Color = Helpers.get_brand_color(data.primary_brand)
 	brand_label.text = Enums.get_brand_name(data.primary_brand)
 	brand_label.add_theme_color_override("font_color", brand_color)
 	

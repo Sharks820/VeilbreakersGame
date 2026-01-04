@@ -266,3 +266,62 @@ func _on_reset_pressed() -> void:
 func _on_apply_pressed() -> void:
 	SettingsManager.save_settings()
 	EventBus.emit_notification("Settings saved", "success")
+
+# =============================================================================
+# CLEANUP
+# =============================================================================
+
+func _exit_tree() -> void:
+	# Disconnect all signal connections to prevent memory leaks
+	if close_button and close_button.pressed.is_connected(_on_close_pressed):
+		close_button.pressed.disconnect(_on_close_pressed)
+
+	# Audio sliders
+	if master_slider and master_slider.value_changed.is_connected(_on_master_volume_changed):
+		master_slider.value_changed.disconnect(_on_master_volume_changed)
+	if music_slider and music_slider.value_changed.is_connected(_on_music_volume_changed):
+		music_slider.value_changed.disconnect(_on_music_volume_changed)
+	if sfx_slider and sfx_slider.value_changed.is_connected(_on_sfx_volume_changed):
+		sfx_slider.value_changed.disconnect(_on_sfx_volume_changed)
+	if voice_slider and voice_slider.value_changed.is_connected(_on_voice_volume_changed):
+		voice_slider.value_changed.disconnect(_on_voice_volume_changed)
+	if mute_unfocused_check and mute_unfocused_check.toggled.is_connected(_on_mute_unfocused_toggled):
+		mute_unfocused_check.toggled.disconnect(_on_mute_unfocused_toggled)
+
+	# Display options
+	if fullscreen_check and fullscreen_check.toggled.is_connected(_on_fullscreen_toggled):
+		fullscreen_check.toggled.disconnect(_on_fullscreen_toggled)
+	if vsync_check and vsync_check.toggled.is_connected(_on_vsync_toggled):
+		vsync_check.toggled.disconnect(_on_vsync_toggled)
+	if resolution_option and resolution_option.item_selected.is_connected(_on_resolution_selected):
+		resolution_option.item_selected.disconnect(_on_resolution_selected)
+	if brightness_slider and brightness_slider.value_changed.is_connected(_on_brightness_changed):
+		brightness_slider.value_changed.disconnect(_on_brightness_changed)
+
+	# Gameplay options
+	if text_speed_slider and text_speed_slider.value_changed.is_connected(_on_text_speed_changed):
+		text_speed_slider.value_changed.disconnect(_on_text_speed_changed)
+	if battle_anims_check and battle_anims_check.toggled.is_connected(_on_battle_anims_toggled):
+		battle_anims_check.toggled.disconnect(_on_battle_anims_toggled)
+	if damage_numbers_check and damage_numbers_check.toggled.is_connected(_on_damage_numbers_toggled):
+		damage_numbers_check.toggled.disconnect(_on_damage_numbers_toggled)
+	if battle_log_check and battle_log_check.toggled.is_connected(_on_battle_log_toggled):
+		battle_log_check.toggled.disconnect(_on_battle_log_toggled)
+	if autosave_check and autosave_check.toggled.is_connected(_on_autosave_toggled):
+		autosave_check.toggled.disconnect(_on_autosave_toggled)
+
+	# Accessibility options
+	if screen_shake_check and screen_shake_check.toggled.is_connected(_on_screen_shake_toggled):
+		screen_shake_check.toggled.disconnect(_on_screen_shake_toggled)
+	if flash_effects_check and flash_effects_check.toggled.is_connected(_on_flash_effects_toggled):
+		flash_effects_check.toggled.disconnect(_on_flash_effects_toggled)
+	if reduce_motion_check and reduce_motion_check.toggled.is_connected(_on_reduce_motion_toggled):
+		reduce_motion_check.toggled.disconnect(_on_reduce_motion_toggled)
+	if large_text_check and large_text_check.toggled.is_connected(_on_large_text_toggled):
+		large_text_check.toggled.disconnect(_on_large_text_toggled)
+
+	# Footer buttons
+	if reset_button and reset_button.pressed.is_connected(_on_reset_pressed):
+		reset_button.pressed.disconnect(_on_reset_pressed)
+	if apply_button and apply_button.pressed.is_connected(_on_apply_pressed):
+		apply_button.pressed.disconnect(_on_apply_pressed)

@@ -169,14 +169,18 @@ func _on_state_changed(_old: int, _new: int) -> void:
 	EventBus.sfx_play_requested.emit("vera_state_change", Vector2.ZERO)
 
 func _on_corruption_changed(new_value: float, _source: String) -> void:
-	# Animate corruption bar
+	# Store old value BEFORE any updates for comparison
+	var old_value: float = corruption_bar.value
+
+	# Update display (updates text labels and colors but NOT the bar value directly)
+	_update_state_colors(GameManager.vera_state)
+
+	# Animate corruption bar to new value
 	var tween := create_tween()
 	tween.tween_property(corruption_bar, "value", new_value, 0.3)
 
-	_update_display()
-
-	# Flash red when corruption increases significantly
-	if new_value > corruption_bar.value + 5:
+	# Flash red when corruption increases significantly (compare with stored old value)
+	if new_value > old_value + 5:
 		var flash := create_tween()
 		flash.tween_property(corruption_bar, "modulate", Color.RED, 0.1)
 		flash.tween_property(corruption_bar, "modulate", Color.WHITE, 0.2)

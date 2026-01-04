@@ -113,36 +113,9 @@ var currency: int = 0
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_connect_signals()
-	_setup_window()
+	# NOTE: Window setup handled by ErrorLogger._setup_window_size() (runs first in _init)
 	is_initialized = true
 	EventBus.emit_debug("GameManager initialized")
-
-func _setup_window() -> void:
-	"""Configure window to fit screen with taskbar"""
-	# Get usable screen area (excludes taskbar)
-	var screen_id := DisplayServer.window_get_current_screen()
-	var usable_rect := DisplayServer.screen_get_usable_rect(screen_id)
-
-	# Target 90% of usable area to leave some margin
-	var target_width := int(usable_rect.size.x * 0.9)
-	var target_height := int(usable_rect.size.y * 0.9)
-
-	# Maintain 16:9 aspect ratio
-	var aspect := 16.0 / 9.0
-	if float(target_width) / float(target_height) > aspect:
-		target_width = int(target_height * aspect)
-	else:
-		target_height = int(target_width / aspect)
-
-	# Set window size and center it
-	DisplayServer.window_set_size(Vector2i(target_width, target_height))
-
-	# Center window in usable area
-	var center_x: int = usable_rect.position.x + int((usable_rect.size.x - target_width) / 2)
-	var center_y: int = usable_rect.position.y + int((usable_rect.size.y - target_height) / 2)
-	DisplayServer.window_set_position(Vector2i(center_x, center_y))
-
-	EventBus.emit_debug("Window sized to %dx%d, positioned at (%d, %d)" % [target_width, target_height, center_x, center_y])
 
 func _process(delta: float) -> void:
 	if current_state in [Enums.GameState.OVERWORLD, Enums.GameState.BATTLE, Enums.GameState.DIALOGUE]:
@@ -154,6 +127,19 @@ func _connect_signals() -> void:
 	EventBus.purification_succeeded.connect(_on_purification_succeeded)
 	EventBus.purification_failed.connect(_on_purification_failed)
 	EventBus.path_alignment_changed.connect(_on_path_alignment_changed)
+
+func _exit_tree() -> void:
+	# Disconnect EventBus signals to prevent memory leaks
+	if EventBus.battle_started.is_connected(_on_battle_started):
+		EventBus.battle_started.disconnect(_on_battle_started)
+	if EventBus.battle_ended.is_connected(_on_battle_ended):
+		EventBus.battle_ended.disconnect(_on_battle_ended)
+	if EventBus.purification_succeeded.is_connected(_on_purification_succeeded):
+		EventBus.purification_succeeded.disconnect(_on_purification_succeeded)
+	if EventBus.purification_failed.is_connected(_on_purification_failed):
+		EventBus.purification_failed.disconnect(_on_purification_failed)
+	if EventBus.path_alignment_changed.is_connected(_on_path_alignment_changed):
+		EventBus.path_alignment_changed.disconnect(_on_path_alignment_changed)
 
 # =============================================================================
 # STATE MANAGEMENT

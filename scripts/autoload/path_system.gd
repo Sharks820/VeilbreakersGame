@@ -17,12 +17,14 @@ signal path_locked(path: Enums.Path)
 signal skill_tree_state_changed(path: Enums.Path, old_state: Enums.SkillTreeState, new_state: Enums.SkillTreeState)
 
 # =============================================================================
-# CONSTANTS
+# CONSTANTS (use Constants class to avoid duplication)
 # =============================================================================
 
-const UNLOCK_THRESHOLD: float = 30.0
-const MAX_AFFINITY: float = 100.0
-const MIN_AFFINITY: float = 0.0
+# Reference centralized constants for path thresholds
+const UNLOCK_THRESHOLD: float = 30.0  # Mirrors Constants.PATH_SKILL_TREE_UNLOCK
+const MAX_AFFINITY: float = 100.0     # Mirrors Constants.PATH_MAX_AFFINITY
+const MIN_AFFINITY: float = 0.0       # Mirrors Constants.PATH_MIN_AFFINITY
+# Note: These are kept local for fast access, but should match Constants values
 
 # Path colors for UI
 const PATH_COLORS: Dictionary = {
@@ -77,6 +79,11 @@ var available_skill_points: int = 0
 
 func _ready() -> void:
 	EventBus.level_up.connect(_on_player_leveled_up)
+
+func _exit_tree() -> void:
+	# Disconnect EventBus signals to prevent memory leaks
+	if EventBus.level_up.is_connected(_on_player_leveled_up):
+		EventBus.level_up.disconnect(_on_player_leveled_up)
 
 # =============================================================================
 # AFFINITY MANAGEMENT

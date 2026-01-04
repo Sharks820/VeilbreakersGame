@@ -2014,3 +2014,68 @@ func get_battle_manager() -> BattleManager:
 
 func get_turn_manager() -> TurnManager:
 	return turn_manager
+
+# =============================================================================
+# CLEANUP
+# =============================================================================
+
+func _exit_tree() -> void:
+	# Disconnect EventBus signals to prevent memory leaks
+	if EventBus.battle_started.is_connected(_on_battle_started):
+		EventBus.battle_started.disconnect(_on_battle_started)
+	if EventBus.damage_dealt.is_connected(_on_damage_dealt):
+		EventBus.damage_dealt.disconnect(_on_damage_dealt)
+	if EventBus.healing_done.is_connected(_on_healing_done):
+		EventBus.healing_done.disconnect(_on_healing_done)
+	if EventBus.action_executed.is_connected(_on_action_executed):
+		EventBus.action_executed.disconnect(_on_action_executed)
+
+	# Disconnect battle_sequencer signals
+	if battle_sequencer:
+		if battle_sequencer.camera_command.is_connected(_on_camera_command):
+			battle_sequencer.camera_command.disconnect(_on_camera_command)
+		if battle_sequencer.vfx_command.is_connected(_on_vfx_command):
+			battle_sequencer.vfx_command.disconnect(_on_vfx_command)
+		if battle_sequencer.ui_command.is_connected(_on_ui_command):
+			battle_sequencer.ui_command.disconnect(_on_ui_command)
+		if battle_sequencer.audio_command.is_connected(_on_audio_command):
+			battle_sequencer.audio_command.disconnect(_on_audio_command)
+		if battle_sequencer.turn_started.is_connected(_on_sequencer_turn_started):
+			battle_sequencer.turn_started.disconnect(_on_sequencer_turn_started)
+		if battle_sequencer.action_execution_started.is_connected(_on_action_execution_started):
+			battle_sequencer.action_execution_started.disconnect(_on_action_execution_started)
+
+	# Disconnect animation system signals
+	if vfx_manager:
+		if vfx_manager.effect_spawned.is_connected(_on_vfx_spawned):
+			vfx_manager.effect_spawned.disconnect(_on_vfx_spawned)
+		if vfx_manager.effect_completed.is_connected(_on_vfx_completed):
+			vfx_manager.effect_completed.disconnect(_on_vfx_completed)
+	if damage_number_spawner:
+		if damage_number_spawner.number_spawned.is_connected(_on_damage_number_spawned):
+			damage_number_spawner.number_spawned.disconnect(_on_damage_number_spawned)
+	if battle_camera:
+		if battle_camera.shake_completed.is_connected(_on_camera_shake_completed):
+			battle_camera.shake_completed.disconnect(_on_camera_shake_completed)
+		if battle_camera.focus_completed.is_connected(_on_camera_focus_completed):
+			battle_camera.focus_completed.disconnect(_on_camera_focus_completed)
+
+	# Disconnect battle_manager signals
+	if battle_manager:
+		if battle_manager.battle_initialized.is_connected(_on_battle_initialized):
+			battle_manager.battle_initialized.disconnect(_on_battle_initialized)
+		if battle_manager.action_animation_started.is_connected(_on_action_animation_started):
+			battle_manager.action_animation_started.disconnect(_on_action_animation_started)
+		if battle_manager.battle_victory.is_connected(_on_battle_victory):
+			battle_manager.battle_victory.disconnect(_on_battle_victory)
+		if battle_manager.battle_defeat.is_connected(_on_battle_defeat):
+			battle_manager.battle_defeat.disconnect(_on_battle_defeat)
+
+	# Disconnect battle_ui signals
+	if battle_ui and battle_ui.has_signal("target_highlight_changed"):
+		if battle_ui.target_highlight_changed.is_connected(_on_target_highlight_changed):
+			battle_ui.target_highlight_changed.disconnect(_on_target_highlight_changed)
+
+	# Kill any active tweens
+	if _highlight_breathing_tween and _highlight_breathing_tween.is_valid():
+		_highlight_breathing_tween.kill()

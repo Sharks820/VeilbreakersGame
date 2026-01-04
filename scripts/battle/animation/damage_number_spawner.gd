@@ -37,6 +37,7 @@ signal number_spawned(number_node: Node)
 @export var stack_delay: float = 0.05
 
 @export_group("Brand Colors")
+## NOTE: Default values match Helpers.get_brand_color() - keep in sync!
 @export var savage_color: Color = Color("c73e3e")
 @export var iron_color: Color = Color("7b8794")
 @export var venom_color: Color = Color("6b9b37")

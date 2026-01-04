@@ -476,3 +476,12 @@ func _on_settings_closed() -> void:
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_debug"):
 		pass
+
+func _exit_tree() -> void:
+	# Kill any looping tweens to prevent memory leaks
+	if logo_tween and logo_tween.is_valid():
+		logo_tween.kill()
+
+	# Disconnect settings_menu signal if connected
+	if settings_menu and settings_menu.settings_closed.is_connected(_on_settings_closed):
+		settings_menu.settings_closed.disconnect(_on_settings_closed)

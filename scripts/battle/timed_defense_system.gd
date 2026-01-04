@@ -79,9 +79,24 @@ func start_defense_opportunity(defender: CharacterBase, attacker: CharacterBase)
 	current_state = DefenseState.WAITING_DELAY
 	delay_timer.start(delay)
 
-	# Wait for defense result
+	# Wait for defense result with timeout to prevent infinite loop
+	# Max wait = delay + window + 1 second buffer
+	var max_wait_time := delay + Constants.TIMED_DEFENSE_WINDOW + 1.0
+	var elapsed_wait := 0.0
+
 	while defense_result.is_empty():
+		# Safety check: prevent infinite loop
+		if not is_instance_valid(self) or not is_inside_tree():
+			return {"success": false, "reason": "system_freed", "reduction": 0.0}
+
 		await get_tree().process_frame
+		elapsed_wait += get_process_delta_time()
+
+		# Timeout protection
+		if elapsed_wait >= max_wait_time:
+			EventBus.emit_warning("TimedDefenseSystem: Wait timeout reached, forcing completion")
+			_complete_defense(false, "timeout")
+			break
 
 	return defense_result
 

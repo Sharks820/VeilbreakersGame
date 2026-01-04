@@ -469,3 +469,17 @@ func reset() -> void:
 	if shadow_sprite:
 		shadow_sprite.modulate = Color.WHITE
 	play_idle()
+
+func _exit_tree() -> void:
+	# Kill any active tweens to prevent memory leaks
+	if _shadow_pulse_tween and _shadow_pulse_tween.is_valid():
+		_shadow_pulse_tween.kill()
+
+	# Disconnect animator signals
+	if _animator:
+		if _animator.animation_event.is_connected(_on_animation_event):
+			_animator.animation_event.disconnect(_on_animation_event)
+		if _animator.animation_finished.is_connected(_on_animation_finished):
+			_animator.animation_finished.disconnect(_on_animation_finished)
+		if _animator.hit_frame_reached.is_connected(_on_hit_frame):
+			_animator.hit_frame_reached.disconnect(_on_hit_frame)

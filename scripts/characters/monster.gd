@@ -93,9 +93,7 @@ var turns_since_last_skill: int = 0
 ## True = enemy monster, False = allied/captured monster
 var is_corrupted: bool = true
 
-## Experience tracking (for allied/recruited monsters)
-var current_experience: int = 0
-var total_experience: int = 0
+## Experience tracking - current_experience and total_experience defined in CharacterBase
 
 ## Stat multiplier from corruption state (cached for performance)
 var _corruption_stat_mult: float = 1.0
@@ -609,54 +607,13 @@ func get_recruitment_stats() -> Dictionary:
 
 # =============================================================================
 # EXPERIENCE & LEVELING (for allied/recruited monsters)
+# Inherits add_experience() and get_level_progress() from CharacterBase
 # =============================================================================
 
-func add_experience(amount: int) -> Dictionary:
-	## Adds experience to the monster and handles level ups
-	## Returns level up info if any levels were gained
-	var old_exp := current_experience
-	var old_level := level
-	var levels_gained := 0
-	var all_stat_gains := {}
-
-	current_experience += amount
-	total_experience += amount
-
-	experience_changed.emit(old_exp, current_experience)
-	EventBus.experience_gained.emit(self, amount)
-
-	# Check for level ups
-	while current_experience >= get_xp_for_next_level() and level < Constants.MAX_LEVEL:
-		current_experience -= get_xp_for_next_level()
-		var stat_gains := level_up()
-		levels_gained += 1
-
-		# Merge stat gains
-		for stat in stat_gains:
-			if all_stat_gains.has(stat):
-				all_stat_gains[stat] += stat_gains[stat]
-			else:
-				all_stat_gains[stat] = stat_gains[stat]
-
-	return {
-		"old_level": old_level,
-		"new_level": level,
-		"levels_gained": levels_gained,
-		"stat_gains": all_stat_gains,
-		"experience_added": amount
-	}
-
 func get_xp_for_next_level() -> int:
-	## Returns XP required for next level (monsters need slightly less XP than players)
+	## Override: Monsters need slightly less XP than players (level up 20% faster)
 	var base_xp := Constants.get_xp_for_level(level + 1)
-	return int(base_xp * 0.8)  # Monsters level up 20% faster
-
-func get_level_progress() -> float:
-	## Returns progress to next level as 0.0 to 1.0
-	var required := get_xp_for_next_level()
-	if required == 0:
-		return 1.0
-	return float(current_experience) / float(required)
+	return int(base_xp * 0.8)
 
 # =============================================================================
 # AI DECISION MAKING

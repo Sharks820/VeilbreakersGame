@@ -2,51 +2,17 @@ class_name DamageCalculator
 extends Node
 ## DamageCalculator: Handles all damage, healing, and combat calculations.
 ## Uses Brand effectiveness system for type advantages.
+## NOTE: Brand utilities consolidated in BrandSystem class.
 
 # =============================================================================
-# BRAND EFFECTIVENESS
+# BRAND EFFECTIVENESS (delegated to BrandSystem)
 # Wheel: SAVAGE → IRON → VENOM → SURGE → DREAD → LEECH → SAVAGE
 # =============================================================================
 
-## Get brand name from enum value
-static func _get_brand_name(brand: Enums.Brand) -> String:
-	match brand:
-		Enums.Brand.SAVAGE: return "SAVAGE"
-		Enums.Brand.IRON: return "IRON"
-		Enums.Brand.VENOM: return "VENOM"
-		Enums.Brand.SURGE: return "SURGE"
-		Enums.Brand.DREAD: return "DREAD"
-		Enums.Brand.LEECH: return "LEECH"
-		Enums.Brand.BLOODIRON: return "BLOODIRON"
-		Enums.Brand.CORROSIVE: return "CORROSIVE"
-		Enums.Brand.VENOMSTRIKE: return "VENOMSTRIKE"
-		Enums.Brand.TERRORFLUX: return "TERRORFLUX"
-		Enums.Brand.NIGHTLEECH: return "NIGHTLEECH"
-		Enums.Brand.RAVENOUS: return "RAVENOUS"
-		_: return "NONE"
-
-## Get the PRIMARY brand for effectiveness calculations (hybrids use their primary)
-static func _get_primary_brand(brand: Enums.Brand) -> String:
-	var brand_name := _get_brand_name(brand)
-	if Constants.HYBRID_BRAND_COMPONENTS.has(brand_name):
-		return Constants.HYBRID_BRAND_COMPONENTS[brand_name]["primary"]
-	return brand_name
-
 ## Calculate brand effectiveness multiplier
+## Delegated to BrandSystem for single source of truth
 func get_brand_effectiveness(attacker_brand: Enums.Brand, defender_brand: Enums.Brand) -> float:
-	if attacker_brand == Enums.Brand.NONE or defender_brand == Enums.Brand.NONE:
-		return Constants.BRAND_NEUTRAL
-
-	var attacker_primary := _get_primary_brand(attacker_brand)
-	var defender_primary := _get_primary_brand(defender_brand)
-
-	# Check effectiveness matrix
-	if Constants.BRAND_EFFECTIVENESS.has(attacker_primary):
-		var matchups: Dictionary = Constants.BRAND_EFFECTIVENESS[attacker_primary]
-		if matchups.has(defender_primary):
-			return matchups[defender_primary]
-
-	return Constants.BRAND_NEUTRAL
+	return BrandSystem.get_effectiveness(attacker_brand, defender_brand)
 
 ## Check path-brand effectiveness for heroes
 func get_path_brand_modifier(hero_path: Enums.Path, monster_brand: Enums.Brand) -> float:
@@ -54,7 +20,7 @@ func get_path_brand_modifier(hero_path: Enums.Path, monster_brand: Enums.Brand) 
 		return 1.0
 
 	var path_name: String = Enums.Path.keys()[hero_path]
-	var brand_name: String = _get_primary_brand(monster_brand)
+	var brand_name: String = BrandSystem.get_primary_brand_name(monster_brand)
 
 	# Check if hero's path is strong against this brand
 	if Constants.PATH_BRAND_STRENGTH.has(path_name):
@@ -179,20 +145,21 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	var variance := randf_range(1.0 - Constants.DAMAGE_VARIANCE, 1.0 + Constants.DAMAGE_VARIANCE)
 
 	# Defender status effects
+	var buff_mult := Constants.STATUS_BUFF_DEBUFF_MULTIPLIER  # 0.25 = ±25%
 	var defender_mod := 1.0
 	if defender.has_status_effect(Enums.StatusEffect.DEFENSE_DOWN):
-		defender_mod *= 1.25
+		defender_mod *= 1.0 + buff_mult  # 1.25x damage taken
 	if defender.has_status_effect(Enums.StatusEffect.DEFENSE_UP):
-		defender_mod *= 0.75
+		defender_mod *= 1.0 - buff_mult  # 0.75x damage taken
 	if defender.has_status_effect(Enums.StatusEffect.SORROW):
 		defender_mod *= 1.15  # DREAD brand debuff - +15% damage taken
 
 	# Attacker status effects
 	var attacker_mod := 1.0
 	if attacker.has_status_effect(Enums.StatusEffect.ATTACK_UP):
-		attacker_mod *= 1.25
+		attacker_mod *= 1.0 + buff_mult  # 1.25x damage dealt
 	if attacker.has_status_effect(Enums.StatusEffect.ATTACK_DOWN):
-		attacker_mod *= 0.75
+		attacker_mod *= 1.0 - buff_mult  # 0.75x damage dealt
 
 	# Final damage (minimum 1)
 	result.damage = maxi(1, int(raw_damage * brand_mod * variance * defender_mod * attacker_mod))
@@ -215,22 +182,14 @@ func calculate_hit_chance(attacker: CharacterBase, defender: CharacterBase) -> f
 	return clampf(hit_chance, 0.1, 0.99)
 
 # =============================================================================
-# BRAND EFFECTIVENESS TEXT
+# BRAND EFFECTIVENESS TEXT (delegated to BrandSystem)
 # =============================================================================
 
 func get_effectiveness_text(modifier: float) -> String:
-	if modifier >= Constants.BRAND_STRONG:
-		return "Super Effective!"
-	elif modifier > 1.0:
-		return "Effective!"
-	elif modifier <= Constants.BRAND_WEAK:
-		return "Resisted..."
-	elif modifier < 1.0:
-		return "Not Very Effective..."
-	return ""
+	return BrandSystem.get_effectiveness_text(modifier)
 
 func get_brand_name(brand: Enums.Brand) -> String:
-	return _get_brand_name(brand)
+	return BrandSystem.get_brand_name(brand)
 
 # =============================================================================
 # HEALING CALCULATION

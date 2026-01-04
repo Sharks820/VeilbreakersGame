@@ -46,86 +46,51 @@ func load_all_data() -> void:
 		])
 
 
-func _load_monsters() -> void:
-	var dir := DirAccess.open(MONSTER_PATH)
+# =============================================================================
+# GENERIC RESOURCE LOADER (eliminates duplicate directory loading code)
+# =============================================================================
+
+func _load_resources_from_dir(path: String, id_property: String, target_dict: Dictionary) -> void:
+	## Generic loader: loads all .tres files from a directory into a dictionary
+	## @param path: Directory path to scan
+	## @param id_property: Property name to use as dictionary key (e.g., "monster_id")
+	## @param target_dict: Dictionary to store loaded resources
+	var dir := DirAccess.open(path)
 	if not dir:
-		push_warning("[DataManager] Could not open monster directory: " + MONSTER_PATH)
+		push_warning("[DataManager] Could not open directory: " + path)
 		return
 
 	dir.list_dir_begin()
 	var file_name := dir.get_next()
 	while file_name != "":
 		if file_name.ends_with(".tres"):
-			var resource := load(MONSTER_PATH + file_name)
-			if resource and "monster_id" in resource:
-				monsters[resource.monster_id] = resource
+			var resource := load(path + file_name)
+			if resource and id_property in resource:
+				target_dict[resource.get(id_property)] = resource
 		file_name = dir.get_next()
 	dir.list_dir_end()
+
+
+func _load_monsters() -> void:
+	_load_resources_from_dir(MONSTER_PATH, "monster_id", monsters)
 
 
 func _load_heroes() -> void:
-	var dir := DirAccess.open(HERO_PATH)
-	if not dir:
-		push_warning("[DataManager] Could not open hero directory: " + HERO_PATH)
-		return
-
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while file_name != "":
-		if file_name.ends_with(".tres"):
-			var resource := load(HERO_PATH + file_name)
-			if resource and "hero_id" in resource:
-				heroes[resource.hero_id] = resource
-		file_name = dir.get_next()
-	dir.list_dir_end()
+	_load_resources_from_dir(HERO_PATH, "hero_id", heroes)
 
 
 func _load_skills() -> void:
 	# Load hero skills
-	_load_skills_from_dir(SKILL_PATH + "heroes/")
+	_load_resources_from_dir(SKILL_PATH + "heroes/", "skill_id", skills)
 	# Load monster skills
-	_load_skills_from_dir(SKILL_PATH + "monsters/")
-
-
-func _load_skills_from_dir(path: String) -> void:
-	var dir := DirAccess.open(path)
-	if not dir:
-		push_warning("[DataManager] Could not open skill directory: " + path)
-		return
-
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while file_name != "":
-		if file_name.ends_with(".tres"):
-			var resource := load(path + file_name)
-			if resource and "skill_id" in resource:
-				skills[resource.skill_id] = resource
-		file_name = dir.get_next()
-	dir.list_dir_end()
+	_load_resources_from_dir(SKILL_PATH + "monsters/", "skill_id", skills)
 
 
 func _load_items() -> void:
 	# Load consumables
-	_load_items_from_dir(ITEM_PATH + "consumables/")
+	_load_resources_from_dir(ITEM_PATH + "consumables/", "item_id", items)
 	# Load equipment
-	_load_items_from_dir(ITEM_PATH + "equipment/")
-
-
-func _load_items_from_dir(path: String) -> void:
-	var dir := DirAccess.open(path)
-	if not dir:
-		push_warning("[DataManager] Could not open item directory: " + path)
-		return
-
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while file_name != "":
-		if file_name.ends_with(".tres"):
-			var resource := load(path + file_name)
-			if resource and "item_id" in resource:
-				items[resource.item_id] = resource
-		file_name = dir.get_next()
-	dir.list_dir_end()
+	_load_resources_from_dir(ITEM_PATH + "equipment/", "item_id", items)
 
 
 # ============================================================================
