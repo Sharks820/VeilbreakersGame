@@ -1818,3 +1818,20 @@ func get_battle_summary() -> Dictionary:
 		"current_character": get_current_character().character_name if get_current_character() else "None",
 		"stats": battle_stats
 	}
+
+func _exit_tree() -> void:
+	# Disconnect capture_system signals to prevent memory leaks
+	if capture_system:
+		if capture_system.capture_succeeded.is_connected(_on_capture_succeeded):
+			capture_system.capture_succeeded.disconnect(_on_capture_succeeded)
+		if capture_system.capture_failed.is_connected(_on_capture_failed):
+			capture_system.capture_failed.disconnect(_on_capture_failed)
+		if capture_system.corruption_battle_pass.is_connected(_on_capture_shake):
+			capture_system.corruption_battle_pass.disconnect(_on_capture_shake)
+		if capture_system.corruption_reduced.is_connected(_on_corruption_reduced):
+			capture_system.corruption_reduced.disconnect(_on_corruption_reduced)
+
+	# Disconnect character died signals
+	for character in player_party + enemy_party:
+		if is_instance_valid(character) and character.died.is_connected(_on_character_died):
+			character.died.disconnect(_on_character_died)

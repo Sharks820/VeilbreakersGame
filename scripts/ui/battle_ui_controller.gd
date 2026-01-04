@@ -2819,36 +2819,8 @@ func _get_brand_name(brand: Enums.Brand) -> String:
 			return "— UNKNOWN"
 
 func _get_brand_color(brand: Enums.Brand) -> Color:
-	"""Get color for monster brand display"""
-	match brand:
-		# Pure Brands
-		Enums.Brand.SAVAGE:
-			return Color(1.0, 0.4, 0.3)  # Red-orange - raw power
-		Enums.Brand.IRON:
-			return Color(0.6, 0.7, 0.8)  # Steel blue - defense
-		Enums.Brand.VENOM:
-			return Color(0.4, 0.9, 0.3)  # Toxic green - poison/debuffs
-		Enums.Brand.SURGE:
-			return Color(0.3, 0.8, 1.0)  # Electric blue - speed/energy
-		Enums.Brand.DREAD:
-			return Color(0.6, 0.3, 0.8)  # Dark purple - fear/mental
-		Enums.Brand.LEECH:
-			return Color(0.8, 0.2, 0.4)  # Blood red - life drain
-		# Hybrid Brands
-		Enums.Brand.BLOODIRON:
-			return Color(0.85, 0.5, 0.4)  # Red-steel blend
-		Enums.Brand.CORROSIVE:
-			return Color(0.5, 0.8, 0.5)  # Steel-green blend
-		Enums.Brand.VENOMSTRIKE:
-			return Color(0.35, 0.85, 0.65)  # Green-blue blend
-		Enums.Brand.TERRORFLUX:
-			return Color(0.45, 0.55, 0.9)  # Blue-purple blend
-		Enums.Brand.NIGHTLEECH:
-			return Color(0.7, 0.25, 0.6)  # Purple-red blend
-		Enums.Brand.RAVENOUS:
-			return Color(0.9, 0.3, 0.35)  # Red-orange blend
-		_:
-			return Color(0.5, 0.5, 0.5)  # Gray for none
+	"""Get color for monster brand display - delegates to Helpers for consistency"""
+	return Helpers.get_brand_color(brand)
 
 func _create_brand_icon(brand: Enums.Brand) -> PanelContainer:
 	"""Create a colored icon indicator for the brand"""
