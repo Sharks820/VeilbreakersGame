@@ -377,6 +377,8 @@ battle, ui, art, audio, vera, monsters, critical
 - Likes AAA quality animations
 - Prefers subtle, fast button animations
 - Values pixel-perfect alignment
+- **Use gdtoolkit (gdlint/gdparse)** for GDScript validation before committing
+- Add all new requirements/tools to memory files
 
 ---
 
@@ -391,6 +393,9 @@ battle, ui, art, audio, vera, monsters, critical
 
 ### WORKS
 - TextureButton with texture_disabled
+- **Run Godot --check-only** to catch script errors before testing
+- Autoloads CANNOT have class_name matching singleton name (Godot 4.x)
+- Child classes CANNOT redeclare signals from parent class
 - Simple scale/modulate tweens
 - Clean button transparency
 - Subtle, fast animations
