@@ -390,7 +390,7 @@ func _on_choice_hovered(choice_index: int) -> void:
 			if data.get("available", false):
 				desc += "[i]" + data.get("description", "") + "[/i]\n"
 				var exploits = data.get("exploits", [])
-				if exploits.size() > 0:
+				if not exploits.is_empty():
 					desc += "\nVulnerabilities:\n"
 					for exploit in exploits:
 						desc += "- " + exploit.type.capitalize() + "\n"

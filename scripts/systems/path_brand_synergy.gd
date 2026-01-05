@@ -280,7 +280,7 @@ static func _generate_recommendations(analysis: Dictionary, hero: Node) -> Array
 			path_key = Enums.Path.keys()[hero.current_path]
 		if path_key != "":
 			var synergy_brands: Array = Constants.PATH_SYNERGY_BRANDS.get(path_key, [])
-			if synergy_brands.size() > 0:
+			if not synergy_brands.is_empty():
 				recs.append("Add %s monsters for synergy bonus" % synergy_brands[0])
 	elif analysis.synergy.tier < 3:
 		recs.append("Add more synergy monsters for stronger bonus")

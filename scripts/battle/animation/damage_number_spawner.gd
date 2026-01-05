@@ -210,7 +210,7 @@ func _spawn_at(position: Vector2, config: Dictionary) -> void:
 
 
 func _get_from_pool() -> Node:
-	if _pool.size() > 0:
+	if not _pool.is_empty():
 		return _pool.pop_back()
 
 	if auto_expand and damage_number_scene:

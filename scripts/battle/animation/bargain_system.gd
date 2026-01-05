@@ -280,8 +280,8 @@ func get_available_approaches() -> Dictionary:
 
 	# BREAK - only if exploits available
 	approaches["BREAK"] = {
-		"available": available_exploits.size() > 0,
-		"chance": break_chance if available_exploits.size() > 0 else 0.0,
+		"available": not available_exploits.is_empty(),
+		"chance": break_chance if not available_exploits.is_empty() else 0.0,
 		"description": _get_break_description(),
 		"exploits": available_exploits,
 		"warning": "No weakness to exploit" if available_exploits.is_empty() else "",
@@ -398,7 +398,7 @@ func _calculate_chances() -> void:
 				)
 			)
 
-	if available_exploits.size() > 0:
+	if not available_exploits.is_empty():
 		break_chance = base_break_chance
 		# Multiple exploits = higher chance
 		break_chance += available_exploits.size() * 0.1
@@ -601,7 +601,7 @@ func _handle_failure(approach: Approach, roll: float) -> void:
 
 		Approach.BREAK:
 			# Failed break - creature sees through manipulation
-			if available_exploits.size() > 0:
+			if not available_exploits.is_empty():
 				failure_dialogue = "You think my pain makes me weak? It makes me ANGRY."
 				is_rage = true
 				counterattack_mult = rage_counterattack_multiplier

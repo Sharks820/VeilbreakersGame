@@ -151,17 +151,17 @@ static func safe_array_get(array: Array, index: int, default: Variant = null) ->
 
 ## Check if array has valid first element
 static func has_first(array: Array) -> bool:
-	return array.size() > 0
+	return not array.is_empty()
 
 
 ## Get first element or default
 static func first_or_default(array: Array, default: Variant = null) -> Variant:
-	return array[0] if array.size() > 0 else default
+	return array[0] if not array.is_empty() else default
 
 
 ## Check if first arg is valid int (common debug pattern)
 static func is_first_arg_int(args: Array) -> bool:
-	return args.size() > 0 and args[0] is String and args[0].is_valid_int()
+	return not args.is_empty() and args[0] is String and args[0].is_valid_int()
 
 
 # =============================================================================
@@ -256,7 +256,7 @@ static func get_valid_targets(targets: Array) -> Array:
 
 ## Check if battle is still ongoing (both sides have living members)
 static func is_battle_active(players: Array, enemies: Array) -> bool:
-	return filter_alive(players).size() > 0 and filter_alive(enemies).size() > 0
+	return not filter_alive(players).is_empty() and not filter_alive(enemies).is_empty()
 
 
 # =============================================================================
