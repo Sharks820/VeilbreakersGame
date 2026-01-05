@@ -162,16 +162,22 @@ static func emit_turn_ended(local_signal: Signal, character: Node) -> void:
 	local_signal.emit(character)
 
 ## Emit battle action signals
+## Uses existing EventBus signals with correct parameters
 static func emit_battle_action(action_type: String, character: Node, data: Dictionary = {}) -> void:
 	match action_type:
 		"attack":
-			EventBus.attack_executed.emit(character, data.get("target"), data.get("damage", 0))
+			# Use action_executed with ATTACK action type (0)
+			EventBus.action_executed.emit(character, Enums.BattleAction.ATTACK, data)
 		"skill":
 			EventBus.skill_used.emit(character, data.get("skill_id", ""), data.get("targets", []))
 		"defend":
-			EventBus.defend_used.emit(character)
+			# Use action_executed with DEFEND action type (2)
+			EventBus.action_executed.emit(character, Enums.BattleAction.DEFEND, data)
 		"item":
-			EventBus.item_used.emit(character, data.get("item_id", ""), data.get("target"))
+			# item_used only takes item_id - emit that, then action_executed for full context
+			var item_id: String = data.get("item_id", "")
+			EventBus.item_used.emit(item_id)
+			EventBus.action_executed.emit(character, Enums.BattleAction.ITEM, data)
 
 # =============================================================================
 # BRAND/ALIGNMENT SIGNALS
