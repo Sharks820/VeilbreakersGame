@@ -66,8 +66,8 @@ func process_damage_modifiers(caster: CharacterBase, target: CharacterBase, skil
 				if target.has_status_effect(Enums.StatusEffect.BLEED):
 					damage = int(damage * 1.25)
 
-			"bonus_damage_low_hp_50":
-				var hp_percent := target.current_hp / float(target.get_stat(Enums.Stat.MAX_HP))
+		"bonus_damage_low_hp_50":
+				var hp_percent := target.current_hp / maxf(float(target.get_stat(Enums.Stat.MAX_HP)), 1.0)
 				if hp_percent < 0.5:
 					damage = int(damage * 1.3)
 
@@ -80,8 +80,8 @@ func process_damage_modifiers(caster: CharacterBase, target: CharacterBase, skil
 				if _is_trainer_hurt(caster):
 					damage = int(damage * 1.4)
 
-			"bonus_vs_low_hp":
-				var hp_percent := target.current_hp / float(target.get_stat(Enums.Stat.MAX_HP))
+		"bonus_vs_low_hp":
+				var hp_percent := target.current_hp / maxf(float(target.get_stat(Enums.Stat.MAX_HP)), 1.0)
 				if hp_percent < 0.3:
 					damage = int(damage * 1.5)
 
@@ -302,8 +302,8 @@ func process_accuracy_effects(caster: CharacterBase, target: CharacterBase, skil
 			"guaranteed_hit":
 				result.guaranteed_hit = true
 
-			"guaranteed_hit_low_hp":
-				var hp_percent := target.current_hp / float(target.get_stat(Enums.Stat.MAX_HP))
+		"guaranteed_hit_low_hp":
+				var hp_percent := target.current_hp / maxf(float(target.get_stat(Enums.Stat.MAX_HP)), 1.0)
 				if hp_percent < 0.3:
 					result.guaranteed_hit = true
 
@@ -449,7 +449,7 @@ func _is_trainer_hurt(monster: CharacterBase) -> bool:
 
 	for player in battle_manager.player_party:
 		if player is PlayerCharacter and player.is_alive():
-			var hp_percent := player.current_hp / float(player.get_stat(Enums.Stat.MAX_HP))
+			var hp_percent := player.current_hp / maxf(float(player.get_stat(Enums.Stat.MAX_HP)), 1.0)
 			if hp_percent < 0.5:
 				return true
 	return false

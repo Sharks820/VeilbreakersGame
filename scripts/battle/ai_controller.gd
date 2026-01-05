@@ -247,7 +247,7 @@ func _calculate_threat(target: CharacterBase) -> float:
 # AI PATTERNS
 # =============================================================================
 
-func _ai_aggressive(monster: Monster, _allies: Array, _enemies: Array, 
+func _ai_aggressive(monster: Monster, _allies: Array, _enemies: Array,
 		basic_targets: Array[CharacterBase], skill_targets: Array[CharacterBase]) -> Dictionary:
 	## Aggressive AI: Prioritize damage, use skills often
 	

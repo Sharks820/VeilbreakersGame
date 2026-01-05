@@ -1,0 +1,19 @@
+# STRICT GDLint Configuration - Find ALL issues
+# Run: python -m gdtoolkit.linter --config .gdlintrc.strict scripts/
+
+# Enable everything - no disabled rules
+disable: []
+
+# Limits
+max-file-lines: 1000
+max-line-length: 120
+max-public-methods: 20
+max-returns: 6
+function-arguments-number: 10
+
+# Excluded paths
+excluded_directories:
+  - addons
+  - archive
+  - .godot
+  - tools

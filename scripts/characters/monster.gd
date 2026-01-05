@@ -342,7 +342,7 @@ func set_corruption(value: float) -> void:
 
 func get_purification_progress() -> float:
 	## Returns purification progress as 0.0 to 1.0 (1.0 = fully ascended)
-	return 1.0 - (corruption_level / max_corruption)
+	return 1.0 - (corruption_level / maxf(max_corruption, 1.0))
 
 func is_purified() -> bool:
 	## Returns true if monster is in Purified or Ascended state
