@@ -149,7 +149,7 @@ func use_on_target(target: CharacterBase) -> Dictionary:
 	# Special Effects (capture orbs, etc.)
 	if special_effect != "":
 		var special_result := _process_special_effect(target)
-		if special_result.size() > 0:
+		if not special_result.is_empty():
 			result.effects.append(special_result)
 			# Capture effects are handled differently - signal that this is a capture item
 			if special_effect.begins_with("attempt_capture"):
@@ -215,7 +215,7 @@ func can_use(target: CharacterBase) -> bool:
 		return false
 
 	# Can't use cure items if target doesn't have the status
-	if cures_status.size() > 0:
+	if not cures_status.is_empty():
 		var has_curable := false
 		for status in cures_status:
 			if target.has_status_effect(status):
@@ -238,7 +238,7 @@ func get_tooltip() -> String:
 			tooltip += "Restores %d MP\n" % mp_restore
 		if revives:
 			tooltip += "Revives fallen ally\n"
-		if cures_status.size() > 0:
+		if not cures_status.is_empty():
 			tooltip += "Cures: "
 			for status in cures_status:
 				tooltip += Enums.StatusEffect.keys()[status] + ", "

@@ -121,7 +121,7 @@ func _on_delay_complete() -> void:
 		popup_container.scale = Vector2(0.5, 0.5)
 		popup_container.modulate.a = 0.0
 		var tween := create_tween().set_parallel(true)
-		tween.tween_property(popup_container, "scale", Vector2(1.0, 1.0), 0.1)
+		tween.tween_property(popup_container, "scale", Vector2.ONE, 0.1)
 		tween.tween_property(popup_container, "modulate:a", 1.0, 0.1)
 
 	# Start the timing window

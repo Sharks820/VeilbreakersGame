@@ -199,7 +199,7 @@ func _play_aaa_entrance() -> void:
 		var btn_tween = create_tween().set_parallel(true)
 		btn_tween.tween_property(btn, "modulate:a", target_alpha, 0.7).set_delay(delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 		btn_tween.tween_property(btn, "position:y", target_y, 0.9).set_delay(delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-		btn_tween.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.8).set_delay(delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+		btn_tween.tween_property(btn, "scale", Vector2.ONE, 0.8).set_delay(delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 
 	# Phase 6: Version label
 	await get_tree().create_timer(0.8).timeout
@@ -384,7 +384,7 @@ func _on_button_unhover(button: TextureButton) -> void:
 	var target_alpha = 0.4 if (button == continue_button and not continue_has_saves) else 1.0
 
 	var tween = create_tween().set_parallel(true)
-	tween.tween_property(button, "scale", Vector2(1.0, 1.0), 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(button, "scale", Vector2.ONE, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	tween.tween_property(button, "position:y", base_y, 0.2).set_ease(Tween.EASE_OUT)
 	tween.tween_property(button, "modulate", Color(1.0, 1.0, 1.0, target_alpha), 0.2)
 	tween.tween_property(button, "rotation_degrees", 0.0, 0.15)
@@ -429,7 +429,7 @@ func _play_button_press(button: TextureButton) -> void:
 	var tween = create_tween()
 	tween.tween_property(button, "scale", Vector2(0.9, 0.9), 0.08).set_trans(Tween.TRANS_CUBIC)
 	tween.tween_property(button, "scale", Vector2(1.05, 1.05), 0.1).set_trans(Tween.TRANS_BACK)
-	tween.tween_property(button, "scale", Vector2(1.0, 1.0), 0.08).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(button, "scale", Vector2.ONE, 0.08).set_trans(Tween.TRANS_CUBIC)
 
 # =============================================================================
 # SETTINGS MENU

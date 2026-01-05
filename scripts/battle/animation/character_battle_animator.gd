@@ -35,7 +35,7 @@ const ANIMATION_CONFIGS := {
 		},
 		"recover": {
 			"duration": 0.2,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"rotation": 0.0,
 		},
@@ -69,7 +69,7 @@ const ANIMATION_CONFIGS := {
 		},
 		"recover": {
 			"duration": 0.3,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"rotation": 0.0,
 		},
@@ -105,7 +105,7 @@ const ANIMATION_CONFIGS := {
 		},
 		"recover": {
 			"duration": 0.25,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"glow_intensity": 0.0,
 		},
@@ -136,7 +136,7 @@ const ANIMATION_CONFIGS := {
 		},
 		"settle": {
 			"duration": 0.3,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"glow_intensity": 0.0,
 		},
@@ -166,7 +166,7 @@ const ANIMATION_CONFIGS := {
 		},
 		"settle": {
 			"duration": 0.25,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"glow_intensity": 0.3,  # Lingering glow
 		},
 	},
@@ -194,7 +194,7 @@ const ANIMATION_CONFIGS := {
 		},
 		"fade": {
 			"duration": 0.2,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"rotation": 0.0,
 		},
@@ -221,7 +221,7 @@ const ANIMATION_CONFIGS := {
 		},
 		"complete": {
 			"duration": 0.2,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"glow_intensity": 0.0,
 		},
 	},
@@ -236,7 +236,7 @@ const ANIMATION_CONFIGS := {
 		},
 		"shield": {
 			"duration": 0.15,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"tint": Color(0.7, 0.85, 1.0),
 			"glow_intensity": 1.0,
 			"glow_color": Color(0.4, 0.6, 1.0),
@@ -274,7 +274,7 @@ const ANIMATION_CONFIGS := {
 		},
 		"complete": {
 			"duration": 0.25,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"glow_intensity": 0.0,
 		},
@@ -314,7 +314,7 @@ const ANIMATION_CONFIGS := {
 		},
 		"effect": {
 			"duration": 0.2,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 		},
 	},
@@ -335,7 +335,7 @@ const ANIMATION_CONFIGS := {
 		},
 		"recover": {
 			"duration": 0.2,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"rotation": 0.0,
 		},
@@ -358,7 +358,7 @@ const ANIMATION_CONFIGS := {
 		},
 		"recover": {
 			"duration": 0.3,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"rotation": 0.0,
 		},
@@ -427,7 +427,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"land": {
 			"duration": 0.18,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"rotation": 0.0,
 		},
@@ -489,7 +489,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"recover": {
 			"duration": 0.2,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"rotation": 0.0,
 		},
@@ -522,7 +522,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"exhaust": {
 			"duration": 0.25,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"rotation": 0.0,
 		},
@@ -554,7 +554,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"recover": {
 			"duration": 0.25,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 		},
 	},
@@ -635,7 +635,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"dissipate": {
 			"duration": 0.25,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"glow_intensity": 0.0,
 		},
@@ -662,7 +662,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"spread": {
 			"duration": 0.3,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"glow_intensity": 0.5,
 		},
 	},
@@ -694,7 +694,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"fade": {
 			"duration": 0.2,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"glow_intensity": 0.0,
 		},
@@ -752,7 +752,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"fade": {
 			"duration": 0.25,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"tint": Color(1.0, 1.0, 1.0),
 			"glow_intensity": 0.0,
 		},
@@ -780,7 +780,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"release": {
 			"duration": 0.2,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"tint": Color(1.0, 1.0, 1.0),
 		},
@@ -810,7 +810,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"complete": {
 			"duration": 0.15,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"glow_intensity": 0.0,
 		},
@@ -837,7 +837,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"release": {
 			"duration": 0.18,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"glow_intensity": 0.0,
 		},
@@ -901,7 +901,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"finish": {
 			"duration": 0.3,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"offset": Vector2(0, 0),
 			"rotation": 0.0,
 		},
@@ -929,7 +929,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"shatter": {
 			"duration": 0.3,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"tint": Color(1.0, 1.0, 1.0),
 			"shake": Vector2(15, 12),
 		},
@@ -956,7 +956,7 @@ const SKILL_SPECIFIC_ANIMATIONS := {
 		},
 		"reform": {
 			"duration": 0.3,
-			"scale": Vector2(1.0, 1.0),
+			"scale": Vector2.ONE,
 			"glow_intensity": 0.0,
 		},
 	},

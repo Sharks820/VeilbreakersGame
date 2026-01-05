@@ -126,7 +126,7 @@ func get_tooltip() -> String:
 			tooltip += " x%d hits" % hit_count
 		tooltip += "\n"
 
-	if status_effects.size() > 0:
+	if not status_effects.is_empty():
 		tooltip += "Effects: "
 		for effect in status_effects:
 			tooltip += "%s (%d%%), " % [Enums.StatusEffect.keys()[effect.effect], int(effect.chance * 100)]

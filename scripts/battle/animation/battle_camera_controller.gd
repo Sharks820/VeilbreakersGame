@@ -442,7 +442,7 @@ func play_boss_intro_camera(boss: Node2D, duration: float = 2.0) -> void:
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(self, "global_position", boss.global_position, duration).set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "zoom", Vector2(1.0, 1.0), duration).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "zoom", Vector2.ONE, duration).set_ease(Tween.EASE_OUT)
 
 # -----------------------------------------------------------------------------
 # UTILITIES

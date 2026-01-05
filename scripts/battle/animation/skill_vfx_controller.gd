@@ -26,7 +26,7 @@ const SKILL_VFX_CONFIG := {
 		"speed_min": 150.0,
 		"speed_max": 300.0,
 		"lifetime": 0.4,
-		"scale": Vector2(1.0, 1.0),
+		"scale": Vector2.ONE,
 		"gravity": Vector2(0, 200),
 		"emission_shape": "sphere"  # Burst outward
 	},
@@ -223,7 +223,7 @@ static func spawn_damage_skill_effect(parent: Node, position: Vector2, brand: En
 	
 	# Scale based on skill power
 	var power_scale: float = clampf(skill_data.base_power / 20.0, 0.8, 2.0) if skill_data else 1.0
-	effect.scale = config.get("scale", Vector2(1.0, 1.0)) * power_scale
+	effect.scale = config.get("scale", Vector2.ONE) * power_scale
 	
 	effect.emitting = true
 	effect.finished.connect(func(): effect.queue_free())

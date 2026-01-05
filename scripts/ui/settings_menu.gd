@@ -153,7 +153,7 @@ func open() -> void:
 	panel.scale = Vector2(0.9, 0.9)
 	panel.pivot_offset = panel.size / 2.0
 	var panel_tween := create_tween()
-	panel_tween.tween_property(panel, "scale", Vector2(1.0, 1.0), 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	panel_tween.tween_property(panel, "scale", Vector2.ONE, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	
 	close_button.grab_focus()
 
