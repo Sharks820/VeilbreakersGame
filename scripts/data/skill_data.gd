@@ -17,15 +17,7 @@ extends Resource
 ## Brand requirement to learn/use this skill
 @export var brand_requirement: Enums.Brand = Enums.Brand.NONE
 
-enum SkillType {
-	DAMAGE,
-	HEAL,
-	BUFF,
-	DEBUFF,
-	STATUS,
-	UTILITY,
-	PASSIVE
-}
+enum SkillType { DAMAGE, HEAL, BUFF, DEBUFF, STATUS, UTILITY, PASSIVE }
 
 @export_group("Costs")
 @export var mp_cost: int = 0
@@ -60,6 +52,7 @@ enum SkillType {
 # METHODS
 # =============================================================================
 
+
 func can_use(character: CharacterBase) -> Dictionary:
 	var result := {"can_use": true, "reasons": []}
 
@@ -77,6 +70,7 @@ func can_use(character: CharacterBase) -> Dictionary:
 	# TODO: Implement cooldown tracking
 
 	return result
+
 
 func get_expected_damage(attacker: CharacterBase, defender: CharacterBase) -> int:
 	if skill_type != SkillType.DAMAGE:
@@ -98,6 +92,7 @@ func get_expected_damage(attacker: CharacterBase, defender: CharacterBase) -> in
 
 	return int(raw_damage * hit_count)
 
+
 func get_expected_healing(caster: CharacterBase) -> int:
 	if skill_type != SkillType.HEAL:
 		return 0
@@ -106,6 +101,7 @@ func get_expected_healing(caster: CharacterBase) -> int:
 	var level_factor := (caster.level / 10.0) + 1.0
 
 	return int(base_power * (magic / 10.0) * scaling_ratio * level_factor)
+
 
 func get_tooltip() -> String:
 	var tooltip := "%s\n%s\n\n" % [display_name, description]
@@ -117,7 +113,7 @@ func get_tooltip() -> String:
 
 	if brand_type != Enums.Brand.NONE:
 		tooltip += "Brand: %s\n" % Enums.Brand.keys()[brand_type]
-	
+
 	tooltip += "Target: %s\n" % Enums.TargetType.keys()[target_type]
 
 	if base_power > 0:
@@ -129,7 +125,9 @@ func get_tooltip() -> String:
 	if not status_effects.is_empty():
 		tooltip += "Effects: "
 		for effect in status_effects:
-			tooltip += "%s (%d%%), " % [Enums.StatusEffect.keys()[effect.effect], int(effect.chance * 100)]
+			tooltip += (
+				"%s (%d%%), " % [Enums.StatusEffect.keys()[effect.effect], int(effect.chance * 100)]
+			)
 		tooltip = tooltip.trim_suffix(", ") + "\n"
 
 	return tooltip

@@ -6,6 +6,7 @@ extends Node
 # TURN ORDER CALCULATION
 # =============================================================================
 
+
 func calculate_turn_order(participants: Array) -> Array[CharacterBase]:
 	var order: Array[CharacterBase] = []
 
@@ -18,6 +19,7 @@ func calculate_turn_order(participants: Array) -> Array[CharacterBase]:
 	order.sort_custom(_compare_speed)
 
 	return order
+
 
 func _compare_speed(a: CharacterBase, b: CharacterBase) -> bool:
 	var speed_a := a.get_stat(Enums.Stat.SPEED)
@@ -36,11 +38,15 @@ func _compare_speed(a: CharacterBase, b: CharacterBase) -> bool:
 
 	return speed_a > speed_b
 
+
 # =============================================================================
 # SPEED MANIPULATION
 # =============================================================================
 
-func insert_character_next(order: Array[CharacterBase], character: CharacterBase, after_index: int) -> Array[CharacterBase]:
+
+func insert_character_next(
+	order: Array[CharacterBase], character: CharacterBase, after_index: int
+) -> Array[CharacterBase]:
 	## Insert a character to act immediately after the specified index
 	if character in order:
 		order.erase(character)
@@ -50,7 +56,10 @@ func insert_character_next(order: Array[CharacterBase], character: CharacterBase
 
 	return order
 
-func delay_character(order: Array[CharacterBase], character: CharacterBase, positions: int) -> Array[CharacterBase]:
+
+func delay_character(
+	order: Array[CharacterBase], character: CharacterBase, positions: int
+) -> Array[CharacterBase]:
 	## Delay a character's turn by a number of positions
 	if character not in order:
 		return order
@@ -63,7 +72,10 @@ func delay_character(order: Array[CharacterBase], character: CharacterBase, posi
 
 	return order
 
-func advance_character(order: Array[CharacterBase], character: CharacterBase, positions: int) -> Array[CharacterBase]:
+
+func advance_character(
+	order: Array[CharacterBase], character: CharacterBase, positions: int
+) -> Array[CharacterBase]:
 	## Advance a character's turn by a number of positions
 	if character not in order:
 		return order
@@ -76,9 +88,11 @@ func advance_character(order: Array[CharacterBase], character: CharacterBase, po
 
 	return order
 
+
 # =============================================================================
 # QUERIES
 # =============================================================================
+
 
 func get_next_character(order: Array[CharacterBase], current_index: int) -> CharacterBase:
 	var next_index := current_index + 1
@@ -88,7 +102,10 @@ func get_next_character(order: Array[CharacterBase], current_index: int) -> Char
 		next_index += 1
 	return null
 
-func get_turns_until_character(order: Array[CharacterBase], character: CharacterBase, current_index: int) -> int:
+
+func get_turns_until_character(
+	order: Array[CharacterBase], character: CharacterBase, current_index: int
+) -> int:
 	if character not in order:
 		return -1
 
@@ -99,13 +116,16 @@ func get_turns_until_character(order: Array[CharacterBase], character: Character
 	else:
 		return char_index - current_index
 
+
 func predict_next_round_order(participants: Array) -> Array[CharacterBase]:
 	## Predict the turn order for the next round (accounts for potential speed changes)
 	return calculate_turn_order(participants)
 
+
 # =============================================================================
 # ACTION TIMING
 # =============================================================================
+
 
 func calculate_action_speed(character: CharacterBase, action: Enums.BattleAction) -> float:
 	## Calculate the speed value for a specific action (for ATB-style systems)
@@ -129,13 +149,17 @@ func calculate_action_speed(character: CharacterBase, action: Enums.BattleAction
 
 	return base_speed * action_modifier
 
+
 # =============================================================================
 # DEBUG
 # =============================================================================
+
 
 func get_turn_order_debug(order: Array[CharacterBase]) -> String:
 	var result := "Turn Order:\n"
 	for i in range(order.size()):
 		var char := order[i]
-		result += "  %d. %s (SPD: %.0f)\n" % [i + 1, char.character_name, char.get_stat(Enums.Stat.SPEED)]
+		result += (
+			"  %d. %s (SPD: %.0f)\n" % [i + 1, char.character_name, char.get_stat(Enums.Stat.SPEED)]
+		)
 	return result

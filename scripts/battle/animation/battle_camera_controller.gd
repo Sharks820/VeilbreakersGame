@@ -95,6 +95,7 @@ var _bounds_rect: Rect2
 var _battle_center: Vector2 = Vector2.ZERO
 var _all_combatants: Array[Node2D] = []
 
+
 # -----------------------------------------------------------------------------
 # LIFECYCLE
 # -----------------------------------------------------------------------------
@@ -107,10 +108,12 @@ func _ready() -> void:
 		shake_noise.noise_type = FastNoiseLite.TYPE_PERLIN
 		shake_noise.frequency = 2.0
 
+
 func _exit_tree() -> void:
 	# CRITICAL: Restore time scale if we're freed during freeze
 	if _freeze_timer > 0:
 		Engine.time_scale = _pre_freeze_time_scale if _pre_freeze_time_scale > 0 else 1.0
+
 
 func _process(delta: float) -> void:
 	# Handle impact freeze
@@ -121,11 +124,12 @@ func _process(delta: float) -> void:
 		if _freeze_timer <= 0:
 			Engine.time_scale = _pre_freeze_time_scale if _pre_freeze_time_scale > 0 else 1.0
 		return
-	
+
 	_process_shake(delta)
 	_process_focus(delta)
 	_process_zoom(delta)
 	_process_transition(delta)
+
 
 # -----------------------------------------------------------------------------
 # SCREEN SHAKE - Trauma-based system (Vlambeer style)
@@ -143,46 +147,56 @@ func shake(intensity: Vector2, duration: float = 0.3) -> void:
 	_shake_decay_tween.tween_property(self, "_shake_trauma", 0.0, duration)
 	_shake_decay_tween.tween_callback(func(): shake_completed.emit())
 
+
 func shake_preset(preset: String) -> void:
 	match preset:
-		"light": shake(light_hit_shake, 0.15)
-		"heavy": shake(heavy_hit_shake, 0.2)
-		"critical": shake(critical_hit_shake, 0.25)
-		"death": shake(death_shake, 0.4)
-		"explosion": shake(explosion_shake, 0.35)
-		_: shake(light_hit_shake, 0.15)
+		"light":
+			shake(light_hit_shake, 0.15)
+		"heavy":
+			shake(heavy_hit_shake, 0.2)
+		"critical":
+			shake(critical_hit_shake, 0.25)
+		"death":
+			shake(death_shake, 0.4)
+		"explosion":
+			shake(explosion_shake, 0.35)
+		_:
+			shake(light_hit_shake, 0.15)
+
 
 func shake_directional(direction: Vector2, intensity: float, duration: float = 0.2) -> void:
 	"""Shake that follows a direction (e.g., toward attacker)"""
 	var dir_shake = direction.normalized() * intensity
 	_shake_intensity = dir_shake.clamp(-max_shake_offset, max_shake_offset)
 	_shake_trauma = 1.0
-	
+
 	var tween = create_tween()
 	tween.tween_property(self, "_shake_trauma", 0.0, duration)
+
 
 func add_trauma(amount: float) -> void:
 	"""Add to existing trauma (stacks)"""
 	_shake_trauma = clamp(_shake_trauma + amount, 0.0, 1.0)
 
+
 func _process_shake(delta: float) -> void:
 	if _shake_trauma <= 0:
 		offset = Vector2.ZERO
 		return
-	
+
 	_shake_time += delta
-	
+
 	# Perlin noise for organic shake
 	var shake_x = shake_noise.get_noise_2d(_shake_time * 100, 0)
 	var shake_y = shake_noise.get_noise_2d(0, _shake_time * 100)
-	
+
 	# Trauma squared for exponential falloff
 	var trauma_sq = _shake_trauma * _shake_trauma
-	
+
 	offset = Vector2(
-		shake_x * _shake_intensity.x * trauma_sq,
-		shake_y * _shake_intensity.y * trauma_sq
+		shake_x * _shake_intensity.x * trauma_sq, shake_y * _shake_intensity.y * trauma_sq
 	)
+
 
 # -----------------------------------------------------------------------------
 # FOCUS SYSTEM - Target tracking
@@ -204,82 +218,90 @@ func focus_on(target: Node2D, zoom_level: float = -1.0, duration: float = 0.3) -
 	_focus_tween.tween_property(self, "_focus_weight", 1.0, duration).set_ease(Tween.EASE_OUT)
 	_focus_tween.tween_callback(func(): focus_completed.emit())
 
+
 func focus_on_multiple(targets: Array[Node2D], padding: float = -1.0) -> void:
 	"""Focus camera to frame multiple targets"""
 	_focus_targets = targets
 	_focus_target = null
 	_is_focusing = true
-	
+
 	if padding < 0:
 		padding = multi_target_padding
-	
+
 	# Calculate bounding box
 	if targets.size() > 0:
 		var bounds = _calculate_bounds(targets, padding)
 		var center = bounds.get_center()
 		var required_zoom = _calculate_zoom_for_bounds(bounds)
-		
+
 		zoom_to(required_zoom, 0.3)
+
 
 func focus_between(attacker: Node2D, target: Node2D, bias: float = 0.5) -> void:
 	"""Focus between two combatants with bias toward one"""
 	var mid_point = attacker.global_position.lerp(target.global_position, bias)
-	
+
 	_focus_target = null
 	_focus_targets.clear()
 	_is_focusing = true
 	_battle_center = mid_point
-	
+
 	# Zoom based on distance
 	var distance = attacker.global_position.distance_to(target.global_position)
 	var zoom_factor = clamp(1.0 - (distance / 1000.0), 0.7, 1.2)
 	zoom_to(Vector2(zoom_factor, zoom_factor), 0.2)
+
 
 func release_focus(duration: float = 0.5) -> void:
 	"""Return to default view"""
 	_is_focusing = false
 	_focus_target = null
 	_focus_targets.clear()
-	
+
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(self, "_focus_weight", 0.0, duration)
 	tween.tween_property(self, "zoom", default_zoom, duration)
 
+
 func _process_focus(delta: float) -> void:
 	if not _is_focusing:
 		return
-	
+
 	var target_pos = _original_position
-	
+
 	if _focus_target and is_instance_valid(_focus_target):
 		target_pos = _focus_target.global_position
 	elif _focus_targets.size() > 0:
 		target_pos = _calculate_bounds(_focus_targets, multi_target_padding).get_center()
 	elif _battle_center != Vector2.ZERO:
 		target_pos = _battle_center
-	
+
 	# Smooth follow
 	var weighted_pos = _original_position.lerp(target_pos, _focus_weight)
 	global_position = global_position.lerp(weighted_pos, focus_speed * delta)
-	
+
 	# Apply bounds
 	if _bounds_enabled:
 		global_position = global_position.clamp(_bounds_rect.position, _bounds_rect.end)
 
+
 func _calculate_bounds(targets: Array[Node2D], padding: float) -> Rect2:
 	if targets.is_empty():
 		return Rect2(global_position, Vector2.ZERO)
-	
+
 	var min_pos = targets[0].global_position
 	var max_pos = targets[0].global_position
-	
+
 	for target in targets:
 		if is_instance_valid(target):
 			min_pos = min_pos.min(target.global_position)
 			max_pos = max_pos.max(target.global_position)
-	
-	return Rect2(min_pos - Vector2(padding, padding), max_pos - min_pos + Vector2(padding * 2, padding * 2))
+
+	return Rect2(
+		min_pos - Vector2(padding, padding), max_pos - min_pos + Vector2(padding * 2, padding * 2)
+	)
+
 
 func _calculate_zoom_for_bounds(bounds: Rect2) -> Vector2:
 	var viewport_size = get_viewport_rect().size
@@ -287,6 +309,7 @@ func _calculate_zoom_for_bounds(bounds: Rect2) -> Vector2:
 	var zoom_y = viewport_size.y / bounds.size.y
 	var required_zoom = min(zoom_x, zoom_y)
 	return Vector2(required_zoom, required_zoom).clamp(min_zoom, max_zoom)
+
 
 # -----------------------------------------------------------------------------
 # ZOOM SYSTEM
@@ -302,24 +325,29 @@ func zoom_to(target: Vector2, duration: float = 0.3) -> void:
 	_zoom_tween.tween_property(self, "zoom", _target_zoom, duration).set_ease(Tween.EASE_OUT)
 	_zoom_tween.tween_callback(func(): zoom_completed.emit())
 
+
 func zoom_punch(amount: float = 0.1, duration: float = 0.15) -> void:
 	"""Quick zoom in-out for impact"""
 	var original = zoom
 	var punched = zoom + Vector2(amount, amount)
-	
+
 	var tween = create_tween()
 	tween.tween_property(self, "zoom", punched, duration * 0.3).set_ease(Tween.EASE_OUT)
 	tween.tween_property(self, "zoom", original, duration * 0.7).set_ease(Tween.EASE_IN)
+
 
 func _process_zoom(delta: float) -> void:
 	# Smooth zoom (for continuous adjustment)
 	if not is_equal_approx(zoom.x, _target_zoom.x):
 		zoom = zoom.lerp(_target_zoom, zoom_speed * delta)
 
+
 # -----------------------------------------------------------------------------
 # TRANSITIONS
 # -----------------------------------------------------------------------------
-func transition_to(target_pos: Vector2, duration: float, ease_type: Tween.EaseType = Tween.EASE_IN_OUT) -> void:
+func transition_to(
+	target_pos: Vector2, duration: float, ease_type: Tween.EaseType = Tween.EASE_IN_OUT
+) -> void:
 	_is_transitioning = true
 	_transition_start = global_position
 	_transition_end = target_pos
@@ -327,32 +355,38 @@ func transition_to(target_pos: Vector2, duration: float, ease_type: Tween.EaseTy
 	_transition_elapsed = 0.0
 	_transition_ease = ease_type
 
+
 func _process_transition(delta: float) -> void:
 	if not _is_transitioning:
 		return
-	
+
 	_transition_elapsed += delta
 	var t = clamp(_transition_elapsed / _transition_duration, 0.0, 1.0)
-	
+
 	# Apply easing
 	t = _apply_ease(t, _transition_ease)
-	
+
 	global_position = _transition_start.lerp(_transition_end, t)
-	
+
 	if t >= 1.0:
 		_is_transitioning = false
 		transition_completed.emit()
 
+
 func _apply_ease(t: float, ease_type: Tween.EaseType) -> float:
 	match ease_type:
-		Tween.EASE_IN: return t * t
-		Tween.EASE_OUT: return 1.0 - (1.0 - t) * (1.0 - t)
+		Tween.EASE_IN:
+			return t * t
+		Tween.EASE_OUT:
+			return 1.0 - (1.0 - t) * (1.0 - t)
 		Tween.EASE_IN_OUT:
 			if t < 0.5:
 				return 2.0 * t * t
 			else:
 				return 1.0 - pow(-2.0 * t + 2.0, 2.0) / 2.0
-		_: return t
+		_:
+			return t
+
 
 # -----------------------------------------------------------------------------
 # IMPACT EFFECTS
@@ -371,16 +405,18 @@ func impact_freeze(duration: float = 0.05, time_scale: float = 0.1) -> void:
 	_freeze_timer = maxf(_freeze_timer, duration)
 	Engine.time_scale = time_scale
 
+
 func impact_flash(color: Color = Color.WHITE, duration: float = 0.05) -> void:
 	"""Screen flash on big hits"""
 	if chromatic_aberration_node:
 		# Use the node's shader if available
 		pass
-	
+
 	# Fallback: modulate
 	var tween = create_tween()
 	tween.tween_property(self, "modulate", color, 0.0)
 	tween.tween_property(self, "modulate", Color.WHITE, duration)
+
 
 # -----------------------------------------------------------------------------
 # BATTLE MANAGEMENT
@@ -389,15 +425,19 @@ func set_battle_bounds(rect: Rect2) -> void:
 	_bounds_enabled = true
 	_bounds_rect = rect
 
+
 func clear_battle_bounds() -> void:
 	_bounds_enabled = false
+
 
 func register_combatant(combatant: Node2D) -> void:
 	if combatant not in _all_combatants:
 		_all_combatants.append(combatant)
 
+
 func unregister_combatant(combatant: Node2D) -> void:
 	_all_combatants.erase(combatant)
+
 
 func focus_all_combatants() -> void:
 	var valid_combatants: Array[Node2D] = []
@@ -406,6 +446,7 @@ func focus_all_combatants() -> void:
 			valid_combatants.append(c)
 	focus_on_multiple(valid_combatants)
 
+
 # -----------------------------------------------------------------------------
 # CINEMATIC SEQUENCES
 # -----------------------------------------------------------------------------
@@ -413,14 +454,15 @@ func play_attack_camera(attacker: Node2D, target: Node2D, is_critical: bool = fa
 	"""Full attack camera sequence"""
 	# 1. Focus between combatants
 	focus_between(attacker, target, 0.3)
-	
+
 	# 2. If critical, zoom in more
 	if is_critical:
 		await get_tree().create_timer(0.1).timeout
 		zoom_to(Vector2(focus_zoom_in, focus_zoom_in), 0.15)
-	
+
 	# 3. On impact, shake and possibly freeze
 	# (Called externally when hit lands)
+
 
 func play_death_camera(dying: Node2D, killer: Node2D = null) -> void:
 	"""Dramatic death camera"""
@@ -428,9 +470,11 @@ func play_death_camera(dying: Node2D, killer: Node2D = null) -> void:
 	await get_tree().create_timer(0.5).timeout
 	shake_preset("death")
 
+
 func play_capture_camera(target: Node2D) -> void:
 	"""Capture drama camera"""
 	focus_on(target, 1.2, 0.4)
+
 
 func play_boss_intro_camera(boss: Node2D, duration: float = 2.0) -> void:
 	"""Dramatic boss introduction"""
@@ -438,11 +482,14 @@ func play_boss_intro_camera(boss: Node2D, duration: float = 2.0) -> void:
 	var start_pos = boss.global_position + Vector2(0, 200)
 	global_position = start_pos
 	zoom = Vector2(1.3, 1.3)
-	
+
 	var tween = create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(self, "global_position", boss.global_position, duration).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "global_position", boss.global_position, duration).set_ease(
+		Tween.EASE_OUT
+	)
 	tween.tween_property(self, "zoom", Vector2.ONE, duration).set_ease(Tween.EASE_OUT)
+
 
 # -----------------------------------------------------------------------------
 # UTILITIES
@@ -450,11 +497,14 @@ func play_boss_intro_camera(boss: Node2D, duration: float = 2.0) -> void:
 func get_screen_center() -> Vector2:
 	return global_position
 
+
 func world_to_screen(world_pos: Vector2) -> Vector2:
 	return (world_pos - global_position) * zoom + get_viewport_rect().size / 2
 
+
 func screen_to_world(screen_pos: Vector2) -> Vector2:
 	return (screen_pos - get_viewport_rect().size / 2) / zoom + global_position
+
 
 func is_position_visible(world_pos: Vector2) -> bool:
 	var screen_pos = world_to_screen(world_pos)

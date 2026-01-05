@@ -9,10 +9,12 @@ extends Node
 # Wheel: SAVAGE → IRON → VENOM → SURGE → DREAD → LEECH → SAVAGE
 # =============================================================================
 
+
 ## Calculate brand effectiveness multiplier
 ## Delegated to BrandSystem for single source of truth
 func get_brand_effectiveness(attacker_brand: Enums.Brand, defender_brand: Enums.Brand) -> float:
 	return BrandSystem.get_effectiveness(attacker_brand, defender_brand)
+
 
 ## Check path-brand effectiveness for heroes
 func get_path_brand_modifier(hero_path: Enums.Path, monster_brand: Enums.Brand) -> float:
@@ -34,11 +36,15 @@ func get_path_brand_modifier(hero_path: Enums.Path, monster_brand: Enums.Brand) 
 
 	return 1.0
 
+
 # =============================================================================
 # DAMAGE CALCULATION
 # =============================================================================
 
-func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: Resource) -> Dictionary:
+
+func calculate_damage(
+	attacker: CharacterBase, defender: CharacterBase, skill: Resource
+) -> Dictionary:
 	var result := {
 		"damage": 0,
 		"is_critical": false,
@@ -93,18 +99,18 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 	#   - Skills: 25-40 damage (2-3 hits to kill)
 	#   - Rend (DPS): Should be ~30% higher than Marrow (healer)
 	# =============================================================================
-	
+
 	# Level scaling (subtle: 1.0 at level 1, 1.18 at level 10)
 	var level_factor := 1.0 + (float(attacker.level - 1) * 0.02)
-	
+
 	# NEW FORMULA: Base + (ATK - DEF/2) scaling
 	# This ensures everyone does meaningful damage while ATK still matters
 	var base_damage := power * 0.8  # 80% of power as guaranteed base (8 for basic attack)
 	var stat_bonus := maxf(0.0, (attack - defense * 0.3) * 0.5)  # ATK matters, DEF reduces but doesn't negate
-	
+
 	# Combine: base + stat scaling
 	var raw_damage := (base_damage + stat_bonus) * level_factor
-	
+
 	# Minimum damage floor based on power (skills always do something)
 	raw_damage = maxf(raw_damage, power * 0.5)
 
@@ -166,6 +172,7 @@ func calculate_damage(attacker: CharacterBase, defender: CharacterBase, skill: R
 
 	return result
 
+
 func calculate_hit_chance(attacker: CharacterBase, defender: CharacterBase) -> float:
 	var accuracy := attacker.get_stat(Enums.Stat.ACCURACY)
 	var evasion := defender.get_stat(Enums.Stat.EVASION)
@@ -181,19 +188,24 @@ func calculate_hit_chance(attacker: CharacterBase, defender: CharacterBase) -> f
 	var hit_chance := accuracy - evasion - speed_evasion_bonus
 	return clampf(hit_chance, 0.1, 0.99)
 
+
 # =============================================================================
 # BRAND EFFECTIVENESS TEXT (delegated to BrandSystem)
 # =============================================================================
 
+
 func get_effectiveness_text(modifier: float) -> String:
 	return BrandSystem.get_effectiveness_text(modifier)
+
 
 func get_brand_name(brand: Enums.Brand) -> String:
 	return BrandSystem.get_brand_name(brand)
 
+
 # =============================================================================
 # HEALING CALCULATION
 # =============================================================================
+
 
 func calculate_healing(healer: CharacterBase, target: CharacterBase, skill: Resource) -> Dictionary:
 	var power := 20.0  # Base healing power
@@ -222,11 +234,15 @@ func calculate_healing(healer: CharacterBase, target: CharacterBase, skill: Reso
 		"target_hp_after": mini(target.get_max_hp(), target.current_hp + final_healing)
 	}
 
+
 # =============================================================================
 # STATUS EFFECT CHANCE
 # =============================================================================
 
-func calculate_status_chance(applier: CharacterBase, target: CharacterBase, base_chance: float) -> float:
+
+func calculate_status_chance(
+	applier: CharacterBase, target: CharacterBase, base_chance: float
+) -> float:
 	# Magic stat increases status chance
 	var magic_bonus := applier.get_stat(Enums.Stat.MAGIC) * 0.002
 
@@ -240,11 +256,15 @@ func calculate_status_chance(applier: CharacterBase, target: CharacterBase, base
 	var final_chance := base_chance + magic_bonus + luck_mod - resistance_mod
 	return clampf(final_chance, 0.05, 0.95)
 
+
 # =============================================================================
 # DAMAGE PREVIEW
 # =============================================================================
 
-func preview_damage(attacker: CharacterBase, defender: CharacterBase, skill: Resource = null) -> Dictionary:
+
+func preview_damage(
+	attacker: CharacterBase, defender: CharacterBase, skill: Resource = null
+) -> Dictionary:
 	## Get estimated damage range without RNG
 	var power := 10.0
 	var scaling_stat := Enums.Stat.ATTACK
@@ -260,7 +280,7 @@ func preview_damage(attacker: CharacterBase, defender: CharacterBase, skill: Res
 
 	var attack := attacker.get_stat(scaling_stat)
 	var defense := defender.get_stat(defense_stat)
-	
+
 	# Match the BALANCED v2 formula from calculate_damage
 	var level_factor := 1.0 + (float(attacker.level - 1) * 0.02)
 	var base_dmg := power * 0.8
@@ -270,11 +290,11 @@ func preview_damage(attacker: CharacterBase, defender: CharacterBase, skill: Res
 	# Get brand effectiveness
 	var attacker_brand: Enums.Brand = attacker.brand if "brand" in attacker else Enums.Brand.NONE
 	var defender_brand: Enums.Brand = defender.brand if "brand" in defender else Enums.Brand.NONE
-	
+
 	if skill != null and skill is SkillData and "brand_type" in skill:
 		if skill.brand_type != Enums.Brand.NONE:
 			attacker_brand = skill.brand_type
-	
+
 	var brand_mod := get_brand_effectiveness(attacker_brand, defender_brand)
 
 	# Apply hit_count multiplier

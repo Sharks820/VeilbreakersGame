@@ -32,11 +32,13 @@ var _ambience_cache: Dictionary = {}  # Added: cache for ambience tracks
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	_setup_audio_buses()
 	_setup_audio_players()
 	_connect_signals()
 	EventBus.emit_debug("AudioManager initialized")
+
 
 func _setup_audio_buses() -> void:
 	# Ensure audio buses exist - they should be set up in project settings
@@ -47,6 +49,7 @@ func _setup_audio_buses() -> void:
 		EventBus.emit_warning("SFX audio bus not found")
 	if AudioServer.get_bus_index("Voice") == -1:
 		EventBus.emit_warning("Voice audio bus not found")
+
 
 func _setup_audio_players() -> void:
 	# Main music player
@@ -78,11 +81,13 @@ func _setup_audio_players() -> void:
 	_ambience_player.volume_db = -6.0  # Slightly quieter than music
 	add_child(_ambience_player)
 
+
 func _connect_signals() -> void:
 	EventBus.music_change_requested.connect(play_music)
 	EventBus.sfx_play_requested.connect(play_sfx)
 	EventBus.voice_play_requested.connect(play_voice)
 	EventBus.audio_settings_changed.connect(_on_audio_settings_changed)
+
 
 func _exit_tree() -> void:
 	# Disconnect EventBus signals to prevent memory leaks
@@ -98,9 +103,11 @@ func _exit_tree() -> void:
 	if _crossfade_tween:
 		_crossfade_tween.kill()
 
+
 # =============================================================================
 # MUSIC
 # =============================================================================
+
 
 func play_music(track_id: String, fade_duration: float = 1.0) -> void:
 	if track_id == current_music_track:
@@ -125,6 +132,7 @@ func play_music(track_id: String, fade_duration: float = 1.0) -> void:
 	current_music_track = track_id
 	EventBus.emit_debug("Playing music: %s" % track_id)
 
+
 func _crossfade_music(new_stream: AudioStream, duration: float) -> void:
 	if is_crossfading:
 		if _crossfade_tween:
@@ -144,6 +152,7 @@ func _crossfade_music(new_stream: AudioStream, duration: float) -> void:
 	_crossfade_tween.tween_property(_music_player_crossfade, "volume_db", 0.0, duration)
 	_crossfade_tween.chain().tween_callback(_finish_crossfade)
 
+
 func _finish_crossfade() -> void:
 	# Swap players
 	var temp := _music_player
@@ -156,6 +165,7 @@ func _finish_crossfade() -> void:
 
 	is_crossfading = false
 
+
 func stop_music(fade_duration: float = 1.0) -> void:
 	if fade_duration > 0 and _music_player.playing:
 		var tween := create_tween()
@@ -166,20 +176,27 @@ func stop_music(fade_duration: float = 1.0) -> void:
 
 	current_music_track = ""
 
+
 func pause_music() -> void:
 	_music_player.stream_paused = true
+
 
 func resume_music() -> void:
 	_music_player.stream_paused = false
 
+
 func is_music_playing() -> bool:
 	return _music_player.playing and not _music_player.stream_paused
+
 
 # =============================================================================
 # GENERIC AUDIO LOADER (eliminates duplicate file extension checking)
 # =============================================================================
 
-func _load_audio(audio_id: String, base_path: String, extensions: Array[String], cache: Dictionary) -> AudioStream:
+
+func _load_audio(
+	audio_id: String, base_path: String, extensions: Array[String], cache: Dictionary
+) -> AudioStream:
 	## Generic audio loader with caching and multi-extension support
 	## @param audio_id: The ID of the audio file (without extension)
 	## @param base_path: Base directory path (e.g., "res://assets/audio/music/")
@@ -199,7 +216,9 @@ func _load_audio(audio_id: String, base_path: String, extensions: Array[String],
 
 
 func _load_music(track_id: String) -> AudioStream:
-	return _load_audio(track_id, "res://assets/audio/music/", [".ogg", ".mp3", ".wav"], _music_cache)
+	return _load_audio(
+		track_id, "res://assets/audio/music/", [".ogg", ".mp3", ".wav"], _music_cache
+	)
 
 
 func _load_sfx(sfx_id: String) -> AudioStream:
@@ -211,12 +230,15 @@ func _load_voice(voice_id: String) -> AudioStream:
 
 
 func _load_ambience(track_id: String) -> AudioStream:
-	return _load_audio("ambience_" + track_id, "res://assets/audio/music/", [".ogg", ".wav"], _ambience_cache)
+	return _load_audio(
+		"ambience_" + track_id, "res://assets/audio/music/", [".ogg", ".wav"], _ambience_cache
+	)
 
 
 # =============================================================================
 # SOUND EFFECTS
 # =============================================================================
+
 
 func play_sfx(sfx_id: String, _position: Vector2 = Vector2.ZERO) -> void:
 	var stream := _load_sfx(sfx_id)
@@ -229,6 +251,7 @@ func play_sfx(sfx_id: String, _position: Vector2 = Vector2.ZERO) -> void:
 		player.stream = stream
 		player.play()
 
+
 func play_sfx_pitched(sfx_id: String, pitch_scale: float = 1.0) -> void:
 	var stream := _load_sfx(sfx_id)
 	if not stream:
@@ -240,6 +263,7 @@ func play_sfx_pitched(sfx_id: String, pitch_scale: float = 1.0) -> void:
 		player.pitch_scale = pitch_scale
 		player.play()
 
+
 func _get_available_sfx_player() -> AudioStreamPlayer:
 	for player in _sfx_pool:
 		if not player.playing:
@@ -250,9 +274,11 @@ func _get_available_sfx_player() -> AudioStreamPlayer:
 	_sfx_pool[0].pitch_scale = 1.0
 	return _sfx_pool[0]
 
+
 # =============================================================================
 # VOICE
 # =============================================================================
+
 
 func play_voice(voice_id: String) -> void:
 	var stream := _load_voice(voice_id)
@@ -263,15 +289,19 @@ func play_voice(voice_id: String) -> void:
 	_voice_player.stream = stream
 	_voice_player.play()
 
+
 func stop_voice() -> void:
 	_voice_player.stop()
+
 
 func is_voice_playing() -> bool:
 	return _voice_player.playing
 
+
 # =============================================================================
 # AMBIENCE
 # =============================================================================
+
 
 func play_ambience(track_id: String, fade_duration: float = 2.0) -> void:
 	if track_id == current_ambience_track:
@@ -295,6 +325,7 @@ func play_ambience(track_id: String, fade_duration: float = 2.0) -> void:
 
 	current_ambience_track = track_id
 
+
 func stop_ambience(fade_duration: float = 2.0) -> void:
 	if fade_duration > 0:
 		var tween := create_tween()
@@ -305,9 +336,11 @@ func stop_ambience(fade_duration: float = 2.0) -> void:
 
 	current_ambience_track = ""
 
+
 # =============================================================================
 # BUS CONTROL
 # =============================================================================
+
 
 func set_bus_volume(bus_name: String, linear_volume: float) -> void:
 	var bus_index := AudioServer.get_bus_index(bus_name)
@@ -318,12 +351,14 @@ func set_bus_volume(bus_name: String, linear_volume: float) -> void:
 	var db_volume := linear_to_db(clampf(linear_volume, 0.0, 1.0))
 	AudioServer.set_bus_volume_db(bus_index, db_volume)
 
+
 func get_bus_volume(bus_name: String) -> float:
 	var bus_index := AudioServer.get_bus_index(bus_name)
 	if bus_index == -1:
 		return 0.0
 
 	return db_to_linear(AudioServer.get_bus_volume_db(bus_index))
+
 
 func set_bus_muted(bus_name: String, muted: bool) -> void:
 	var bus_index := AudioServer.get_bus_index(bus_name)
@@ -332,15 +367,18 @@ func set_bus_muted(bus_name: String, muted: bool) -> void:
 
 	AudioServer.set_bus_mute(bus_index, muted)
 
+
 func is_bus_muted(bus_name: String) -> bool:
 	var bus_index := AudioServer.get_bus_index(bus_name)
 	if bus_index == -1:
 		return false
 	return AudioServer.is_bus_mute(bus_index)
 
+
 # =============================================================================
 # SIGNAL HANDLERS
 # =============================================================================
+
 
 func _on_audio_settings_changed() -> void:
 	# Reload volume settings from SettingsManager
@@ -349,17 +387,21 @@ func _on_audio_settings_changed() -> void:
 	set_bus_volume("SFX", SettingsManager.get_setting("audio/sfx_volume"))
 	set_bus_volume("Voice", SettingsManager.get_setting("audio/voice_volume"))
 
+
 # =============================================================================
 # UTILITY
 # =============================================================================
+
 
 func preload_music(track_ids: Array[String]) -> void:
 	for track_id in track_ids:
 		_load_music(track_id)
 
+
 func preload_sfx(sfx_ids: Array[String]) -> void:
 	for sfx_id in sfx_ids:
 		_load_sfx(sfx_id)
+
 
 func clear_cache() -> void:
 	_music_cache.clear()

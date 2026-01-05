@@ -7,7 +7,8 @@ extends Node
 # =============================================================================
 
 const EFFECT_DATA := {
-	Enums.StatusEffect.POISON: {
+	Enums.StatusEffect.POISON:
+	{
 		"name": "Poison",
 		"description": "Deals 5% max HP damage per turn",
 		"icon": "status_poison",
@@ -17,7 +18,8 @@ const EFFECT_DATA := {
 		"is_debuff": true,
 		"can_stack": true
 	},
-	Enums.StatusEffect.BURN: {
+	Enums.StatusEffect.BURN:
+	{
 		"name": "Burn",
 		"description": "Deals 8% max HP damage per turn",
 		"icon": "status_burn",
@@ -27,7 +29,8 @@ const EFFECT_DATA := {
 		"is_debuff": true,
 		"can_stack": false
 	},
-	Enums.StatusEffect.FREEZE: {
+	Enums.StatusEffect.FREEZE:
+	{
 		"name": "Freeze",
 		"description": "Cannot act for 1 turn",
 		"icon": "status_freeze",
@@ -37,7 +40,8 @@ const EFFECT_DATA := {
 		"is_debuff": true,
 		"can_stack": false
 	},
-	Enums.StatusEffect.PARALYSIS: {
+	Enums.StatusEffect.PARALYSIS:
+	{
 		"name": "Paralysis",
 		"description": "50% chance to be unable to act",
 		"icon": "status_paralysis",
@@ -47,7 +51,8 @@ const EFFECT_DATA := {
 		"is_debuff": true,
 		"can_stack": false
 	},
-	Enums.StatusEffect.SLEEP: {
+	Enums.StatusEffect.SLEEP:
+	{
 		"name": "Sleep",
 		"description": "Cannot act, wakes when damaged",
 		"icon": "status_sleep",
@@ -57,7 +62,8 @@ const EFFECT_DATA := {
 		"is_debuff": true,
 		"can_stack": false
 	},
-	Enums.StatusEffect.CONFUSION: {
+	Enums.StatusEffect.CONFUSION:
+	{
 		"name": "Confusion",
 		"description": "May attack allies",
 		"icon": "status_confusion",
@@ -67,7 +73,8 @@ const EFFECT_DATA := {
 		"is_debuff": true,
 		"can_stack": false
 	},
-	Enums.StatusEffect.BLIND: {
+	Enums.StatusEffect.BLIND:
+	{
 		"name": "Blind",
 		"description": "Greatly reduced accuracy",
 		"icon": "status_blind",
@@ -77,7 +84,8 @@ const EFFECT_DATA := {
 		"is_debuff": true,
 		"can_stack": false
 	},
-	Enums.StatusEffect.SILENCE: {
+	Enums.StatusEffect.SILENCE:
+	{
 		"name": "Silence",
 		"description": "Cannot use skills",
 		"icon": "status_silence",
@@ -87,7 +95,8 @@ const EFFECT_DATA := {
 		"is_debuff": true,
 		"can_stack": false
 	},
-	Enums.StatusEffect.BLEED: {
+	Enums.StatusEffect.BLEED:
+	{
 		"name": "Bleed",
 		"description": "Deals 3% max HP damage per turn",
 		"icon": "status_bleed",
@@ -97,7 +106,8 @@ const EFFECT_DATA := {
 		"is_debuff": true,
 		"can_stack": true
 	},
-	Enums.StatusEffect.REGEN: {
+	Enums.StatusEffect.REGEN:
+	{
 		"name": "Regeneration",
 		"description": "Heals 5% max HP per turn",
 		"icon": "status_regen",
@@ -107,7 +117,8 @@ const EFFECT_DATA := {
 		"is_debuff": false,
 		"can_stack": true
 	},
-	Enums.StatusEffect.SHIELD: {
+	Enums.StatusEffect.SHIELD:
+	{
 		"name": "Shield",
 		"description": "Absorbs damage",
 		"icon": "status_shield",
@@ -117,7 +128,8 @@ const EFFECT_DATA := {
 		"is_debuff": false,
 		"can_stack": false
 	},
-	Enums.StatusEffect.ATTACK_UP: {
+	Enums.StatusEffect.ATTACK_UP:
+	{
 		"name": "Attack Up",
 		"description": "Increased attack power by 25%",
 		"icon": "status_atk_up",
@@ -127,7 +139,8 @@ const EFFECT_DATA := {
 		"is_debuff": false,
 		"can_stack": false
 	},
-	Enums.StatusEffect.ATTACK_DOWN: {
+	Enums.StatusEffect.ATTACK_DOWN:
+	{
 		"name": "Attack Down",
 		"description": "Decreased attack power by 25%",
 		"icon": "status_atk_down",
@@ -137,7 +150,8 @@ const EFFECT_DATA := {
 		"is_debuff": true,
 		"can_stack": false
 	},
-	Enums.StatusEffect.DEFENSE_UP: {
+	Enums.StatusEffect.DEFENSE_UP:
+	{
 		"name": "Defense Up",
 		"description": "Increased defense by 25%",
 		"icon": "status_def_up",
@@ -147,7 +161,8 @@ const EFFECT_DATA := {
 		"is_debuff": false,
 		"can_stack": false
 	},
-	Enums.StatusEffect.DEFENSE_DOWN: {
+	Enums.StatusEffect.DEFENSE_DOWN:
+	{
 		"name": "Defense Down",
 		"description": "Decreased defense by 25%",
 		"icon": "status_def_down",
@@ -157,7 +172,8 @@ const EFFECT_DATA := {
 		"is_debuff": true,
 		"can_stack": false
 	},
-	Enums.StatusEffect.SPEED_UP: {
+	Enums.StatusEffect.SPEED_UP:
+	{
 		"name": "Speed Up",
 		"description": "Increased speed by 25%",
 		"icon": "status_spd_up",
@@ -167,7 +183,8 @@ const EFFECT_DATA := {
 		"is_debuff": false,
 		"can_stack": false
 	},
-	Enums.StatusEffect.SPEED_DOWN: {
+	Enums.StatusEffect.SPEED_DOWN:
+	{
 		"name": "Speed Down",
 		"description": "Decreased speed by 25%",
 		"icon": "status_spd_down",
@@ -177,7 +194,8 @@ const EFFECT_DATA := {
 		"is_debuff": true,
 		"can_stack": false
 	},
-	Enums.StatusEffect.CORRUPTED: {
+	Enums.StatusEffect.CORRUPTED:
+	{
 		"name": "Corrupted",
 		"description": "Veil corruption is spreading",
 		"icon": "status_corrupted",
@@ -187,7 +205,8 @@ const EFFECT_DATA := {
 		"is_debuff": true,
 		"can_stack": false
 	},
-	Enums.StatusEffect.PURIFYING: {
+	Enums.StatusEffect.PURIFYING:
+	{
 		"name": "Purifying",
 		"description": "Being cleansed of corruption",
 		"icon": "status_purifying",
@@ -203,7 +222,10 @@ const EFFECT_DATA := {
 # APPLICATION
 # =============================================================================
 
-func apply_effect(target: CharacterBase, effect: Enums.StatusEffect, duration: int = -1, source: Node = null) -> bool:
+
+func apply_effect(
+	target: CharacterBase, effect: Enums.StatusEffect, duration: int = -1, source: Node = null
+) -> bool:
 	if not EFFECT_DATA.has(effect):
 		return false
 
@@ -221,15 +243,17 @@ func apply_effect(target: CharacterBase, effect: Enums.StatusEffect, duration: i
 
 	return true
 
+
 func remove_effect(target: CharacterBase, effect: Enums.StatusEffect) -> void:
 	if target.has_status_effect(effect):
 		_remove_effect_modifiers(target, effect)
 		target.remove_status_effect(effect)
 
+
 func _check_immunity(target: CharacterBase, effect: Enums.StatusEffect) -> bool:
 	# v5.0 Brand-based immunities
 	var target_brand: Enums.Brand = target.brand if "brand" in target else Enums.Brand.NONE
-	
+
 	# SURGE brand resists electric/burn effects (lightning speed)
 	if effect == Enums.StatusEffect.BURN and target_brand == Enums.Brand.SURGE:
 		return true
@@ -245,21 +269,35 @@ func _check_immunity(target: CharacterBase, effect: Enums.StatusEffect) -> bool:
 
 	return false
 
+
 func _apply_effect_modifiers(target: CharacterBase, effect: Enums.StatusEffect) -> void:
 	var mult := Constants.STATUS_BUFF_DEBUFF_MULTIPLIER
 	match effect:
 		Enums.StatusEffect.ATTACK_UP:
-			target.add_stat_modifier(Enums.Stat.ATTACK, target.base_attack * mult, 999, "status_atk_up")
+			target.add_stat_modifier(
+				Enums.Stat.ATTACK, target.base_attack * mult, 999, "status_atk_up"
+			)
 		Enums.StatusEffect.ATTACK_DOWN:
-			target.add_stat_modifier(Enums.Stat.ATTACK, -target.base_attack * mult, 999, "status_atk_down")
+			target.add_stat_modifier(
+				Enums.Stat.ATTACK, -target.base_attack * mult, 999, "status_atk_down"
+			)
 		Enums.StatusEffect.DEFENSE_UP:
-			target.add_stat_modifier(Enums.Stat.DEFENSE, target.base_defense * mult, 999, "status_def_up")
+			target.add_stat_modifier(
+				Enums.Stat.DEFENSE, target.base_defense * mult, 999, "status_def_up"
+			)
 		Enums.StatusEffect.DEFENSE_DOWN:
-			target.add_stat_modifier(Enums.Stat.DEFENSE, -target.base_defense * mult, 999, "status_def_down")
+			target.add_stat_modifier(
+				Enums.Stat.DEFENSE, -target.base_defense * mult, 999, "status_def_down"
+			)
 		Enums.StatusEffect.SPEED_UP:
-			target.add_stat_modifier(Enums.Stat.SPEED, target.base_speed * mult, 999, "status_spd_up")
+			target.add_stat_modifier(
+				Enums.Stat.SPEED, target.base_speed * mult, 999, "status_spd_up"
+			)
 		Enums.StatusEffect.SPEED_DOWN:
-			target.add_stat_modifier(Enums.Stat.SPEED, -target.base_speed * mult, 999, "status_spd_down")
+			target.add_stat_modifier(
+				Enums.Stat.SPEED, -target.base_speed * mult, 999, "status_spd_down"
+			)
+
 
 func _remove_effect_modifiers(target: CharacterBase, effect: Enums.StatusEffect) -> void:
 	# Clear modifiers with matching source
@@ -282,9 +320,11 @@ func _remove_effect_modifiers(target: CharacterBase, effect: Enums.StatusEffect)
 	if source_name != "":
 		target.remove_stat_modifiers_by_source(source_name)
 
+
 # =============================================================================
 # CLEANSING
 # =============================================================================
+
 
 func cleanse_debuffs(target: CharacterBase, count: int = -1) -> int:
 	## Remove debuffs from target. Returns number of debuffs removed.
@@ -303,6 +343,7 @@ func cleanse_debuffs(target: CharacterBase, count: int = -1) -> int:
 
 	return removed
 
+
 func dispel_buffs(target: CharacterBase, count: int = -1) -> int:
 	## Remove buffs from target. Returns number of buffs removed.
 	var removed := 0
@@ -320,34 +361,41 @@ func dispel_buffs(target: CharacterBase, count: int = -1) -> int:
 
 	return removed
 
+
 # =============================================================================
 # QUERIES
 # =============================================================================
+
 
 func get_effect_name(effect: Enums.StatusEffect) -> String:
 	if EFFECT_DATA.has(effect):
 		return EFFECT_DATA[effect].name
 	return "Unknown"
 
+
 func get_effect_description(effect: Enums.StatusEffect) -> String:
 	if EFFECT_DATA.has(effect):
 		return EFFECT_DATA[effect].description
 	return ""
+
 
 func get_effect_color(effect: Enums.StatusEffect) -> Color:
 	if EFFECT_DATA.has(effect):
 		return EFFECT_DATA[effect].color
 	return Color.WHITE
 
+
 func get_effect_icon(effect: Enums.StatusEffect) -> String:
 	if EFFECT_DATA.has(effect):
 		return EFFECT_DATA[effect].icon
 	return ""
 
+
 func is_debuff(effect: Enums.StatusEffect) -> bool:
 	if EFFECT_DATA.has(effect):
 		return EFFECT_DATA[effect].is_debuff
 	return false
+
 
 func get_active_debuffs(target: CharacterBase) -> Array[Enums.StatusEffect]:
 	var debuffs: Array[Enums.StatusEffect] = []
@@ -355,6 +403,7 @@ func get_active_debuffs(target: CharacterBase) -> Array[Enums.StatusEffect]:
 		if is_debuff(effect):
 			debuffs.append(effect)
 	return debuffs
+
 
 func get_active_buffs(target: CharacterBase) -> Array[Enums.StatusEffect]:
 	var buffs: Array[Enums.StatusEffect] = []

@@ -10,9 +10,9 @@ signal minigame_started(monster: Monster)
 signal minigame_progress(progress: float)
 signal minigame_success(monster: Monster)
 signal minigame_failure(monster: Monster)
-signal minigame_cancelled()
-signal input_success()
-signal input_failure()
+signal minigame_cancelled
+signal input_success
+signal input_failure
 
 # =============================================================================
 # STATE
@@ -45,8 +45,10 @@ var last_beat_time: float = 0.0
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	EventBus.emit_debug("PurificationMinigame initialized")
+
 
 func _process(delta: float) -> void:
 	if not is_active:
@@ -64,9 +66,11 @@ func _process(delta: float) -> void:
 
 	minigame_progress.emit(purification_progress)
 
+
 # =============================================================================
 # MAIN INTERFACE
 # =============================================================================
+
 
 func start_purification(target: Monster) -> void:
 	if is_active:
@@ -93,6 +97,7 @@ func start_purification(target: Monster) -> void:
 	minigame_started.emit(target)
 	EventBus.emit_debug("Purification minigame started for: %s" % target.character_name)
 
+
 func cancel_purification() -> void:
 	if not is_active:
 		return
@@ -102,6 +107,7 @@ func cancel_purification() -> void:
 	beat_sequence.clear()
 	minigame_cancelled.emit()
 	EventBus.emit_debug("Purification cancelled")
+
 
 func _generate_beat_sequence() -> void:
 	beat_sequence.clear()
@@ -113,9 +119,11 @@ func _generate_beat_sequence() -> void:
 
 	current_beat_index = 0
 
+
 # =============================================================================
 # MINIGAME INPUTS
 # =============================================================================
+
 
 func register_input_success(timing_quality: float = 1.0) -> void:
 	"""Called when player successfully completes a minigame action.
@@ -140,6 +148,7 @@ func register_input_success(timing_quality: float = 1.0) -> void:
 	if purification_progress >= 100.0:
 		_on_success()
 
+
 func register_input_failure() -> void:
 	"""Called when player fails a minigame action"""
 	if not is_active:
@@ -153,6 +162,7 @@ func register_input_failure() -> void:
 
 	if current_attempts >= MAX_ATTEMPTS:
 		_on_failure()
+
 
 func check_beat_timing() -> Dictionary:
 	"""Check if player input is within timing window of current beat.
@@ -182,9 +192,11 @@ func check_beat_timing() -> Dictionary:
 
 	return {"hit": false, "quality": 0.0, "early": true, "late": false}
 
+
 # =============================================================================
 # RESULTS
 # =============================================================================
+
 
 func _on_success() -> void:
 	is_active = false
@@ -210,6 +222,7 @@ func _on_success() -> void:
 	current_target = null
 	beat_sequence.clear()
 
+
 func _on_failure() -> void:
 	is_active = false
 
@@ -227,9 +240,11 @@ func _on_failure() -> void:
 	current_target = null
 	beat_sequence.clear()
 
+
 # =============================================================================
 # QUERIES
 # =============================================================================
+
 
 func get_purification_difficulty(monster: Monster) -> String:
 	var resistance := monster.corruption_level / 100.0
@@ -242,6 +257,7 @@ func get_purification_difficulty(monster: Monster) -> String:
 		return "Hard"
 	else:
 		return "Very Hard"
+
 
 func get_difficulty_color(monster: Monster) -> Color:
 	var difficulty := get_purification_difficulty(monster)
@@ -256,22 +272,28 @@ func get_difficulty_color(monster: Monster) -> Color:
 			return Color.RED
 	return Color.WHITE
 
+
 func get_current_progress() -> float:
 	return purification_progress
+
 
 func get_time_remaining() -> float:
 	return time_remaining
 
+
 func get_time_percent() -> float:
 	return time_remaining / TIME_LIMIT
 
+
 func get_combo() -> int:
 	return combo_count
+
 
 func get_next_beat_time() -> float:
 	if current_beat_index >= beat_sequence.size():
 		return -1.0
 	return beat_sequence[current_beat_index]
+
 
 func get_attempts_remaining() -> int:
 	return MAX_ATTEMPTS - current_attempts

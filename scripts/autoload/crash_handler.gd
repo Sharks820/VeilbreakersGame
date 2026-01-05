@@ -11,7 +11,7 @@ var _crash_count: int = 0
 var _max_crashes_before_safe_mode: int = 3
 
 signal recovery_save_created(slot: int)
-signal safe_mode_activated()
+signal safe_mode_activated
 signal crash_recovered(error: String)
 
 
@@ -39,6 +39,7 @@ func _connect_error_logger() -> void:
 		if not ErrorLogger.crash_detected.is_connected(_on_crash_detected):
 			ErrorLogger.crash_detected.connect(_on_crash_detected)
 
+
 func _exit_tree() -> void:
 	# Disconnect ErrorLogger signals to prevent memory leaks
 	if has_node("/root/ErrorLogger"):
@@ -59,6 +60,7 @@ func _notification(what: int) -> void:
 # =============================================================================
 # PUBLIC API
 # =============================================================================
+
 
 func safe_call(callable: Callable, _error_context: String = "Unknown") -> Variant:
 	## Wraps a function call in error handling
@@ -92,6 +94,7 @@ func reset_crash_count() -> void:
 # =============================================================================
 # CRASH DETECTION & RECOVERY
 # =============================================================================
+
 
 func _on_crash_detected(error: String) -> void:
 	_crash_count += 1
@@ -136,8 +139,10 @@ func _activate_safe_mode() -> void:
 	# Notify user
 	if not OS.is_debug_build():
 		OS.alert(
-			"VEILBREAKERS has encountered multiple errors and is running in safe mode.\n\n" +
-			"Some features may be disabled. Please report this issue.",
+			(
+				"VEILBREAKERS has encountered multiple errors and is running in safe mode.\n\n"
+				+ "Some features may be disabled. Please report this issue."
+			),
 			"Safe Mode Activated"
 		)
 

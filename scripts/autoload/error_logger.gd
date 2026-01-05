@@ -24,8 +24,8 @@ func _init() -> void:
 	# Run window setup as early as possible (before _ready)
 	call_deferred("_setup_window_size")
 
-func _ready() -> void:
 
+func _ready() -> void:
 	_session_id = _generate_session_id()
 	_ensure_log_directory()
 	_cleanup_old_logs()
@@ -37,6 +37,7 @@ func _ready() -> void:
 	# Connect to Godot's error output
 	if OS.is_debug_build():
 		push_warning("[ErrorLogger] Running in debug mode - verbose logging enabled")
+
 
 func _setup_window_size() -> void:
 	"""Configure window to fit screen with taskbar - runs FIRST"""
@@ -68,13 +69,18 @@ func _setup_window_size() -> void:
 	DisplayServer.window_set_position(Vector2i(center_x, center_y))
 	print("[Window] Sized to %dx%d at (%d, %d)" % [target_width, target_height, center_x, center_y])
 
+
 func _log_session_start() -> void:
 	_log("INFO", "=== SESSION START ===")
 	_log("INFO", "Session ID: %s" % _session_id)
-	_log("INFO", "Game Version: %s" % ProjectSettings.get_setting("application/config/version", "0.0.0"))
+	_log(
+		"INFO",
+		"Game Version: %s" % ProjectSettings.get_setting("application/config/version", "0.0.0")
+	)
 	_log("INFO", "Platform: %s" % OS.get_name())
 	_log("INFO", "Godot Version: %s" % Engine.get_version_info().string)
 	_log("INFO", "========================")
+
 
 func _exit_tree() -> void:
 	_log("INFO", "=== SESSION END ===")
@@ -85,6 +91,7 @@ func _exit_tree() -> void:
 # =============================================================================
 # PUBLIC API
 # =============================================================================
+
 
 func log_info(message: String, context: String = "") -> void:
 	_log("INFO", message, context)
@@ -119,7 +126,9 @@ func log_critical(message: String, context: String = "") -> void:
 	crash_detected.emit(message)
 
 	# Always show critical errors
-	_show_error_popup("A critical error occurred. The game will try to continue.\n\nError: " + message)
+	_show_error_popup(
+		"A critical error occurred. The game will try to continue.\n\nError: " + message
+	)
 
 
 func log_exception(message: String, stack_trace: String = "") -> void:
@@ -145,6 +154,7 @@ func log_save_event(event_type: String, slot: int, success: bool) -> void:
 # =============================================================================
 # LOG FILE MANAGEMENT
 # =============================================================================
+
 
 func get_log_path() -> String:
 	return _log_path
@@ -191,6 +201,7 @@ func export_logs_for_report() -> String:
 # =============================================================================
 # INTERNAL METHODS
 # =============================================================================
+
 
 func _log(level: String, message: String, context: String = "") -> void:
 	var timestamp := Time.get_datetime_string_from_system()
@@ -268,6 +279,7 @@ func _show_error_popup(message: String) -> void:
 
 var _perf_timers: Dictionary = {}
 
+
 func perf_start(label: String) -> void:
 	_perf_timers[label] = Time.get_ticks_usec()
 
@@ -285,6 +297,7 @@ func perf_end(label: String) -> float:
 # =============================================================================
 # SYSTEM INFO (for bug reports)
 # =============================================================================
+
 
 func get_system_info() -> Dictionary:
 	return {

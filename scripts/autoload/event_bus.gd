@@ -7,10 +7,10 @@ extends Node
 # =============================================================================
 
 signal game_state_changed(old_state: int, new_state: int)
-signal game_started()
-signal game_paused()
-signal game_resumed()
-signal game_over()
+signal game_started
+signal game_paused
+signal game_resumed
+signal game_over
 
 # =============================================================================
 # BATTLE SIGNALS
@@ -44,7 +44,7 @@ signal purification_succeeded(monster: Node)
 signal purification_failed(monster: Node)
 signal monster_recruited(monster: Node)
 signal monster_captured(monster_id: String, monster_name: String)
-signal battle_retry_requested()
+signal battle_retry_requested
 
 # =============================================================================
 # VERA SIGNALS
@@ -122,7 +122,7 @@ signal currency_changed(old_amount: int, new_amount: int)
 signal dialogue_started(dialogue_id: String)
 signal dialogue_line_shown(speaker: String, text: String)
 signal dialogue_choice_made(choice_index: int)
-signal dialogue_ended()
+signal dialogue_ended
 signal quest_started(quest_id: String)
 signal quest_objective_updated(quest_id: String, objective_index: int)
 signal quest_completed(quest_id: String)
@@ -138,7 +138,7 @@ signal menu_opened(menu_type: int)
 signal menu_closed(menu_type: int)
 signal notification_requested(message: String, type: String)
 signal tooltip_requested(text: String, position: Vector2)
-signal tooltip_hidden()
+signal tooltip_hidden
 
 # =============================================================================
 # SETTINGS SIGNALS
@@ -154,7 +154,7 @@ signal save_requested(slot: int)
 signal save_completed(slot: int, success: bool)
 signal load_requested(slot: int)
 signal load_completed(slot: int, success: bool)
-signal autosave_triggered()
+signal autosave_triggered
 
 # =============================================================================
 # AUDIO SIGNALS
@@ -163,7 +163,7 @@ signal autosave_triggered()
 signal music_change_requested(track_id: String, fade_duration: float)
 signal sfx_play_requested(sfx_id: String, position: Vector2)
 signal voice_play_requested(voice_id: String)
-signal audio_settings_changed()
+signal audio_settings_changed
 
 # =============================================================================
 # DEBUG SIGNALS
@@ -176,18 +176,22 @@ signal debug_log(message: String, level: int)
 # HELPER METHODS
 # =============================================================================
 
+
 func emit_notification(message: String, type: String = "info") -> void:
 	notification_requested.emit(message, type)
+
 
 func emit_debug(message: String, level: int = 0) -> void:
 	if OS.is_debug_build():
 		debug_log.emit(message, level)
 		print("[DEBUG] ", message)
 
+
 func emit_warning(message: String) -> void:
 	if OS.is_debug_build():
 		debug_log.emit(message, 1)
 		push_warning("[WARN] " + message)
+
 
 func emit_error(message: String) -> void:
 	# Always emit signal in debug builds, always push_error in all builds

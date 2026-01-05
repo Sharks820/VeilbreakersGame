@@ -51,12 +51,15 @@ signal target_highlight_changed(target: CharacterBase)
 @onready var victory_screen: ColorRect = $VictoryScreen
 @onready var exp_label: Label = $VictoryScreen/VictoryPanel/VBoxContainer/RewardsContainer/EXPLabel
 @onready var gold_label: Label = $VictoryScreen/VictoryPanel/VBoxContainer/RewardsContainer/GoldLabel
-@onready var items_label: Label = $VictoryScreen/VictoryPanel/VBoxContainer/RewardsContainer/ItemsLabel
+@onready
+var items_label: Label = $VictoryScreen/VictoryPanel/VBoxContainer/RewardsContainer/ItemsLabel
 @onready var continue_button: Button = $VictoryScreen/VictoryPanel/VBoxContainer/ContinueButton
 
 @onready var defeat_screen: ColorRect = $DefeatScreen
-@onready var retry_button: Button = $DefeatScreen/DefeatPanel/VBoxContainer/ButtonsContainer/RetryButton
-@onready var title_button: Button = $DefeatScreen/DefeatPanel/VBoxContainer/ButtonsContainer/TitleButton
+@onready
+var retry_button: Button = $DefeatScreen/DefeatPanel/VBoxContainer/ButtonsContainer/RetryButton
+@onready
+var title_button: Button = $DefeatScreen/DefeatPanel/VBoxContainer/ButtonsContainer/TitleButton
 
 # =============================================================================
 # STATE
@@ -105,11 +108,12 @@ var _battle_level_ups: Dictionary = {}  # CharacterBase -> {old_level, new_level
 # INITIALIZATION
 # =============================================================================
 
+
 func _ready() -> void:
 	_connect_signals()
 	_hide_all_menus()
 	_style_action_buttons()
-	
+
 	# Ensure we receive input events for mouse tracking
 	set_process_input(true)
 	mouse_filter = Control.MOUSE_FILTER_PASS  # Pass events through but still receive them
@@ -135,13 +139,15 @@ func _ready() -> void:
 		var scrollbar := combat_log_scroll.get_v_scroll_bar()
 		if scrollbar:
 			scrollbar.value_changed.connect(_on_combat_log_scrolled)
-	
+
 	# Connect capture system signals for animated corruption bar
 	_connect_capture_signals()
+
 
 func _on_viewport_size_changed() -> void:
 	"""Called when viewport size changes (windowed mode resize) - reposition all UI elements"""
 	_force_ui_layout()
+
 
 func _force_ui_layout() -> void:
 	"""Force UI elements to correct positions for CanvasLayer rendering - RESPONSIVE"""
@@ -181,7 +187,12 @@ func _force_ui_layout() -> void:
 		party_panel.add_theme_stylebox_override("panel", transparent_style)
 		party_panel.show()
 		party_panel.visible = true
-		print("[BATTLE_UI] PartyPanel positioned: size=%s, visible=%s" % [party_panel.size, party_panel.visible])
+		print(
+			(
+				"[BATTLE_UI] PartyPanel positioned: size=%s, visible=%s"
+				% [party_panel.size, party_panel.visible]
+			)
+		)
 
 		# Hide the party status container from main panel
 		if party_status_container:
@@ -219,6 +230,7 @@ func _force_ui_layout() -> void:
 	# Create left party sidebar if not exists
 	_create_left_party_sidebar(viewport_size)
 
+
 func set_battle_manager(manager: BattleManager) -> void:
 	battle_manager = manager
 	print("[BATTLE_UI] set_battle_manager called - manager: %s" % str(manager))
@@ -244,11 +256,17 @@ func set_battle_manager(manager: BattleManager) -> void:
 	# Clear combat log for new battle
 	clear_combat_log()
 
+
 func _on_action_started(character: CharacterBase, action: int) -> void:
-	print("[COMBAT_LOG] _on_action_started called - character: %s, action: %d" % [character.character_name, action])
+	print(
+		(
+			"[COMBAT_LOG] _on_action_started called - character: %s, action: %d"
+			% [character.character_name, action]
+		)
+	)
 	var action_name := ""
 	var skill_name := ""
-	
+
 	match action:
 		Enums.BattleAction.ATTACK:
 			action_name = "Attack"
@@ -272,20 +290,31 @@ func _on_action_started(character: CharacterBase, action: int) -> void:
 	print("[COMBAT_LOG] Logging action: %s uses %s" % [character.character_name, action_name])
 	log_action(character.character_name, action_name)
 
+
 func _on_action_executed(character: CharacterBase, action: int, result: Dictionary) -> void:
 	# NOTE: Action name is already logged by _on_action_started() - only log results here
-	print("[COMBAT_LOG] _on_action_executed called - character: %s, action: %d, result: %s" % [character.character_name, action, result])
-	
+	print(
+		(
+			"[COMBAT_LOG] _on_action_executed called - character: %s, action: %d, result: %s"
+			% [character.character_name, action, result]
+		)
+	)
+
 	var attacker_name: String = result.get("attacker_name", character.character_name)
 	var target_name: String = result.get("target_name", "target")
-	
+
 	# Log the result (damage, miss, heal, etc.)
 	if result.has("is_miss") and result.is_miss:
 		print("[COMBAT_LOG] Logging MISS: %s -> %s" % [attacker_name, target_name])
 		log_miss(attacker_name, target_name)
 	elif result.has("damage") and result.damage > 0:
 		var is_crit: bool = result.get("is_critical", false)
-		print("[COMBAT_LOG] Logging DAMAGE: %s took %d damage (crit: %s)" % [target_name, result.damage, is_crit])
+		print(
+			(
+				"[COMBAT_LOG] Logging DAMAGE: %s took %d damage (crit: %s)"
+				% [target_name, result.damage, is_crit]
+			)
+		)
 		log_damage(target_name, result.damage, is_crit)
 	elif result.has("heal") and result.heal > 0:
 		print("[COMBAT_LOG] Logging HEAL: %s healed %d" % [target_name, result.heal])
@@ -293,21 +322,34 @@ func _on_action_executed(character: CharacterBase, action: int, result: Dictiona
 	else:
 		print("[COMBAT_LOG] No loggable result - keys: %s" % result.keys())
 
-func _on_action_selected(action: Enums.BattleAction, target: CharacterBase, skill_id: String) -> void:
+
+func _on_action_selected(
+	action: Enums.BattleAction, target: CharacterBase, skill_id: String
+) -> void:
 	if battle_manager:
 		battle_manager.submit_player_action(action, target, skill_id)
 
+
 func _on_waiting_for_input(character: CharacterBase) -> void:
-	print("[BATTLE_UI] _on_waiting_for_input - character: %s, is_protagonist: %s" % [character.character_name, character.is_protagonist])
+	print(
+		(
+			"[BATTLE_UI] _on_waiting_for_input - character: %s, is_protagonist: %s"
+			% [character.character_name, character.is_protagonist]
+		)
+	)
 	start_turn(character)
+
 
 func _on_round_started(round_number: int) -> void:
 	print("[BATTLE_UI] _on_round_started - round: %d" % round_number)
 	update_round_display(round_number)
 	log_round_start(round_number)
 	if battle_manager:
-		print("[BATTLE_UI] Updating turn order with %d characters" % battle_manager.turn_order.size())
+		print(
+			"[BATTLE_UI] Updating turn order with %d characters" % battle_manager.turn_order.size()
+		)
 		update_turn_order(battle_manager.turn_order)
+
 
 func _on_turn_started_update_order(character: CharacterBase) -> void:
 	"""Update turn order display when a new character's turn starts"""
@@ -316,23 +358,24 @@ func _on_turn_started_update_order(character: CharacterBase) -> void:
 	# Rebuild turn order starting from the current character
 	var current_order: Array[CharacterBase] = []
 	var found_current := false
-	
+
 	# First pass: add characters from current onwards
 	for c in battle_manager.turn_order:
 		if c == character:
 			found_current = true
 		if found_current and c.is_alive():
 			current_order.append(c)
-	
+
 	# Second pass: add remaining characters (wrapped around for next round preview)
 	for c in battle_manager.turn_order:
 		if c == character:
 			break
 		if c.is_alive():
 			current_order.append(c)
-	
+
 	if not current_order.is_empty():
 		update_turn_order(current_order)
+
 
 func _on_victory(rewards: Dictionary) -> void:
 	# Pass the full rewards dictionary to show_victory for enhanced display
@@ -343,8 +386,10 @@ func _on_victory(rewards: Dictionary) -> void:
 	}
 	show_victory(victory_data)
 
+
 func _on_defeat() -> void:
 	show_defeat()
+
 
 func _connect_signals() -> void:
 	attack_button.pressed.connect(_on_attack_pressed)
@@ -355,7 +400,9 @@ func _connect_signals() -> void:
 	flee_button.pressed.connect(_on_flee_pressed)
 
 	# Connect hover effects for action buttons
-	for button in [attack_button, skill_button, purify_button, item_button, defend_button, flee_button]:
+	for button in [
+		attack_button, skill_button, purify_button, item_button, defend_button, flee_button
+	]:
 		button.mouse_entered.connect(_on_action_button_hover.bind(button))
 		button.mouse_exited.connect(_on_action_button_unhover.bind(button))
 		button.focus_entered.connect(_on_action_button_hover.bind(button))
@@ -371,15 +418,16 @@ func _connect_signals() -> void:
 	# Status effect signals for icon updates
 	EventBus.status_effect_applied.connect(_on_status_effect_changed)
 	EventBus.status_effect_removed.connect(_on_status_effect_changed)
-	
+
 	# Character sprite hover signals (from battle arena)
 	EventBus.character_hovered.connect(_on_character_sprite_hovered)
 	EventBus.character_unhovered.connect(_on_character_sprite_unhovered)
 	EventBus.target_selected.connect(_on_target_selected_from_sprite)
-	
+
 	# Level up tracking for victory screen stat display
 	EventBus.level_up.connect(_on_character_level_up)
 	EventBus.battle_started.connect(_on_battle_started_clear_level_ups)
+
 
 func _hide_all_menus() -> void:
 	skill_menu.hide()
@@ -389,9 +437,11 @@ func _hide_all_menus() -> void:
 	victory_screen.hide()
 	defeat_screen.hide()
 
+
 # =============================================================================
 # INPUT
 # =============================================================================
+
 
 func _input(event: InputEvent) -> void:
 	# Handle cancel/escape for various states
@@ -407,9 +457,13 @@ func _input(event: InputEvent) -> void:
 				_on_item_back_pressed()
 				get_viewport().set_input_as_handled()
 		return
-	
+
 	# Handle right-click as cancel during target selection
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+	if (
+		event is InputEventMouseButton
+		and event.pressed
+		and event.button_index == MOUSE_BUTTON_RIGHT
+	):
 		match current_state:
 			UIState.TARGET_SELECT:
 				_cancel_target_selection()
@@ -421,7 +475,7 @@ func _input(event: InputEvent) -> void:
 				_on_item_back_pressed()
 				get_viewport().set_input_as_handled()
 		return
-	
+
 	# Handle target selection with arrow keys - MUST consume input to prevent focus stealing
 	if current_state == UIState.TARGET_SELECT:
 		if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_up"):
@@ -434,41 +488,45 @@ func _input(event: InputEvent) -> void:
 			_confirm_target()
 			get_viewport().set_input_as_handled()
 
+
 func register_sprite_hitbox(character: CharacterBase, hitbox: Rect2) -> void:
 	"""Register a character's sprite hitbox for mouse detection (called from BattleArena)"""
 	_sprite_hitboxes[character] = hitbox
+
 
 func clear_sprite_hitboxes() -> void:
 	"""Clear all sprite hitboxes"""
 	_sprite_hitboxes.clear()
 	_hovered_sprite_character = null
 
+
 func _check_sprite_hover_at(mouse_pos: Vector2) -> void:
 	"""Check if mouse is over any character sprite hitbox (called from BattleArena)"""
 	var hovered: CharacterBase = null
-	
+
 	for character in _sprite_hitboxes:
 		var hitbox: Rect2 = _sprite_hitboxes[character]
 		if hitbox.has_point(mouse_pos):
 			hovered = character
 			break
-	
+
 	# Handle hover state change
 	if hovered != _hovered_sprite_character:
 		# Unhover previous
 		if _hovered_sprite_character:
 			_on_character_sprite_unhovered(_hovered_sprite_character)
-		
+
 		# Hover new
 		_hovered_sprite_character = hovered
 		if _hovered_sprite_character:
 			_on_character_sprite_hovered(_hovered_sprite_character)
 
+
 func _check_sprite_click_at(mouse_pos: Vector2) -> void:
 	"""Check if mouse clicked on a character sprite"""
 	if current_state != UIState.TARGET_SELECT:
 		return
-	
+
 	for character in _sprite_hitboxes:
 		var hitbox: Rect2 = _sprite_hitboxes[character]
 		if hitbox.has_point(mouse_pos):
@@ -481,12 +539,19 @@ func _check_sprite_click_at(mouse_pos: Vector2) -> void:
 					_confirm_target()
 			break
 
+
 # =============================================================================
 # BATTLE FLOW
 # =============================================================================
 
+
 func setup_battle(player_party: Array, enemy_party: Array) -> void:
-	print("[BATTLE_UI] setup_battle called with %d players, %d enemies" % [player_party.size(), enemy_party.size()])
+	print(
+		(
+			"[BATTLE_UI] setup_battle called with %d players, %d enemies"
+			% [player_party.size(), enemy_party.size()]
+		)
+	)
 	# Assign to typed arrays
 	party_members.clear()
 	for p in player_party:
@@ -519,9 +584,15 @@ func setup_battle(player_party: Array, enemy_party: Array) -> void:
 		party_status_container.custom_minimum_size = Vector2.ZERO
 		party_status_container.size = Vector2.ZERO
 
+
 func start_turn(character: CharacterBase) -> void:
 	current_character = character
-	print("[BATTLE_UI] start_turn called for: %s, is_protagonist: %s" % [character.character_name, character.is_protagonist])
+	print(
+		(
+			"[BATTLE_UI] start_turn called for: %s, is_protagonist: %s"
+			% [character.character_name, character.is_protagonist]
+		)
+	)
 
 	# Log turn start
 	var is_ally := character.is_protagonist or character in party_members
@@ -531,7 +602,7 @@ func start_turn(character: CharacterBase) -> void:
 	# - Protagonist: always player controlled
 	# - Party monsters: player controlled unless high corruption
 	var is_player_controlled := character.is_protagonist
-	
+
 	if not is_player_controlled and character in party_members:
 		# Check if monster has high corruption (auto-attacks on its own)
 		if character is Monster:
@@ -551,16 +622,24 @@ func start_turn(character: CharacterBase) -> void:
 		print("[BATTLE_UI] Character is AI-controlled (high corruption) - setting ANIMATING state")
 		set_ui_state(UIState.ANIMATING)
 
+
 func show_action_menu() -> void:
 	print("[BATTLE_UI] show_action_menu called")
 	set_ui_state(UIState.ACTION_SELECT)
 	action_menu.show()
-	print("[BATTLE_UI] action_menu.visible = %s, party_panel.visible = %s" % [action_menu.visible, party_panel.visible if party_panel else "null"])
+	print(
+		(
+			"[BATTLE_UI] action_menu.visible = %s, party_panel.visible = %s"
+			% [action_menu.visible, party_panel.visible if party_panel else "null"]
+		)
+	)
 	_update_action_buttons()
 	attack_button.grab_focus()
 
+
 func hide_action_menu() -> void:
 	action_menu.hide()
+
 
 func set_ui_state(state: UIState) -> void:
 	var previous_state := current_state
@@ -590,6 +669,7 @@ func set_ui_state(state: UIState) -> void:
 			# Clear all highlights when action is submitted
 			_clear_all_sidebar_highlights()
 			target_highlight_changed.emit(null)
+
 
 func _update_action_buttons() -> void:
 	if current_character == null:
@@ -632,15 +712,18 @@ func _update_action_buttons() -> void:
 		flee_button.visible = false
 		flee_button.disabled = true
 
+
 func _is_boss_battle() -> bool:
 	for enemy in enemies:
 		if enemy is Monster and enemy.is_boss():
 			return true
 	return false
 
+
 # =============================================================================
 # ACTION BUTTON HANDLERS
 # =============================================================================
+
 
 func _on_attack_pressed() -> void:
 	_reset_combat_log_scroll()  # Resume auto-scroll on user interaction
@@ -648,9 +731,11 @@ func _on_attack_pressed() -> void:
 	pending_skill = ""
 	_start_target_selection(false)  # Target enemies
 
+
 func _on_skill_pressed() -> void:
 	_reset_combat_log_scroll()
 	_show_skill_menu()
+
 
 func _on_purify_pressed() -> void:
 	_reset_combat_log_scroll()
@@ -658,9 +743,11 @@ func _on_purify_pressed() -> void:
 	pending_skill = ""
 	_start_target_selection(false, true)  # Target enemies (purifiable only)
 
+
 func _on_item_pressed() -> void:
 	_reset_combat_log_scroll()
 	_show_item_menu()
+
 
 func _on_defend_pressed() -> void:
 	_reset_combat_log_scroll()
@@ -670,6 +757,7 @@ func _on_defend_pressed() -> void:
 	# Start ally target selection (includes self)
 	_start_target_selection(true)  # true = target allies (BLUE highlighting)
 
+
 func _on_flee_pressed() -> void:
 	_reset_combat_log_scroll()
 	pending_action = Enums.BattleAction.FLEE
@@ -677,28 +765,36 @@ func _on_flee_pressed() -> void:
 	action_selected.emit(pending_action, null, "")
 	set_ui_state(UIState.ANIMATING)
 
+
 # =============================================================================
 # BUTTON STYLING
 # =============================================================================
 
+
 func _style_action_buttons() -> void:
 	"""Apply polished AAA styling to action buttons with icons"""
 	var button_data := {
-		attack_button: {"icon": "res://assets/ui/icons/actions/attack.png", "color": Color(0.9, 0.3, 0.3)},
-		skill_button: {"icon": "res://assets/ui/icons/actions/skill.png", "color": Color(0.3, 0.5, 0.9)},
-		purify_button: {"icon": "res://assets/ui/icons/actions/special.png", "color": Color(0.8, 0.6, 0.9)},
-		item_button: {"icon": "res://assets/ui/icons/actions/item.png", "color": Color(0.3, 0.8, 0.4)},
-		defend_button: {"icon": "res://assets/ui/icons/actions/defend.png", "color": Color(0.6, 0.6, 0.7)},
-		flee_button: {"icon": "res://assets/ui/icons/actions/flee.png", "color": Color(0.8, 0.7, 0.3)}
+		attack_button:
+		{"icon": "res://assets/ui/icons/actions/attack.png", "color": Color(0.9, 0.3, 0.3)},
+		skill_button:
+		{"icon": "res://assets/ui/icons/actions/skill.png", "color": Color(0.3, 0.5, 0.9)},
+		purify_button:
+		{"icon": "res://assets/ui/icons/actions/special.png", "color": Color(0.8, 0.6, 0.9)},
+		item_button:
+		{"icon": "res://assets/ui/icons/actions/item.png", "color": Color(0.3, 0.8, 0.4)},
+		defend_button:
+		{"icon": "res://assets/ui/icons/actions/defend.png", "color": Color(0.6, 0.6, 0.7)},
+		flee_button:
+		{"icon": "res://assets/ui/icons/actions/flee.png", "color": Color(0.8, 0.7, 0.3)}
 	}
-	
+
 	for button in button_data.keys():
 		if not button:
 			continue
-		
+
 		var data: Dictionary = button_data[button]
 		var accent_color: Color = data.color
-		
+
 		# Create custom stylebox for normal state
 		var normal_style := StyleBoxFlat.new()
 		normal_style.bg_color = Color(0.12, 0.12, 0.15, 0.95)
@@ -708,7 +804,7 @@ func _style_action_buttons() -> void:
 		normal_style.shadow_color = Color(0, 0, 0, 0.5)
 		normal_style.shadow_size = 4
 		normal_style.shadow_offset = Vector2(2, 2)
-		
+
 		# Hover style - brighter
 		var hover_style := StyleBoxFlat.new()
 		hover_style.bg_color = Color(0.18, 0.18, 0.22, 0.98)
@@ -719,42 +815,42 @@ func _style_action_buttons() -> void:
 		hover_style.shadow_color.a = 0.6
 		hover_style.shadow_size = 8
 		hover_style.shadow_offset = Vector2(0, 0)
-		
+
 		# Pressed style
 		var pressed_style := StyleBoxFlat.new()
 		pressed_style.bg_color = accent_color.darkened(0.4)
 		pressed_style.border_color = accent_color.lightened(0.2)
 		pressed_style.set_border_width_all(2)
 		pressed_style.set_corner_radius_all(6)
-		
+
 		# Disabled style
 		var disabled_style := StyleBoxFlat.new()
 		disabled_style.bg_color = Color(0.08, 0.08, 0.1, 0.7)
 		disabled_style.border_color = Color(0.3, 0.3, 0.3, 0.5)
 		disabled_style.set_border_width_all(1)
 		disabled_style.set_corner_radius_all(6)
-		
+
 		# Focus style - same as hover so focus indicator matches hover
 		var focus_style := StyleBoxFlat.new()
 		focus_style.bg_color = Color(0.18, 0.14, 0.22, 0.95)
 		focus_style.border_color = Color(0.7, 0.55, 0.4, 1.0)
 		focus_style.set_border_width_all(2)
 		focus_style.set_corner_radius_all(6)
-		
+
 		# Apply styles
 		button.add_theme_stylebox_override("normal", normal_style)
 		button.add_theme_stylebox_override("hover", hover_style)
 		button.add_theme_stylebox_override("pressed", pressed_style)
 		button.add_theme_stylebox_override("disabled", disabled_style)
 		button.add_theme_stylebox_override("focus", focus_style)  # Match hover style
-		
+
 		# Text styling
 		button.add_theme_color_override("font_color", UIStyleFactory.COLOR_PARCHMENT)
 		button.add_theme_color_override("font_hover_color", Color(1.0, 0.95, 0.85))
 		button.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0))
 		button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
 		button.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-		
+
 		# Add icon if texture exists
 		var icon_path: String = data.icon
 		if ResourceLoader.exists(icon_path):
@@ -766,21 +862,24 @@ func _style_action_buttons() -> void:
 				# Scale icon to fit button height
 				button.add_theme_constant_override("icon_max_width", 28)
 
+
 # =============================================================================
 # BUTTON HOVER EFFECTS
 # =============================================================================
+
 
 func _on_action_button_hover(button: Button) -> void:
 	"""Highlight button on hover/focus with scale and color tween"""
 	# Grab focus when mouse hovers - this syncs the focus indicator with mouse
 	button.grab_focus()
-	
+
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(button, "scale", Vector2(1.08, 1.08), 0.12)
 	tween.tween_property(button, "modulate", Color(1.3, 1.1, 0.9, 1.0), 0.12)
 	# Ensure pivot is centered for proper scaling
 	button.pivot_offset = button.size / 2
+
 
 func _on_action_button_unhover(button: Button) -> void:
 	"""Reset button on unhover/unfocus"""
@@ -789,13 +888,16 @@ func _on_action_button_unhover(button: Button) -> void:
 	tween.tween_property(button, "scale", Vector2.ONE, 0.1)
 	tween.tween_property(button, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.1)
 
+
 # =============================================================================
 # SKILL MENU
 # =============================================================================
 
+
 func _show_skill_menu() -> void:
 	set_ui_state(UIState.SKILL_SELECT)
 	_populate_skill_list()
+
 
 func _populate_skill_list() -> void:
 	# Clear existing
@@ -809,7 +911,7 @@ func _populate_skill_list() -> void:
 		# Skip basic actions that have dedicated buttons (attack, defend)
 		if skill_id in ["attack_basic", "defend"]:
 			continue
-		
+
 		var can_use := current_character.can_use_skill(skill_id)
 		var skill_name := _get_skill_display_name(skill_id)
 		var mp_cost := _get_skill_mp_cost(skill_id)
@@ -827,17 +929,20 @@ func _populate_skill_list() -> void:
 			button.modulate = Color(0.5, 0.5, 0.5, 0.8)
 		skill_list.add_child(button)
 
+
 func _get_skill_display_name(skill_id: String) -> String:
 	var skill_data := DataManager.get_skill(skill_id)
 	if skill_data:
 		return skill_data.display_name
 	return skill_id.capitalize().replace("_", " ")
 
+
 func _get_skill_mp_cost(skill_id: String) -> int:
 	var skill_data := DataManager.get_skill(skill_id)
 	if skill_data:
 		return skill_data.mp_cost
 	return 0
+
 
 func _on_skill_selected(skill_id: String) -> void:
 	pending_action = Enums.BattleAction.SKILL
@@ -847,6 +952,7 @@ func _on_skill_selected(skill_id: String) -> void:
 	# Determine target type based on skill
 	var targets_allies := _skill_targets_allies(skill_id)
 	_start_target_selection(targets_allies)
+
 
 func _skill_targets_allies(skill_id: String) -> bool:
 	var skill_data := DataManager.get_skill(skill_id)
@@ -859,18 +965,22 @@ func _skill_targets_allies(skill_id: String) -> bool:
 	# Fallback
 	return skill_id.contains("heal") or skill_id.contains("buff")
 
+
 func _on_skill_back_pressed() -> void:
 	skill_menu.hide()
 	set_ui_state(UIState.ACTION_SELECT)
 	skill_button.grab_focus()
 
+
 # =============================================================================
 # ITEM MENU
 # =============================================================================
 
+
 func _show_item_menu() -> void:
 	set_ui_state(UIState.ITEM_SELECT)
 	_populate_item_list()
+
 
 func _populate_item_list() -> void:
 	# Clear existing
@@ -897,6 +1007,7 @@ func _populate_item_list() -> void:
 		button.pressed.connect(_on_item_selected.bind(item_id))
 		item_list.add_child(button)
 
+
 func _populate_item_list_fallback() -> void:
 	"""Fallback for when inventory is empty (test purposes)"""
 	var items := ["Potion", "Ether", "Antidote"]
@@ -906,6 +1017,7 @@ func _populate_item_list_fallback() -> void:
 		button.text = item_name
 		button.pressed.connect(_on_item_selected.bind(item_name.to_lower()))
 		item_list.add_child(button)
+
 
 func _on_item_selected(item_id: String) -> void:
 	pending_action = Enums.BattleAction.ITEM
@@ -939,14 +1051,17 @@ func _on_item_selected(item_id: String) -> void:
 		# Fallback - most items target allies
 		_start_target_selection(true)
 
+
 func _on_item_back_pressed() -> void:
 	item_menu.hide()
 	set_ui_state(UIState.ACTION_SELECT)
 	item_button.grab_focus()
 
+
 # =============================================================================
 # TARGET SELECTION
 # =============================================================================
+
 
 func _start_target_selection(target_allies: bool, purify_only: bool = false) -> void:
 	set_ui_state(UIState.TARGET_SELECT)
@@ -976,17 +1091,20 @@ func _start_target_selection(target_allies: bool, purify_only: bool = false) -> 
 	current_target_index = 0
 	_update_target_display()
 
+
 func _select_previous_target() -> void:
 	if valid_targets.is_empty():
 		return
 	current_target_index = (current_target_index - 1 + valid_targets.size()) % valid_targets.size()
 	_update_target_display()
 
+
 func _select_next_target() -> void:
 	if valid_targets.is_empty():
 		return
 	current_target_index = (current_target_index + 1) % valid_targets.size()
 	_update_target_display()
+
 
 func _update_target_display() -> void:
 	if valid_targets.is_empty():
@@ -1014,6 +1132,7 @@ func _update_target_display() -> void:
 	# Emit signal for battle arena to highlight the target sprite
 	target_highlight_changed.emit(target)
 
+
 func _confirm_target() -> void:
 	if valid_targets.is_empty():
 		return
@@ -1029,6 +1148,7 @@ func _confirm_target() -> void:
 	action_selected.emit(pending_action, target, pending_skill)
 	set_ui_state(UIState.ANIMATING)
 
+
 func _cancel_target_selection() -> void:
 	target_selector.hide()
 
@@ -1040,9 +1160,11 @@ func _cancel_target_selection() -> void:
 	set_ui_state(UIState.ACTION_SELECT)
 	attack_button.grab_focus()
 
+
 # =============================================================================
 # DISPLAY UPDATES
 # =============================================================================
+
 
 func _update_party_display() -> void:
 	# Clear existing
@@ -1052,6 +1174,7 @@ func _update_party_display() -> void:
 	for member in party_members:
 		var panel := _create_party_member_panel(member)
 		party_status_container.add_child(panel)
+
 
 func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 	var panel := PanelContainer.new()
@@ -1177,6 +1300,7 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 
 	return panel
 
+
 func _get_portrait_path(character: CharacterBase) -> String:
 	# Check if it's a monster with a sprite
 	if character is Monster:
@@ -1193,6 +1317,7 @@ func _get_portrait_path(character: CharacterBase) -> String:
 	# Default - no portrait found
 	return ""
 
+
 func _update_enemy_sidebar() -> void:
 	"""Populate the enemy sidebar with all enemies"""
 	# Clear existing enemy entries
@@ -1202,6 +1327,7 @@ func _update_enemy_sidebar() -> void:
 	for enemy in enemies:
 		var panel := _create_enemy_slot_panel(enemy)
 		enemy_status_container.add_child(panel)
+
 
 func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	"""Create a panel for one enemy in the sidebar"""
@@ -1230,7 +1356,9 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	var portrait_container := PanelContainer.new()
 	portrait_container.custom_minimum_size = Vector2(45, 45)
 	portrait_container.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
-	portrait_container.add_theme_stylebox_override("panel", UIStyleFactory.create_sidebar_portrait_frame(true))
+	portrait_container.add_theme_stylebox_override(
+		"panel", UIStyleFactory.create_sidebar_portrait_frame(true)
+	)
 	hbox.add_child(portrait_container)
 
 	# Load portrait texture
@@ -1294,8 +1422,12 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 		corruption_bar.name = "CorruptionBar"
 		corruption_bar.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 
-		corruption_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_corruption_bar_fill())
-		corruption_bar.add_theme_stylebox_override("background", UIStyleFactory.create_corruption_bar_bg())
+		corruption_bar.add_theme_stylebox_override(
+			"fill", UIStyleFactory.create_corruption_bar_fill()
+		)
+		corruption_bar.add_theme_stylebox_override(
+			"background", UIStyleFactory.create_corruption_bar_bg()
+		)
 		vbox.add_child(corruption_bar)
 
 		# Brand display
@@ -1324,6 +1456,7 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 
 	return panel
 
+
 func _highlight_all_valid_targets(target_allies: bool) -> void:
 	"""Highlight ALL valid targets - RED for enemies, BLUE for allies"""
 	if target_allies:
@@ -1338,6 +1471,7 @@ func _highlight_all_valid_targets(target_allies: bool) -> void:
 				_set_panel_highlight(enemy, "ui_panel", Color(1.0, 0.3, 0.3, 1.0), 2)  # Red glow
 				_set_panel_highlight(enemy, "enemy_sidebar_panel", Color(1.0, 0.3, 0.3, 1.0), 2)  # Red glow on right sidebar
 
+
 func _highlight_enemy_in_sidebar(target: CharacterBase) -> void:
 	"""Highlight the SELECTED enemy target (brighter red), others stay dimmer red"""
 	for enemy in enemies:
@@ -1351,7 +1485,7 @@ func _highlight_enemy_in_sidebar(target: CharacterBase) -> void:
 			var p: PanelContainer = enemy.get_meta("enemy_sidebar_panel")
 			if is_instance_valid(p):
 				panels.append(p)
-		
+
 		for panel in panels:
 			var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
 			if style:
@@ -1372,6 +1506,7 @@ func _highlight_enemy_in_sidebar(target: CharacterBase) -> void:
 					style.border_color = Color(0.5, 0.25, 0.25, 1.0)
 					style.set_border_width_all(1)
 					style.shadow_size = 0
+
 
 func _highlight_ally_in_sidebar(target: CharacterBase) -> void:
 	"""Highlight the SELECTED ally target (brighter blue), others stay dimmer blue"""
@@ -1400,7 +1535,10 @@ func _highlight_ally_in_sidebar(target: CharacterBase) -> void:
 						style.set_border_width_all(1)
 						style.shadow_size = 0
 
-func _set_panel_highlight(character: CharacterBase, meta_key: String, color: Color, width: int) -> void:
+
+func _set_panel_highlight(
+	character: CharacterBase, meta_key: String, color: Color, width: int
+) -> void:
 	"""Helper to set panel highlight by meta key"""
 	if character.has_meta(meta_key):
 		var panel: PanelContainer = character.get_meta(meta_key)
@@ -1411,6 +1549,7 @@ func _set_panel_highlight(character: CharacterBase, meta_key: String, color: Col
 				style.set_border_width_all(width)
 				style.shadow_color = Color(color.r, color.g, color.b, 0.4)
 				style.shadow_size = 6
+
 
 func _clear_all_sidebar_highlights() -> void:
 	"""Clear all target highlights from both enemy and party sidebars"""
@@ -1424,7 +1563,7 @@ func _clear_all_sidebar_highlights() -> void:
 					style.border_color = Color(0.5, 0.25, 0.25, 1.0)
 					style.set_border_width_all(1)
 					style.shadow_size = 0  # Clear shadow
-		
+
 		# Also check enemy_sidebar_panel (right sidebar)
 		if enemy.has_meta("enemy_sidebar_panel"):
 			var panel: PanelContainer = enemy.get_meta("enemy_sidebar_panel")
@@ -1456,6 +1595,7 @@ func _clear_all_sidebar_highlights() -> void:
 					style.set_border_width_all(1)
 					style.shadow_size = 0  # Clear shadow
 
+
 func update_enemy_hp(enemy: CharacterBase) -> void:
 	"""Update a single enemy's HP display in the sidebar"""
 	if enemy.has_meta("ui_panel"):
@@ -1467,6 +1607,7 @@ func update_enemy_hp(enemy: CharacterBase) -> void:
 				hp_bar.value = enemy.current_hp
 			if hp_label:
 				hp_label.text = "%d/%d" % [enemy.current_hp, enemy.get_max_hp()]
+
 
 func _get_status_effect_icon_path(effect: Enums.StatusEffect) -> String:
 	"""Map status effects to icon paths"""
@@ -1520,6 +1661,7 @@ func _get_status_effect_icon_path(effect: Enums.StatusEffect) -> String:
 		_:
 			return ""
 
+
 func _get_status_effect_name(effect: Enums.StatusEffect) -> String:
 	"""Get display name for status effect tooltip"""
 	return Enums.StatusEffect.keys()[effect].capitalize().replace("_", " ")
@@ -1528,6 +1670,7 @@ func _get_status_effect_name(effect: Enums.StatusEffect) -> String:
 # =============================================================================
 # STATUS ICON DISPLAY
 # =============================================================================
+
 
 func _on_status_effect_changed(target: Node, _effect: int, _extra: int = 0) -> void:
 	"""Called when a status effect is applied or removed - update icons"""
@@ -1565,29 +1708,36 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 		# Create container for icon with background
 		var icon_container := PanelContainer.new()
 		icon_container.custom_minimum_size = Vector2(20, 20)
-		
+
 		# Style the container based on buff/debuff
 		var style := StyleBoxFlat.new()
 		style.set_corner_radius_all(3)
 		style.set_border_width_all(1)
-		
+
 		# Determine if buff or debuff for coloring
-		var is_buff := effect in [
-			Enums.StatusEffect.REGEN, Enums.StatusEffect.SHIELD,
-			Enums.StatusEffect.ATTACK_UP, Enums.StatusEffect.DEFENSE_UP,
-			Enums.StatusEffect.SPEED_UP, Enums.StatusEffect.PURIFYING,
-			Enums.StatusEffect.UNTARGETABLE, Enums.StatusEffect.GUARDED
-		]
-		
+		var is_buff := (
+			effect
+			in [
+				Enums.StatusEffect.REGEN,
+				Enums.StatusEffect.SHIELD,
+				Enums.StatusEffect.ATTACK_UP,
+				Enums.StatusEffect.DEFENSE_UP,
+				Enums.StatusEffect.SPEED_UP,
+				Enums.StatusEffect.PURIFYING,
+				Enums.StatusEffect.UNTARGETABLE,
+				Enums.StatusEffect.GUARDED
+			]
+		)
+
 		if is_buff:
 			style.bg_color = Color(0.1, 0.3, 0.1, 0.8)  # Green tint for buffs
 			style.border_color = Color(0.3, 0.7, 0.3, 0.9)
 		else:
 			style.bg_color = Color(0.3, 0.1, 0.1, 0.8)  # Red tint for debuffs
 			style.border_color = Color(0.7, 0.3, 0.3, 0.9)
-		
+
 		icon_container.add_theme_stylebox_override("panel", style)
-		
+
 		var icon := TextureRect.new()
 		icon.custom_minimum_size = Vector2(16, 16)
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -1640,7 +1790,10 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 	for i in range(mini(8, order.size())):
 		var character := order[i]
 		# Check if ally by checking protagonist flag OR if in player_party from battle_manager
-		var is_ally := character.is_protagonist or (battle_manager and character in battle_manager.player_party)
+		var is_ally := (
+			character.is_protagonist
+			or (battle_manager and character in battle_manager.player_party)
+		)
 
 		# Create portrait container - compact 36x36
 		var portrait_panel := PanelContainer.new()
@@ -1711,8 +1864,12 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 			glow_color = Color(1.2, 0.9, 0.9, 1.0)
 
 		var breathe_tween := create_tween().set_loops()
-		breathe_tween.tween_property(portrait_panel, "modulate", glow_color, 0.8).set_ease(Tween.EASE_IN_OUT)
-		breathe_tween.tween_property(portrait_panel, "modulate", base_color, 0.8).set_ease(Tween.EASE_IN_OUT)
+		breathe_tween.tween_property(portrait_panel, "modulate", glow_color, 0.8).set_ease(
+			Tween.EASE_IN_OUT
+		)
+		breathe_tween.tween_property(portrait_panel, "modulate", base_color, 0.8).set_ease(
+			Tween.EASE_IN_OUT
+		)
 		_turn_order_tweens.append(breathe_tween)
 
 		# Add arrow between characters (except after last)
@@ -1724,12 +1881,15 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 			arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			turn_order_display.add_child(arrow)
 
+
 func update_round_display(round_number: int) -> void:
 	battle_info_label.text = "Round %d" % round_number
+
 
 # =============================================================================
 # MESSAGES
 # =============================================================================
+
 
 func show_message(text: String, duration: float = 2.0) -> void:
 	message_label.text = text
@@ -1739,28 +1899,41 @@ func show_message(text: String, duration: float = 2.0) -> void:
 		await get_tree().create_timer(duration).timeout
 		message_box.hide()
 
+
 func hide_message() -> void:
 	message_box.hide()
+
 
 # =============================================================================
 # COMBAT LOG
 # =============================================================================
 
-func log_action(attacker_name: String, action_name: String, target_name: String = "", skill_name: String = "") -> void:
+
+func log_action(
+	attacker_name: String, action_name: String, target_name: String = "", skill_name: String = ""
+) -> void:
 	var entry := ""
 	# If skill_name is provided, use it; otherwise use action_name
 	var display_action := skill_name if skill_name != "" else action_name
-	
+
 	if target_name.is_empty():
-		entry = "[color=#e0d8c8]%s[/color] uses [color=#66ccff]'%s'[/color]" % [attacker_name, display_action]
+		entry = (
+			"[color=#e0d8c8]%s[/color] uses [color=#66ccff]'%s'[/color]"
+			% [attacker_name, display_action]
+		)
 	else:
-		entry = "[color=#e0d8c8]%s[/color] uses [color=#66ccff]'%s'[/color] on [color=#ffcc66]%s[/color]" % [attacker_name, display_action, target_name]
+		entry = (
+			"[color=#e0d8c8]%s[/color] uses [color=#66ccff]'%s'[/color] on [color=#ffcc66]%s[/color]"
+			% [attacker_name, display_action, target_name]
+		)
 	_append_to_log(entry)
+
 
 func log_skill_use(attacker_name: String, skill_id: String, target_name: String = "") -> void:
 	"""Log a skill use with proper skill display name"""
 	var skill_display_name := _get_skill_display_name(skill_id)
 	log_action(attacker_name, "Skill", target_name, skill_display_name)
+
 
 func log_damage(target_name: String, amount: int, is_critical: bool = false) -> void:
 	var color := "red" if not is_critical else "orange"
@@ -1768,13 +1941,16 @@ func log_damage(target_name: String, amount: int, is_critical: bool = false) -> 
 	var entry := "[color=%s]%s takes %d damage!%s[/color]" % [color, target_name, amount, crit_text]
 	_append_to_log(entry)
 
+
 func log_heal(target_name: String, amount: int) -> void:
 	var entry := "[color=green]%s recovers %d HP![/color]" % [target_name, amount]
 	_append_to_log(entry)
 
+
 func log_miss(attacker_name: String, target_name: String) -> void:
 	var entry := "[color=gray]%s's attack missed %s![/color]" % [attacker_name, target_name]
 	_append_to_log(entry)
+
 
 func log_status_effect(target_name: String, effect_name: String, applied: bool = true) -> void:
 	var action := "afflicted with" if applied else "recovered from"
@@ -1782,23 +1958,28 @@ func log_status_effect(target_name: String, effect_name: String, applied: bool =
 	var entry := "[color=%s]%s is %s %s![/color]" % [color, target_name, action, effect_name]
 	_append_to_log(entry)
 
+
 func log_defeat(character_name: String) -> void:
 	var entry := "[color=red][b]%s has been defeated![/b][/color]" % character_name
 	_append_to_log(entry)
+
 
 func log_turn_start(character_name: String, is_ally: bool) -> void:
 	var color := "lime" if is_ally else "salmon"
 	var entry := "\n[color=%s]>>> %s's turn <<<[/color]" % [color, character_name]
 	_append_to_log(entry)
 
+
 func log_round_start(round_number: int) -> void:
 	var entry := "\n[color=gold]========== ROUND %d ==========[/color]" % round_number
 	_append_to_log(entry)
+
 
 func _append_to_log(entry: String) -> void:
 	combat_log_text.append_text("\n" + entry)
 	# Schedule auto-scroll after text is rendered
 	_schedule_auto_scroll()
+
 
 func _schedule_auto_scroll() -> void:
 	"""Schedule auto-scroll after frame to ensure text layout is complete"""
@@ -1813,15 +1994,23 @@ func _schedule_auto_scroll() -> void:
 	await get_tree().process_frame  # Extra frame for RichTextLabel layout
 	_auto_scroll_combat_log()
 
+
 func clear_combat_log() -> void:
 	combat_log_text.clear()
 	combat_log_text.append_text("[color=#cc9933]╔══════════════════════════════╗[/color]")
-	combat_log_text.append_text("\n[color=#cc9933]║[/color]      [color=#ffcc66]⚔ BATTLE START ⚔[/color]      [color=#cc9933]║[/color]")
+	(
+		combat_log_text
+		. append_text(
+			"\n[color=#cc9933]║[/color]      [color=#ffcc66]⚔ BATTLE START ⚔[/color]      [color=#cc9933]║[/color]"
+		)
+	)
 	combat_log_text.append_text("\n[color=#cc9933]╚══════════════════════════════╝[/color]")
+
 
 # =============================================================================
 # BATTLE END SCREENS
 # =============================================================================
+
 
 func show_victory(data_or_exp, gold_gained: int = 0, items_obtained: Array = []) -> void:
 	## Show victory screen with rewards
@@ -1829,12 +2018,12 @@ func show_victory(data_or_exp, gold_gained: int = 0, items_obtained: Array = [])
 	##   show_victory(exp: int, gold: int, items: Array) - legacy
 	##   show_victory(data: Dictionary) - new format with party info
 	set_ui_state(UIState.WAITING)
-	
+
 	var exp_gained: int = 0
 	var gold: int = gold_gained
 	var items: Array = items_obtained
 	var party_data: Array = []  # Array of {character, exp_before, exp_after, level_before, level_after}
-	
+
 	# Handle both call signatures
 	if data_or_exp is Dictionary:
 		var data: Dictionary = data_or_exp
@@ -1846,14 +2035,16 @@ func show_victory(data_or_exp, gold_gained: int = 0, items_obtained: Array = [])
 		exp_gained = data_or_exp as int
 		gold = gold_gained
 		items = items_obtained
-	
+
 	# Style the victory panel
 	_style_victory_panel()
-	
+
 	victory_screen.show()
-	
+
 	# Get the rewards container
-	var rewards_container: VBoxContainer = victory_screen.get_node_or_null("VictoryPanel/VBoxContainer/RewardsContainer")
+	var rewards_container: VBoxContainer = victory_screen.get_node_or_null(
+		"VictoryPanel/VBoxContainer/RewardsContainer"
+	)
 	if rewards_container:
 		# Clear old content and rebuild
 		_build_victory_rewards_display(rewards_container, exp_gained, gold, items, party_data)
@@ -1875,37 +2066,52 @@ func show_victory(data_or_exp, gold_gained: int = 0, items_obtained: Array = [])
 		items_label.text = item_text
 
 	continue_button.grab_focus()
-	
+
 	# === VICTORY FANFARE SEQUENCE ===
 	# 1. Screen flash effect
 	_play_victory_screen_flash()
-	
+
 	# 2. Animate victory screen entrance with dramatic timing
 	var victory_panel: PanelContainer = victory_screen.get_node_or_null("VictoryPanel")
 	if victory_panel:
 		victory_panel.modulate.a = 0.0
 		victory_panel.scale = Vector2(0.5, 0.5)
 		victory_panel.pivot_offset = victory_panel.size / 2
-		
+
 		var tween := create_tween()
 		tween.set_parallel(true)
 		# Fade in with slight delay for flash
-		tween.tween_property(victory_panel, "modulate:a", 1.0, 0.5).set_delay(0.15).set_ease(Tween.EASE_OUT)
+		tween.tween_property(victory_panel, "modulate:a", 1.0, 0.5).set_delay(0.15).set_ease(
+			Tween.EASE_OUT
+		)
 		# Scale up with dramatic bounce
-		tween.tween_property(victory_panel, "scale", Vector2.ONE, 0.6).set_delay(0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	
+		(
+			tween
+			. tween_property(victory_panel, "scale", Vector2.ONE, 0.6)
+			. set_delay(0.15)
+			. set_ease(Tween.EASE_OUT)
+			. set_trans(Tween.TRANS_BACK)
+		)
+
 	# 3. Animate the "VICTORY!" title with extra flair
 	await get_tree().create_timer(0.2).timeout
 	_animate_victory_title()
 
-func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, gold: int, items: Array, party_data: Array) -> void:
+
+func _build_victory_rewards_display(
+	container: VBoxContainer, exp_gained: int, gold: int, items: Array, party_data: Array
+) -> void:
 	## Build the enhanced victory rewards display with per-character XP bars
-	
+
 	# Clear existing children except the original labels (we'll hide them)
 	for child in container.get_children():
-		if child.name.begins_with("CharXP_") or child.name == "PartyXPSection" or child.name == "Separator":
+		if (
+			child.name.begins_with("CharXP_")
+			or child.name == "PartyXPSection"
+			or child.name == "Separator"
+		):
 			child.queue_free()
-	
+
 	# Hide original simple labels - we'll use our custom display
 	if exp_label:
 		exp_label.hide()
@@ -1913,7 +2119,7 @@ func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, g
 		gold_label.hide()
 	if items_label:
 		items_label.hide()
-	
+
 	# === TOTAL EXP HEADER ===
 	var exp_header := Label.new()
 	exp_header.name = "CharXP_Header"
@@ -1924,69 +2130,69 @@ func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, g
 	exp_header.add_theme_color_override("font_outline_color", Color(0.2, 0.15, 0.1))
 	exp_header.add_theme_constant_override("outline_size", 1)
 	container.add_child(exp_header)
-	
+
 	# Add decorative separator under header
 	var header_sep := HSeparator.new()
 	header_sep.name = "CharXP_HeaderSep"
 	header_sep.modulate = Color(0.6, 0.45, 0.25, 0.6)
 	container.add_child(header_sep)
-	
+
 	# === PARTY XP SECTION ===
 	var party_section := VBoxContainer.new()
 	party_section.name = "PartyXPSection"
 	party_section.add_theme_constant_override("separation", 8)
 	container.add_child(party_section)
-	
+
 	# Get party members from battle_manager or GameManager
 	var party: Array = []
 	if battle_manager and not battle_manager.player_party.is_empty():
 		party = battle_manager.player_party
 	elif GameManager and not GameManager.player_party.is_empty():
 		party = GameManager.player_party
-	
+
 	# Calculate XP per member
 	var alive_count := 0
 	for member in party:
 		if member and member.is_alive():
 			alive_count += 1
 	var xp_per_member: int = exp_gained / maxi(1, alive_count) if alive_count > 0 else 0
-	
+
 	# Create XP display for each party member
 	var delay := 0.0
 	for i in range(party.size()):
 		var member: CharacterBase = party[i]
 		if not member:
 			continue
-		
+
 		var char_row := _create_character_xp_row(member, xp_per_member, delay)
 		party_section.add_child(char_row)
 		delay += 0.15  # Stagger animations
-	
+
 	# === SEPARATOR ===
 	var sep := HSeparator.new()
 	sep.name = "Separator"
 	sep.add_theme_constant_override("separation", 10)
 	sep.modulate = Color(0.6, 0.45, 0.25, 0.6)  # Golden amber to match theme
 	container.add_child(sep)
-	
+
 	# === GOLD & ITEMS ROW ===
 	var rewards_row := HBoxContainer.new()
 	rewards_row.name = "CharXP_RewardsRow"
 	rewards_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	rewards_row.add_theme_constant_override("separation", 40)
 	container.add_child(rewards_row)
-	
+
 	# Gold display - dark fantasy style
 	var gold_display := HBoxContainer.new()
 	gold_display.add_theme_constant_override("separation", 8)
 	rewards_row.add_child(gold_display)
-	
+
 	var gold_label_text := Label.new()
 	gold_label_text.text = "Gold:"
 	gold_label_text.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
 	gold_label_text.add_theme_color_override("font_color", UIStyleFactory.COLOR_SUBTITLE)
 	gold_display.add_child(gold_label_text)
-	
+
 	var gold_amount := Label.new()
 	gold_amount.text = "%d" % gold
 	gold_amount.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TITLE)
@@ -1994,18 +2200,18 @@ func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, g
 	gold_amount.add_theme_color_override("font_outline_color", Color(0.3, 0.2, 0.1))
 	gold_amount.add_theme_constant_override("outline_size", 1)
 	gold_display.add_child(gold_amount)
-	
+
 	# Items display - dark fantasy style
 	var items_display := HBoxContainer.new()
 	items_display.add_theme_constant_override("separation", 8)
 	rewards_row.add_child(items_display)
-	
+
 	var items_label_text := Label.new()
 	items_label_text.text = "Loot:"
 	items_label_text.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
 	items_label_text.add_theme_color_override("font_color", UIStyleFactory.COLOR_SUBTITLE)
 	items_display.add_child(items_label_text)
-	
+
 	var items_text := Label.new()
 	if items.is_empty():
 		items_text.text = "None"
@@ -2023,31 +2229,32 @@ func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, g
 		items_text.add_theme_color_override("font_color", UIStyleFactory.COLOR_ITEM_TEXT)
 	items_text.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
 	items_display.add_child(items_text)
-	
+
 	# Animate rewards row entrance
 	rewards_row.modulate.a = 0.0
 	var tween := create_tween()
 	tween.tween_property(rewards_row, "modulate:a", 1.0, 0.3).set_delay(delay + 0.3)
-	
+
 	# === BATTLE STATS SECTION ===
 	_add_battle_stats_section(container, delay + 0.5)
+
 
 func _add_battle_stats_section(container: VBoxContainer, delay: float) -> void:
 	## Add battle statistics summary to victory screen
 	if not battle_manager:
 		return
-	
+
 	var stats: Dictionary = battle_manager.battle_stats
 	if stats.is_empty():
 		return
-	
+
 	# Separator
 	var sep2 := HSeparator.new()
 	sep2.name = "CharXP_StatsSep"
 	sep2.add_theme_constant_override("separation", 8)
 	sep2.modulate = Color(0.4, 0.6, 0.8, 0.4)
 	container.add_child(sep2)
-	
+
 	# Stats header
 	var stats_header := Label.new()
 	stats_header.name = "CharXP_StatsHeader"
@@ -2056,7 +2263,7 @@ func _add_battle_stats_section(container: VBoxContainer, delay: float) -> void:
 	stats_header.add_theme_font_size_override("font_size", UIStyleFactory.FONT_NORMAL)
 	stats_header.add_theme_color_override("font_color", UIStyleFactory.COLOR_STATS_HEADER)
 	container.add_child(stats_header)
-	
+
 	# Stats grid
 	var stats_grid := GridContainer.new()
 	stats_grid.name = "CharXP_StatsGrid"
@@ -2064,53 +2271,74 @@ func _add_battle_stats_section(container: VBoxContainer, delay: float) -> void:
 	stats_grid.add_theme_constant_override("h_separation", 30)
 	stats_grid.add_theme_constant_override("v_separation", 4)
 	container.add_child(stats_grid)
-	
+
 	# Add stat entries
 	var stat_entries: Array[Dictionary] = [
-		{"icon": "⚔", "label": "Turns", "value": stats.get("turns_taken", 0), "color": Color(0.9, 0.9, 0.9)},
-		{"icon": "💥", "label": "Damage Dealt", "value": stats.get("damage_dealt", 0), "color": Color(1.0, 0.6, 0.4)},
-		{"icon": "🛡", "label": "Damage Taken", "value": stats.get("damage_received", 0), "color": Color(0.6, 0.8, 1.0)},
+		{
+			"icon": "⚔",
+			"label": "Turns",
+			"value": stats.get("turns_taken", 0),
+			"color": Color(0.9, 0.9, 0.9)
+		},
+		{
+			"icon": "💥",
+			"label": "Damage Dealt",
+			"value": stats.get("damage_dealt", 0),
+			"color": Color(1.0, 0.6, 0.4)
+		},
+		{
+			"icon": "🛡",
+			"label": "Damage Taken",
+			"value": stats.get("damage_received", 0),
+			"color": Color(0.6, 0.8, 1.0)
+		},
 	]
-	
+
 	# Add capture stats if any captures were attempted
 	if stats.get("captures_attempted", 0) > 0:
-		stat_entries.append({
-			"icon": "🔮", 
-			"label": "Captures", 
-			"value": "%d/%d" % [stats.get("captures_successful", 0), stats.get("captures_attempted", 0)],
-			"color": Color(0.8, 0.5, 1.0)
-		})
-	
+		stat_entries.append(
+			{
+				"icon": "🔮",
+				"label": "Captures",
+				"value":
+				"%d/%d" % [stats.get("captures_successful", 0), stats.get("captures_attempted", 0)],
+				"color": Color(0.8, 0.5, 1.0)
+			}
+		)
+
 	for entry in stat_entries:
 		var stat_label := Label.new()
 		stat_label.text = "%s %s:" % [entry.icon, entry.label]
 		stat_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_BODY)
 		stat_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 		stats_grid.add_child(stat_label)
-		
+
 		var stat_value := Label.new()
 		stat_value.text = str(entry.value)
 		stat_value.add_theme_font_size_override("font_size", UIStyleFactory.FONT_BODY)
 		stat_value.add_theme_color_override("font_color", entry.color)
 		stat_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		stats_grid.add_child(stat_value)
-	
+
 	# Animate stats section entrance
 	sep2.modulate.a = 0.0
 	stats_header.modulate.a = 0.0
 	stats_grid.modulate.a = 0.0
-	
+
 	var stats_tween := create_tween()
 	stats_tween.tween_property(sep2, "modulate:a", 0.4, 0.2).set_delay(delay)
 	stats_tween.tween_property(stats_header, "modulate:a", 1.0, 0.2).set_delay(delay + 0.1)
 	stats_tween.tween_property(stats_grid, "modulate:a", 1.0, 0.3).set_delay(delay + 0.2)
 
-func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: float) -> PanelContainer:
+
+func _create_character_xp_row(
+	character: CharacterBase, xp_gained: int, delay: float
+) -> PanelContainer:
 	## Create a single character's XP display row with animated progress bar
 	var row := PanelContainer.new()
 	row.name = "CharXP_%s" % character.character_name
 	row.custom_minimum_size = Vector2(380, 50)
-	
+
 	# Style the row panel
 	var row_style := StyleBoxFlat.new()
 	row_style.bg_color = Color(0.05, 0.08, 0.05, 0.8)
@@ -2122,56 +2350,56 @@ func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: f
 	row_style.content_margin_top = 5
 	row_style.content_margin_bottom = 5
 	row.add_theme_stylebox_override("panel", row_style)
-	
+
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 10)
 	row.add_child(hbox)
-	
+
 	# Character name and level
 	var name_container := VBoxContainer.new()
 	name_container.custom_minimum_size.x = 100
 	hbox.add_child(name_container)
-	
+
 	var name_label := Label.new()
 	name_label.text = character.character_name
 	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_NORMAL)
 	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ALLY_NAME_ALT)
 	name_container.add_child(name_label)
-	
+
 	var level_label := Label.new()
 	level_label.text = "Lv. %d" % character.level
 	level_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_BODY)
 	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_HP_TITLE)
 	name_container.add_child(level_label)
-	
+
 	# XP bar section
 	var xp_section := VBoxContainer.new()
 	xp_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	xp_section.add_theme_constant_override("separation", 2)
 	hbox.add_child(xp_section)
-	
+
 	# XP text row
 	var xp_text_row := HBoxContainer.new()
 	xp_section.add_child(xp_text_row)
-	
+
 	var xp_label := Label.new()
 	xp_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	xp_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
 	xp_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_XP)
 	xp_text_row.add_child(xp_label)
-	
+
 	var xp_gained_label := Label.new()
 	xp_gained_label.text = "+%d XP" % xp_gained
 	xp_gained_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_BODY)
 	xp_gained_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_GOLD)  # Golden to match theme
 	xp_text_row.add_child(xp_gained_label)
-	
+
 	# XP progress bar
 	var xp_bar := ProgressBar.new()
 	xp_bar.custom_minimum_size = Vector2(200, 12)
 	xp_bar.show_percentage = false
 	xp_section.add_child(xp_bar)
-	
+
 	# Style the progress bar - golden/amber to match victory panel theme
 	var bar_bg := StyleBoxFlat.new()
 	bar_bg.bg_color = Color(0.08, 0.06, 0.04, 0.9)  # Dark brown/black
@@ -2179,77 +2407,98 @@ func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: f
 	bar_bg.set_border_width_all(1)
 	bar_bg.set_corner_radius_all(4)
 	xp_bar.add_theme_stylebox_override("background", bar_bg)
-	
+
 	var bar_fill := StyleBoxFlat.new()
 	bar_fill.bg_color = Color(0.85, 0.65, 0.25, 1.0)  # Golden amber fill
 	bar_fill.set_corner_radius_all(4)
 	xp_bar.add_theme_stylebox_override("fill", bar_fill)
-	
+
 	# Calculate XP values
 	var current_xp: int = 0
 	var xp_for_next: int = 100
 	var is_alive := character.is_alive()
-	
+
 	if character.has_method("get_xp_for_next_level"):
 		xp_for_next = character.get_xp_for_next_level()
-	
+
 	# Get current XP - check for both player and monster
 	if "current_experience" in character:
 		current_xp = character.current_experience
-	
+
 	# Calculate the XP BEFORE this battle's gain (for animation)
 	var xp_before: int = current_xp - xp_gained if is_alive else current_xp
 	xp_before = maxi(0, xp_before)
-	
+
 	# Set initial bar state
 	xp_bar.max_value = xp_for_next
 	xp_bar.value = xp_before
-	
+
 	# Update XP text
 	xp_label.text = "%d / %d" % [current_xp, xp_for_next]
-	
+
 	# Dead characters get dimmed and no XP
 	if not is_alive:
 		row.modulate = Color(0.5, 0.5, 0.5, 0.7)
 		xp_gained_label.text = "(KO)"
 		xp_gained_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_HP)
-	
+
 	# Animate entrance
 	row.modulate.a = 0.0
 	row.position.x = -20
-	
+
 	var entrance_tween := create_tween()
 	entrance_tween.set_parallel(true)
 	entrance_tween.tween_property(row, "modulate:a", 1.0 if is_alive else 0.7, 0.3).set_delay(delay)
-	entrance_tween.tween_property(row, "position:x", 0.0, 0.3).set_delay(delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	
+	(
+		entrance_tween
+		. tween_property(row, "position:x", 0.0, 0.3)
+		. set_delay(delay)
+		. set_ease(Tween.EASE_OUT)
+		. set_trans(Tween.TRANS_BACK)
+	)
+
 	# Animate XP bar fill (only for alive characters)
 	if is_alive and xp_gained > 0:
 		var bar_tween := create_tween()
-		bar_tween.tween_property(xp_bar, "value", float(current_xp), 0.8).set_delay(delay + 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-		
+		(
+			bar_tween
+			. tween_property(xp_bar, "value", float(current_xp), 0.8)
+			. set_delay(delay + 0.4)
+			. set_ease(Tween.EASE_OUT)
+			. set_trans(Tween.TRANS_CUBIC)
+		)
+
 		# Check for level up - use our tracked level up data
 		if has_character_leveled_up(character):
 			# Level up occurred! Add celebration effect with stat gains
-			bar_tween.tween_callback(_show_level_up_flash.bind(row, level_label, character.level, character)).set_delay(delay + 1.2)
-	
+			(
+				bar_tween
+				. tween_callback(
+					_show_level_up_flash.bind(row, level_label, character.level, character)
+				)
+				. set_delay(delay + 1.2)
+			)
+
 	return row
 
-func _show_level_up_flash(row: PanelContainer, level_label: Label, new_level: int, character: CharacterBase = null) -> void:
+
+func _show_level_up_flash(
+	row: PanelContainer, level_label: Label, new_level: int, character: CharacterBase = null
+) -> void:
 	## Flash effect when character levels up, with stat gains display
 	level_label.text = "Lv. %d ⬆" % new_level
 	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL_UP)
-	
+
 	# Flash the row
 	var flash_tween := create_tween()
 	flash_tween.tween_property(row, "modulate", Color(1.5, 1.5, 1.0, 1.0), 0.15)
 	flash_tween.tween_property(row, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.3)
-	
+
 	# Add "LEVEL UP!" popup with stat gains
 	var popup := PanelContainer.new()
 	popup.name = "LevelUpPopup"
 	popup.z_index = 10
-	
+
 	var popup_style := StyleBoxFlat.new()
 	popup_style.bg_color = Color(0.15, 0.12, 0.05, 0.95)
 	popup_style.border_color = Color(1.0, 0.85, 0.3)
@@ -2260,11 +2509,11 @@ func _show_level_up_flash(row: PanelContainer, level_label: Label, new_level: in
 	popup_style.content_margin_top = 6
 	popup_style.content_margin_bottom = 6
 	popup.add_theme_stylebox_override("panel", popup_style)
-	
+
 	var popup_vbox := VBoxContainer.new()
 	popup_vbox.add_theme_constant_override("separation", 2)
 	popup.add_child(popup_vbox)
-	
+
 	# Title
 	var title := Label.new()
 	title.text = "⭐ LEVEL UP! ⭐"
@@ -2272,66 +2521,83 @@ func _show_level_up_flash(row: PanelContainer, level_label: Label, new_level: in
 	title.add_theme_color_override("font_color", UIStyleFactory.COLOR_VICTORY_TITLE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	popup_vbox.add_child(title)
-	
+
 	# Get stat gains if we have level up data
 	var level_up_data: Dictionary = {}
 	if character:
 		level_up_data = get_level_up_data(character)
-	
+
 	if not level_up_data.is_empty() and level_up_data.has("stat_gains"):
 		var stat_gains: Dictionary = level_up_data["stat_gains"]
-		
+
 		# Create stat gains display
 		var stats_grid := GridContainer.new()
 		stats_grid.columns = 4  # 4 stats per row
 		stats_grid.add_theme_constant_override("h_separation", 8)
 		stats_grid.add_theme_constant_override("v_separation", 1)
 		popup_vbox.add_child(stats_grid)
-		
+
 		# Add stat gains in a compact format
-		var stat_order: Array[String] = ["max_hp", "max_mp", "attack", "defense", "magic", "resistance", "speed", "luck"]
+		var stat_order: Array[String] = [
+			"max_hp", "max_mp", "attack", "defense", "magic", "resistance", "speed", "luck"
+		]
 		var stat_abbrevs := {
-			"max_hp": "HP", "max_mp": "MP", "attack": "ATK", "defense": "DEF",
-			"magic": "MAG", "resistance": "RES", "speed": "SPD", "luck": "LCK"
+			"max_hp": "HP",
+			"max_mp": "MP",
+			"attack": "ATK",
+			"defense": "DEF",
+			"magic": "MAG",
+			"resistance": "RES",
+			"speed": "SPD",
+			"luck": "LCK"
 		}
 		var stat_colors := {
-			"max_hp": Color(0.4, 0.9, 0.4), "max_mp": Color(0.4, 0.6, 1.0),
-			"attack": Color(1.0, 0.5, 0.4), "defense": Color(0.5, 0.7, 1.0),
-			"magic": Color(0.8, 0.5, 1.0), "resistance": Color(0.6, 0.8, 0.9),
-			"speed": Color(0.5, 1.0, 0.7), "luck": Color(1.0, 0.9, 0.4)
+			"max_hp": Color(0.4, 0.9, 0.4),
+			"max_mp": Color(0.4, 0.6, 1.0),
+			"attack": Color(1.0, 0.5, 0.4),
+			"defense": Color(0.5, 0.7, 1.0),
+			"magic": Color(0.8, 0.5, 1.0),
+			"resistance": Color(0.6, 0.8, 0.9),
+			"speed": Color(0.5, 1.0, 0.7),
+			"luck": Color(1.0, 0.9, 0.4)
 		}
-		
+
 		for stat in stat_order:
 			if stat_gains.has(stat) and stat_gains[stat] > 0:
 				var stat_label := Label.new()
 				stat_label.text = "%s+%d" % [stat_abbrevs.get(stat, stat), stat_gains[stat]]
 				stat_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SMALL)
-				stat_label.add_theme_color_override("font_color", stat_colors.get(stat, Color.WHITE))
+				stat_label.add_theme_color_override(
+					"font_color", stat_colors.get(stat, Color.WHITE)
+				)
 				stats_grid.add_child(stat_label)
-	
+
 	# Position popup above the row
 	popup.position = Vector2(row.size.x / 2 - 80, -60)
 	row.add_child(popup)
-	
+
 	# Animate popup entrance and exit
 	popup.modulate.a = 0.0
 	popup.scale = Vector2(0.8, 0.8)
 	popup.pivot_offset = popup.size / 2
-	
+
 	var popup_tween := create_tween()
 	popup_tween.set_parallel(true)
 	popup_tween.tween_property(popup, "modulate:a", 1.0, 0.2)
-	popup_tween.tween_property(popup, "scale", Vector2.ONE, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	popup_tween.tween_property(popup, "scale", Vector2.ONE, 0.3).set_ease(Tween.EASE_OUT).set_trans(
+		Tween.TRANS_BACK
+	)
 	popup_tween.tween_property(popup, "position:y", -80.0, 0.5).set_ease(Tween.EASE_OUT)
 	popup_tween.chain().tween_property(popup, "modulate:a", 0.0, 0.5).set_delay(1.5)
 	popup_tween.tween_callback(popup.queue_free)
+
 
 func _style_victory_panel() -> void:
 	"""Apply dark fantasy styling to victory screen"""
 	var victory_panel: PanelContainer = victory_screen.get_node_or_null("VictoryPanel")
 	if not victory_panel:
 		return
-	
+
 	# Dark fantasy panel style - deep blacks with golden/amber accents
 	var panel_style := StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.04, 0.04, 0.06, 0.98)  # Near black
@@ -2344,16 +2610,16 @@ func _style_victory_panel() -> void:
 	panel_style.content_margin_right = 40
 	panel_style.content_margin_top = 30
 	panel_style.content_margin_bottom = 30
-	
+
 	# Add inner border effect with second stylebox
 	var inner_style := StyleBoxFlat.new()
 	inner_style.bg_color = Color(0.06, 0.06, 0.08, 0.95)
 	inner_style.border_color = Color(0.4, 0.3, 0.15, 0.6)
 	inner_style.set_border_width_all(1)
 	inner_style.set_corner_radius_all(6)
-	
+
 	victory_panel.add_theme_stylebox_override("panel", panel_style)
-	
+
 	# Style the title - golden with dark fantasy feel
 	var title: Label = victory_panel.get_node_or_null("VBoxContainer/VictoryTitle")
 	if title:
@@ -2361,13 +2627,13 @@ func _style_victory_panel() -> void:
 		title.add_theme_color_override("font_color", UIStyleFactory.COLOR_GOLD)  # Golden
 		title.add_theme_color_override("font_outline_color", Color(0.3, 0.2, 0.1))
 		title.add_theme_constant_override("outline_size", 3)
-	
+
 	# Style the labels with parchment-like colors
 	for label in [exp_label, gold_label, items_label]:
 		if label:
 			label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_HEADING)
 			label.add_theme_color_override("font_color", UIStyleFactory.COLOR_PARCHMENT_WARM)  # Parchment
-	
+
 	# Style the continue button - dark with golden accents
 	if continue_button:
 		var btn_normal := StyleBoxFlat.new()
@@ -2375,7 +2641,7 @@ func _style_victory_panel() -> void:
 		btn_normal.border_color = Color(0.65, 0.5, 0.25)
 		btn_normal.set_border_width_all(2)
 		btn_normal.set_corner_radius_all(6)
-		
+
 		var btn_hover := StyleBoxFlat.new()
 		btn_hover.bg_color = Color(0.2, 0.15, 0.1, 0.98)
 		btn_hover.border_color = Color(0.9, 0.7, 0.35)
@@ -2383,19 +2649,20 @@ func _style_victory_panel() -> void:
 		btn_hover.set_corner_radius_all(6)
 		btn_hover.shadow_color = Color(0.7, 0.5, 0.2, 0.5)
 		btn_hover.shadow_size = 10
-		
+
 		var btn_pressed := StyleBoxFlat.new()
 		btn_pressed.bg_color = Color(0.25, 0.2, 0.12, 0.98)
 		btn_pressed.border_color = Color(1.0, 0.8, 0.4)
 		btn_pressed.set_border_width_all(2)
 		btn_pressed.set_corner_radius_all(6)
-		
+
 		continue_button.add_theme_stylebox_override("normal", btn_normal)
 		continue_button.add_theme_stylebox_override("hover", btn_hover)
 		continue_button.add_theme_stylebox_override("pressed", btn_pressed)
 		continue_button.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TITLE)
 		continue_button.add_theme_color_override("font_color", UIStyleFactory.COLOR_BUTTON_GOLD)
 		continue_button.text = "CONTINUE"
+
 
 func _play_victory_screen_flash() -> void:
 	## Create a dramatic screen flash effect for victory
@@ -2406,33 +2673,34 @@ func _play_victory_screen_flash() -> void:
 	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	flash.z_index = 50
 	victory_screen.add_child(flash)
-	
+
 	# Flash sequence: quick bright flash then fade
 	var tween := create_tween()
 	tween.tween_property(flash, "color:a", 0.7, 0.08)
 	tween.tween_property(flash, "color:a", 0.0, 0.4).set_ease(Tween.EASE_OUT)
 	tween.tween_callback(flash.queue_free)
 
+
 func _animate_victory_title() -> void:
 	## Animate the VICTORY! title with dark fantasy dramatic effects
 	var victory_panel: PanelContainer = victory_screen.get_node_or_null("VictoryPanel")
 	if not victory_panel:
 		return
-	
+
 	var title: Label = victory_panel.get_node_or_null("VBoxContainer/VictoryTitle")
 	if not title:
 		return
-	
+
 	# Store original text
 	title.text = ""
-	
+
 	# Dark fantasy victory text with decorative elements
 	var full_text := "VICTORY"
 	var letter_delay := 0.06
-	
+
 	# Start with a dramatic pause
 	await get_tree().create_timer(0.15).timeout
-	
+
 	# Animate each letter appearing with golden glow
 	for i in range(full_text.length()):
 		await get_tree().create_timer(letter_delay).timeout
@@ -2441,49 +2709,60 @@ func _animate_victory_title() -> void:
 		title.modulate = Color(1.5, 1.3, 0.8, 1.0)
 		var flash_tween := create_tween()
 		flash_tween.tween_property(title, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.1)
-	
+
 	# Final pulse effect on the title
 	title.pivot_offset = title.size / 2
 	var pulse_tween := create_tween()
-	pulse_tween.tween_property(title, "scale", Vector2(1.12, 1.12), 0.12).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	(
+		pulse_tween
+		. tween_property(title, "scale", Vector2(1.12, 1.12), 0.12)
+		. set_ease(Tween.EASE_OUT)
+		. set_trans(Tween.TRANS_BACK)
+	)
 	pulse_tween.tween_property(title, "scale", Vector2.ONE, 0.15).set_ease(Tween.EASE_IN_OUT)
-	
+
 	# Add golden glow pulse effect
 	var glow_tween := create_tween()
 	glow_tween.set_loops(2)
 	glow_tween.tween_property(title, "modulate", Color(1.4, 1.2, 0.9, 1.0), 0.4)
 	glow_tween.tween_property(title, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.4)
 
+
 func show_defeat(data: Dictionary = {}) -> void:
 	## Show defeat screen. Accepts optional data dictionary for battle stats.
 	set_ui_state(UIState.WAITING)
-	
+
 	# Style the defeat panel
 	_style_defeat_panel()
-	
+
 	defeat_screen.show()
 	retry_button.grab_focus()
-	
+
 	# === DEFEAT SEQUENCE ===
 	# 1. Red screen flash effect
 	_play_defeat_screen_flash()
-	
+
 	# 2. Animate defeat screen entrance with somber timing
 	var defeat_panel: PanelContainer = defeat_screen.get_node_or_null("DefeatPanel")
 	if defeat_panel:
 		defeat_panel.modulate.a = 0.0
 		defeat_panel.scale = Vector2(0.9, 0.9)
 		defeat_panel.pivot_offset = defeat_panel.size / 2
-		
+
 		var tween := create_tween()
 		tween.set_parallel(true)
 		# Slower, more somber fade in
-		tween.tween_property(defeat_panel, "modulate:a", 1.0, 0.8).set_delay(0.3).set_ease(Tween.EASE_OUT)
-		tween.tween_property(defeat_panel, "scale", Vector2.ONE, 0.6).set_delay(0.3).set_ease(Tween.EASE_OUT)
-	
+		tween.tween_property(defeat_panel, "modulate:a", 1.0, 0.8).set_delay(0.3).set_ease(
+			Tween.EASE_OUT
+		)
+		tween.tween_property(defeat_panel, "scale", Vector2.ONE, 0.6).set_delay(0.3).set_ease(
+			Tween.EASE_OUT
+		)
+
 	# 3. Animate the defeat title
 	await get_tree().create_timer(0.4).timeout
 	_animate_defeat_title()
+
 
 func _play_defeat_screen_flash() -> void:
 	## Create a dramatic red screen flash effect for defeat
@@ -2494,30 +2773,31 @@ func _play_defeat_screen_flash() -> void:
 	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	flash.z_index = 50
 	defeat_screen.add_child(flash)
-	
+
 	# Flash sequence: slower, more ominous
 	var tween := create_tween()
 	tween.tween_property(flash, "color:a", 0.5, 0.15)
 	tween.tween_property(flash, "color:a", 0.0, 0.6).set_ease(Tween.EASE_OUT)
 	tween.tween_callback(flash.queue_free)
 
+
 func _animate_defeat_title() -> void:
 	## Animate the DEFEAT title with somber effects
 	var defeat_panel: PanelContainer = defeat_screen.get_node_or_null("DefeatPanel")
 	if not defeat_panel:
 		return
-	
+
 	var title: Label = defeat_panel.get_node_or_null("VBoxContainer/DefeatTitle")
 	if not title:
 		return
-	
+
 	# Slow fade-in of text with slight shake
 	title.modulate.a = 0.0
 	title.text = "💀 DEFEAT 💀"
-	
+
 	var tween := create_tween()
 	tween.tween_property(title, "modulate:a", 1.0, 0.6).set_ease(Tween.EASE_IN)
-	
+
 	# Subtle shake effect
 	var original_pos := title.position
 	var shake_tween := create_tween()
@@ -2526,12 +2806,13 @@ func _animate_defeat_title() -> void:
 	shake_tween.tween_property(title, "position:x", original_pos.x + 2, 0.05)
 	shake_tween.tween_property(title, "position:x", original_pos.x, 0.05)
 
+
 func _style_defeat_panel() -> void:
 	"""Apply polished styling to defeat screen"""
 	var defeat_panel: PanelContainer = defeat_screen.get_node_or_null("DefeatPanel")
 	if not defeat_panel:
 		return
-	
+
 	# Style the panel - dark red theme
 	var panel_style := StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.12, 0.06, 0.06, 0.98)
@@ -2545,19 +2826,19 @@ func _style_defeat_panel() -> void:
 	panel_style.content_margin_top = 25
 	panel_style.content_margin_bottom = 25
 	defeat_panel.add_theme_stylebox_override("panel", panel_style)
-	
+
 	# Style the title
 	var title: Label = defeat_panel.get_node_or_null("VBoxContainer/DefeatTitle")
 	if title:
 		title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_DISPLAY)
 		title.add_theme_color_override("font_color", UIStyleFactory.COLOR_DEFEAT_TITLE)
-	
+
 	# Style the message
 	var message: Label = defeat_panel.get_node_or_null("VBoxContainer/DefeatMessage")
 	if message:
 		message.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
 		message.add_theme_color_override("font_color", UIStyleFactory.COLOR_DEFEAT_MSG)
-	
+
 	# Style buttons
 	for button in [retry_button, title_button]:
 		if not button:
@@ -2567,7 +2848,7 @@ func _style_defeat_panel() -> void:
 		btn_normal.border_color = Color(0.6, 0.3, 0.3)
 		btn_normal.set_border_width_all(2)
 		btn_normal.set_corner_radius_all(6)
-		
+
 		var btn_hover := StyleBoxFlat.new()
 		btn_hover.bg_color = Color(0.5, 0.2, 0.2, 0.98)
 		btn_hover.border_color = Color(0.8, 0.4, 0.4)
@@ -2575,12 +2856,13 @@ func _style_defeat_panel() -> void:
 		btn_hover.set_corner_radius_all(6)
 		btn_hover.shadow_color = Color(0.6, 0.2, 0.2, 0.5)
 		btn_hover.shadow_size = 8
-		
+
 		button.add_theme_stylebox_override("normal", btn_normal)
 		button.add_theme_stylebox_override("hover", btn_hover)
 		button.add_theme_stylebox_override("pressed", btn_hover)
 		button.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
 		button.add_theme_color_override("font_color", UIStyleFactory.COLOR_BUTTON_LIGHT)
+
 
 func _on_continue_pressed() -> void:
 	victory_screen.hide()
@@ -2588,20 +2870,26 @@ func _on_continue_pressed() -> void:
 	# In production, this would return to the location where battle was triggered
 	SceneManager.go_to_overworld()
 
+
 func _on_retry_pressed() -> void:
 	defeat_screen.hide()
 	EventBus.battle_retry_requested.emit()
 
+
 func _on_title_pressed() -> void:
 	defeat_screen.hide()
 	SceneManager.goto_main_menu()
+
 
 func _on_level_up(character: CharacterBase, new_level: int, stat_gains: Dictionary) -> void:
 	## Display level up notification during battle
 	_show_level_up_notification(character, new_level, stat_gains)
 	log_level_up(character.character_name, new_level)
 
-func _show_level_up_notification(character: CharacterBase, new_level: int, stat_gains: Dictionary) -> void:
+
+func _show_level_up_notification(
+	character: CharacterBase, new_level: int, stat_gains: Dictionary
+) -> void:
 	## Creates a dramatic level up popup
 	var popup := PanelContainer.new()
 	popup.name = "LevelUpPopup"
@@ -2660,7 +2948,9 @@ func _show_level_up_notification(character: CharacterBase, new_level: int, stat_
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(popup, "modulate:a", 1.0, 0.3).set_ease(Tween.EASE_OUT)
-	tween.tween_property(popup, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(popup, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(
+		Tween.TRANS_BACK
+	)
 
 	# Hold and fade out
 	tween.set_parallel(false)
@@ -2668,17 +2958,22 @@ func _show_level_up_notification(character: CharacterBase, new_level: int, stat_
 	tween.tween_property(popup, "modulate:a", 0.0, 0.5)
 	tween.tween_callback(popup.queue_free)
 
+
 func log_level_up(character_name: String, new_level: int) -> void:
 	## Logs level up to combat log
 	var msg := "[color=gold]★ %s reached Level %d! ★[/color]" % [character_name, new_level]
 	combat_log_text.append_text("\n" + msg)
 	_auto_scroll_combat_log()
 
+
 # =============================================================================
 # ANIMATION SUPPORT
 # =============================================================================
 
-func show_damage_number(amount: int, position: Vector2, is_critical: bool = false, is_heal: bool = false) -> void:
+
+func show_damage_number(
+	amount: int, position: Vector2, is_critical: bool = false, is_heal: bool = false
+) -> void:
 	var label := Label.new()
 	label.text = str(amount)
 	label.position = position
@@ -2699,17 +2994,21 @@ func show_damage_number(amount: int, position: Vector2, is_critical: bool = fals
 	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.8).set_delay(0.3)
 	tween.tween_callback(label.queue_free)
 
+
 func flash_character(character: CharacterBase, color: Color = Color.WHITE) -> void:
 	# TODO: Implement character sprite flash effect
 	pass
+
 
 func shake_screen(intensity: float = 5.0, duration: float = 0.2) -> void:
 	# TODO: Implement screen shake
 	pass
 
+
 # =============================================================================
 # BRAND DISPLAY
 # =============================================================================
+
 
 func _get_brand_name(brand: Enums.Brand) -> String:
 	"""Get display name for monster brand"""
@@ -2717,7 +3016,7 @@ func _get_brand_name(brand: Enums.Brand) -> String:
 	var brand_int := int(brand)
 	if brand_int < 0 or brand_int > 11:
 		return "— UNKNOWN"
-	
+
 	match brand:
 		# Pure Brands
 		Enums.Brand.SAVAGE:
@@ -2750,16 +3049,21 @@ func _get_brand_name(brand: Enums.Brand) -> String:
 		_:
 			return "— UNKNOWN"
 
+
 func _get_brand_color(brand: Enums.Brand) -> Color:
 	"""Get color for monster brand display - delegates to Helpers for consistency"""
 	return BrandSystem.get_brand_color(brand)
+
 
 func _create_brand_icon(brand: Enums.Brand) -> PanelContainer:
 	"""Create a colored icon indicator for the brand"""
 	var icon := PanelContainer.new()
 	icon.custom_minimum_size = Vector2(14, 14)
-	icon.add_theme_stylebox_override("panel", UIStyleFactory.create_brand_indicator(_get_brand_color(brand)))
+	icon.add_theme_stylebox_override(
+		"panel", UIStyleFactory.create_brand_indicator(_get_brand_color(brand))
+	)
 	return icon
+
 
 func _get_path_color() -> Color:
 	"""Get color for player's Path based on alignment"""
@@ -2771,9 +3075,11 @@ func _get_path_color() -> Color:
 	else:
 		return Color(0.6, 0.6, 0.6)  # Gray for neutral/undecided
 
+
 # =============================================================================
 # ENEMY HOVER TOOLTIP
 # =============================================================================
+
 
 func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
 	"""Show tooltip with enemy details on hover, also select as target if in TARGET_SELECT"""
@@ -2912,6 +3218,7 @@ func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
 	enemy_tooltip.position = tooltip_pos
 	tooltip_visible = true
 
+
 func _add_stat_row(grid: GridContainer, stat_name: String, value: int, color: Color) -> void:
 	"""Helper to add a stat row to the tooltip grid"""
 	var name_label := Label.new()
@@ -2926,9 +3233,11 @@ func _add_stat_row(grid: GridContainer, stat_name: String, value: int, color: Co
 	value_label.add_theme_color_override("font_color", color)
 	grid.add_child(value_label)
 
+
 func _on_enemy_panel_unhover() -> void:
 	"""Hide tooltip when mouse leaves enemy panel"""
 	_hide_enemy_tooltip()
+
 
 func _on_enemy_panel_clicked(event: InputEvent, enemy: CharacterBase) -> void:
 	"""Handle click on enemy panel - select and confirm target"""
@@ -2949,6 +3258,7 @@ func _on_enemy_panel_clicked(event: InputEvent, enemy: CharacterBase) -> void:
 				current_target_index = idx
 				_update_target_display()
 
+
 func _hide_enemy_tooltip() -> void:
 	"""Remove and destroy the tooltip"""
 	if enemy_tooltip and is_instance_valid(enemy_tooltip):
@@ -2956,9 +3266,11 @@ func _hide_enemy_tooltip() -> void:
 		enemy_tooltip = null
 	tooltip_visible = false
 
+
 # =============================================================================
 # PARTY HOVER TOOLTIP
 # =============================================================================
+
 
 func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> void:
 	"""Show tooltip with party member details on hover"""
@@ -3078,7 +3390,7 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 			brand_info.add_child(brand_value)
 	elif character is PlayerCharacter:
 		var player := character as PlayerCharacter
-		
+
 		# Player characters have PATHS, not Brands - show Path info only
 		# (Brand alignment is internal and affects synergies, but heroes are not "branded")
 		var sep_path := HSeparator.new()
@@ -3117,9 +3429,11 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 
 	party_tooltip.position = tooltip_pos
 
+
 func _on_party_panel_unhover() -> void:
 	"""Hide tooltip when mouse leaves party panel"""
 	_hide_party_tooltip()
+
 
 func _hide_party_tooltip() -> void:
 	"""Remove and destroy the party tooltip"""
@@ -3127,27 +3441,29 @@ func _hide_party_tooltip() -> void:
 		party_tooltip.queue_free()
 		party_tooltip = null
 
+
 # =============================================================================
 # CHARACTER SPRITE HOVER (from Battle Arena)
 # =============================================================================
+
 
 func _on_character_sprite_hovered(character: Node) -> void:
 	"""Handle hover on character sprite in battle arena - show tooltip and update target if in TARGET_SELECT"""
 	if not character is CharacterBase:
 		return
 	var char := character as CharacterBase
-	
+
 	# If in target selection mode, hovering selects this character as target
 	if current_state == UIState.TARGET_SELECT and char in valid_targets:
 		var idx := valid_targets.find(char)
 		if idx >= 0 and idx != current_target_index:
 			current_target_index = idx
 			_update_target_display()
-	
+
 	# Don't show sprite tooltip if sidebar tooltip is already visible (prevents glitching)
 	if tooltip_visible or (party_tooltip and is_instance_valid(party_tooltip)):
 		return
-	
+
 	# Determine if this is an enemy or ally and show appropriate tooltip
 	if char is Monster and (char as Monster).is_corrupted:
 		# Enemy monster - show enemy tooltip at mouse position
@@ -3156,21 +3472,23 @@ func _on_character_sprite_hovered(character: Node) -> void:
 		# Ally - show party tooltip at mouse position
 		_show_sprite_party_tooltip(char)
 
+
 func _on_character_sprite_unhovered(character: Node) -> void:
 	"""Hide tooltips when mouse leaves character sprite"""
 	_hide_enemy_tooltip()
 	_hide_party_tooltip()
+
 
 func _on_target_selected_from_sprite(character: Node) -> void:
 	"""Handle target selection from clicking on character sprite"""
 	if not character is CharacterBase:
 		return
 	var char := character as CharacterBase
-	
+
 	# Only process if we're in target selection mode
 	if current_state != UIState.TARGET_SELECT:
 		return
-	
+
 	# Check if this is a valid target
 	if char in valid_targets:
 		var idx := valid_targets.find(char)
@@ -3180,29 +3498,30 @@ func _on_target_selected_from_sprite(character: Node) -> void:
 			# Confirm the selection
 			_confirm_target()
 
+
 func _show_sprite_enemy_tooltip(enemy: CharacterBase) -> void:
 	"""Show enemy tooltip near mouse position when hovering arena sprite"""
 	_hide_enemy_tooltip()
-	
+
 	# Create tooltip (same as _on_enemy_panel_hover but positioned at mouse)
 	enemy_tooltip = PanelContainer.new()
 	enemy_tooltip.name = "EnemyTooltip"
 	enemy_tooltip.custom_minimum_size = Vector2(280, 0)
 	enemy_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
+
 	enemy_tooltip.add_theme_stylebox_override("panel", UIStyleFactory.create_enemy_tooltip_style())
-	
+
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
 	enemy_tooltip.add_child(vbox)
-	
+
 	# Name header
 	var name_label := Label.new()
 	name_label.text = enemy.character_name
 	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
 	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_CREAM)
 	vbox.add_child(name_label)
-	
+
 	# Level and tier
 	var level_label := Label.new()
 	if enemy is Monster:
@@ -3214,166 +3533,168 @@ func _show_sprite_enemy_tooltip(enemy: CharacterBase) -> void:
 	level_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
 	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 	vbox.add_child(level_label)
-	
+
 	# Separator
 	var sep := HSeparator.new()
 	sep.add_theme_color_override("separator", Color(0.4, 0.3, 0.35))
 	vbox.add_child(sep)
-	
+
 	# HP info
 	var hp_info := HBoxContainer.new()
 	hp_info.add_theme_constant_override("separation", 8)
 	vbox.add_child(hp_info)
-	
+
 	var hp_title := Label.new()
 	hp_title.text = "HP:"
 	hp_title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
 	hp_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_HP_TITLE)
 	hp_info.add_child(hp_title)
-	
+
 	var hp_value := Label.new()
 	hp_value.text = "%d / %d" % [enemy.current_hp, enemy.get_max_hp()]
 	hp_value.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
 	hp_value.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_HP)
 	hp_info.add_child(hp_value)
-	
+
 	# Brand info for monsters
 	if enemy is Monster:
 		var monster := enemy as Monster
 		var brand_info := HBoxContainer.new()
 		brand_info.add_theme_constant_override("separation", 8)
 		vbox.add_child(brand_info)
-		
+
 		var brand_title := Label.new()
 		brand_title.text = "Brand:"
 		brand_title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
 		brand_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 		brand_info.add_child(brand_title)
-		
+
 		var brand_value := Label.new()
 		brand_value.text = _get_brand_name(monster.brand)
 		brand_value.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
 		brand_value.add_theme_color_override("font_color", _get_brand_color(monster.brand))
 		brand_info.add_child(brand_value)
-	
+
 	add_child(enemy_tooltip)
 	tooltip_visible = true
-	
+
 	# Position near mouse
 	await get_tree().process_frame
 	var mouse_pos := get_global_mouse_position()
 	var tooltip_pos := mouse_pos + Vector2(15, 15)
-	
+
 	# Keep tooltip on screen
 	if tooltip_pos.x + enemy_tooltip.size.x > size.x - 10:
 		tooltip_pos.x = mouse_pos.x - enemy_tooltip.size.x - 15
 	if tooltip_pos.y + enemy_tooltip.size.y > size.y - 10:
 		tooltip_pos.y = size.y - enemy_tooltip.size.y - 10
-	
+
 	enemy_tooltip.position = tooltip_pos
+
 
 func _show_sprite_party_tooltip(character: CharacterBase) -> void:
 	"""Show party tooltip near mouse position when hovering arena sprite"""
 	_hide_party_tooltip()
-	
+
 	party_tooltip = PanelContainer.new()
 	party_tooltip.name = "PartyTooltip"
 	party_tooltip.custom_minimum_size = Vector2(280, 0)
 	party_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
+
 	party_tooltip.add_theme_stylebox_override("panel", UIStyleFactory.create_ally_tooltip_style())
-	
+
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
 	party_tooltip.add_child(vbox)
-	
+
 	# Name header
 	var name_label := Label.new()
 	name_label.text = character.character_name
 	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
 	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ALLY_NAME)
 	vbox.add_child(name_label)
-	
+
 	# Level info
 	var level_label := Label.new()
 	level_label.text = "Level %d" % character.level
 	level_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
 	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 	vbox.add_child(level_label)
-	
+
 	# Separator
 	var sep := HSeparator.new()
 	sep.add_theme_color_override("separator", Color(0.3, 0.4, 0.35))
 	vbox.add_child(sep)
-	
+
 	# HP info
 	var hp_info := HBoxContainer.new()
 	hp_info.add_theme_constant_override("separation", 8)
 	vbox.add_child(hp_info)
-	
+
 	var hp_title := Label.new()
 	hp_title.text = "HP:"
 	hp_title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
 	hp_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_HP_TITLE)
 	hp_info.add_child(hp_title)
-	
+
 	var hp_value := Label.new()
 	hp_value.text = "%d / %d" % [character.current_hp, character.get_max_hp()]
 	hp_value.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
 	hp_value.add_theme_color_override("font_color", UIStyleFactory.COLOR_HP_VALUE)
 	hp_info.add_child(hp_value)
-	
+
 	# MP info if character has MP
 	if character.get_max_mp() > 0:
 		var mp_info := HBoxContainer.new()
 		mp_info.add_theme_constant_override("separation", 8)
 		vbox.add_child(mp_info)
-		
+
 		var mp_title := Label.new()
 		mp_title.text = "MP:"
 		mp_title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
 		mp_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_MP_TITLE)
 		mp_info.add_child(mp_title)
-		
+
 		var mp_value := Label.new()
 		mp_value.text = "%d / %d" % [character.current_mp, character.get_max_mp()]
 		mp_value.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
 		mp_value.add_theme_color_override("font_color", UIStyleFactory.COLOR_MP_VALUE_ALT)
 		mp_info.add_child(mp_value)
-	
+
 	# Brand info for monsters
 	if character is Monster:
 		var monster := character as Monster
 		var brand_info := HBoxContainer.new()
 		brand_info.add_theme_constant_override("separation", 8)
 		vbox.add_child(brand_info)
-		
+
 		var brand_title := Label.new()
 		brand_title.text = "Brand:"
 		brand_title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
 		brand_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 		brand_info.add_child(brand_title)
-		
+
 		var brand_value := Label.new()
 		brand_value.text = _get_brand_name(monster.brand)
 		brand_value.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
 		brand_value.add_theme_color_override("font_color", _get_brand_color(monster.brand))
 		brand_info.add_child(brand_value)
-	
+
 	add_child(party_tooltip)
-	
+
 	# Position near mouse
 	await get_tree().process_frame
 	var mouse_pos := get_global_mouse_position()
 	var tooltip_pos := mouse_pos + Vector2(15, 15)
-	
+
 	# Keep tooltip on screen
 	if tooltip_pos.x + party_tooltip.size.x > size.x - 10:
 		tooltip_pos.x = mouse_pos.x - party_tooltip.size.x - 15
 	if tooltip_pos.y + party_tooltip.size.y > size.y - 10:
 		tooltip_pos.y = size.y - party_tooltip.size.y - 10
-	
+
 	party_tooltip.position = tooltip_pos
+
 
 # =============================================================================
 # LEFT PARTY SIDEBAR
@@ -3387,9 +3708,15 @@ var left_party_sidebar: PanelContainer = null
 
 var right_enemy_sidebar: PanelContainer = null
 
+
 func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	"""Create a vertical party sidebar on the left side of the screen"""
-	print("[BATTLE_UI] _create_left_party_sidebar called, party_members: %d, viewport: %s" % [party_members.size(), str(viewport_size)])
+	print(
+		(
+			"[BATTLE_UI] _create_left_party_sidebar called, party_members: %d, viewport: %s"
+			% [party_members.size(), str(viewport_size)]
+		)
+	)
 	# Don't create sidebar if no party members
 	if party_members.is_empty():
 		print("[BATTLE_UI] No party members, skipping party sidebar")
@@ -3410,7 +3737,9 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	left_party_sidebar.position = Vector2(10, 70)  # Below top bar
 
 	# Style the sidebar with green/ally theme
-	left_party_sidebar.add_theme_stylebox_override("panel", UIStyleFactory.create_party_sidebar_header())
+	left_party_sidebar.add_theme_stylebox_override(
+		"panel", UIStyleFactory.create_party_sidebar_header()
+	)
 
 	var vbox := VBoxContainer.new()
 	vbox.name = "PartyList"
@@ -3433,10 +3762,20 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	add_child(left_party_sidebar)
 	left_party_sidebar.show()
 	left_party_sidebar.visible = true
-	print("[BATTLE_UI] Party sidebar added to tree, visible: %s, position: %s, z_index: %d" % [left_party_sidebar.visible, str(left_party_sidebar.global_position), left_party_sidebar.z_index])
+	print(
+		(
+			"[BATTLE_UI] Party sidebar added to tree, visible: %s, position: %s, z_index: %d"
+			% [
+				left_party_sidebar.visible,
+				str(left_party_sidebar.global_position),
+				left_party_sidebar.z_index
+			]
+		)
+	)
 
 	# Refresh status icons for all characters
 	_refresh_all_status_icons()
+
 
 func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	"""Create a compact party member slot for the left sidebar"""
@@ -3469,7 +3808,9 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	var portrait_container := PanelContainer.new()
 	portrait_container.custom_minimum_size = Vector2(36, 36)
 	portrait_container.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
-	portrait_container.add_theme_stylebox_override("panel", UIStyleFactory.create_sidebar_portrait_frame(false))
+	portrait_container.add_theme_stylebox_override(
+		"panel", UIStyleFactory.create_sidebar_portrait_frame(false)
+	)
 	hbox.add_child(portrait_container)
 
 	var portrait := TextureRect.new()
@@ -3500,17 +3841,22 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	vbox.add_child(name_label)
 
 	# Path display for player characters (with aligned brand info)
-	if character.character_type == Enums.CharacterType.PLAYER and character.current_path != Enums.Path.NONE:
+	if (
+		character.character_type == Enums.CharacterType.PLAYER
+		and character.current_path != Enums.Path.NONE
+	):
 		var path_label := Label.new()
 		path_label.name = "PathLabel"
 		var path_name: String = Enums.get_path_name(character.current_path)
 		var aligned_brand: String = _get_path_aligned_brand(character.current_path)
 		path_label.text = "%s [%s]" % [path_name, aligned_brand]
 		path_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TINY)
-		path_label.add_theme_color_override("font_color", _get_path_type_color(character.current_path))
+		path_label.add_theme_color_override(
+			"font_color", _get_path_type_color(character.current_path)
+		)
 		path_label.mouse_filter = Control.MOUSE_FILTER_PASS
 		vbox.add_child(path_label)
-	
+
 	# Brand display for monsters (allied monsters in party)
 	if character is Monster:
 		var monster := character as Monster
@@ -3574,6 +3920,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 
 	return panel
 
+
 func update_party_sidebar() -> void:
 	"""Update HP/MP bars in the left party sidebar"""
 	for member in party_members:
@@ -3592,16 +3939,22 @@ func update_party_sidebar() -> void:
 				if mp_bar:
 					mp_bar.max_value = maxi(1, member.get_max_mp())
 					mp_bar.value = member.current_mp
-				
+
 				# Handle death state - fade out dead party members
 				if member.is_dead():
 					_mark_sidebar_panel_dead(panel)
 				else:
 					panel.modulate.a = 1.0  # Ensure alive members are fully visible
 
+
 func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
 	"""Create a vertical enemy sidebar on the right side - mirrors party sidebar"""
-	print("[BATTLE_UI] _create_right_enemy_sidebar called, enemies: %d, viewport: %s" % [enemies.size(), str(viewport_size)])
+	print(
+		(
+			"[BATTLE_UI] _create_right_enemy_sidebar called, enemies: %d, viewport: %s"
+			% [enemies.size(), str(viewport_size)]
+		)
+	)
 
 	# Don't create if no enemies
 	if enemies.is_empty():
@@ -3624,7 +3977,9 @@ func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
 	print("[BATTLE_UI] Enemy sidebar position set to: %s" % str(right_enemy_sidebar.position))
 
 	# Style with red theme for enemies
-	right_enemy_sidebar.add_theme_stylebox_override("panel", UIStyleFactory.create_enemy_sidebar_header())
+	right_enemy_sidebar.add_theme_stylebox_override(
+		"panel", UIStyleFactory.create_enemy_sidebar_header()
+	)
 
 	var vbox := VBoxContainer.new()
 	vbox.name = "EnemyList"
@@ -3647,7 +4002,13 @@ func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
 	add_child(right_enemy_sidebar)
 	right_enemy_sidebar.show()
 	right_enemy_sidebar.z_index = 100  # Ensure it's on top
-	print("[BATTLE_UI] Enemy sidebar added to tree, visible: %s, position: %s" % [right_enemy_sidebar.visible, str(right_enemy_sidebar.global_position)])
+	print(
+		(
+			"[BATTLE_UI] Enemy sidebar added to tree, visible: %s, position: %s"
+			% [right_enemy_sidebar.visible, str(right_enemy_sidebar.global_position)]
+		)
+	)
+
 
 func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	"""Create a compact enemy slot for the right sidebar"""
@@ -3683,7 +4044,9 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	var portrait_container := PanelContainer.new()
 	portrait_container.custom_minimum_size = Vector2(36, 36)
 	portrait_container.mouse_filter = Control.MOUSE_FILTER_PASS
-	portrait_container.add_theme_stylebox_override("panel", UIStyleFactory.create_sidebar_portrait_frame(true))
+	portrait_container.add_theme_stylebox_override(
+		"panel", UIStyleFactory.create_sidebar_portrait_frame(true)
+	)
 	hbox.add_child(portrait_container)
 
 	var portrait := TextureRect.new()
@@ -3758,14 +4121,19 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 		corruption_bar.custom_minimum_size = Vector2(85, 6)
 		corruption_bar.mouse_filter = Control.MOUSE_FILTER_PASS
 
-		corruption_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_corruption_bar_fill())
-		corruption_bar.add_theme_stylebox_override("background", UIStyleFactory.create_corruption_bar_bg())
+		corruption_bar.add_theme_stylebox_override(
+			"fill", UIStyleFactory.create_corruption_bar_fill()
+		)
+		corruption_bar.add_theme_stylebox_override(
+			"background", UIStyleFactory.create_corruption_bar_bg()
+		)
 		vbox.add_child(corruption_bar)
 
 	# Store reference for updates
 	enemy.set_meta("enemy_sidebar_panel", panel)
 
 	return panel
+
 
 func update_enemy_sidebar() -> void:
 	"""Update HP/corruption bars in the right enemy sidebar"""
@@ -3784,20 +4152,23 @@ func update_enemy_sidebar() -> void:
 					hp_label.text = "%d/%d" % [enemy.current_hp, enemy.get_max_hp()]
 				if corruption_bar and enemy is Monster:
 					var monster := enemy as Monster
-					var corruption_percent := (monster.corruption_level / monster.max_corruption) * 100.0
+					var corruption_percent := (
+						(monster.corruption_level / monster.max_corruption) * 100.0
+					)
 					corruption_bar.value = corruption_percent
-				
+
 				# Handle death state - fade out dead enemies
 				if enemy.is_dead():
 					_mark_sidebar_panel_dead(panel)
 				else:
 					panel.modulate.a = 1.0  # Ensure alive enemies are fully visible
 
+
 func _auto_scroll_combat_log() -> void:
 	"""Auto-scroll combat log to bottom - ALWAYS scrolls to latest entry"""
 	if not combat_log_scroll:
 		return
-	
+
 	var scrollbar := combat_log_scroll.get_v_scroll_bar()
 	if scrollbar:
 		# Set flag to ignore scroll events during programmatic scroll
@@ -3808,9 +4179,11 @@ func _auto_scroll_combat_log() -> void:
 		# Use call_deferred to avoid async issues
 		call_deferred("_reset_auto_scroll_flag")
 
+
 func _reset_auto_scroll_flag() -> void:
 	"""Reset the auto-scroll flag after scroll completes"""
 	_is_auto_scrolling = false
+
 
 func _on_combat_log_scrolled(_value: float) -> void:
 	"""Called when user manually scrolls the combat log"""
@@ -3828,26 +4201,28 @@ func _on_combat_log_scrolled(_value: float) -> void:
 		# User scrolled back to bottom, resume auto-scroll
 		user_scrolled_log = false
 
+
 func _reset_combat_log_scroll() -> void:
 	"""Reset scroll state when user interacts with battle (button press, target select, etc.)"""
 	user_scrolled_log = false
 	_auto_scroll_combat_log()
 
+
 func _mark_sidebar_panel_dead(panel: PanelContainer) -> void:
 	"""Mark a sidebar panel as dead with visual feedback"""
 	if not is_instance_valid(panel):
 		return
-	
+
 	# Skip if already marked dead
 	if panel.has_meta("is_dead_panel") and panel.get_meta("is_dead_panel"):
 		return
-	
+
 	panel.set_meta("is_dead_panel", true)
-	
+
 	# Animate fade out
 	var tween := create_tween()
 	tween.tween_property(panel, "modulate:a", 0.35, 0.5)
-	
+
 	# Add "DEAD" overlay text
 	var dead_label := Label.new()
 	dead_label.name = "DeadOverlay"
@@ -3860,6 +4235,7 @@ func _mark_sidebar_panel_dead(panel: PanelContainer) -> void:
 	dead_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	dead_label.grow_vertical = Control.GROW_DIRECTION_BOTH
 	panel.add_child(dead_label)
+
 
 func _update_combat_log_size() -> void:
 	"""Update combat log size - LARGER default 300x220px, draggable to expand"""
@@ -3876,6 +4252,7 @@ func _update_combat_log_size() -> void:
 	if combat_log_drag_handle:
 		var is_expanded := combat_log.offset_top < -380
 		combat_log_drag_handle.text = "━━ ▲ ━━" if is_expanded else "━━ ▼ ━━"
+
 
 func _add_combat_log_drag_handle() -> void:
 	"""Add a draggable handle to resize the combat log"""
@@ -3906,6 +4283,7 @@ func _add_combat_log_drag_handle() -> void:
 	# Initialize default position (LARGER default)
 	_log_start_top = -330.0  # Default height: 220px
 
+
 func _on_combat_log_drag_input(event: InputEvent) -> void:
 	"""Handle drag input on combat log handle"""
 	if event is InputEventMouseButton:
@@ -3934,9 +4312,11 @@ func _on_combat_log_drag_input(event: InputEvent) -> void:
 		var is_expanded := new_top < -380
 		combat_log_drag_handle.text = "━━ ▲ ━━" if is_expanded else "━━ ▼ ━━"
 
+
 # =============================================================================
 # PATH & BRAND HELPERS
 # =============================================================================
+
 
 func _get_path_aligned_brand(path: Enums.Path) -> String:
 	"""Get the primary aligned brand for a given Path"""
@@ -3951,32 +4331,36 @@ func _get_path_aligned_brand(path: Enums.Path) -> String:
 			return "SURGE"
 	return ""
 
+
 func _get_path_type_color(path: Enums.Path) -> Color:
 	"""Get the display color for a given Path type (IRONBOUND, FANGBORN, etc.)"""
 	match path:
 		Enums.Path.IRONBOUND:
 			return Color(0.6, 0.65, 0.75)  # Steel blue
 		Enums.Path.FANGBORN:
-			return Color(0.85, 0.4, 0.3)   # Savage red
+			return Color(0.85, 0.4, 0.3)  # Savage red
 		Enums.Path.VOIDTOUCHED:
-			return Color(0.6, 0.3, 0.7)    # Void purple
+			return Color(0.6, 0.3, 0.7)  # Void purple
 		Enums.Path.UNCHAINED:
-			return Color(0.9, 0.8, 0.3)    # Lightning gold
+			return Color(0.9, 0.8, 0.3)  # Lightning gold
 	return Color(0.7, 0.7, 0.7)
+
 
 # =============================================================================
 # LEVEL UP TRACKING FOR VICTORY SCREEN
 # =============================================================================
 
+
 func _on_battle_started_clear_level_ups(_enemy_data: Array) -> void:
 	## Clear level up tracking when a new battle starts
 	_battle_level_ups.clear()
+
 
 func _on_character_level_up(character: Node, new_level: int, stat_gains: Dictionary) -> void:
 	## Track level ups during battle for display on victory screen
 	if not character:
 		return
-	
+
 	# Store or update level up data for this character
 	if _battle_level_ups.has(character):
 		# Character leveled up multiple times - merge stat gains
@@ -3989,18 +4373,19 @@ func _on_character_level_up(character: Node, new_level: int, stat_gains: Diction
 				existing["stat_gains"][stat] = stat_gains[stat]
 	else:
 		_battle_level_ups[character] = {
-			"old_level": new_level - 1,
-			"new_level": new_level,
-			"stat_gains": stat_gains.duplicate()
+			"old_level": new_level - 1, "new_level": new_level, "stat_gains": stat_gains.duplicate()
 		}
+
 
 func get_level_up_data(character: CharacterBase) -> Dictionary:
 	## Get level up data for a character (if they leveled up this battle)
 	return _battle_level_ups.get(character, {})
 
+
 func has_character_leveled_up(character: CharacterBase) -> bool:
 	## Check if a character leveled up during this battle
 	return _battle_level_ups.has(character)
+
 
 # =============================================================================
 # CAPTURE SYSTEM UI ANIMATIONS
@@ -4008,6 +4393,7 @@ func has_character_leveled_up(character: CharacterBase) -> bool:
 
 var _corruption_bar_tweens: Dictionary = {}  # monster -> Tween
 var _capture_overlay: ColorRect = null
+
 
 func _connect_capture_signals() -> void:
 	"""Connect to CaptureSystem signals for animated UI feedback"""
@@ -4026,63 +4412,72 @@ func _connect_capture_signals() -> void:
 			capture_system.corruption_battle_started.connect(_on_corruption_battle_started)
 		if capture_system.has_signal("corruption_battle_pass"):
 			capture_system.corruption_battle_pass.connect(_on_corruption_battle_pass)
-	
+
 	# Also connect via EventBus for decoupled communication
 	if not EventBus.corruption_battle_started.is_connected(_on_corruption_battle_started_event):
 		EventBus.corruption_battle_started.connect(_on_corruption_battle_started_event)
 	if not EventBus.corruption_battle_pass_completed.is_connected(_on_corruption_battle_pass_event):
 		EventBus.corruption_battle_pass_completed.connect(_on_corruption_battle_pass_event)
 
+
 func _on_corruption_reduced(monster: Node, old_value: float, new_value: float) -> void:
 	"""Animate corruption bar decrease with dramatic effect"""
 	if not monster or not is_instance_valid(monster):
 		return
-	
+
 	# Find the corruption bar for this monster
 	var corruption_bar := _get_monster_corruption_bar(monster)
 	if not corruption_bar:
 		return
-	
+
 	# Kill any existing tween for this monster
 	if _corruption_bar_tweens.has(monster) and _corruption_bar_tweens[monster].is_valid():
 		_corruption_bar_tweens[monster].kill()
-	
+
 	# Calculate percentages
 	var max_corruption: float = 100.0
 	if monster.has_method("get_max_corruption"):
 		max_corruption = monster.get_max_corruption()
 	elif "max_corruption" in monster:
 		max_corruption = monster.max_corruption
-	
+
 	var old_percent := (old_value / max_corruption) * 100.0
 	var new_percent := (new_value / max_corruption) * 100.0
-	
+
 	# Create dramatic animation
 	var tween := create_tween()
 	_corruption_bar_tweens[monster] = tween
-	
+
 	# Flash the bar bright purple
 	var bar_fill := corruption_bar.get_theme_stylebox("fill") as StyleBoxFlat
 	if bar_fill:
 		var original_color := bar_fill.bg_color
 		var flash_color := Color(0.9, 0.4, 1.0, 1.0)  # Bright purple flash
-		
+
 		tween.tween_callback(func(): bar_fill.bg_color = flash_color)
 		tween.tween_interval(0.1)
 		tween.tween_callback(func(): bar_fill.bg_color = original_color)
-	
+
 	# Animate the value decrease with easing
-	tween.tween_property(corruption_bar, "value", new_percent, 0.6).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	
+	(
+		tween
+		. tween_property(corruption_bar, "value", new_percent, 0.6)
+		. set_ease(Tween.EASE_OUT)
+		. set_trans(Tween.TRANS_CUBIC)
+	)
+
 	# Add floating text showing corruption reduction
 	var reduction := old_value - new_value
 	if reduction > 0:
 		_show_corruption_reduction_popup(monster, reduction)
-	
+
 	# Log to combat log
 	if monster.has_method("get_character_name"):
 		var name: String = monster.character_name if "character_name" in monster else "Monster"
-		_append_to_log("[color=purple]%s's corruption reduced by %.0f%%![/color]" % [name, reduction])
+		_append_to_log(
+			"[color=purple]%s's corruption reduced by %.0f%%![/color]" % [name, reduction]
+		)
+
 
 func _get_monster_corruption_bar(monster: Node) -> ProgressBar:
 	"""Find the corruption bar for a monster in the UI"""
@@ -4091,14 +4486,15 @@ func _get_monster_corruption_bar(monster: Node) -> ProgressBar:
 		var panel: PanelContainer = monster.get_meta("enemy_sidebar_panel")
 		if is_instance_valid(panel):
 			return panel.find_child("CorruptionBar", true, false) as ProgressBar
-	
+
 	# Check ui_panel (old sidebar)
 	if monster.has_meta("ui_panel"):
 		var panel: PanelContainer = monster.get_meta("ui_panel")
 		if is_instance_valid(panel):
 			return panel.find_child("CorruptionBar", true, false) as ProgressBar
-	
+
 	return null
+
 
 func _show_corruption_reduction_popup(monster: Node, amount: float) -> void:
 	"""Show floating popup when corruption is reduced"""
@@ -4110,17 +4506,17 @@ func _show_corruption_reduction_popup(monster: Node, amount: float) -> void:
 	popup.add_theme_constant_override("outline_size", 3)
 	popup.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	popup.z_index = 100
-	
+
 	# Position near the monster's sidebar panel
 	var panel_pos := Vector2(size.x - 200, 150)  # Default to right side
 	if monster.has_meta("enemy_sidebar_panel"):
 		var panel: PanelContainer = monster.get_meta("enemy_sidebar_panel")
 		if is_instance_valid(panel):
 			panel_pos = panel.global_position + Vector2(-50, 20)
-	
+
 	popup.position = panel_pos
 	add_child(popup)
-	
+
 	# Animate float up and fade
 	var tween := create_tween()
 	tween.set_parallel(true)
@@ -4129,48 +4525,57 @@ func _show_corruption_reduction_popup(monster: Node, amount: float) -> void:
 	tween.set_parallel(false)
 	tween.tween_callback(popup.queue_free)
 
+
 func _on_capture_attempt_started(monster: Node, vessel_tier: int, chance: float) -> void:
 	"""Show capture attempt UI with chance display"""
 	if not monster or not is_instance_valid(monster):
 		return
-	
+
 	var name: String = monster.character_name if "character_name" in monster else "Monster"
-	_append_to_log("[color=cyan]⚔ Capture attempt on %s! (%.0f%% chance)[/color]" % [name, chance * 100])
-	
+	_append_to_log(
+		"[color=cyan]⚔ Capture attempt on %s! (%.0f%% chance)[/color]" % [name, chance * 100]
+	)
+
 	# Start corruption bar pulsing animation
 	_start_corruption_bar_pulse(monster)
+
 
 func _start_corruption_bar_pulse(monster: Node) -> void:
 	"""Make corruption bar pulse during capture attempt"""
 	var corruption_bar := _get_monster_corruption_bar(monster)
 	if not corruption_bar:
 		return
-	
+
 	# Create pulsing glow effect
 	var pulse_tween := create_tween().set_loops(5)  # Pulse 5 times
 	pulse_tween.tween_property(corruption_bar, "modulate", Color(1.4, 1.0, 1.4, 1.0), 0.3)
 	pulse_tween.tween_property(corruption_bar, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.3)
 
+
 func _on_corruption_battle_started(monster: Node, passes_needed: int) -> void:
 	"""Show corruption battle UI overlay"""
 	if not monster or not is_instance_valid(monster):
 		return
-	
+
 	var name: String = monster.character_name if "character_name" in monster else "Monster"
 	_append_to_log("[color=magenta]═══ CORRUPTION BATTLE: %s ═══[/color]" % name)
-	_append_to_log("[color=gray]%d passes needed to break the corruption...[/color]" % passes_needed)
-	
+	_append_to_log(
+		"[color=gray]%d passes needed to break the corruption...[/color]" % passes_needed
+	)
+
 	# Create dramatic overlay effect
 	_show_capture_overlay(Color(0.3, 0.1, 0.4, 0.3))
+
 
 func _on_corruption_battle_started_event(monster: Node, passes: int) -> void:
 	"""EventBus version of corruption battle started"""
 	_on_corruption_battle_started(monster, passes)
 
+
 func _on_corruption_battle_pass(monster: Node, current_pass: int, total_passes: int) -> void:
 	"""Show progress during corruption battle"""
 	_append_to_log("[color=purple]Pass %d/%d complete![/color]" % [current_pass, total_passes])
-	
+
 	# Flash the corruption bar
 	var corruption_bar := _get_monster_corruption_bar(monster)
 	if corruption_bar:
@@ -4178,64 +4583,74 @@ func _on_corruption_battle_pass(monster: Node, current_pass: int, total_passes: 
 		flash_tween.tween_property(corruption_bar, "modulate", Color(2.0, 1.5, 2.0, 1.0), 0.1)
 		flash_tween.tween_property(corruption_bar, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.2)
 
+
 func _on_corruption_battle_pass_event(monster: Node, current: int, total: int) -> void:
 	"""EventBus version of corruption battle pass"""
 	_on_corruption_battle_pass(monster, current, total)
+
 
 func _on_capture_succeeded(monster: Node, method: int, bonus_data: Dictionary) -> void:
 	"""Show dramatic capture success animation"""
 	if not monster or not is_instance_valid(monster):
 		return
-	
+
 	var name: String = monster.character_name if "character_name" in monster else "Monster"
 	var method_name := _get_capture_method_name(method)
-	
+
 	_append_to_log("[color=lime][b]★ CAPTURE SUCCESS! ★[/b][/color]")
 	_append_to_log("[color=green]%s has been captured via %s![/color]" % [name, method_name])
-	
+
 	# Hide capture overlay
 	_hide_capture_overlay()
-	
+
 	# Show success popup
 	_show_capture_result_popup(true, name, method_name)
-	
+
 	# Flash the monster's panel green
 	_flash_monster_panel(monster, Color(0.3, 1.0, 0.3, 1.0))
+
 
 func _on_capture_failed(monster: Node, method: int, reason: String) -> void:
 	"""Show capture failure animation"""
 	if not monster or not is_instance_valid(monster):
 		return
-	
+
 	var name: String = monster.character_name if "character_name" in monster else "Monster"
 	var method_name := _get_capture_method_name(method)
-	
+
 	_append_to_log("[color=red][b]✗ CAPTURE FAILED![/b][/color]")
 	_append_to_log("[color=salmon]%s[/color]" % reason)
-	
+
 	# Hide capture overlay
 	_hide_capture_overlay()
-	
+
 	# Show failure popup
 	_show_capture_result_popup(false, name, method_name)
-	
+
 	# Flash the monster's panel red
 	_flash_monster_panel(monster, Color(1.0, 0.3, 0.3, 1.0))
+
 
 func _get_capture_method_name(method: int) -> String:
 	"""Get display name for capture method"""
 	match method:
-		0: return "SOULBIND"
-		1: return "PURIFY"
-		2: return "DOMINATE"
-		3: return "BARGAIN"
-		_: return "UNKNOWN"
+		0:
+			return "SOULBIND"
+		1:
+			return "PURIFY"
+		2:
+			return "DOMINATE"
+		3:
+			return "BARGAIN"
+		_:
+			return "UNKNOWN"
+
 
 func _show_capture_overlay(color: Color) -> void:
 	"""Show semi-transparent overlay during capture"""
 	if _capture_overlay and is_instance_valid(_capture_overlay):
 		_capture_overlay.queue_free()
-	
+
 	_capture_overlay = ColorRect.new()
 	_capture_overlay.name = "CaptureOverlay"
 	_capture_overlay.color = color
@@ -4243,11 +4658,12 @@ func _show_capture_overlay(color: Color) -> void:
 	_capture_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_capture_overlay.z_index = 50
 	add_child(_capture_overlay)
-	
+
 	# Fade in
 	_capture_overlay.modulate.a = 0.0
 	var tween := create_tween()
 	tween.tween_property(_capture_overlay, "modulate:a", 1.0, 0.3)
+
 
 func _hide_capture_overlay() -> void:
 	"""Hide and remove capture overlay"""
@@ -4257,12 +4673,13 @@ func _hide_capture_overlay() -> void:
 		tween.tween_callback(_capture_overlay.queue_free)
 		_capture_overlay = null
 
+
 func _show_capture_result_popup(success: bool, monster_name: String, method_name: String) -> void:
 	"""Show dramatic capture result popup"""
 	var popup := PanelContainer.new()
 	popup.name = "CaptureResultPopup"
 	popup.z_index = 100
-	
+
 	# Style based on success/failure
 	var style := StyleBoxFlat.new()
 	if success:
@@ -4278,11 +4695,11 @@ func _show_capture_result_popup(success: bool, monster_name: String, method_name
 	style.content_margin_top = 30
 	style.content_margin_bottom = 30
 	popup.add_theme_stylebox_override("panel", style)
-	
+
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 10)
 	popup.add_child(vbox)
-	
+
 	# Title
 	var title := Label.new()
 	if success:
@@ -4294,7 +4711,7 @@ func _show_capture_result_popup(success: bool, monster_name: String, method_name
 	title.add_theme_font_size_override("font_size", 32)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
-	
+
 	# Monster name
 	var name_label := Label.new()
 	name_label.text = monster_name
@@ -4302,7 +4719,7 @@ func _show_capture_result_popup(success: bool, monster_name: String, method_name
 	name_label.add_theme_color_override("font_color", Color.WHITE)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(name_label)
-	
+
 	# Method used
 	var method_label := Label.new()
 	method_label.text = "via %s" % method_name
@@ -4310,29 +4727,32 @@ func _show_capture_result_popup(success: bool, monster_name: String, method_name
 	method_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 	method_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(method_label)
-	
+
 	add_child(popup)
-	
+
 	# Center on screen
 	await get_tree().process_frame
 	var viewport_size := get_viewport_rect().size
 	popup.position = (viewport_size - popup.size) / 2
-	
+
 	# Animate entrance
 	popup.modulate.a = 0.0
 	popup.scale = Vector2(0.5, 0.5)
 	popup.pivot_offset = popup.size / 2
-	
+
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(popup, "modulate:a", 1.0, 0.3).set_ease(Tween.EASE_OUT)
-	tween.tween_property(popup, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	
+	tween.tween_property(popup, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(
+		Tween.TRANS_BACK
+	)
+
 	# Hold and fade out
 	tween.set_parallel(false)
 	tween.tween_interval(2.0)
 	tween.tween_property(popup, "modulate:a", 0.0, 0.5)
 	tween.tween_callback(popup.queue_free)
+
 
 func _flash_monster_panel(monster: Node, color: Color) -> void:
 	"""Flash a monster's sidebar panel with a color"""
@@ -4341,38 +4761,46 @@ func _flash_monster_panel(monster: Node, color: Color) -> void:
 		panel = monster.get_meta("enemy_sidebar_panel")
 	elif monster.has_meta("ui_panel"):
 		panel = monster.get_meta("ui_panel")
-	
+
 	if not panel or not is_instance_valid(panel):
 		return
-	
+
 	var tween := create_tween()
 	tween.tween_property(panel, "modulate", color, 0.15)
 	tween.tween_property(panel, "modulate", Color.WHITE, 0.3)
 	tween.tween_property(panel, "modulate", color.lerp(Color.WHITE, 0.5), 0.15)
 	tween.tween_property(panel, "modulate", Color.WHITE, 0.2)
 
+
 func animate_corruption_change(monster: Node, new_corruption: float) -> void:
 	"""Public method to animate corruption bar change (called from battle system)"""
 	if not monster or not is_instance_valid(monster):
 		return
-	
+
 	var corruption_bar := _get_monster_corruption_bar(monster)
 	if not corruption_bar:
 		return
-	
+
 	# Calculate percentage
 	var max_corruption: float = 100.0
 	if "max_corruption" in monster:
 		max_corruption = monster.max_corruption
 	var new_percent := (new_corruption / max_corruption) * 100.0
-	
+
 	# Animate smoothly
 	var tween := create_tween()
-	tween.tween_property(corruption_bar, "value", new_percent, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	(
+		tween
+		. tween_property(corruption_bar, "value", new_percent, 0.4)
+		. set_ease(Tween.EASE_OUT)
+		. set_trans(Tween.TRANS_CUBIC)
+	)
+
 
 # =============================================================================
 # CLEANUP
 # =============================================================================
+
 
 func _exit_tree() -> void:
 	# Disconnect BattleManager signals (connected in set_battle_manager)
@@ -4389,7 +4817,7 @@ func _exit_tree() -> void:
 			battle_manager.battle_defeat.disconnect(_on_defeat)
 		if battle_manager.action_animation_started.is_connected(_on_action_started):
 			battle_manager.action_animation_started.disconnect(_on_action_started)
-	
+
 	# Disconnect EventBus signals to prevent errors after scene is freed
 	if EventBus.action_executed.is_connected(_on_action_executed):
 		EventBus.action_executed.disconnect(_on_action_executed)
@@ -4409,30 +4837,30 @@ func _exit_tree() -> void:
 		EventBus.level_up.disconnect(_on_character_level_up)
 	if EventBus.battle_started.is_connected(_on_battle_started_clear_level_ups):
 		EventBus.battle_started.disconnect(_on_battle_started_clear_level_ups)
-	
+
 	# Disconnect capture system signals
 	if EventBus.corruption_battle_started.is_connected(_on_corruption_battle_started_event):
 		EventBus.corruption_battle_started.disconnect(_on_corruption_battle_started_event)
 	if EventBus.corruption_battle_pass_completed.is_connected(_on_corruption_battle_pass_event):
 		EventBus.corruption_battle_pass_completed.disconnect(_on_corruption_battle_pass_event)
-	
+
 	# Disconnect viewport size changed signal
 	if get_viewport() and get_viewport().size_changed.is_connected(_on_viewport_size_changed):
 		get_viewport().size_changed.disconnect(_on_viewport_size_changed)
-	
+
 	# Kill any running tweens
 	for tween in _turn_order_tweens:
 		if tween and tween.is_valid():
 			tween.kill()
 	_turn_order_tweens.clear()
-	
+
 	# Kill corruption bar tweens
 	for monster in _corruption_bar_tweens:
 		var tween: Tween = _corruption_bar_tweens[monster]
 		if tween and tween.is_valid():
 			tween.kill()
 	_corruption_bar_tweens.clear()
-	
+
 	# Clean up capture overlay
 	if _capture_overlay and is_instance_valid(_capture_overlay):
 		_capture_overlay.queue_free()

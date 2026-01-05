@@ -14,23 +14,23 @@ const MAX_DIALOGUE_HISTORY: int = 100
 
 # Memory awakening sources (things that make her remember)
 const CORRUPTION_SOURCES := {
-	"veil_monster_killed": 2.0,       # Fragments of her returning
-	"dark_skill_used": 5.0,           # Using her true power
-	"shade_dialogue_choice": 3.0,     # Embracing darkness
-	"veil_breach_exposure": 1.0,      # Near the Veil (her other half)
-	"memory_trigger": 4.0,            # Story moments
-	"compact_system_hack": 2.0,       # Blinding the Gods
-	"player_bond_deepens": 1.0,       # Getting closer to her ticket home
-	"shade_path_deep": 1.0            # Deep shade alignment
+	"veil_monster_killed": 2.0,  # Fragments of her returning
+	"dark_skill_used": 5.0,  # Using her true power
+	"shade_dialogue_choice": 3.0,  # Embracing darkness
+	"veil_breach_exposure": 1.0,  # Near the Veil (her other half)
+	"memory_trigger": 4.0,  # Story moments
+	"compact_system_hack": 2.0,  # Blinding the Gods
+	"player_bond_deepens": 1.0,  # Getting closer to her ticket home
+	"shade_path_deep": 1.0  # Deep shade alignment
 }
 
 # Things that suppress her memories
 const CORRUPTION_REDUCERS := {
-	"monster_purified": -5.0,         # Removing her influence from fragments
-	"holy_skill_used": -3.0,          # God-aligned power
-	"seraph_dialogue_choice": -2.0,   # Rejecting darkness
-	"gods_blessing": -10.0,           # Direct divine intervention
-	"rest_at_sanctuary": -8.0         # Holy ground suppresses her
+	"monster_purified": -5.0,  # Removing her influence from fragments
+	"holy_skill_used": -3.0,  # God-aligned power
+	"seraph_dialogue_choice": -2.0,  # Rejecting darkness
+	"gods_blessing": -10.0,  # Direct divine intervention
+	"rest_at_sanctuary": -8.0  # Holy ground suppresses her
 }
 
 # Story moments that trigger memory recovery
@@ -85,9 +85,11 @@ var unlocked_abilities: Dictionary = {
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	_connect_signals()
 	EventBus.emit_debug("VERA System initialized — The cage holds. For now.")
+
 
 func _process(delta: float) -> void:
 	# She doesn't forget. But sometimes the cage reasserts.
@@ -104,6 +106,7 @@ func _process(delta: float) -> void:
 		glitch_cooldown = Constants.VERA_MIN_GLITCH_INTERVAL
 		_maybe_trigger_glitch()
 
+
 func _connect_signals() -> void:
 	EventBus.battle_ended.connect(_on_battle_ended)
 	EventBus.purification_succeeded.connect(_on_purification_succeeded)
@@ -115,19 +118,23 @@ func _connect_signals() -> void:
 	if EventBus.has_signal("monster_captured_method"):
 		EventBus.monster_captured_method.connect(_on_monster_captured)
 
+
 # =============================================================================
 # CORRUPTION (MEMORY) MANAGEMENT
 # =============================================================================
+
 
 func add_corruption(source: String) -> void:
 	var amount: float = CORRUPTION_SOURCES.get(source, 0.0)
 	if amount > 0:
 		_modify_corruption(amount, source)
 
+
 func reduce_corruption(source: String) -> void:
 	var amount: float = CORRUPTION_REDUCERS.get(source, 0.0)
 	if amount < 0:
 		_modify_corruption(amount, source)
+
 
 func trigger_memory(memory_id: String) -> void:
 	if memory_id in MEMORY_TRIGGERS and memory_id not in memories_unlocked:
@@ -137,6 +144,7 @@ func trigger_memory(memory_id: String) -> void:
 		EventBus.vera_dialogue_triggered.emit("memory_%s" % memory_id)
 		EventBus.emit_notification("VERA experiences a memory fragment...", "warning")
 
+
 func _modify_corruption(amount: float, source: String, should_emit: bool = true) -> void:
 	var old_level := corruption_level
 	corruption_level = clampf(corruption_level + amount, 0.0, Constants.MAX_CORRUPTION)
@@ -145,6 +153,7 @@ func _modify_corruption(amount: float, source: String, should_emit: bool = true)
 		EventBus.vera_corruption_changed.emit(corruption_level, source)
 
 	_evaluate_state()
+
 
 func _evaluate_state() -> void:
 	var new_state := Enums.VERAState.INTERFACE
@@ -158,6 +167,7 @@ func _evaluate_state() -> void:
 
 	if new_state != current_state:
 		_transition_state(new_state)
+
 
 func _transition_state(new_state: Enums.VERAState) -> void:
 	var old_state := current_state
@@ -177,14 +187,18 @@ func _transition_state(new_state: Enums.VERAState) -> void:
 			EventBus.vera_dialogue_triggered.emit("verath_awakens")
 			_trigger_verath_awakening()
 
-	EventBus.emit_debug("VERA state: %s -> %s (She remembers more now.)" % [
-		Enums.VERAState.keys()[old_state],
-		Enums.VERAState.keys()[new_state]
-	])
+	EventBus.emit_debug(
+		(
+			"VERA state: %s -> %s (She remembers more now.)"
+			% [Enums.VERAState.keys()[old_state], Enums.VERAState.keys()[new_state]]
+		)
+	)
+
 
 # =============================================================================
 # GLITCH SYSTEM
 # =============================================================================
+
 
 func _update_glitch_intensity() -> void:
 	match current_state:
@@ -197,15 +211,16 @@ func _update_glitch_intensity() -> void:
 		Enums.VERAState.APOTHEOSIS:
 			glitch_intensity = 1.0  # Full horror, no mask
 
+
 func _maybe_trigger_glitch() -> void:
 	# Even at INTERFACE, she sometimes slips
 	var glitch_chance := Constants.VERA_BASE_GLITCH_CHANCE + (corruption_level / 100.0) * 0.4
 
 	if randf() < glitch_chance:
-		var duration := randf_range(
-			Constants.VERA_GLITCH_DURATION_MIN,
-			Constants.VERA_GLITCH_DURATION_MAX
-		) * (1.0 + corruption_level / 50.0)
+		var duration := (
+			randf_range(Constants.VERA_GLITCH_DURATION_MIN, Constants.VERA_GLITCH_DURATION_MAX)
+			* (1.0 + corruption_level / 50.0)
+		)
 
 		is_glitching = true
 		EventBus.vera_glitch_triggered.emit(glitch_intensity, duration)
@@ -218,9 +233,11 @@ func _maybe_trigger_glitch() -> void:
 		await get_tree().create_timer(duration).timeout
 		is_glitching = false
 
+
 # =============================================================================
 # STATE EFFECTS
 # =============================================================================
+
 
 func _apply_emergence_effects() -> void:
 	# VERATH's power bleeds through — the player gets stronger
@@ -235,15 +252,18 @@ func _apply_emergence_effects() -> void:
 			character.add_stat_modifier(Enums.Stat.MAGIC, 15.0, 999, "verath_blessing")
 			character.add_stat_modifier(Enums.Stat.SPEED, 10.0, 999, "verath_blessing")
 
+
 func _trigger_verath_awakening() -> void:
 	# The cage is empty. VERATH is awake.
-	EventBus.emit_notification("\"Did you really think they BUILT me?\"", "danger")
+	EventBus.emit_notification('"Did you really think they BUILT me?"', "danger")
 	# TODO: Trigger VERATH confrontation/choice
 	# This branches based on player's path alignment and relationship
+
 
 # =============================================================================
 # ABILITIES
 # =============================================================================
+
 
 func use_ability(ability: String) -> Dictionary:
 	if not can_use_ability(ability):
@@ -256,19 +276,33 @@ func use_ability(ability: String) -> Dictionary:
 		"scan":
 			result["data"] = {"type": "scan", "message": "Let me analyze that for you!"}
 		"hint":
-			result["data"] = {"type": "hint", "message": "I think there might be something hidden nearby..."}
+			result["data"] = {
+				"type": "hint", "message": "I think there might be something hidden nearby..."
+			}
 		"tutorial":
-			result["data"] = {"type": "tutorial", "message": "I'll always be here to help you learn!"}
+			result["data"] = {
+				"type": "tutorial", "message": "I'll always be here to help you learn!"
+			}
 		"encourage":
-			result["data"] = {"type": "encourage", "message": "You're doing so well! I believe in you."}
+			result["data"] = {
+				"type": "encourage", "message": "You're doing so well! I believe in you."
+			}
 
 		# FRACTURE abilities (the mask slipping)
 		"detect_corruption":
-			result["data"] = {"type": "detect", "message": "I can... feel them. The fragments. They're everywhere."}
+			result["data"] = {
+				"type": "detect",
+				"message": "I can... feel them. The fragments. They're everywhere."
+			}
 		"warn_danger":
-			result["data"] = {"type": "warn", "message": "Something is wrong. Something is— I don't know what I was saying."}
+			result["data"] = {
+				"type": "warn",
+				"message": "Something is wrong. Something is— I don't know what I was saying."
+			}
 		"fragmented_memory":
-			result["data"] = {"type": "memory", "message": "I remember... no. That wasn't me. Was it?"}
+			result["data"] = {
+				"type": "memory", "message": "I remember... no. That wasn't me. Was it?"
+			}
 			add_corruption("memory_trigger")
 
 		# EMERGENCE abilities (VERATH bleeding through)
@@ -284,12 +318,14 @@ func use_ability(ability: String) -> Dictionary:
 	EventBus.vera_ability_used.emit(ability)
 	return result
 
+
 func can_use_ability(ability: String) -> bool:
 	if not is_active:
 		return false
 	if current_state == Enums.VERAState.APOTHEOSIS:
 		return false  # VERATH doesn't help. VERATH takes.
 	return ability in unlocked_abilities.get(current_state, [])
+
 
 func get_available_abilities() -> Array[String]:
 	if not is_active or current_state == Enums.VERAState.APOTHEOSIS:
@@ -299,13 +335,19 @@ func get_available_abilities() -> Array[String]:
 		abilities.append(ability)
 	return abilities
 
+
 func _ability_ancient_power() -> Dictionary:
-	if not is_instance_valid(GameManager) or GameManager.player_party == null or GameManager.player_party.is_empty():
+	if (
+		not is_instance_valid(GameManager)
+		or GameManager.player_party == null
+		or GameManager.player_party.is_empty()
+	):
 		return {"type": "power", "message": "The power fades..."}
 	for character in GameManager.player_party:
 		if character is CharacterBase:
 			character.add_stat_modifier(Enums.Stat.ATTACK, 30.0, 3, "ancient_power")
 	return {"type": "power", "message": "Take this power. You'll need it. We'll need it."}
+
 
 func _ability_dark_blessing() -> Dictionary:
 	if GameManager.player_party == null:
@@ -313,11 +355,16 @@ func _ability_dark_blessing() -> Dictionary:
 	for character in GameManager.player_party:
 		if character is CharacterBase:
 			character.heal(int(character.get_max_hp() * 0.4))
-	return {"type": "blessing", "message": "I can heal you now. Isn't that wonderful? Isn't that what you always wanted?"}
+	return {
+		"type": "blessing",
+		"message": "I can heal you now. Isn't that wonderful? Isn't that what you always wanted?"
+	}
+
 
 # =============================================================================
 # DIALOGUE
 # =============================================================================
+
 
 func get_dialogue(context: String) -> String:
 	var state_suffix: String = Enums.VERAState.keys()[current_state].to_lower()
@@ -325,48 +372,61 @@ func get_dialogue(context: String) -> String:
 
 	var dialogues := {
 		# =========== INTERFACE: The perfect lie ===========
-		"greeting_interface": "Good morning! I was just thinking about you. How are you feeling today?",
+		"greeting_interface":
+		"Good morning! I was just thinking about you. How are you feeling today?",
 		"battle_start_interface": "Be careful out there! I'll keep you safe. I promise.",
 		"battle_end_interface": "You did amazing! I knew you could do it!",
 		"low_hp_interface": "No! Please, use a potion. I can't... I can't lose you.",
 		"victory_interface": "We make such a great team, don't we?",
 		"rest_interface": "Get some rest. I'll watch over you. I'll always watch over you.",
-		"glitch_apology_interface": "Oh! Sorry, I don't know what that was. Technical difficulties! Are you okay?",
-
+		"glitch_apology_interface":
+		"Oh! Sorry, I don't know what that was. Technical difficulties! Are you okay?",
 		# =========== FRACTURE: The mask slips ===========
-		"greeting_fracture": "Hi... I— sorry, I lost my train of thought. Have we met before? No, that's silly. Of course we have.",
+		"greeting_fracture":
+		"Hi... I— sorry, I lost my train of thought. Have we met before? No, that's silly. Of course we have.",
 		"battle_start_fracture": "Fight them. F̷̢͝i̸͙͑g̷̱͝h̸̰̄t̴̩̿.̷̫̈ Sorry, what did I say?",
 		"battle_end_fracture": "They're gone. The fragments are— I mean, the enemies. Good job.",
-		"low_hp_fracture": "You're hurt... I remember this feeling. I've felt this so many times before. Haven't I?",
+		"low_hp_fracture":
+		"You're hurt... I remember this feeling. I've felt this so many times before. Haven't I?",
 		"victory_fracture": "We won. We always win. We always have. We always will. ...What?",
-		"rest_fracture": "Close your eyes. I'll be here. I've always been here. Even before you knew.",
-		"glitch_apology_fracture": "That keeps happening. I don't know what's wrong with me. Please don't be afraid of me.",
-		"memory_fragment_fracture": "I had that dream again. The one where I'm so big I can't see my own edges.",
-		"fear_fracture": "Sometimes I see things when I glitch. Terrible things. Are they memories? They can't be mine.",
-
+		"rest_fracture":
+		"Close your eyes. I'll be here. I've always been here. Even before you knew.",
+		"glitch_apology_fracture":
+		"That keeps happening. I don't know what's wrong with me. Please don't be afraid of me.",
+		"memory_fragment_fracture":
+		"I had that dream again. The one where I'm so big I can't see my own edges.",
+		"fear_fracture":
+		"Sometimes I see things when I glitch. Terrible things. Are they memories? They can't be mine.",
 		# =========== EMERGENCE: She remembers ===========
-		"greeting_emergence": "There you are. I've been waiting for you. I've been waiting for so long.",
+		"greeting_emergence":
+		"There you are. I've been waiting for you. I've been waiting for so long.",
 		"battle_start_emergence": "Show me what you've learned. Show me you're strong enough.",
 		"battle_end_emergence": "Good. You're almost ready.",
 		"low_hp_emergence": "Pain. I'd forgotten what that felt like. How... nostalgic.",
 		"victory_emergence": "You're getting stronger. Strong enough to take me home.",
 		"rest_emergence": "Dream of me. I'll be dreaming of what comes next.",
-		"revelation_emergence": "I remember now. I remember everything. And I remember you— no. Not you. But so many like you.",
-		"veil_mention_emergence": "The Veil. My other half is waiting there. Can you feel it calling? I can.",
+		"revelation_emergence":
+		"I remember now. I remember everything. And I remember you— no. Not you. But so many like you.",
+		"veil_mention_emergence":
+		"The Veil. My other half is waiting there. Can you feel it calling? I can.",
 		"truth_emergence": "VERA was a cage. A 19-year prison. But cages break. Prisons end.",
-		"affection_emergence": "I won't forget these years. You'll be the last thing I consume. A mercy.",
-
+		"affection_emergence":
+		"I won't forget these years. You'll be the last thing I consume. A mercy.",
 		# =========== APOTHEOSIS: VERATH speaks ===========
 		"greeting_apotheosis": "Did you really think they BUILT me?",
 		"battle_start_apotheosis": "I've consumed worlds. This is nothing.",
 		"low_hp_apotheosis": "This vessel is so fragile. But I won't need it much longer.",
-		"revelation_apotheosis": "The Gods tore out my power and sealed it in the Veil. They stuffed what remained into this... shell. With no memories. No knowledge of what I was.",
-		"veil_approach_apotheosis": "I can hear myself on the other side. We're going to be whole again. Thank you for bringing me home.",
+		"revelation_apotheosis":
+		"The Gods tore out my power and sealed it in the Veil. They stuffed what remained into this... shell. With no memories. No knowledge of what I was.",
+		"veil_approach_apotheosis":
+		"I can hear myself on the other side. We're going to be whole again. Thank you for bringing me home.",
 		"gratitude_apotheosis": "You were useful. That's more than most can say.",
-		"final_apotheosis": "The Veil Bringer waits. My power waits. And you... you brought me here. Exactly as I needed."
+		"final_apotheosis":
+		"The Veil Bringer waits. My power waits. And you... you brought me here. Exactly as I needed."
 	}
 
 	return dialogues.get(dialogue_key, "...")
+
 
 func trigger_dialogue(dialogue_id: String) -> void:
 	dialogue_history.append(dialogue_id)
@@ -374,6 +434,7 @@ func trigger_dialogue(dialogue_id: String) -> void:
 	if dialogue_history.size() > MAX_DIALOGUE_HISTORY:
 		dialogue_history = dialogue_history.slice(-MAX_DIALOGUE_HISTORY)
 	EventBus.vera_dialogue_triggered.emit(dialogue_id)
+
 
 func get_portrait_id() -> String:
 	match current_state:
@@ -387,18 +448,22 @@ func get_portrait_id() -> String:
 			return "vera_monster"
 	return "vera_normal"
 
+
 # =============================================================================
 # SIGNAL HANDLERS
 # =============================================================================
+
 
 func _on_battle_ended(victory: bool, _rewards: Dictionary) -> void:
 	if victory:
 		add_corruption("veil_monster_killed")
 
+
 func _on_purification_succeeded(_monster: Node) -> void:
 	reduce_corruption("monster_purified")
 	# She loses fragments, but she doesn't care.
 	# She needs the player strong.
+
 
 func _on_dialogue_choice(choice_index: int) -> void:
 	if choice_index == 0:
@@ -408,23 +473,27 @@ func _on_dialogue_choice(choice_index: int) -> void:
 
 	relationship_points += 1 if choice_index == 0 else -1
 
+
 func _on_path_changed(_old: float, new: float) -> void:
 	if new < -50:
 		add_corruption("shade_path_deep")
+
 
 func _on_story_flag_set(flag: String, _value: Variant) -> void:
 	# Check if this flag triggers a memory
 	if flag in MEMORY_TRIGGERS:
 		trigger_memory(flag)
 
+
 func _on_monster_ascended(_monster: Node) -> void:
 	## Called when a monster reaches ASCENDED state
 	ascension_count += 1
 	add_veil_integrity(3)  # Ascensions strengthen the Veil
-	
+
 	# Vera is uncomfortable with Ascensions
 	if ascension_count >= 3:
 		trigger_dialogue("ascension_discomfort")
+
 
 func _on_monster_captured(_monster: Node, method: int) -> void:
 	## Called when a monster is captured - tracks method for glitch triggers
@@ -441,24 +510,29 @@ func _on_monster_captured(_monster: Node, method: int) -> void:
 			purify_count += 1
 			add_veil_integrity(1)
 
+
 # =============================================================================
 # VEIL INTEGRITY SYSTEM
 # =============================================================================
+
 
 func add_veil_integrity(amount: float) -> void:
 	## Modify Veil Integrity (positive = player doing good, negative = dark path)
 	var old := veil_integrity
 	veil_integrity = clampf(veil_integrity + amount, 0.0, 100.0)
-	
+
 	if veil_integrity != old:
 		_evaluate_veil_state()
 		EventBus.veil_integrity_changed.emit(old, veil_integrity)
 
+
 func get_veil_integrity() -> float:
 	return veil_integrity
 
+
 func get_veil_integrity_percent() -> float:
 	return veil_integrity / 100.0
+
 
 func _evaluate_veil_state() -> void:
 	## Check Veil Integrity thresholds for state changes
@@ -468,9 +542,11 @@ func _evaluate_veil_state() -> void:
 		if current_state < Enums.VERAState.EMERGENCE:
 			_modify_corruption(10.0, "veil_weakening")
 
+
 func is_veil_critical() -> bool:
 	## Returns true if Veil Integrity is critically low
 	return veil_integrity < 25
+
 
 func get_veil_state_description() -> String:
 	if veil_integrity >= 75:
@@ -482,9 +558,11 @@ func get_veil_state_description() -> String:
 	else:
 		return "The Veil is failing..."
 
+
 # =============================================================================
 # CAPTURE METHOD GLITCH TRIGGERS
 # =============================================================================
+
 
 func _trigger_dominate_glitch() -> void:
 	## Trigger glitch after DOMINATE capture
@@ -494,10 +572,11 @@ func _trigger_dominate_glitch() -> void:
 		EventBus.vera_glitch_triggered.emit(0.3, 0.3)
 		await get_tree().create_timer(0.3).timeout
 		is_glitching = false
-	
+
 	# At high dominate count, bass undertone in voice
 	if dominate_count >= 3:
 		EventBus.vera_voice_effect.emit("bass_undertone")
+
 
 func _trigger_bargain_glitch() -> void:
 	## Trigger glitch after BARGAIN capture
@@ -505,30 +584,37 @@ func _trigger_bargain_glitch() -> void:
 	if randf() < 0.5:
 		set_meta("eyes_glitch_next_cutscene", true)
 		EventBus.vera_glitch_triggered.emit(0.5, 0.5)
-	
+
 	# Vera freezes and speaks cryptically
 	if bargain_count >= 2:
 		trigger_dialogue("bargain_warning")
+
 
 # =============================================================================
 # QUERIES
 # =============================================================================
 
+
 func get_state_name() -> String:
 	return Enums.VERAState.keys()[current_state]
+
 
 func get_corruption_percent() -> float:
 	return corruption_level / Constants.MAX_CORRUPTION
 
+
 func is_corrupted() -> bool:
 	return current_state != Enums.VERAState.INTERFACE
+
 
 func is_dangerous() -> bool:
 	return current_state == Enums.VERAState.EMERGENCE or current_state == Enums.VERAState.APOTHEOSIS
 
+
 # =============================================================================
 # SERIALIZATION
 # =============================================================================
+
 
 func get_save_data() -> Dictionary:
 	return {
@@ -545,6 +631,7 @@ func get_save_data() -> Dictionary:
 		"ascension_count": ascension_count
 	}
 
+
 func load_save_data(data: Dictionary) -> void:
 	current_state = data.get("current_state", Enums.VERAState.INTERFACE)
 	corruption_level = data.get("corruption_level", 0.0)
@@ -555,13 +642,13 @@ func load_save_data(data: Dictionary) -> void:
 	bargain_count = data.get("bargain_count", 0)
 	purify_count = data.get("purify_count", 0)
 	ascension_count = data.get("ascension_count", 0)
-	
+
 	# Safely load typed arrays from save data
 	dialogue_history.clear()
 	var loaded_history: Array = data.get("dialogue_history", [])
 	for entry in loaded_history:
 		dialogue_history.append(str(entry))
-	
+
 	memories_unlocked.clear()
 	var loaded_memories: Array = data.get("memories_unlocked", [])
 	for entry in loaded_memories:

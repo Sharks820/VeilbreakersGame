@@ -10,7 +10,7 @@ extends Node
 signal defense_popup_shown(defender: CharacterBase, attacker: CharacterBase)
 signal defense_success(defender: CharacterBase, is_perfect: bool, reduction: float)
 signal defense_failed(defender: CharacterBase, reason: String)
-signal defense_window_closed()
+signal defense_window_closed
 
 # =============================================================================
 # STATE
@@ -36,6 +36,7 @@ var timing_bar: ProgressBar = null
 # INITIALIZATION
 # =============================================================================
 
+
 func _ready() -> void:
 	# Create timers
 	window_timer = Timer.new()
@@ -50,6 +51,7 @@ func _ready() -> void:
 	delay_timer.timeout.connect(_on_delay_complete)
 	add_child(delay_timer)
 
+
 func setup_ui(container: Control, button: Button, bar: ProgressBar = null) -> void:
 	## Connect UI elements for the timed defense popup
 	popup_container = container
@@ -62,9 +64,11 @@ func setup_ui(container: Control, button: Button, bar: ProgressBar = null) -> vo
 	if popup_container:
 		popup_container.hide()
 
+
 # =============================================================================
 # DEFENSE FLOW
 # =============================================================================
+
 
 func start_defense_opportunity(defender: CharacterBase, attacker: CharacterBase) -> Dictionary:
 	## Called when an enemy attacks - gives defender chance to block
@@ -75,7 +79,9 @@ func start_defense_opportunity(defender: CharacterBase, attacker: CharacterBase)
 	defense_result = {}
 
 	# Start with random delay to prevent spam timing
-	var delay := randf_range(Constants.TIMED_DEFENSE_POPUP_DELAY_MIN, Constants.TIMED_DEFENSE_POPUP_DELAY_MAX)
+	var delay := randf_range(
+		Constants.TIMED_DEFENSE_POPUP_DELAY_MIN, Constants.TIMED_DEFENSE_POPUP_DELAY_MAX
+	)
 	current_state = DefenseState.WAITING_DELAY
 	delay_timer.start(delay)
 
@@ -99,6 +105,7 @@ func start_defense_opportunity(defender: CharacterBase, attacker: CharacterBase)
 			break
 
 	return defense_result
+
 
 func _on_delay_complete() -> void:
 	## Delay finished, show the popup
@@ -129,6 +136,7 @@ func _on_delay_complete() -> void:
 
 	defense_popup_shown.emit(current_defender, current_attacker)
 
+
 func _on_popup_button_pressed() -> void:
 	## Player clicked the defense button
 	if current_state != DefenseState.POPUP_ACTIVE:
@@ -142,10 +150,12 @@ func _on_popup_button_pressed() -> void:
 
 	_complete_defense(true, "success", is_perfect)
 
+
 func _on_window_expired() -> void:
 	## Timing window closed without input
 	if current_state == DefenseState.POPUP_ACTIVE:
 		_complete_defense(false, "timeout")
+
 
 func _complete_defense(success: bool, reason: String, is_perfect: bool = false) -> void:
 	## Finalize the defense attempt
@@ -161,30 +171,40 @@ func _complete_defense(success: bool, reason: String, is_perfect: bool = false) 
 
 	var reduction := 0.0
 	if success:
-		reduction = Constants.TIMED_DEFENSE_PERFECT_REDUCTION if is_perfect else Constants.TIMED_DEFENSE_REDUCTION
+		reduction = (
+			Constants.TIMED_DEFENSE_PERFECT_REDUCTION
+			if is_perfect
+			else Constants.TIMED_DEFENSE_REDUCTION
+		)
 		defense_success.emit(current_defender, is_perfect, reduction)
-		EventBus.emit_debug("%s TIMED DEFENSE %s! (%.0f%% reduction)" % [
-			current_defender.character_name,
-			"PERFECT" if is_perfect else "SUCCESS",
-			reduction * 100
-		])
+		EventBus.emit_debug(
+			(
+				"%s TIMED DEFENSE %s! (%.0f%% reduction)"
+				% [
+					current_defender.character_name,
+					"PERFECT" if is_perfect else "SUCCESS",
+					reduction * 100
+				]
+			)
+		)
 	else:
 		defense_failed.emit(current_defender, reason)
-		EventBus.emit_debug("%s timed defense FAILED (%s)" % [current_defender.character_name, reason])
+		EventBus.emit_debug(
+			"%s timed defense FAILED (%s)" % [current_defender.character_name, reason]
+		)
 
 	defense_result = {
-		"success": success,
-		"is_perfect": is_perfect,
-		"reduction": reduction,
-		"reason": reason
+		"success": success, "is_perfect": is_perfect, "reduction": reduction, "reason": reason
 	}
 
 	defense_window_closed.emit()
 	current_state = DefenseState.IDLE
 
+
 # =============================================================================
 # INPUT HANDLING (Anti-spam)
 # =============================================================================
+
 
 func _input(event: InputEvent) -> void:
 	## Track early clicks during the delay phase to punish spam
@@ -196,9 +216,11 @@ func _input(event: InputEvent) -> void:
 			has_clicked_early = true
 			EventBus.emit_debug("Timed Defense: Early click detected - will fail!")
 
+
 # =============================================================================
 # PROCESS (Timing bar update)
 # =============================================================================
+
 
 func _process(_delta: float) -> void:
 	if current_state == DefenseState.POPUP_ACTIVE and timing_bar:
@@ -214,12 +236,15 @@ func _process(_delta: float) -> void:
 		else:
 			timing_bar.modulate = Color(1.0, 0.3, 0.3)  # Red
 
+
 # =============================================================================
 # UTILITIES
 # =============================================================================
 
+
 func is_active() -> bool:
 	return current_state != DefenseState.IDLE
+
 
 func cancel() -> void:
 	## Cancel any active defense opportunity

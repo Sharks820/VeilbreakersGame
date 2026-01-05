@@ -37,18 +37,25 @@ func load_all_data() -> void:
 	data_loaded.emit()
 	# Safety check for ErrorLogger autoload order
 	if has_node("/root/ErrorLogger"):
-		ErrorLogger.log_info("[DataManager] All data loaded: %d monsters, %d heroes, %d skills, %d items" % [
-			monsters.size(), heroes.size(), skills.size(), items.size()
-		])
+		ErrorLogger.log_info(
+			(
+				"[DataManager] All data loaded: %d monsters, %d heroes, %d skills, %d items"
+				% [monsters.size(), heroes.size(), skills.size(), items.size()]
+			)
+		)
 	else:
-		print("[DataManager] All data loaded: %d monsters, %d heroes, %d skills, %d items" % [
-			monsters.size(), heroes.size(), skills.size(), items.size()
-		])
+		print(
+			(
+				"[DataManager] All data loaded: %d monsters, %d heroes, %d skills, %d items"
+				% [monsters.size(), heroes.size(), skills.size(), items.size()]
+			)
+		)
 
 
 # =============================================================================
 # GENERIC RESOURCE LOADER (eliminates duplicate directory loading code)
 # =============================================================================
+
 
 func _load_resources_from_dir(path: String, id_property: String, target_dict: Dictionary) -> void:
 	## Generic loader: loads all .tres files from a directory into a dictionary
@@ -97,6 +104,7 @@ func _load_items() -> void:
 # PUBLIC API - Getters
 # ============================================================================
 
+
 func get_monster(monster_id: String) -> Resource:
 	if monsters.has(monster_id):
 		return monsters[monster_id]
@@ -128,6 +136,7 @@ func get_item(item_id: String) -> Resource:
 # ============================================================================
 # PUBLIC API - Collection Getters
 # ============================================================================
+
 
 func get_all_monsters() -> Array:
 	return monsters.values()
@@ -218,6 +227,7 @@ func get_equipment_by_slot(slot: int) -> Array:
 # ============================================================================
 # UTILITY
 # ============================================================================
+
 
 func is_loaded() -> bool:
 	return _is_loaded

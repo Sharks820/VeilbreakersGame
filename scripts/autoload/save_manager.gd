@@ -21,6 +21,7 @@ var is_loading: bool = false
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	_ensure_save_directory()
 	_load_slot_metadata()
@@ -28,12 +29,14 @@ func _ready() -> void:
 	EventBus.load_requested.connect(_on_load_requested)
 	EventBus.emit_debug("SaveManager initialized")
 
+
 func _exit_tree() -> void:
 	# Disconnect EventBus signals to prevent memory leaks
 	if EventBus.save_requested.is_connected(_on_save_requested):
 		EventBus.save_requested.disconnect(_on_save_requested)
 	if EventBus.load_requested.is_connected(_on_load_requested):
 		EventBus.load_requested.disconnect(_on_load_requested)
+
 
 func _ensure_save_directory() -> void:
 	var dir := DirAccess.open("user://")
@@ -44,6 +47,7 @@ func _ensure_save_directory() -> void:
 # =============================================================================
 # JSON FILE HELPERS (eliminates duplicate file reading/parsing)
 # =============================================================================
+
 
 func _read_json_file(path: String) -> Dictionary:
 	## Generic JSON file reader with error handling
@@ -81,15 +85,18 @@ func _write_json_file(path: String, data: Dictionary) -> bool:
 	file.close()
 	return true
 
+
 # =============================================================================
 # SLOT MANAGEMENT
 # =============================================================================
+
 
 func _load_slot_metadata() -> void:
 	save_slots.clear()
 	for i in range(Constants.MAX_SAVE_SLOTS):
 		var slot_data := _get_slot_metadata(i)
 		save_slots.append(slot_data)
+
 
 func _get_slot_metadata(slot: int) -> Dictionary:
 	var path := _get_save_path(slot)
@@ -108,16 +115,20 @@ func _get_slot_metadata(slot: int) -> Dictionary:
 		"version": data.get("version", 0)
 	}
 
+
 func get_slot_info(slot: int) -> Dictionary:
 	if slot >= 0 and slot < save_slots.size():
 		return save_slots[slot]
 	return {"empty": true, "slot": slot}
 
+
 func is_slot_empty(slot: int) -> bool:
 	return get_slot_info(slot).get("empty", true)
 
+
 func _get_save_path(slot: int) -> String:
 	return Constants.SAVE_DIR + "slot_%d%s" % [slot, Constants.SAVE_FILE_EXTENSION]
+
 
 func get_formatted_slot_time(slot: int) -> String:
 	var info := get_slot_info(slot)
@@ -128,9 +139,11 @@ func get_formatted_slot_time(slot: int) -> String:
 	var minutes: int = int((total_seconds % 3600) / 60)
 	return "%02d:%02d" % [hours, minutes]
 
+
 # =============================================================================
 # SAVE OPERATIONS
 # =============================================================================
+
 
 func save_game(slot: int) -> bool:
 	if is_saving:
@@ -155,6 +168,7 @@ func save_game(slot: int) -> bool:
 
 	return success
 
+
 func _compile_save_data() -> Dictionary:
 	var timestamp := Time.get_datetime_string_from_system()
 
@@ -167,14 +181,13 @@ func _compile_save_data() -> Dictionary:
 		"party_data": _get_party_save_data()
 	}
 
+
 func _get_vera_save_data() -> Dictionary:
 	# Get VERA save data from VERASystem if available
 	if has_node("/root/VERASystem"):
 		return get_node("/root/VERASystem").get_save_data()
-	return {
-		"corruption_level": 0.0,
-		"current_state": Enums.VERAState.INTERFACE
-	}
+	return {"corruption_level": 0.0, "current_state": Enums.VERAState.INTERFACE}
+
 
 func _get_inventory_save_data() -> Dictionary:
 	# TODO: Connect to InventorySystem when party/inventory integration is complete
@@ -183,10 +196,8 @@ func _get_inventory_save_data() -> Dictionary:
 		if inv.has_method("get_save_data"):
 			return inv.get_save_data()
 	# Fallback empty structure
-	return {
-		"items": {},
-		"equipment": {}
-	}
+	return {"items": {}, "equipment": {}}
+
 
 func _get_party_save_data() -> Array:
 	# TODO: Connect to GameManager party system when party management is complete
@@ -197,6 +208,7 @@ func _get_party_save_data() -> Array:
 	# Fallback empty array
 	return []
 
+
 func _write_save_file(slot: int, data: Dictionary) -> bool:
 	var path := _get_save_path(slot)
 	var success := _write_json_file(path, data)
@@ -204,9 +216,11 @@ func _write_save_file(slot: int, data: Dictionary) -> bool:
 		EventBus.emit_debug("Game saved to: %s" % path)
 	return success
 
+
 # =============================================================================
 # LOAD OPERATIONS
 # =============================================================================
+
 
 func load_game(slot: int) -> bool:
 	if is_loading:
@@ -239,15 +253,19 @@ func load_game(slot: int) -> bool:
 
 	return success
 
+
 func _read_save_file(slot: int) -> Dictionary:
 	var path := _get_save_path(slot)
 	return _read_json_file(path)
+
 
 func _apply_save_data(data: Dictionary) -> bool:
 	# Version check
 	var save_version: int = data.get("version", 0)
 	if save_version > SAVE_VERSION:
-		push_error("Save file version (%d) is newer than game version (%d)" % [save_version, SAVE_VERSION])
+		push_error(
+			"Save file version (%d) is newer than game version (%d)" % [save_version, SAVE_VERSION]
+		)
 		return false
 
 	# Apply game data
@@ -261,9 +279,11 @@ func _apply_save_data(data: Dictionary) -> bool:
 	EventBus.emit_debug("Save data applied successfully")
 	return true
 
+
 # =============================================================================
 # DELETE OPERATIONS
 # =============================================================================
+
 
 func delete_save(slot: int) -> bool:
 	var path := _get_save_path(slot)
@@ -281,11 +301,13 @@ func delete_save(slot: int) -> bool:
 
 	return false
 
+
 # =============================================================================
 # AUTOSAVE
 # =============================================================================
 
 var _autosave_timer: float = 0.0
+
 
 func _process(delta: float) -> void:
 	if GameManager.current_state in [Enums.GameState.OVERWORLD]:
@@ -294,34 +316,42 @@ func _process(delta: float) -> void:
 			_autosave_timer = 0.0
 			autosave()
 
+
 func autosave() -> void:
 	if current_slot >= 0:
 		EventBus.autosave_triggered.emit()
 		save_game(current_slot)
 		EventBus.emit_debug("Autosave completed")
 
+
 func reset_autosave_timer() -> void:
 	_autosave_timer = 0.0
+
 
 # =============================================================================
 # SIGNAL HANDLERS
 # =============================================================================
 
+
 func _on_save_requested(slot: int) -> void:
 	save_game(slot)
+
 
 func _on_load_requested(slot: int) -> void:
 	load_game(slot)
 
+
 # =============================================================================
 # UTILITY
 # =============================================================================
+
 
 func has_any_saves() -> bool:
 	for slot in save_slots:
 		if not slot.get("empty", true):
 			return true
 	return false
+
 
 func get_most_recent_slot() -> int:
 	var most_recent := -1

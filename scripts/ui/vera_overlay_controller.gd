@@ -28,16 +28,17 @@ var _portraits: Dictionary = {}
 
 # Horror colors for glitch frames
 var horror_colors: Array[Color] = [
-	Color(0.8, 0, 0, 0.3),      # Blood red
-	Color(0.5, 0, 0.5, 0.4),    # Void purple
-	Color(0, 0, 0, 0.8),        # Darkness
-	Color(1, 0, 0.5, 0.3),      # Sickly magenta
-	Color(0.2, 0, 0.2, 0.5)     # Deep void
+	Color(0.8, 0, 0, 0.3),  # Blood red
+	Color(0.5, 0, 0.5, 0.4),  # Void purple
+	Color(0, 0, 0, 0.8),  # Darkness
+	Color(1, 0, 0.5, 0.3),  # Sickly magenta
+	Color(0.2, 0, 0.2, 0.5)  # Deep void
 ]
 
 # =============================================================================
 # LIFECYCLE
 # =============================================================================
+
 
 func _ready() -> void:
 	_connect_signals()
@@ -48,9 +49,11 @@ func _ready() -> void:
 	if GameManager.current_state == Enums.GameState.MAIN_MENU:
 		container.visible = false
 
+
 func _process(delta: float) -> void:
 	if _glitch_active:
 		_process_glitch(delta)
+
 
 func _connect_signals() -> void:
 	EventBus.vera_state_changed.connect(_on_state_changed)
@@ -58,9 +61,11 @@ func _connect_signals() -> void:
 	EventBus.vera_glitch_triggered.connect(_on_glitch_triggered)
 	EventBus.game_state_changed.connect(_on_game_state_changed)
 
+
 # =============================================================================
 # DISPLAY UPDATE
 # =============================================================================
+
 
 func _update_display() -> void:
 	if not has_node("/root/VERASystem"):
@@ -99,6 +104,7 @@ func _update_display() -> void:
 	# Update available abilities
 	_update_abilities(vera)
 
+
 func _update_portrait(state: Enums.VERAState) -> void:
 	var portrait_ids := {
 		Enums.VERAState.INTERFACE: "vera_normal",
@@ -117,6 +123,7 @@ func _update_portrait(state: Enums.VERAState) -> void:
 		_portraits[portrait_id] = tex
 		portrait.texture = tex
 
+
 func _update_state_colors(state: Enums.VERAState) -> void:
 	match state:
 		Enums.VERAState.INTERFACE:
@@ -131,6 +138,7 @@ func _update_state_colors(state: Enums.VERAState) -> void:
 		Enums.VERAState.APOTHEOSIS:
 			state_label.add_theme_color_override("font_color", Color(0.9, 0.1, 0.1))  # Blood red
 			corruption_bar.modulate = Color(0.8, 0, 0)
+
 
 func _update_abilities(vera) -> void:
 	if not ability_container:
@@ -150,9 +158,11 @@ func _update_abilities(vera) -> void:
 		button.pressed.connect(_on_ability_pressed.bind(ability))
 		ability_container.add_child(button)
 
+
 # =============================================================================
 # SIGNAL HANDLERS
 # =============================================================================
+
 
 func _on_state_changed(_old: int, _new: int) -> void:
 	_update_display()
@@ -167,6 +177,7 @@ func _on_state_changed(_old: int, _new: int) -> void:
 
 	# Play sound effect
 	EventBus.sfx_play_requested.emit("vera_state_change", Vector2.ZERO)
+
 
 func _on_corruption_changed(new_value: float, _source: String) -> void:
 	# Store old value BEFORE any updates for comparison
@@ -185,6 +196,7 @@ func _on_corruption_changed(new_value: float, _source: String) -> void:
 		flash.tween_property(corruption_bar, "modulate", Color.RED, 0.1)
 		flash.tween_property(corruption_bar, "modulate", Color.WHITE, 0.2)
 
+
 func _on_glitch_triggered(intensity: float, duration: float = 0.3) -> void:
 	if intensity <= 0:
 		_glitch_active = false
@@ -196,6 +208,7 @@ func _on_glitch_triggered(intensity: float, duration: float = 0.3) -> void:
 	_glitch_timer = 0.0
 	glitch_overlay.visible = true
 
+
 func _on_game_state_changed(_old: Enums.GameState, new: Enums.GameState) -> void:
 	# Show overlay during gameplay, hide in menus
 	match new:
@@ -203,6 +216,7 @@ func _on_game_state_changed(_old: Enums.GameState, new: Enums.GameState) -> void
 			hide_overlay()
 		Enums.GameState.OVERWORLD, Enums.GameState.BATTLE:
 			show_overlay()
+
 
 func _on_ability_pressed(ability: String) -> void:
 	if has_node("/root/VERASystem"):
@@ -212,9 +226,11 @@ func _on_ability_pressed(ability: String) -> void:
 		else:
 			EventBus.emit_notification(result.get("reason", "Ability failed"), "warning")
 
+
 # =============================================================================
 # GLITCH EFFECTS
 # =============================================================================
+
 
 func _process_glitch(delta: float) -> void:
 	_glitch_timer += delta
@@ -242,24 +258,34 @@ func _process_glitch(delta: float) -> void:
 
 	# Text corruption during glitch
 	if randf() < 0.1:
-		var corrupt_names := ["V̸̢̛O̷̡̔I̵̢̛D̶̨̛", "H̷̨̛U̸̡̔N̵̢̛G̶̨̛E̷̡̔R̵̢̛", "Ṱ̵̛̈H̷̨̊E̸̢̓ ̵̧̌M̷̨̈́O̶̡̊U̵̢̓Ť̸̨Ḧ̷̡́", "S̵̨̛E̸̢̓Ȩ̵̌ ̷̨̈́M̶̡̊E̵̢̓"]
+		var corrupt_names := [
+			"V̸̢̛O̷̡̔I̵̢̛D̶̨̛",
+			"H̷̨̛U̸̡̔N̵̢̛G̶̨̛E̷̡̔R̵̢̛",
+			"Ṱ̵̛̈H̷̨̊E̸̢̓ ̵̧̌M̷̨̈́O̶̡̊U̵̢̓Ť̸̨Ḧ̷̡́",
+			"S̵̨̛E̸̢̓Ȩ̵̌ ̷̨̈́M̶̡̊E̵̢̓"
+		]
 		state_label.text = corrupt_names[randi() % corrupt_names.size()]
+
 
 # =============================================================================
 # PUBLIC INTERFACE
 # =============================================================================
 
+
 func show_overlay() -> void:
 	container.visible = true
 	_update_display()
 
+
 func hide_overlay() -> void:
 	container.visible = false
+
 
 func toggle_overlay() -> void:
 	container.visible = not container.visible
 	if container.visible:
 		_update_display()
+
 
 func pulse_corruption() -> void:
 	"""Visual pulse effect when corruption changes"""
@@ -270,9 +296,11 @@ func pulse_corruption() -> void:
 	_pulse_tween.tween_property(corruption_bar, "scale", Vector2(1.1, 1.1), 0.1)
 	_pulse_tween.tween_property(corruption_bar, "scale", Vector2.ONE, 0.2)
 
+
 # =============================================================================
 # CLEANUP
 # =============================================================================
+
 
 func _exit_tree() -> void:
 	# Disconnect EventBus signals to prevent errors after scene is freed
@@ -284,7 +312,7 @@ func _exit_tree() -> void:
 		EventBus.vera_glitch_triggered.disconnect(_on_glitch_triggered)
 	if EventBus.game_state_changed.is_connected(_on_game_state_changed):
 		EventBus.game_state_changed.disconnect(_on_game_state_changed)
-	
+
 	# Kill any running tweens
 	if _pulse_tween and _pulse_tween.is_valid():
 		_pulse_tween.kill()

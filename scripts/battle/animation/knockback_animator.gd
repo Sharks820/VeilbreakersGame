@@ -22,7 +22,13 @@ const RECOIL_OVERSHOOT := 0.3  # How much to overshoot on return (bounce effect)
 # STATIC METHODS - Can be called from anywhere
 # -----------------------------------------------------------------------------
 
-static func apply_knockback(target: Node2D, direction: Vector2 = Vector2.LEFT, intensity: float = 1.0, is_critical: bool = false) -> Tween:
+
+static func apply_knockback(
+	target: Node2D,
+	direction: Vector2 = Vector2.LEFT,
+	intensity: float = 1.0,
+	is_critical: bool = false
+) -> Tween:
 	"""Apply knockback to a character sprite with smooth return animation.
 
 	Args:
@@ -64,7 +70,9 @@ static func apply_knockback(target: Node2D, direction: Vector2 = Vector2.LEFT, i
 	return tween
 
 
-static func apply_knockback_from_attacker(target: Node2D, attacker: Node2D, intensity: float = 1.0, is_critical: bool = false) -> Tween:
+static func apply_knockback_from_attacker(
+	target: Node2D, attacker: Node2D, intensity: float = 1.0, is_critical: bool = false
+) -> Tween:
 	"""Apply knockback away from an attacker's position.
 
 	Args:
@@ -170,8 +178,7 @@ static func apply_shake(target: Node2D, intensity: float = 3.0, duration: float 
 
 	for i in range(shake_count):
 		var offset := Vector2(
-			randf_range(-intensity, intensity),
-			randf_range(-intensity, intensity)
+			randf_range(-intensity, intensity), randf_range(-intensity, intensity)
 		)
 		tween.tween_property(target, "position", original_pos + offset, 0.015)
 		tween.tween_property(target, "position", original_pos, 0.015)
@@ -203,7 +210,9 @@ static func apply_death_fall(target: Node2D, direction: Vector2 = Vector2.LEFT) 
 	tween.set_parallel(true)
 
 	# Fall with rotation
-	tween.tween_property(target, "position", fall_pos, 0.5).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(target, "position", fall_pos, 0.5).set_ease(Tween.EASE_IN).set_trans(
+		Tween.TRANS_QUAD
+	)
 
 	# Rotate as falling
 	var fall_rotation := deg_to_rad(45.0) if fall_dir.x < 0 else deg_to_rad(-45.0)

@@ -56,25 +56,28 @@ var _active: Array[Node] = []
 var _stack_counts: Dictionary = {}  # position_hash -> count
 var _last_spawn_time: Dictionary = {}  # position_hash -> time
 
+
 # -----------------------------------------------------------------------------
 # LIFECYCLE
 # -----------------------------------------------------------------------------
 func _ready() -> void:
 	_initialize_pool()
 
+
 func _initialize_pool() -> void:
 	if not damage_number_scene:
 		push_warning("DamageNumberSpawner: No scene assigned!")
 		return
-	
+
 	for i in range(pool_size):
 		var instance = damage_number_scene.instantiate()
 		instance.visible = false
 		add_child(instance)
 		_pool.append(instance)
-		
+
 		if instance.has_signal("finished"):
 			instance.finished.connect(_on_number_finished.bind(instance))
+
 
 # -----------------------------------------------------------------------------
 # PUBLIC API
@@ -102,6 +105,7 @@ func spawn_damage(
 
 	_spawn_at(position, config)
 
+
 func spawn_heal(position: Vector2, amount: int, is_hot: bool = false) -> void:
 	"""Spawn a healing number"""
 	var config = {
@@ -116,6 +120,7 @@ func spawn_heal(position: Vector2, amount: int, is_hot: bool = false) -> void:
 
 	_spawn_at(position, config)
 
+
 func spawn_miss(position: Vector2) -> void:
 	"""Spawn a miss indicator"""
 	var config = {
@@ -124,8 +129,9 @@ func spawn_miss(position: Vector2) -> void:
 		"is_critical": false,
 		"scale_mult": 0.8,
 	}
-	
+
 	_spawn_at(position, config)
+
 
 func spawn_status(position: Vector2, status_name: String, is_applying: bool = true) -> void:
 	"""Spawn status effect text"""
@@ -135,8 +141,9 @@ func spawn_status(position: Vector2, status_name: String, is_applying: bool = tr
 		"is_critical": false,
 		"scale_mult": 0.75,
 	}
-	
+
 	_spawn_at(position, config)
+
 
 func spawn_text(position: Vector2, text: String, color: Color = Color.WHITE) -> void:
 	"""Spawn arbitrary text"""
@@ -145,8 +152,9 @@ func spawn_text(position: Vector2, text: String, color: Color = Color.WHITE) -> 
 		"color": color,
 		"is_critical": false,
 	}
-	
+
 	_spawn_at(position, config)
+
 
 func spawn_combo(position: Vector2, combo_count: int) -> void:
 	"""Spawn combo counter"""
@@ -156,8 +164,9 @@ func spawn_combo(position: Vector2, combo_count: int) -> void:
 		"is_critical": combo_count >= 10,
 		"scale_mult": 0.6 + min(combo_count * 0.05, 0.4),
 	}
-	
+
 	_spawn_at(position, config)
+
 
 # -----------------------------------------------------------------------------
 # INTERNAL
@@ -166,78 +175,99 @@ func _spawn_at(position: Vector2, config: Dictionary) -> void:
 	var number = _get_from_pool()
 	if not number:
 		return
-	
+
 	# Calculate stack offset
 	var pos_hash = _position_hash(position)
 	var stack_count = _stack_counts.get(pos_hash, 0)
 	var offset = Vector2(0, -stack_count * stack_offset)
-	
+
 	# Track stacking
 	_stack_counts[pos_hash] = stack_count + 1
 	_last_spawn_time[pos_hash] = Time.get_ticks_msec()
-	
+
 	# Reset stack after delay
-	get_tree().create_timer(0.5).timeout.connect(func():
-		if _stack_counts.has(pos_hash):
-			_stack_counts[pos_hash] = max(0, _stack_counts[pos_hash] - 1)
+	get_tree().create_timer(0.5).timeout.connect(
+		func():
+			if _stack_counts.has(pos_hash):
+				_stack_counts[pos_hash] = max(0, _stack_counts[pos_hash] - 1)
 	)
-	
+
 	# Calculate velocity
 	var velocity = base_velocity
 	velocity.x += randf_range(-velocity_randomness.x, velocity_randomness.x)
 	velocity.y += randf_range(-velocity_randomness.y, 0)
-	
+
 	if config.get("is_critical", false):
 		velocity *= crit_velocity_multiplier
-	
+
 	# Setup number
 	number.global_position = position + offset
 	number.setup(config, velocity, gravity)
 	number.visible = true
-	
+
 	_active.append(number)
 	number_spawned.emit(number)
+
 
 func _get_from_pool() -> Node:
 	if _pool.size() > 0:
 		return _pool.pop_back()
-	
+
 	if auto_expand and damage_number_scene:
 		var instance = damage_number_scene.instantiate()
 		add_child(instance)
 		if instance.has_signal("finished"):
 			instance.finished.connect(_on_number_finished.bind(instance))
 		return instance
-	
+
 	return null
+
 
 func _return_to_pool(number: Node) -> void:
 	number.visible = false
 	_active.erase(number)
 	_pool.append(number)
 
+
 func _on_number_finished(number: Node) -> void:
 	_return_to_pool(number)
 
+
 func _get_brand_color(brand: String) -> Color:
 	match brand.to_upper():
-		"SAVAGE": return savage_color
-		"IRON": return iron_color
-		"VENOM": return venom_color
-		"SURGE": return surge_color
-		"DREAD": return dread_color
-		"LEECH": return leech_color
-		_: return neutral_color
+		"SAVAGE":
+			return savage_color
+		"IRON":
+			return iron_color
+		"VENOM":
+			return venom_color
+		"SURGE":
+			return surge_color
+		"DREAD":
+			return dread_color
+		"LEECH":
+			return leech_color
+		_:
+			return neutral_color
+
 
 func _get_status_color(status: String) -> Color:
 	match status.to_lower():
-		"poison", "poisoned": return venom_color
-		"burn", "burning": return Color.ORANGE
-		"freeze", "frozen": return surge_color
-		"stun", "stunned": return Color.YELLOW
-		"bleed", "bleeding": return savage_color
-		"curse", "cursed": return dread_color
-		_: return Color.WHITE
+		"poison", "poisoned":
+			return venom_color
+		"burn", "burning":
+			return Color.ORANGE
+		"freeze", "frozen":
+			return surge_color
+		"stun", "stunned":
+			return Color.YELLOW
+		"bleed", "bleeding":
+			return savage_color
+		"curse", "cursed":
+			return dread_color
+		_:
+			return Color.WHITE
+
 
 func _position_hash(pos: Vector2) -> int:
 	return int(pos.x / 50) * 10000 + int(pos.y / 50)

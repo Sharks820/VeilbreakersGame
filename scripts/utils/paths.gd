@@ -84,39 +84,51 @@ const PORTRAIT_VERA_MONSTER := "res://assets/sprites/characters/portraits/vera_m
 # HELPER METHODS
 # =============================================================================
 
+
 static func get_monster_data_path(monster_id: String) -> String:
 	return DATA_MONSTERS + monster_id + ".tres"
+
 
 static func get_skill_data_path(skill_id: String) -> String:
 	return DATA_SKILLS + skill_id + ".tres"
 
+
 static func get_item_data_path(item_id: String) -> String:
 	return DATA_ITEMS + item_id + ".tres"
+
 
 static func get_monster_sprite_path(monster_id: String) -> String:
 	return SPRITES_MONSTERS + monster_id + ".png"
 
+
 static func get_character_sprite_path(character_id: String) -> String:
 	return SPRITES_CHARACTERS + character_id + ".png"
+
 
 static func get_music_path(track_id: String) -> String:
 	return AUDIO_MUSIC + track_id + ".ogg"
 
+
 static func get_sfx_path(sfx_id: String) -> String:
 	return AUDIO_SFX + sfx_id + ".wav"
+
 
 static func get_voice_path(voice_id: String) -> String:
 	return AUDIO_VOICE + voice_id + ".ogg"
 
+
 static func scene_exists(path: String) -> bool:
 	return ResourceLoader.exists(path)
+
 
 static func resource_exists(path: String) -> bool:
 	return ResourceLoader.exists(path)
 
+
 # =============================================================================
 # SAFE LOADING METHODS (v0.98 - Consolidate 61+ duplicate load patterns)
 # =============================================================================
+
 
 ## Load resource safely, returning null if not found
 static func load_resource(path: String) -> Resource:
@@ -124,17 +136,21 @@ static func load_resource(path: String) -> Resource:
 		return load(path)
 	return null
 
+
 ## Load monster data by ID
 static func load_monster_data(monster_id: String) -> Resource:
 	return load_resource(get_monster_data_path(monster_id))
+
 
 ## Load skill data by ID
 static func load_skill_data(skill_id: String) -> Resource:
 	return load_resource(get_skill_data_path(skill_id))
 
+
 ## Load item data by ID
 static func load_item_data(item_id: String) -> Resource:
 	return load_resource(get_item_data_path(item_id))
+
 
 ## Load monster sprite texture by ID
 static func load_monster_sprite(monster_id: String) -> Texture2D:
@@ -143,6 +159,7 @@ static func load_monster_sprite(monster_id: String) -> Texture2D:
 		return load(path) as Texture2D
 	return null
 
+
 ## Load character sprite texture by ID
 static func load_character_sprite(character_id: String) -> Texture2D:
 	var path := get_character_sprite_path(character_id)
@@ -150,22 +167,27 @@ static func load_character_sprite(character_id: String) -> Texture2D:
 		return load(path) as Texture2D
 	return null
 
+
 ## Load portrait texture by path
 static func load_portrait(portrait_path: String) -> Texture2D:
 	if ResourceLoader.exists(portrait_path):
 		return load(portrait_path) as Texture2D
 	return null
 
+
 ## Load hero data by ID
 static func get_hero_data_path(hero_id: String) -> String:
 	return "res://data/heroes/" + hero_id + ".tres"
 
+
 static func load_hero_data(hero_id: String) -> Resource:
 	return load_resource(get_hero_data_path(hero_id))
+
 
 ## Get dialogue data path
 static func get_dialogue_path(dialogue_id: String) -> String:
 	return DATA_DIALOGUE + dialogue_id + ".json"
+
 
 ## Get map data path
 static func get_map_path(map_id: String) -> String:

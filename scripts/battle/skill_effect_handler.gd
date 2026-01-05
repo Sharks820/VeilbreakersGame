@@ -25,8 +25,11 @@ func reset_battle() -> void:
 # MAIN PROCESSING
 # =============================================================================
 
-func process_pre_skill_effects(caster: CharacterBase, target: CharacterBase, skill: SkillData) -> Dictionary:
-	"""Process effects that happen BEFORE the skill executes"""
+
+func process_pre_skill_effects(
+	caster: CharacterBase, target: CharacterBase, skill: SkillData
+) -> Dictionary:
+	## Process effects that happen BEFORE the skill executes
 	var result := {"can_execute": true, "modified_power": skill.base_power}
 
 	for effect in skill.special_effects:
@@ -56,8 +59,10 @@ func process_pre_skill_effects(caster: CharacterBase, target: CharacterBase, ski
 	return result
 
 
-func process_damage_modifiers(caster: CharacterBase, target: CharacterBase, skill: SkillData, base_damage: int) -> int:
-	"""Modify damage based on special effects"""
+func process_damage_modifiers(
+	caster: CharacterBase, target: CharacterBase, skill: SkillData, base_damage: int
+) -> int:
+	## Modify damage based on special effects
 	var damage := base_damage
 
 	for effect in skill.special_effects:
@@ -66,8 +71,10 @@ func process_damage_modifiers(caster: CharacterBase, target: CharacterBase, skil
 				if target.has_status_effect(Enums.StatusEffect.BLEED):
 					damage = int(damage * 1.25)
 
-		"bonus_damage_low_hp_50":
-				var hp_percent := target.current_hp / maxf(float(target.get_stat(Enums.Stat.MAX_HP)), 1.0)
+			"bonus_damage_low_hp_50":
+				var hp_percent := (
+					target.current_hp / maxf(float(target.get_stat(Enums.Stat.MAX_HP)), 1.0)
+				)
 				if hp_percent < 0.5:
 					damage = int(damage * 1.3)
 
@@ -80,8 +87,10 @@ func process_damage_modifiers(caster: CharacterBase, target: CharacterBase, skil
 				if _is_trainer_hurt(caster):
 					damage = int(damage * 1.4)
 
-		"bonus_vs_low_hp":
-				var hp_percent := target.current_hp / maxf(float(target.get_stat(Enums.Stat.MAX_HP)), 1.0)
+			"bonus_vs_low_hp":
+				var hp_percent := (
+					target.current_hp / maxf(float(target.get_stat(Enums.Stat.MAX_HP)), 1.0)
+				)
 				if hp_percent < 0.3:
 					damage = int(damage * 1.5)
 
@@ -103,8 +112,14 @@ func process_damage_modifiers(caster: CharacterBase, target: CharacterBase, skil
 	return damage
 
 
-func process_post_damage_effects(caster: CharacterBase, target: CharacterBase, skill: SkillData, damage_dealt: int, target_died: bool) -> Dictionary:
-	"""Process effects that happen AFTER damage is dealt"""
+func process_post_damage_effects(
+	caster: CharacterBase,
+	target: CharacterBase,
+	skill: SkillData,
+	damage_dealt: int,
+	target_died: bool
+) -> Dictionary:
+	## Process effects that happen AFTER damage is dealt
 	var result := {"extra_actions": [], "healed": 0, "buffs": [], "debuffs": []}
 
 	for effect in skill.special_effects:
@@ -153,8 +168,10 @@ func process_post_damage_effects(caster: CharacterBase, target: CharacterBase, s
 	return result
 
 
-func process_buff_effects(caster: CharacterBase, target: CharacterBase, skill: SkillData) -> Dictionary:
-	"""Process special buff-related effects"""
+func process_buff_effects(
+	caster: CharacterBase, target: CharacterBase, skill: SkillData
+) -> Dictionary:
+	## Process special buff-related effects
 	var result := {"success": true}
 
 	for effect in skill.special_effects:
@@ -210,8 +227,10 @@ func process_buff_effects(caster: CharacterBase, target: CharacterBase, skill: S
 	return result
 
 
-func process_heal_effects(caster: CharacterBase, target: CharacterBase, skill: SkillData) -> Dictionary:
-	"""Process special heal-related effects"""
+func process_heal_effects(
+	caster: CharacterBase, target: CharacterBase, skill: SkillData
+) -> Dictionary:
+	## Process special heal-related effects
 	var result := {"success": true, "revived": []}
 
 	for effect in skill.special_effects:
@@ -246,8 +265,10 @@ func process_heal_effects(caster: CharacterBase, target: CharacterBase, skill: S
 	return result
 
 
-func process_debuff_effects(caster: CharacterBase, target: CharacterBase, skill: SkillData) -> Dictionary:
-	"""Process special debuff-related effects"""
+func process_debuff_effects(
+	caster: CharacterBase, target: CharacterBase, skill: SkillData
+) -> Dictionary:
+	## Process special debuff-related effects
 	var result := {"success": true}
 
 	for effect in skill.special_effects:
@@ -261,8 +282,10 @@ func process_debuff_effects(caster: CharacterBase, target: CharacterBase, skill:
 	return result
 
 
-func process_utility_effects(caster: CharacterBase, target: CharacterBase, skill: SkillData) -> Dictionary:
-	"""Process utility skill effects"""
+func process_utility_effects(
+	caster: CharacterBase, target: CharacterBase, skill: SkillData
+) -> Dictionary:
+	## Process utility skill effects
 	var result := {"success": true}
 
 	for effect in skill.special_effects:
@@ -293,8 +316,10 @@ func process_utility_effects(caster: CharacterBase, target: CharacterBase, skill
 	return result
 
 
-func process_accuracy_effects(caster: CharacterBase, target: CharacterBase, skill: SkillData) -> Dictionary:
-	"""Process accuracy-related effects"""
+func process_accuracy_effects(
+	caster: CharacterBase, target: CharacterBase, skill: SkillData
+) -> Dictionary:
+	## Process accuracy-related effects
 	var result := {"accuracy_bonus": 0.0, "guaranteed_hit": false}
 
 	for effect in skill.special_effects:
@@ -302,16 +327,20 @@ func process_accuracy_effects(caster: CharacterBase, target: CharacterBase, skil
 			"guaranteed_hit":
 				result.guaranteed_hit = true
 
-		"guaranteed_hit_low_hp":
-				var hp_percent := target.current_hp / maxf(float(target.get_stat(Enums.Stat.MAX_HP)), 1.0)
+			"guaranteed_hit_low_hp":
+				var hp_percent := (
+					target.current_hp / maxf(float(target.get_stat(Enums.Stat.MAX_HP)), 1.0)
+				)
 				if hp_percent < 0.3:
 					result.guaranteed_hit = true
 
 	return result
 
 
-func process_target_selection(caster: CharacterBase, skill: SkillData, potential_targets: Array) -> Array:
-	"""Modify target selection based on effects"""
+func process_target_selection(
+	caster: CharacterBase, skill: SkillData, potential_targets: Array
+) -> Array:
+	## Modify target selection based on effects
 	var targets := potential_targets.duplicate()
 
 	for effect in skill.special_effects:
@@ -327,12 +356,14 @@ func process_target_selection(caster: CharacterBase, skill: SkillData, potential
 
 
 func check_interruptable(skill: SkillData) -> bool:
-	"""Check if a skill can be interrupted"""
+	## Check if a skill can be interrupted
 	return "interruptable" in skill.special_effects
 
 
-func process_interrupt(caster: CharacterBase, target: CharacterBase, skill: SkillData) -> Dictionary:
-	"""Process interrupt effects"""
+func process_interrupt(
+	caster: CharacterBase, target: CharacterBase, skill: SkillData
+) -> Dictionary:
+	## Process interrupt effects
 	var result := {"interrupted": false}
 
 	for effect in skill.special_effects:
@@ -349,8 +380,9 @@ func process_interrupt(caster: CharacterBase, target: CharacterBase, skill: Skil
 # PASSIVE EFFECTS (checked each turn)
 # =============================================================================
 
+
 func apply_passive_effects(character: CharacterBase) -> void:
-	"""Apply passive skill effects at start of turn"""
+	## Apply passive skill effects at start of turn
 	if not character is Monster:
 		return
 
@@ -376,7 +408,7 @@ func apply_passive_effects(character: CharacterBase) -> void:
 
 
 func on_any_death(dead_character: CharacterBase) -> void:
-	"""Called when any character dies - for passive triggers"""
+	## Called when any character dies - for passive triggers
 	if not battle_manager:
 		return
 
@@ -404,6 +436,7 @@ func on_any_death(dead_character: CharacterBase) -> void:
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
+
 
 func _has_corpse_available() -> bool:
 	if not battle_manager:
@@ -449,7 +482,9 @@ func _is_trainer_hurt(monster: CharacterBase) -> bool:
 
 	for player in battle_manager.player_party:
 		if player is PlayerCharacter and player.is_alive():
-			var hp_percent := player.current_hp / maxf(float(player.get_stat(Enums.Stat.MAX_HP)), 1.0)
+			var hp_percent := (
+				player.current_hp / maxf(float(player.get_stat(Enums.Stat.MAX_HP)), 1.0)
+			)
 			if hp_percent < 0.5:
 				return true
 	return false

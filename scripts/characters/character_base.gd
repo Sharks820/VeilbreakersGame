@@ -6,14 +6,14 @@ extends Node2D
 # SIGNALS
 # =============================================================================
 
-signal stats_changed()
+signal stats_changed
 signal hp_changed(old_value: int, new_value: int)
 signal mp_changed(old_value: int, new_value: int)
 signal experience_changed(old_value: int, new_value: int)
 signal status_effect_added(effect: int)
 signal status_effect_removed(effect: int)
-signal died()
-signal revived()
+signal died
+signal revived
 
 # =============================================================================
 # EXPORTED PROPERTIES
@@ -85,9 +85,11 @@ var is_defending: bool = false
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	current_hp = get_max_hp()
 	current_mp = get_max_mp()
+
 
 func initialize_stats() -> void:
 	current_hp = get_max_hp()
@@ -96,15 +98,17 @@ func initialize_stats() -> void:
 	stat_modifiers.clear()
 	is_defending = false
 
+
 # =============================================================================
 # STAT CALCULATIONS
 # =============================================================================
+
 
 func get_stat(stat: Enums.Stat) -> float:
 	var base_value := _get_base_stat(stat)
 	var modifier := _get_stat_modifier(stat)
 	var equipment_bonus := _get_equipment_bonus(stat)
-	
+
 	# Percentage-based stats (0-1 range) shouldn't use minimum of 1.0
 	if stat in [Enums.Stat.ACCURACY, Enums.Stat.EVASION, Enums.Stat.CRIT_CHANCE]:
 		return clampf(base_value + modifier + equipment_bonus, 0.0, 1.0)
@@ -114,23 +118,39 @@ func get_stat(stat: Enums.Stat) -> float:
 	# All other stats use minimum of 1
 	return maxf(1.0, base_value + modifier + equipment_bonus)
 
+
 func _get_base_stat(stat: Enums.Stat) -> float:
 	match stat:
-		Enums.Stat.HP: return float(current_hp)
-		Enums.Stat.MAX_HP: return float(base_max_hp)
-		Enums.Stat.MP: return float(current_mp)
-		Enums.Stat.MAX_MP: return float(base_max_mp)
-		Enums.Stat.ATTACK: return float(base_attack)
-		Enums.Stat.DEFENSE: return float(base_defense)
-		Enums.Stat.MAGIC: return float(base_magic)
-		Enums.Stat.RESISTANCE: return float(base_resistance)
-		Enums.Stat.SPEED: return float(base_speed)
-		Enums.Stat.LUCK: return float(base_luck)
-		Enums.Stat.CRIT_CHANCE: return base_crit_chance
-		Enums.Stat.CRIT_DAMAGE: return base_crit_damage
-		Enums.Stat.ACCURACY: return base_accuracy
-		Enums.Stat.EVASION: return base_evasion
+		Enums.Stat.HP:
+			return float(current_hp)
+		Enums.Stat.MAX_HP:
+			return float(base_max_hp)
+		Enums.Stat.MP:
+			return float(current_mp)
+		Enums.Stat.MAX_MP:
+			return float(base_max_mp)
+		Enums.Stat.ATTACK:
+			return float(base_attack)
+		Enums.Stat.DEFENSE:
+			return float(base_defense)
+		Enums.Stat.MAGIC:
+			return float(base_magic)
+		Enums.Stat.RESISTANCE:
+			return float(base_resistance)
+		Enums.Stat.SPEED:
+			return float(base_speed)
+		Enums.Stat.LUCK:
+			return float(base_luck)
+		Enums.Stat.CRIT_CHANCE:
+			return base_crit_chance
+		Enums.Stat.CRIT_DAMAGE:
+			return base_crit_damage
+		Enums.Stat.ACCURACY:
+			return base_accuracy
+		Enums.Stat.EVASION:
+			return base_evasion
 	return 0.0
+
 
 func _get_stat_modifier(stat: Enums.Stat) -> float:
 	if not stat_modifiers.has(stat):
@@ -140,6 +160,7 @@ func _get_stat_modifier(stat: Enums.Stat) -> float:
 	for mod in stat_modifiers[stat]:
 		total += mod.value
 	return total
+
 
 func _get_equipment_bonus(stat: Enums.Stat) -> float:
 	var total := 0.0
@@ -156,23 +177,32 @@ func _get_equipment_bonus(stat: Enums.Stat) -> float:
 		return total
 
 	# Get bonuses from each equipment slot
-	var equipment_ids := [equipped_weapon, equipped_armor, equipped_accessory_1, equipped_accessory_2]
+	var equipment_ids := [
+		equipped_weapon, equipped_armor, equipped_accessory_1, equipped_accessory_2
+	]
 
 	for item_id in equipment_ids:
 		if item_id == "":
 			continue
 
-		var item_data: ItemData = _inventory_system_cached.get_item_data(item_id) if _inventory_system_cached.has_method("get_item_data") else null
+		var item_data: ItemData = (
+			_inventory_system_cached.get_item_data(item_id)
+			if _inventory_system_cached.has_method("get_item_data")
+			else null
+		)
 		if item_data and item_data.stat_bonuses.has(stat):
 			total += item_data.stat_bonuses[stat]
 
 	return total
 
+
 func get_max_hp() -> int:
 	return int(get_stat(Enums.Stat.MAX_HP))
 
+
 func get_max_mp() -> int:
 	return int(get_stat(Enums.Stat.MAX_MP))
+
 
 func get_hp_percent() -> float:
 	var max_hp := get_max_hp()
@@ -180,15 +210,18 @@ func get_hp_percent() -> float:
 		return 1.0
 	return float(current_hp) / float(max_hp)
 
+
 func get_mp_percent() -> float:
 	var max_mp := get_max_mp()
 	if max_mp == 0:
 		return 1.0
 	return float(current_mp) / float(max_mp)
 
+
 # =============================================================================
 # HEALTH & MANA
 # =============================================================================
+
 
 func take_damage(amount: int, source: Node = null, is_critical: bool = false) -> Dictionary:
 	# Capture defending state before clearing it
@@ -221,6 +254,7 @@ func take_damage(amount: int, source: Node = null, is_critical: bool = false) ->
 		"was_defending": was_defending
 	}
 
+
 func heal(amount: int, source: Node = null) -> int:
 	var max_hp := get_max_hp()
 	var actual_heal := mini(amount, max_hp - current_hp)
@@ -233,6 +267,7 @@ func heal(amount: int, source: Node = null) -> int:
 
 	return actual_heal
 
+
 func use_mp(amount: int) -> bool:
 	if current_mp < amount:
 		return false
@@ -241,6 +276,7 @@ func use_mp(amount: int) -> bool:
 	current_mp -= amount
 	mp_changed.emit(old_mp, current_mp)
 	return true
+
 
 func restore_mp(amount: int) -> int:
 	var max_mp := get_max_mp()
@@ -251,16 +287,20 @@ func restore_mp(amount: int) -> int:
 	mp_changed.emit(old_mp, current_mp)
 	return actual_restore
 
+
 func is_alive() -> bool:
 	return current_hp > 0
 
+
 func is_dead() -> bool:
 	return current_hp <= 0
+
 
 func _on_death() -> void:
 	clear_all_status_effects()
 	died.emit()
 	EventBus.character_died.emit(self)
+
 
 func revive(hp_percent: float = 0.5) -> void:
 	if is_alive():
@@ -270,14 +310,17 @@ func revive(hp_percent: float = 0.5) -> void:
 	revived.emit()
 	EventBus.character_revived.emit(self)
 
+
 func full_restore() -> void:
 	current_hp = get_max_hp()
 	current_mp = get_max_mp()
 	clear_all_status_effects()
 
+
 # =============================================================================
 # STATUS EFFECTS
 # =============================================================================
+
 
 func add_status_effect(effect: Enums.StatusEffect, duration: int, source: Node = null) -> void:
 	if status_effects.has(effect):
@@ -285,13 +328,10 @@ func add_status_effect(effect: Enums.StatusEffect, duration: int, source: Node =
 		status_effects[effect].duration = maxi(status_effects[effect].duration, duration)
 		status_effects[effect].stacks = mini(status_effects[effect].stacks + 1, 9)
 	else:
-		status_effects[effect] = {
-			"duration": duration,
-			"stacks": 1,
-			"source": source
-		}
+		status_effects[effect] = {"duration": duration, "stacks": 1, "source": source}
 		status_effect_added.emit(effect)
 		EventBus.status_effect_applied.emit(self, effect, duration)
+
 
 func remove_status_effect(effect: Enums.StatusEffect) -> void:
 	if status_effects.has(effect):
@@ -299,13 +339,16 @@ func remove_status_effect(effect: Enums.StatusEffect) -> void:
 		status_effect_removed.emit(effect)
 		EventBus.status_effect_removed.emit(self, effect)
 
+
 func has_status_effect(effect: Enums.StatusEffect) -> bool:
 	return status_effects.has(effect)
+
 
 func get_status_effect_stacks(effect: Enums.StatusEffect) -> int:
 	if status_effects.has(effect):
 		return status_effects[effect].stacks
 	return 0
+
 
 func tick_status_effects() -> Array[Dictionary]:
 	var tick_results: Array[Dictionary] = []
@@ -348,10 +391,12 @@ func tick_status_effects() -> Array[Dictionary]:
 
 	return tick_results
 
+
 func clear_all_status_effects() -> void:
 	var effects := status_effects.keys().duplicate()
 	for effect in effects:
 		remove_status_effect(effect)
+
 
 func can_act() -> bool:
 	if is_dead():
@@ -365,20 +410,19 @@ func can_act() -> bool:
 		return randf() > 0.5
 	return true
 
+
 # =============================================================================
 # STAT MODIFIERS
 # =============================================================================
+
 
 func add_stat_modifier(stat: Enums.Stat, value: float, duration: int, source: String = "") -> void:
 	if not stat_modifiers.has(stat):
 		stat_modifiers[stat] = []
 
-	stat_modifiers[stat].append({
-		"value": value,
-		"duration": duration,
-		"source": source
-	})
+	stat_modifiers[stat].append({"value": value, "duration": duration, "source": source})
 	stats_changed.emit()
+
 
 func tick_stat_modifiers() -> void:
 	var changed := false
@@ -398,9 +442,11 @@ func tick_stat_modifiers() -> void:
 	if changed:
 		stats_changed.emit()
 
+
 func clear_stat_modifiers() -> void:
 	stat_modifiers.clear()
 	stats_changed.emit()
+
 
 func remove_stat_modifiers_by_source(source: String) -> void:
 	## Remove all stat modifiers with the given source string
@@ -420,9 +466,11 @@ func remove_stat_modifiers_by_source(source: String) -> void:
 	if changed:
 		stats_changed.emit()
 
+
 # =============================================================================
 # SKILLS
 # =============================================================================
+
 
 func can_use_skill(skill_id: String) -> bool:
 	if skill_id not in known_skills:
@@ -448,27 +496,33 @@ func can_use_skill(skill_id: String) -> bool:
 
 	return true
 
+
 func learn_skill(skill_id: String) -> void:
 	if skill_id not in known_skills:
 		known_skills.append(skill_id)
 		EventBus.skill_learned.emit(self, skill_id)
 
+
 func forget_skill(skill_id: String) -> void:
 	if skill_id in known_skills:
 		known_skills.erase(skill_id)
 
+
 # =============================================================================
 # DEFEND
 # =============================================================================
+
 
 func set_defending(defending: bool) -> void:
 	is_defending = defending
 	if defending:
 		add_stat_modifier(Enums.Stat.DEFENSE, base_defense * 0.5, 1, "defend")
 
+
 # =============================================================================
 # LEVEL UP
 # =============================================================================
+
 
 func level_up() -> Dictionary:
 	level += 1
@@ -503,9 +557,11 @@ func level_up() -> Dictionary:
 
 	return stat_gains
 
+
 # =============================================================================
 # EXPERIENCE SYSTEM (shared by Monster and PlayerCharacter)
 # =============================================================================
+
 
 func add_experience(amount: int) -> Dictionary:
 	## Adds experience and handles level ups. Returns level up info.
@@ -541,9 +597,11 @@ func add_experience(amount: int) -> Dictionary:
 		"experience_added": amount
 	}
 
+
 func get_xp_for_next_level() -> int:
 	## Virtual function - override in subclasses for custom XP curves
 	return Constants.get_xp_for_level(level + 1)
+
 
 func get_level_progress() -> float:
 	## Returns progress to next level as 0.0 to 1.0
@@ -552,28 +610,34 @@ func get_level_progress() -> float:
 		return 1.0
 	return float(current_experience) / float(required)
 
+
 # =============================================================================
 # ANIMATION INTERFACE (Override in subclasses for actual animations)
 # =============================================================================
 # These methods provide a common interface for BattleSequencer to call.
 # Base implementations use simple tweens; subclasses can override with sprites.
 
+
 func play_idle() -> void:
 	## Return to idle state - base implementation does nothing
 	pass
+
 
 func play_attack_windup() -> void:
 	## Attack anticipation - character prepares to strike
 	_tween_scale(Vector2(1.1, 0.9), 0.2)
 
+
 func play_attack_strike() -> void:
 	## Attack execution - character strikes
 	_tween_position_offset(Vector2(30, 0), 0.1)
+
 
 func play_attack_recovery() -> void:
 	## Attack recovery - return to idle position
 	_tween_position_offset(Vector2.ZERO, 0.2)
 	_tween_scale(Vector2.ONE, 0.2)
+
 
 func play_hurt(is_critical: bool = false) -> void:
 	## React to being hit
@@ -583,6 +647,7 @@ func play_hurt(is_critical: bool = false) -> void:
 	await get_tree().create_timer(0.15).timeout
 	_tween_position_offset(Vector2.ZERO, 0.15)
 
+
 func play_death() -> void:
 	## Death sequence
 	var tween := create_tween()
@@ -590,17 +655,20 @@ func play_death() -> void:
 	tween.parallel().tween_property(self, "rotation", deg_to_rad(15), 0.4)
 	tween.parallel().tween_property(self, "position:y", position.y + 30, 0.8)
 
+
 func play_victory() -> void:
 	## Victory celebration
 	var tween := create_tween()
 	tween.tween_property(self, "position:y", position.y - 20, 0.2).set_trans(Tween.TRANS_QUAD)
 	tween.tween_property(self, "position:y", position.y, 0.3).set_trans(Tween.TRANS_BOUNCE)
 
+
 func play_skill_cast(_skill_name: String) -> void:
 	## Skill/magic casting animation
 	_tween_scale(Vector2(1.15, 1.15), 0.3)
 	await get_tree().create_timer(0.3).timeout
 	_tween_scale(Vector2.ONE, 0.2)
+
 
 func flash_hit() -> void:
 	## Quick white flash when hit
@@ -609,9 +677,11 @@ func flash_hit() -> void:
 	await get_tree().create_timer(0.1).timeout
 	modulate = original_modulate
 
+
 func play_defend() -> void:
 	## Defensive stance
 	_tween_scale(Vector2(0.95, 1.05), 0.2)
+
 
 func play_item_use() -> void:
 	## Using an item
@@ -619,23 +689,30 @@ func play_item_use() -> void:
 	await get_tree().create_timer(0.3).timeout
 	_tween_scale(Vector2.ONE, 0.15)
 
+
 # Animation helper tweens
 var _position_offset := Vector2.ZERO
 var _base_position := Vector2.ZERO
+
 
 func _tween_scale(target_scale: Vector2, duration: float) -> void:
 	var tween := create_tween()
 	tween.tween_property(self, "scale", target_scale, duration).set_ease(Tween.EASE_OUT)
 
+
 func _tween_position_offset(offset: Vector2, duration: float) -> void:
 	if _base_position == Vector2.ZERO:
 		_base_position = position
 	var tween := create_tween()
-	tween.tween_property(self, "position", _base_position + offset, duration).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "position", _base_position + offset, duration).set_ease(
+		Tween.EASE_OUT
+	)
+
 
 # =============================================================================
 # SERIALIZATION
 # =============================================================================
+
 
 func get_save_data() -> Dictionary:
 	return {
@@ -662,6 +739,7 @@ func get_save_data() -> Dictionary:
 		"equipped_accessory_1": equipped_accessory_1,
 		"equipped_accessory_2": equipped_accessory_2
 	}
+
 
 func load_save_data(data: Dictionary) -> void:
 	character_name = data.get("name", "Character")

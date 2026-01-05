@@ -5,7 +5,7 @@ extends Node
 # SIGNALS
 # =============================================================================
 
-signal inventory_changed()
+signal inventory_changed
 signal item_added(item_id: String, quantity: int)
 signal item_removed(item_id: String, quantity: int)
 signal equipment_changed(character: CharacterBase, slot: int)
@@ -22,9 +22,11 @@ var item_database: Dictionary = {}  # {item_id: ItemData resource}
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	_load_item_database()
 	EventBus.emit_debug("InventorySystem initialized")
+
 
 func _load_item_database() -> void:
 	# Load all item resources from data/items/ subdirectories
@@ -33,11 +35,12 @@ func _load_item_database() -> void:
 	# Also check root for any stray items
 	_load_items_from_directory("res://data/items/")
 
+
 func _load_items_from_directory(path: String) -> void:
 	var dir := DirAccess.open(path)
 	if not dir:
 		return
-	
+
 	dir.list_dir_begin()
 	var file_name := dir.get_next()
 	while file_name != "":
@@ -49,9 +52,11 @@ func _load_items_from_directory(path: String) -> void:
 		file_name = dir.get_next()
 	dir.list_dir_end()
 
+
 # =============================================================================
 # ITEM MANAGEMENT
 # =============================================================================
+
 
 func add_item(item_id: String, quantity: int = 1) -> bool:
 	var item_data: ItemData = item_database.get(item_id, null)
@@ -87,6 +92,7 @@ func add_item(item_id: String, quantity: int = 1) -> bool:
 
 	return true
 
+
 func remove_item(item_id: String, quantity: int = 1) -> bool:
 	# Handle key items
 	if item_id in key_items:
@@ -112,22 +118,27 @@ func remove_item(item_id: String, quantity: int = 1) -> bool:
 	EventBus.item_removed.emit(item_id, quantity)
 	return true
 
+
 func has_item(item_id: String, quantity: int = 1) -> bool:
 	if item_id in key_items:
 		return true
 	return items.get(item_id, 0) >= quantity
+
 
 func get_item_count(item_id: String) -> int:
 	if item_id in key_items:
 		return 1
 	return items.get(item_id, 0)
 
+
 func get_item_data(item_id: String) -> ItemData:
 	return item_database.get(item_id, null)
+
 
 # =============================================================================
 # ITEM USAGE
 # =============================================================================
+
 
 func use_item(item_id: String, target: CharacterBase) -> Dictionary:
 	var item_data := get_item_data(item_id)
@@ -157,9 +168,11 @@ func use_item(item_id: String, target: CharacterBase) -> Dictionary:
 	EventBus.item_used.emit(item_id)
 	return result
 
+
 # =============================================================================
 # EQUIPMENT
 # =============================================================================
+
 
 func equip_item(character: CharacterBase, item_id: String) -> Dictionary:
 	var item_data := get_item_data(item_id)
@@ -207,6 +220,7 @@ func equip_item(character: CharacterBase, item_id: String) -> Dictionary:
 
 	return {"success": true, "old_item": old_item}
 
+
 func unequip_item(character: CharacterBase, slot: Enums.EquipmentSlot) -> Dictionary:
 	var current_item := ""
 
@@ -238,6 +252,7 @@ func unequip_item(character: CharacterBase, slot: Enums.EquipmentSlot) -> Dictio
 
 	return {"success": true, "item": current_item}
 
+
 func _apply_equipment_stats(character: CharacterBase, item_id: String) -> void:
 	var item_data := get_item_data(item_id)
 	if not item_data:
@@ -246,6 +261,7 @@ func _apply_equipment_stats(character: CharacterBase, item_id: String) -> void:
 	for stat in item_data.stat_bonuses:
 		var amount: int = item_data.stat_bonuses[stat]
 		character.add_stat_modifier(stat, amount, 9999, "equipment_%s" % item_id)
+
 
 func _remove_equipment_stats(character: CharacterBase, item_id: String) -> void:
 	# Remove modifiers with matching source
@@ -256,21 +272,22 @@ func _remove_equipment_stats(character: CharacterBase, item_id: String) -> void:
 			if mods[i].get("source", "") == source_key:
 				mods.remove_at(i)
 
+
 # =============================================================================
 # QUERIES
 # =============================================================================
+
 
 func get_all_items() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 
 	for item_id in items:
-		result.append({
-			"item_id": item_id,
-			"quantity": items[item_id],
-			"data": get_item_data(item_id)
-		})
+		result.append(
+			{"item_id": item_id, "quantity": items[item_id], "data": get_item_data(item_id)}
+		)
 
 	return result
+
 
 func get_items_by_type(item_type: Enums.ItemType) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -278,13 +295,10 @@ func get_items_by_type(item_type: Enums.ItemType) -> Array[Dictionary]:
 	for item_id in items:
 		var data := get_item_data(item_id)
 		if data and data.item_type == item_type:
-			result.append({
-				"item_id": item_id,
-				"quantity": items[item_id],
-				"data": data
-			})
+			result.append({"item_id": item_id, "quantity": items[item_id], "data": data})
 
 	return result
+
 
 func get_key_items() -> Array[ItemData]:
 	var result: Array[ItemData] = []
@@ -294,6 +308,7 @@ func get_key_items() -> Array[ItemData]:
 			result.append(data)
 	return result
 
+
 func get_battle_usable_items() -> Array[Dictionary]:
 	"""Get all items that can be used in battle"""
 	var result: Array[Dictionary] = []
@@ -301,23 +316,19 @@ func get_battle_usable_items() -> Array[Dictionary]:
 	for item_id in items:
 		var data := get_item_data(item_id)
 		if data and data.usable_in_battle and data.item_type == Enums.ItemType.CONSUMABLE:
-			result.append({
-				"item_id": item_id,
-				"quantity": items[item_id],
-				"data": data
-			})
+			result.append({"item_id": item_id, "quantity": items[item_id], "data": data})
 
 	return result
+
 
 # =============================================================================
 # SERIALIZATION
 # =============================================================================
 
+
 func get_save_data() -> Dictionary:
-	return {
-		"items": items.duplicate(),
-		"key_items": key_items.duplicate()
-	}
+	return {"items": items.duplicate(), "key_items": key_items.duplicate()}
+
 
 func load_save_data(data: Dictionary) -> void:
 	items = data.get("items", {})

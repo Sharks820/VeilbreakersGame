@@ -31,12 +31,15 @@ var rate_modifier: float = 1.0  # Items/abilities can modify this
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	EventBus.emit_debug("EncounterManager initialized")
+
 
 # =============================================================================
 # STEP TRACKING
 # =============================================================================
+
 
 func register_step() -> void:
 	if encounters_disabled:
@@ -47,6 +50,7 @@ func register_step() -> void:
 
 	if steps_taken % steps_per_check == 0:
 		_check_encounter()
+
 
 func _check_encounter() -> void:
 	if steps_since_encounter < min_steps_between_encounters:
@@ -64,6 +68,7 @@ func _check_encounter() -> void:
 	if randf() < encounter_chance:
 		_trigger_encounter()
 
+
 func _trigger_encounter() -> void:
 	steps_since_encounter = 0
 
@@ -76,9 +81,11 @@ func _trigger_encounter() -> void:
 	encounter_triggered.emit(enemies)
 	EventBus.battle_started.emit(enemies)
 
+
 # =============================================================================
 # ENCOUNTER SELECTION
 # =============================================================================
+
 
 func _select_encounter() -> Dictionary:
 	if current_area_encounters.is_empty():
@@ -98,6 +105,7 @@ func _select_encounter() -> Dictionary:
 			return enc
 
 	return current_area_encounters[0]
+
 
 func _create_enemies(encounter: Dictionary) -> Array[CharacterBase]:
 	var enemies: Array[CharacterBase] = []
@@ -122,6 +130,7 @@ func _create_enemies(encounter: Dictionary) -> Array[CharacterBase]:
 
 	return enemies
 
+
 func _create_monster(monster_id: String, level: int) -> Monster:
 	# Load monster data and create instance
 	var data_path := "res://data/monsters/%s.tres" % monster_id
@@ -144,9 +153,11 @@ func _create_monster(monster_id: String, level: int) -> Monster:
 	monster.corruption_level = 80.0 + randf() * 20.0  # Wild monsters are 80%+ corrupted
 	return monster
 
+
 # =============================================================================
 # AREA MANAGEMENT
 # =============================================================================
+
 
 func set_area_encounters(encounters: Array[Dictionary]) -> void:
 	"""
@@ -163,24 +174,31 @@ func set_area_encounters(encounters: Array[Dictionary]) -> void:
 	"""
 	current_area_encounters = encounters
 
+
 func clear_encounters() -> void:
 	current_area_encounters.clear()
+
 
 func disable_encounters() -> void:
 	encounters_disabled = true
 
+
 func enable_encounters() -> void:
 	encounters_disabled = false
+
 
 func set_rate_modifier(modifier: float) -> void:
 	rate_modifier = maxf(0.0, modifier)
 
+
 func reset_rate_modifier() -> void:
 	rate_modifier = 1.0
+
 
 # =============================================================================
 # SCRIPTED ENCOUNTERS
 # =============================================================================
+
 
 func trigger_scripted_encounter(encounter: Dictionary) -> void:
 	"""Trigger a specific encounter, bypassing random selection."""
@@ -189,6 +207,7 @@ func trigger_scripted_encounter(encounter: Dictionary) -> void:
 	if not enemies.is_empty():
 		encounter_triggered.emit(enemies)
 		EventBus.battle_started.emit(enemies)
+
 
 func trigger_boss_encounter(boss_id: String, level: int, minions: Array[Dictionary] = []) -> void:
 	"""Trigger a boss encounter."""
