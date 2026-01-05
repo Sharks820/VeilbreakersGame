@@ -229,7 +229,7 @@ func focus_on_multiple(targets: Array[Node2D], padding: float = -1.0) -> void:
 		padding = multi_target_padding
 
 	# Calculate bounding box
-	if targets.size() > 0:
+	if not targets.is_empty():
 		var bounds = _calculate_bounds(targets, padding)
 		var center = bounds.get_center()
 		var required_zoom = _calculate_zoom_for_bounds(bounds)
@@ -272,7 +272,7 @@ func _process_focus(delta: float) -> void:
 
 	if _focus_target and is_instance_valid(_focus_target):
 		target_pos = _focus_target.global_position
-	elif _focus_targets.size() > 0:
+	elif not _focus_targets.is_empty():
 		target_pos = _calculate_bounds(_focus_targets, multi_target_padding).get_center()
 	elif _battle_center != Vector2.ZERO:
 		target_pos = _battle_center

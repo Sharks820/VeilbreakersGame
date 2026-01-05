@@ -377,7 +377,7 @@ func start_battle(players: Array, enemies: Array, is_boss_battle: bool = false) 
 	camera_command.emit("battle_intro", {"duration": 1.5})
 
 	# If boss battle, dramatic intro
-	if is_boss_battle and active_bosses.size() > 0:
+	if is_boss_battle and not active_bosses.is_empty():
 		await _play_boss_intro(active_bosses[0])
 
 	EventBus.battle_started.emit(enemies)
@@ -389,7 +389,7 @@ func start_battle(players: Array, enemies: Array, is_boss_battle: bool = false) 
 		"Battle started: %d players vs %d enemies" % [player_party.size(), enemy_party.size()]
 	)
 
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 
 	_start_round()
 
@@ -480,7 +480,7 @@ func _start_next_turn() -> void:
 		EventBus.turn_ended.emit(current_character)
 		turn_ended_signal.emit(current_character)
 		current_turn_index += 1
-		await get_tree().create_timer(0.5).timeout
+		await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 		_start_next_turn()
 		return
 
@@ -500,14 +500,14 @@ func _start_next_turn() -> void:
 		waiting_for_player_input.emit(current_character)
 	else:
 		# AI turn
-		await get_tree().create_timer(0.3).timeout
+		await get_tree().create_timer(Constants.WAIT_SHORT).timeout
 		_execute_ai_turn(current_character)
 
 
 func _execute_ai_turn(character: CharacterBase) -> void:
 	var ai_decision: Dictionary = ai_controller.get_action(character, enemy_party, player_party)
 
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(Constants.WAIT_SHORT).timeout
 
 	execute_action(character, ai_decision.action, ai_decision.target, ai_decision.get("skill", ""))
 
@@ -526,7 +526,7 @@ func _start_party_lock_in() -> void:
 	EventBus.emit_debug("=== PARTY LOCK-IN PHASE ===")
 	ui_command.emit("show_message", {"text": "Select Actions!", "duration": 1.0})
 
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 	_prompt_next_party_member()
 
 
@@ -560,7 +560,7 @@ func _prompt_next_party_member() -> void:
 				"action": Enums.BattleAction.DEFEND, "target": character, "skill": ""
 			}
 			party_lock_in_index += 1
-			await get_tree().create_timer(0.5).timeout
+			await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 			continue
 
 		# This character can select an action
@@ -631,7 +631,7 @@ func _prompt_next_party_member() -> void:
 			print(
 				"[BATTLE_MANAGER] Character is AI ally (corruption auto-attack) - queueing AI action"
 			)
-			await get_tree().create_timer(0.3).timeout
+			await get_tree().create_timer(Constants.WAIT_SHORT).timeout
 			_queue_ally_ai_action(character)
 		return
 
@@ -657,7 +657,7 @@ func _queue_ally_ai_action(character: CharacterBase) -> void:
 	)
 
 	party_lock_in_index += 1
-	await get_tree().create_timer(0.2).timeout
+	await get_tree().create_timer(Constants.WAIT_QUICK).timeout
 	_prompt_next_party_member()
 
 
@@ -673,7 +673,7 @@ func _queue_player_action(action: Enums.BattleAction, target: CharacterBase, ski
 
 	party_lock_in_index += 1
 
-	await get_tree().create_timer(0.2).timeout
+	await get_tree().create_timer(Constants.WAIT_QUICK).timeout
 	_prompt_next_party_member()
 
 
@@ -685,7 +685,7 @@ func _execute_party_actions() -> void:
 	EventBus.emit_debug("=== PARTY EXECUTION PHASE ===")
 	ui_command.emit("show_message", {"text": "Attack!", "duration": 0.8})
 
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 	_execute_next_party_action()
 
 
@@ -757,7 +757,7 @@ func _execute_next_party_action() -> void:
 	party_execution_index += 1
 
 	# Continue to next action
-	await get_tree().create_timer(0.2).timeout
+	await get_tree().create_timer(Constants.WAIT_QUICK).timeout
 	_execute_next_party_action()
 
 
@@ -781,7 +781,7 @@ func _start_enemy_phase() -> void:
 	EventBus.emit_debug("=== ENEMY PHASE === (%d attacks)" % enemy_attacks_remaining)
 	ui_command.emit("show_message", {"text": "Enemy Turn!", "duration": 0.8})
 
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 	_execute_next_enemy_attack()
 
 
@@ -826,7 +826,7 @@ func _execute_next_enemy_attack() -> void:
 		ui_command.emit("show_message", {"text": attacker.character_name + " is stunned!"})
 		enemy_attacks_remaining -= 1
 		enemy_attack_index += 1
-		await get_tree().create_timer(0.5).timeout
+		await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 		_execute_next_enemy_attack()
 		return
 
@@ -836,7 +836,7 @@ func _execute_next_enemy_attack() -> void:
 	# Camera focus on enemy
 	camera_command.emit("focus", {"target": attacker, "duration": camera_focus_time})
 
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(Constants.WAIT_SHORT).timeout
 
 	# AI decides action
 	var ai_decision: Dictionary = ai_controller.get_action(attacker, enemy_party, player_party)
@@ -1129,7 +1129,7 @@ func _execute_skill(caster: CharacterBase, target: CharacterBase, skill_id: Stri
 		return {
 			"success": false,
 			"reason":
-			can_use_result.reasons[0] if can_use_result.reasons.size() > 0 else "Cannot use skill"
+			can_use_result.reasons[0] if not can_use_result.reasons.is_empty() else "Cannot use skill"
 		}
 
 	# Check for silence status
@@ -1151,7 +1151,7 @@ func _execute_skill(caster: CharacterBase, target: CharacterBase, skill_id: Stri
 
 	vfx_command.emit("skill_charge", {"position": caster.global_position, "duration": 0.5})
 
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 
 	var result := {"success": true, "skill_id": skill_id, "effects": []}
 
@@ -1164,7 +1164,7 @@ func _execute_skill(caster: CharacterBase, target: CharacterBase, skill_id: Stri
 	elif targets.size() == 1:
 		camera_command.emit("focus", {"target": targets[0], "duration": 0.3})
 
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(Constants.WAIT_SHORT).timeout
 
 	# Execute based on skill type
 	match skill_data.skill_type:
@@ -1251,7 +1251,7 @@ func _execute_skill(caster: CharacterBase, target: CharacterBase, skill_id: Stri
 	# Add skill name and attacker info for combat log
 	result["skill_name"] = skill_data.display_name
 	result["attacker_name"] = caster.character_name
-	if targets.size() > 0:
+	if not targets.is_empty():
 		result["target_name"] = targets[0].character_name
 	return result
 
@@ -1631,16 +1631,16 @@ func _execute_flee(character: CharacterBase) -> Dictionary:
 	var alive_players := player_party.filter(func(p): return p.is_alive())
 	var alive_enemies := enemy_party.filter(func(e): return e.is_alive())
 
-	if alive_players.size() > 0:
+	if not alive_players.is_empty():
 		party_speed /= alive_players.size()
-	if alive_enemies.size() > 0:
+	if not alive_enemies.is_empty():
 		enemy_speed /= alive_enemies.size()
 
 	flee_chance += (party_speed - enemy_speed) * 0.01
 	flee_chance = clampf(flee_chance, 0.1, 0.9)
 
 	# Can't flee from bosses
-	if active_bosses.size() > 0:
+	if not active_bosses.is_empty():
 		ui_command.emit("show_message", {"text": "Can't escape from boss!"})
 		audio_command.emit("play_sfx", {"sound": "flee_fail"})
 		flee_chance = 0.0
@@ -1968,7 +1968,7 @@ func _on_character_died(character: CharacterBase) -> void:
 	if character in active_bosses:
 		camera_command.emit("shake", {"intensity": 20.0, "duration": 1.5})
 		vfx_command.emit("boss_death_explosion", {"position": character.global_position})
-		await get_tree().create_timer(1.5).timeout
+		await get_tree().create_timer(Constants.WAIT_VICTORY_DISPLAY).timeout
 
 	await get_tree().create_timer(death_dramatic_pause).timeout
 

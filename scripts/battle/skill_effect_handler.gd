@@ -347,7 +347,7 @@ func process_target_selection(
 		match effect:
 			"target_lowest_hp":
 				targets.sort_custom(func(a, b): return a.current_hp < b.current_hp)
-				return [targets[0]] if targets.size() > 0 else []
+				return [targets[0]] if not targets.is_empty() else []
 
 			"random_targets":
 				targets.shuffle()

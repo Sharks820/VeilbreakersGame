@@ -372,7 +372,7 @@ static func has_connections(node: Variant, signal_name: String) -> bool:
 		return false
 	if not node.has_signal(signal_name):
 		return false
-	return node.get_signal_connection_list(signal_name).size() > 0
+	return not node.get_signal_connection_list(signal_name).is_empty()
 
 
 ## Safe connect with duplicate check

@@ -64,20 +64,15 @@ func _setup_transition_ui() -> void:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_loading_container.add_child(center)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 20)
+	var vbox := UIStyleFactory.create_vbox(20)
 	center.add_child(vbox)
 
 	# Loading label
-	_loading_label = Label.new()
-	_loading_label.text = "Loading..."
-	_loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loading_label = UIStyleFactory.create_centered_label("Loading...", UIStyleFactory.FONT_NORMAL, UIStyleFactory.COLOR_DEFAULT)
 	vbox.add_child(_loading_label)
 
 	# Progress bar
-	_progress_bar = ProgressBar.new()
-	_progress_bar.custom_minimum_size = Vector2(400, 24)
-	_progress_bar.show_percentage = false
+	_progress_bar = UIStyleFactory.create_hp_bar(Vector2(400, 24))
 	vbox.add_child(_progress_bar)
 
 

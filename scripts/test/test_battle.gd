@@ -933,7 +933,14 @@ func _on_tutorial_continue_pressed() -> void:
 
 func _create_vera_tutorial_panel() -> void:
 	## Create the VERA tutorial panel UI - positioned in CENTER of screen
-	vera_tutorial_panel = PanelContainer.new()
+	# Style - dark fantasy horror theme
+	var style := UIStyleFactory.create_vera_tutorial_panel()
+	style.content_margin_left = 25
+	style.content_margin_right = 25
+	style.content_margin_top = 18
+	style.content_margin_bottom = 18
+
+	vera_tutorial_panel = UIStyleFactory.create_styled_panel(style)
 	vera_tutorial_panel.name = "VERATutorialPanel"
 
 	# Position in CENTER of screen - not at bottom where buttons are
@@ -947,51 +954,34 @@ func _create_vera_tutorial_panel() -> void:
 	vera_tutorial_panel.offset_top = -120  # Center vertically
 	vera_tutorial_panel.offset_bottom = 120
 
-	# Style - dark fantasy horror theme
-	var style := UIStyleFactory.create_vera_tutorial_panel()
-	style.content_margin_left = 25
-	style.content_margin_right = 25
-	style.content_margin_top = 18
-	style.content_margin_bottom = 18
-	vera_tutorial_panel.add_theme_stylebox_override("panel", style)
-
 	# Main content container
-	var main_vbox := VBoxContainer.new()
+	var main_vbox := UIStyleFactory.create_vbox(12)
 	main_vbox.name = "MainVBox"
-	main_vbox.add_theme_constant_override("separation", 12)
 	vera_tutorial_panel.add_child(main_vbox)
 
 	# Content row (portrait + text)
-	var hbox := HBoxContainer.new()
+	var hbox := UIStyleFactory.create_hbox(20)
 	hbox.name = "HBox"
-	hbox.add_theme_constant_override("separation", 20)
 	main_vbox.add_child(hbox)
 
 	# Portrait with circular frame
-	var portrait_frame := PanelContainer.new()
+	var portrait_frame := UIStyleFactory.create_styled_panel(UIStyleFactory.create_vera_portrait_circle())
 	portrait_frame.name = "PortraitFrame"
 	portrait_frame.custom_minimum_size = Vector2(90, 90)
-	portrait_frame.add_theme_stylebox_override("panel", UIStyleFactory.create_vera_portrait_circle())
 	hbox.add_child(portrait_frame)
 
-	var portrait := TextureRect.new()
+	var portrait := UIStyleFactory.create_portrait(Vector2(84, 84))
 	portrait.name = "Portrait"
-	portrait.custom_minimum_size = Vector2(84, 84)
-	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait_frame.add_child(portrait)
 
 	# Text content
-	var vbox := VBoxContainer.new()
+	var vbox := UIStyleFactory.create_vbox(6)
 	vbox.name = "VBox"
-	vbox.add_theme_constant_override("separation", 6)
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UIStyleFactory.expand_horizontal(vbox)
 	hbox.add_child(vbox)
 
-	var speaker := Label.new()
+	var speaker := UIStyleFactory.create_label("", 20, Color(0.7, 0.55, 0.8))
 	speaker.name = "SpeakerLabel"
-	speaker.add_theme_font_size_override("font_size", 20)
-	speaker.add_theme_color_override("font_color", Color(0.7, 0.55, 0.8))
 	vbox.add_child(speaker)
 
 	var text := RichTextLabel.new()
@@ -1023,12 +1013,8 @@ func _create_vera_tutorial_panel() -> void:
 	main_vbox.add_child(button_container)
 
 	# Also keep keyboard hint as secondary option
-	var hint_label := Label.new()
+	var hint_label := UIStyleFactory.create_centered_label("(or press SPACE/ENTER)", 11, Color(0.45, 0.4, 0.5))
 	hint_label.name = "HintLabel"
-	hint_label.text = "(or press SPACE/ENTER)"
-	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint_label.add_theme_font_size_override("font_size", 11)
-	hint_label.add_theme_color_override("font_color", Color(0.45, 0.4, 0.5))
 	hint_label.visible = false
 	main_vbox.add_child(hint_label)
 
@@ -1263,10 +1249,8 @@ func _show_tutorial_arrow(target: String) -> void:
 	_tutorial_arrow.z_index = 101
 	_tutorial_arrow.process_mode = Node.PROCESS_MODE_ALWAYS
 
-	var arrow_label := Label.new()
+	var arrow_label := UIStyleFactory.create_label("", 48, Color(1.0, 0.9, 0.3))
 	arrow_label.name = "ArrowLabel"
-	arrow_label.add_theme_font_size_override("font_size", 48)
-	arrow_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
 	arrow_label.add_theme_color_override("font_outline_color", Color(0.2, 0.1, 0.0))
 	arrow_label.add_theme_constant_override("outline_size", 4)
 	_tutorial_arrow.add_child(arrow_label)

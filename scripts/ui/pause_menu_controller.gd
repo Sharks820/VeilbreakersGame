@@ -94,41 +94,31 @@ func _build_ui() -> void:
 	add_child(center)
 
 	# Main panel with dark style
-	_panel = PanelContainer.new()
+	_panel = UIStyleFactory.create_styled_panel(UIStyleFactory.create_pause_menu_panel())
 	_panel.name = "MenuPanel"
 	_panel.custom_minimum_size = Vector2(PANEL_WIDTH, 0)
-
-	# Create stylebox for panel
-	_panel.add_theme_stylebox_override("panel", UIStyleFactory.create_pause_menu_panel())
 	center.add_child(_panel)
 
 	# VBox for content
-	_vbox = VBoxContainer.new()
+	_vbox = UIStyleFactory.create_vbox(BUTTON_SPACING)
 	_vbox.name = "VBoxContainer"
-	_vbox.add_theme_constant_override("separation", BUTTON_SPACING)
 	_panel.add_child(_vbox)
 
 	# Title
-	_title_label = Label.new()
+	_title_label = UIStyleFactory.create_centered_label("PAUSED", 28, Color(0.9, 0.85, 0.7))
 	_title_label.name = "TitleLabel"
-	_title_label.text = "PAUSED"
-	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title_label.add_theme_font_size_override("font_size", 28)
-	_title_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7))
 	_vbox.add_child(_title_label)
 
 	# Separator
-	var sep := HSeparator.new()
+	var sep := UIStyleFactory.create_separator()
 	sep.add_theme_constant_override("separation", 10)
 	_vbox.add_child(sep)
 
 	# Battle warning (hidden by default)
-	_battle_warning_label = Label.new()
+	_battle_warning_label = UIStyleFactory.create_centered_label(
+		"Cannot save during battle.\nQuit will return you to before this battle.", 14, Color(1.0, 0.7, 0.3)
+	)
 	_battle_warning_label.name = "BattleWarning"
-	_battle_warning_label.text = "Cannot save during battle.\nQuit will return you to before this battle."
-	_battle_warning_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_battle_warning_label.add_theme_font_size_override("font_size", 14)
-	_battle_warning_label.add_theme_color_override("font_color", Color(1.0, 0.7, 0.3))
 	_battle_warning_label.visible = false
 	_vbox.add_child(_battle_warning_label)
 

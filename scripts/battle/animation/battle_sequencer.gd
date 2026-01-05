@@ -140,13 +140,13 @@ func start_battle(players: Array, enemies: Array, is_boss_battle: bool = false) 
 	camera_command.emit("battle_intro", {"duration": 1.5})
 
 	# If boss battle, dramatic intro
-	if is_boss_battle and active_bosses.size() > 0:
+	if is_boss_battle and not active_bosses.is_empty():
 		await _play_boss_intro(active_bosses[0])
 
 	battle_started.emit(player_party, enemy_party)
 
 	# Begin turn cycle
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 	_begin_turn_cycle()
 
 
@@ -222,7 +222,7 @@ func _process_next_turn() -> void:
 	# Skip stunned entities
 	if current_actor.has_method("is_stunned") and current_actor.is_stunned():
 		ui_command.emit("show_message", {"text": current_actor.display_name + " is stunned!"})
-		await get_tree().create_timer(0.5).timeout
+		await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 		turn_ended.emit(current_actor)
 		_process_next_turn()
 		return
@@ -510,7 +510,7 @@ func _execute_damage_skill(source: Node, targets: Array, skill: Dictionary, bran
 	else:
 		camera_command.emit("focus", {"target": targets[0], "duration": 0.3})
 
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(Constants.WAIT_SHORT).timeout
 
 	for hit in range(hit_count):
 		for target in targets:
@@ -576,7 +576,7 @@ func _execute_heal_skill(source: Node, targets: Array, skill: Dictionary) -> voi
 
 		audio_command.emit("play_sfx", {"sound": "heal"})
 
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 
 
 func _execute_buff_skill(source: Node, targets: Array, skill: Dictionary) -> void:
@@ -599,7 +599,7 @@ func _execute_buff_skill(source: Node, targets: Array, skill: Dictionary) -> voi
 		)
 
 	audio_command.emit("play_sfx", {"sound": "buff_apply"})
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 
 
 func _execute_debuff_skill(source: Node, targets: Array, skill: Dictionary) -> void:
@@ -622,7 +622,7 @@ func _execute_debuff_skill(source: Node, targets: Array, skill: Dictionary) -> v
 		)
 
 	audio_command.emit("play_sfx", {"sound": "debuff_apply"})
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 
 
 func _execute_status_skill(source: Node, targets: Array, skill: Dictionary, brand: String) -> void:
@@ -652,7 +652,7 @@ func _execute_status_skill(source: Node, targets: Array, skill: Dictionary, bran
 				"show_message", {"text": "RESISTED!", "position": target.global_position}
 			)
 
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 
 
 # -----------------------------------------------------------------------------
@@ -708,7 +708,7 @@ func _execute_capture(source: Node, target: Node, action: Dictionary) -> void:
 
 	audio_command.emit("play_sfx", {"sound": "capture_beam"})
 
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 
 	# 3. STRUGGLE SEQUENCE - Build tension
 	var success = randf() < capture_chance
@@ -781,7 +781,7 @@ func _capture_success(source: Node, target: Node) -> void:
 	# The target becomes yours!
 	capture_result.emit(target, true)
 
-	await get_tree().create_timer(2.0).timeout
+	await get_tree().create_timer(Constants.WAIT_DRAMATIC).timeout
 
 
 func _capture_failure(source: Node, target: Node) -> void:
@@ -800,7 +800,7 @@ func _capture_failure(source: Node, target: Node) -> void:
 
 	capture_result.emit(target, false)
 
-	await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(Constants.WAIT_LONG).timeout
 
 
 # -----------------------------------------------------------------------------
@@ -839,7 +839,7 @@ func _execute_item(source: Node, targets: Array, action: Dictionary) -> void:
 				if target.has_method("clear_status"):
 					target.clear_status(item.get("status", "all"))
 
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 
 
 func _execute_swap(source: Node, new_monster: Node) -> void:
@@ -849,7 +849,7 @@ func _execute_swap(source: Node, new_monster: Node) -> void:
 	# Return animation
 	vfx_command.emit("monster_return", {"position": source.global_position})
 
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 
 	# Swap in party
 	var idx = player_party.find(source)
@@ -871,7 +871,7 @@ func _execute_swap(source: Node, new_monster: Node) -> void:
 
 	audio_command.emit("play_sfx", {"sound": "monster_summon"})
 
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 
 
 func _execute_defend(source: Node) -> void:
@@ -886,7 +886,7 @@ func _execute_defend(source: Node) -> void:
 		"show_status_popup", {"target": source, "status": "DEFENDING", "positive": true}
 	)
 
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(Constants.WAIT_SHORT).timeout
 
 
 func _attempt_flee(source: Node) -> void:
@@ -894,10 +894,10 @@ func _attempt_flee(source: Node) -> void:
 	var flee_chance = 0.5  # Base 50%
 
 	# Can't flee from bosses
-	if active_bosses.size() > 0:
+	if not active_bosses.is_empty():
 		ui_command.emit("show_message", {"text": "Can't escape!"})
 		audio_command.emit("play_sfx", {"sound": "flee_fail"})
-		await get_tree().create_timer(0.5).timeout
+		await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 		return
 
 	if randf() < flee_chance:
@@ -909,7 +909,7 @@ func _attempt_flee(source: Node) -> void:
 		ui_command.emit("show_message", {"text": "Couldn't escape!"})
 		audio_command.emit("play_sfx", {"sound": "flee_fail"})
 
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
 
 
 # -----------------------------------------------------------------------------
@@ -954,7 +954,7 @@ func _apply_poison_tick(entity: Node, status: Dictionary) -> void:
 		entity.take_damage(damage, "VENOM", null)
 
 	audio_command.emit("play_sfx", {"sound": "poison_tick"})
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(Constants.WAIT_SHORT).timeout
 
 
 func _apply_burn_tick(entity: Node, status: Dictionary) -> void:
@@ -970,7 +970,7 @@ func _apply_burn_tick(entity: Node, status: Dictionary) -> void:
 		entity.take_damage(damage, "SURGE", null)
 
 	audio_command.emit("play_sfx", {"sound": "burn_tick"})
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(Constants.WAIT_SHORT).timeout
 
 
 func _apply_regen_tick(entity: Node, status: Dictionary) -> void:
@@ -984,7 +984,7 @@ func _apply_regen_tick(entity: Node, status: Dictionary) -> void:
 	if entity.has_method("heal"):
 		entity.heal(heal)
 
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(Constants.WAIT_SHORT).timeout
 
 
 func _apply_bleed_tick(entity: Node, status: Dictionary) -> void:
@@ -999,7 +999,7 @@ func _apply_bleed_tick(entity: Node, status: Dictionary) -> void:
 	if entity.has_method("take_damage"):
 		entity.take_damage(damage, "SAVAGE", null)
 
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(Constants.WAIT_SHORT).timeout
 
 
 # -----------------------------------------------------------------------------
@@ -1131,7 +1131,7 @@ func _handle_death(entity: Node) -> void:
 	if entity in active_bosses:
 		camera_command.emit("shake", {"intensity": 20.0, "duration": 1.5})
 		vfx_command.emit("boss_death_explosion", {"position": entity.global_position})
-		await get_tree().create_timer(1.5).timeout
+		await get_tree().create_timer(Constants.WAIT_VICTORY_DISPLAY).timeout
 
 	await get_tree().create_timer(death_dramatic_pause).timeout
 
@@ -1161,7 +1161,7 @@ func _handle_victory() -> void:
 		{"exp_gained": _calculate_exp(), "items_dropped": _calculate_drops(), "stats": battle_stats}
 	)
 
-	await get_tree().create_timer(2.0).timeout
+	await get_tree().create_timer(Constants.WAIT_DRAMATIC).timeout
 
 	battle_ended.emit(true)
 
@@ -1181,7 +1181,7 @@ func _handle_defeat() -> void:
 	# Defeat UI
 	ui_command.emit("show_defeat_screen", {"stats": battle_stats})
 
-	await get_tree().create_timer(2.0).timeout
+	await get_tree().create_timer(Constants.WAIT_DRAMATIC).timeout
 
 	battle_ended.emit(false)
 

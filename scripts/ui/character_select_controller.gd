@@ -146,17 +146,15 @@ func _build_ui() -> void:
 	main_container.add_theme_constant_override("margin_bottom", 30)
 	add_child(main_container)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 15)
+	var vbox := UIStyleFactory.create_vbox(15)
 	main_container.add_child(vbox)
 
 	# === TITLE BAR ===
 	_create_title_bar(vbox)
 
 	# === MAIN CONTENT (Hero + Info + Monsters) ===
-	var content_hbox := HBoxContainer.new()
-	content_hbox.add_theme_constant_override("separation", 25)
-	content_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var content_hbox := UIStyleFactory.create_hbox(25)
+	UIStyleFactory.expand_vertical(content_hbox)
 	vbox.add_child(content_hbox)
 
 	# Left: Hero selection cards
@@ -320,9 +318,8 @@ func _create_hero_display() -> Control:
 	container.name = "HeroDisplay"
 
 	# Dark backdrop
-	var backdrop := PanelContainer.new()
+	var backdrop := UIStyleFactory.create_styled_panel(UIStyleFactory.create_hero_display_backdrop())
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
-	backdrop.add_theme_stylebox_override("panel", UIStyleFactory.create_hero_display_backdrop())
 	container.add_child(backdrop)
 
 	# Hero portrait (large)
@@ -341,34 +338,24 @@ func _create_hero_display() -> Control:
 	container.add_child(hero_portrait)
 
 	# Name overlay at bottom
-	var name_panel := PanelContainer.new()
+	var name_panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_hero_name_overlay())
 	name_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	name_panel.offset_top = -140
-	name_panel.add_theme_stylebox_override("panel", UIStyleFactory.create_hero_name_overlay())
 	container.add_child(name_panel)
 
-	var name_vbox := VBoxContainer.new()
-	name_vbox.add_theme_constant_override("separation", 5)
+	var name_vbox := UIStyleFactory.create_vbox(5)
 	name_panel.add_child(name_vbox)
 
 	# Hero name
-	hero_name_label = Label.new()
-	hero_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hero_name_label.add_theme_font_size_override("font_size", 42)
-	hero_name_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.85))
+	hero_name_label = UIStyleFactory.create_centered_label("", 42, Color(1.0, 0.95, 0.85))
 	name_vbox.add_child(hero_name_label)
 
 	# Hero class
-	hero_class_label = Label.new()
-	hero_class_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hero_class_label.add_theme_font_size_override("font_size", 22)
+	hero_class_label = UIStyleFactory.create_centered_label("", 22, Color.WHITE)
 	name_vbox.add_child(hero_class_label)
 
 	# Hero title
-	hero_title_label = Label.new()
-	hero_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hero_title_label.add_theme_font_size_override("font_size", 16)
-	hero_title_label.add_theme_color_override("font_color", Color(0.6, 0.55, 0.5))
+	hero_title_label = UIStyleFactory.create_centered_label("", 16, Color(0.6, 0.55, 0.5))
 	name_vbox.add_child(hero_title_label)
 
 	return container
@@ -376,67 +363,47 @@ func _create_hero_display() -> Control:
 
 func _create_info_panel() -> PanelContainer:
 	## Create the right panel with stats, path/brand info, and monster showcase
-	var panel := PanelContainer.new()
+	var panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_char_select_panel(20))
 	panel.name = "InfoPanel"
-	panel.add_theme_stylebox_override("panel", UIStyleFactory.create_char_select_panel(20))
-	
+
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	panel.add_child(scroll)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 18)
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var vbox := UIStyleFactory.create_vbox(18)
+	UIStyleFactory.expand_horizontal(vbox)
 	scroll.add_child(vbox)
 
 	# === PATH & BRAND SECTION ===
 	var alignment_section := _create_section_header("PATH & BRAND ALIGNMENT")
 	vbox.add_child(alignment_section)
 
-	var alignment_hbox := HBoxContainer.new()
-	alignment_hbox.add_theme_constant_override("separation", 30)
+	var alignment_hbox := UIStyleFactory.create_hbox(30)
 	alignment_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(alignment_hbox)
 
 	# Path display
-	var path_vbox := VBoxContainer.new()
-	path_vbox.add_theme_constant_override("separation", 4)
+	var path_vbox := UIStyleFactory.create_vbox(4)
 	alignment_hbox.add_child(path_vbox)
 
-	var path_title := Label.new()
-	path_title.text = "PATH"
-	path_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	path_title.add_theme_font_size_override("font_size", 11)
-	path_title.add_theme_color_override("font_color", Color(0.5, 0.45, 0.4))
+	var path_title := UIStyleFactory.create_centered_label("PATH", 11, Color(0.5, 0.45, 0.4))
 	path_vbox.add_child(path_title)
 
-	path_label = Label.new()
-	path_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	path_label.add_theme_font_size_override("font_size", 18)
+	path_label = UIStyleFactory.create_centered_label("", 18, Color.WHITE)
 	path_vbox.add_child(path_label)
 
 	# Arrow
-	var arrow := Label.new()
-	arrow.text = "→"
-	arrow.add_theme_font_size_override("font_size", 28)
-	arrow.add_theme_color_override("font_color", Color(0.4, 0.35, 0.3))
+	var arrow := UIStyleFactory.create_label("→", 28, Color(0.4, 0.35, 0.3))
 	alignment_hbox.add_child(arrow)
 
 	# Brand display
-	var brand_vbox := VBoxContainer.new()
-	brand_vbox.add_theme_constant_override("separation", 4)
+	var brand_vbox := UIStyleFactory.create_vbox(4)
 	alignment_hbox.add_child(brand_vbox)
 
-	var brand_title := Label.new()
-	brand_title.text = "ALIGNED BRAND"
-	brand_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	brand_title.add_theme_font_size_override("font_size", 11)
-	brand_title.add_theme_color_override("font_color", Color(0.5, 0.45, 0.4))
+	var brand_title := UIStyleFactory.create_centered_label("ALIGNED BRAND", 11, Color(0.5, 0.45, 0.4))
 	brand_vbox.add_child(brand_title)
 
-	brand_label = Label.new()
-	brand_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	brand_label.add_theme_font_size_override("font_size", 18)
+	brand_label = UIStyleFactory.create_centered_label("", 18, Color.WHITE)
 	brand_vbox.add_child(brand_label)
 
 	# === DESCRIPTION SECTION ===
@@ -473,8 +440,7 @@ func _create_info_panel() -> PanelContainer:
 	synergy_label.add_theme_color_override("default_color", Color(0.65, 0.6, 0.55))
 	vbox.add_child(synergy_label)
 
-	monster_showcase = HBoxContainer.new()
-	monster_showcase.add_theme_constant_override("separation", 15)
+	monster_showcase = UIStyleFactory.create_hbox(15)
 	monster_showcase.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(monster_showcase)
 
@@ -483,16 +449,12 @@ func _create_info_panel() -> PanelContainer:
 
 func _create_section_header(title: String) -> VBoxContainer:
 	## Create a styled section header
-	var container := VBoxContainer.new()
-	container.add_theme_constant_override("separation", 8)
+	var container := UIStyleFactory.create_vbox(8)
 
-	var label := Label.new()
-	label.text = title
-	label.add_theme_font_size_override("font_size", 13)
-	label.add_theme_color_override("font_color", Color(0.55, 0.5, 0.45))
+	var label := UIStyleFactory.create_label(title, 13, Color(0.55, 0.5, 0.45))
 	container.add_child(label)
 
-	var sep := HSeparator.new()
+	var sep := UIStyleFactory.create_separator()
 	sep.modulate = Color(0.35, 0.3, 0.4, 0.6)
 	container.add_child(sep)
 
@@ -501,14 +463,12 @@ func _create_section_header(title: String) -> VBoxContainer:
 
 func _create_monster_card(monster_id: String) -> PanelContainer:
 	## Create a small monster showcase card
-	var card := PanelContainer.new()
+	var card := UIStyleFactory.create_styled_panel(UIStyleFactory.create_monster_card_style())
 	card.custom_minimum_size = Vector2(110, 130)
 
 	var monster_data = monster_data_cache.get(monster_id)
-	card.add_theme_stylebox_override("panel", UIStyleFactory.create_monster_card_style())
-	
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 5)
+
+	var vbox := UIStyleFactory.create_vbox(5)
 	card.add_child(vbox)
 
 	# Monster sprite
@@ -516,21 +476,16 @@ func _create_monster_card(monster_id: String) -> PanelContainer:
 	sprite_container.custom_minimum_size.y = 70
 	vbox.add_child(sprite_container)
 
-	var sprite := TextureRect.new()
-	sprite.custom_minimum_size = Vector2(60, 60)
-	sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	var sprite := UIStyleFactory.create_icon(Vector2(60, 60))
 	var sprite_path := "res://assets/sprites/monsters/%s.png" % monster_id
 	if ResourceLoader.exists(sprite_path):
 		sprite.texture = load(sprite_path)
 	sprite_container.add_child(sprite)
 
 	# Monster name
-	var name_label := Label.new()
-	name_label.text = monster_id.capitalize().replace("_", " ")
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 11)
-	name_label.add_theme_color_override("font_color", Color(0.85, 0.8, 0.75))
+	var name_label := UIStyleFactory.create_centered_label(
+		monster_id.capitalize().replace("_", " "), 11, Color(0.85, 0.8, 0.75)
+	)
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	vbox.add_child(name_label)
 
@@ -543,11 +498,7 @@ func _create_monster_card(monster_id: String) -> PanelContainer:
 			brand_name = Enums.get_brand_name(monster_data.brand)
 
 		if brand_name != "":
-			var brand_indicator := Label.new()
-			brand_indicator.text = brand_name
-			brand_indicator.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			brand_indicator.add_theme_font_size_override("font_size", 9)
-			brand_indicator.add_theme_color_override("font_color", Color(0.6, 0.55, 0.5))
+			var brand_indicator := UIStyleFactory.create_centered_label(brand_name, 9, Color(0.6, 0.55, 0.5))
 			vbox.add_child(brand_indicator)
 
 	return card
@@ -555,29 +506,22 @@ func _create_monster_card(monster_id: String) -> PanelContainer:
 
 func _create_vera_panel(parent: Control) -> void:
 	## Create the VERA introduction panel at the bottom - dynamic and engaging
-	vera_panel = PanelContainer.new()
+	vera_panel = UIStyleFactory.create_styled_panel(UIStyleFactory.create_vera_panel_style())
 	vera_panel.name = "VERAPanel"
 	vera_panel.custom_minimum_size.y = 120
-
-	# Dark panel with glowing purple border
-	vera_panel.add_theme_stylebox_override("panel", UIStyleFactory.create_vera_panel_style())
 	parent.add_child(vera_panel)
 
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 25)
+	var hbox := UIStyleFactory.create_hbox(25)
 	vera_panel.add_child(hbox)
 
 	# VERA portrait - larger with animated glow
-	var portrait_frame := PanelContainer.new()
+	var portrait_frame := UIStyleFactory.create_styled_panel(UIStyleFactory.create_vera_portrait_frame())
 	portrait_frame.name = "PortraitFrame"
 	portrait_frame.custom_minimum_size = Vector2(90, 90)
-	portrait_frame.add_theme_stylebox_override("panel", UIStyleFactory.create_vera_portrait_frame())
 	hbox.add_child(portrait_frame)
 
-	vera_portrait = TextureRect.new()
-	vera_portrait.custom_minimum_size = Vector2(84, 84)
+	vera_portrait = UIStyleFactory.create_portrait(Vector2(84, 84))
 	vera_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	vera_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	vera_portrait.pivot_offset = Vector2(42, 42)  # Center pivot for animations
 	if ResourceLoader.exists("res://assets/characters/vera/vera_interface.png"):
 		vera_portrait.texture = load("res://assets/characters/vera/vera_interface.png")
@@ -587,17 +531,13 @@ func _create_vera_panel(parent: Control) -> void:
 	_start_vera_portrait_animation()
 
 	# VERA dialogue section
-	var dialogue_vbox := VBoxContainer.new()
-	dialogue_vbox.add_theme_constant_override("separation", 8)
-	dialogue_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var dialogue_vbox := UIStyleFactory.create_vbox(8)
+	UIStyleFactory.expand_horizontal(dialogue_vbox)
 	hbox.add_child(dialogue_vbox)
 
 	# VERA name with glowing effect
-	var vera_name := Label.new()
+	var vera_name := UIStyleFactory.create_label("⬡ V.E.R.A. ⬡", 16, Color(0.7, 0.5, 0.8))
 	vera_name.name = "VERAName"
-	vera_name.text = "⬡ V.E.R.A. ⬡"
-	vera_name.add_theme_font_size_override("font_size", 16)
-	vera_name.add_theme_color_override("font_color", Color(0.7, 0.5, 0.8))
 	vera_name.add_theme_color_override("font_outline_color", Color(0.3, 0.2, 0.4))
 	vera_name.add_theme_constant_override("outline_size", 2)
 	dialogue_vbox.add_child(vera_name)
@@ -605,7 +545,7 @@ func _create_vera_panel(parent: Control) -> void:
 	vera_dialogue = RichTextLabel.new()
 	vera_dialogue.bbcode_enabled = true
 	vera_dialogue.fit_content = true
-	vera_dialogue.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UIStyleFactory.expand_horizontal(vera_dialogue)
 	vera_dialogue.custom_minimum_size.y = 60
 	vera_dialogue.add_theme_font_size_override("normal_font_size", 14)
 	vera_dialogue.add_theme_color_override("default_color", Color(0.82, 0.78, 0.72))
@@ -623,8 +563,7 @@ func _start_vera_portrait_animation() -> void:
 
 func _create_button_bar(parent: Control) -> void:
 	## Create the bottom button bar
-	var button_container := HBoxContainer.new()
-	button_container.add_theme_constant_override("separation", 20)
+	var button_container := UIStyleFactory.create_hbox(20)
 	parent.add_child(button_container)
 
 	# Back button
@@ -634,7 +573,7 @@ func _create_button_bar(parent: Control) -> void:
 
 	# Spacer
 	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UIStyleFactory.expand_horizontal(spacer)
 	button_container.add_child(spacer)
 
 	# Confirm button
@@ -781,16 +720,10 @@ func _update_info_panel(data: HeroData) -> void:
 		var stat_value: int = stat_info[1]
 		var stat_color: Color = stat_info[2]
 
-		var name_lbl := Label.new()
-		name_lbl.text = stat_name
-		name_lbl.add_theme_font_size_override("font_size", 12)
-		name_lbl.add_theme_color_override("font_color", Color(0.55, 0.5, 0.45))
+		var name_lbl := UIStyleFactory.create_label(stat_name, 12, Color(0.55, 0.5, 0.45))
 		stats_grid.add_child(name_lbl)
 
-		var value_lbl := Label.new()
-		value_lbl.text = str(stat_value)
-		value_lbl.add_theme_font_size_override("font_size", 14)
-		value_lbl.add_theme_color_override("font_color", stat_color)
+		var value_lbl := UIStyleFactory.create_label(str(stat_value), 14, stat_color)
 		stats_grid.add_child(value_lbl)
 
 	# Synergy explanation
@@ -1016,35 +949,26 @@ func _show_confirmation_popup(hero_name: String, hero_id: String) -> void:
 	overlay.add_child(center)
 
 	# Create popup panel
-	_confirmation_popup = PanelContainer.new()
+	_confirmation_popup = UIStyleFactory.create_styled_panel(UIStyleFactory.create_confirmation_popup_style())
 	_confirmation_popup.name = "ConfirmationPopup"
 	_confirmation_popup.custom_minimum_size = Vector2(500, 240)
-	_confirmation_popup.add_theme_stylebox_override("panel", UIStyleFactory.create_confirmation_popup_style())
 	center.add_child(_confirmation_popup)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 20)
+	var vbox := UIStyleFactory.create_vbox(20)
 	_confirmation_popup.add_child(vbox)
 
 	# Title
-	var title := Label.new()
-	title.text = "CONFIRM SELECTION"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color(0.9, 0.8, 0.6))
+	var title := UIStyleFactory.create_centered_label("CONFIRM SELECTION", 24, Color(0.9, 0.8, 0.6))
 	vbox.add_child(title)
 
 	# Message
-	var message := Label.new()
-	message.text = "Are you sure you want to choose\n%s as your champion?" % hero_name
-	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	message.add_theme_font_size_override("font_size", 16)
-	message.add_theme_color_override("font_color", Color(0.8, 0.75, 0.7))
+	var message := UIStyleFactory.create_centered_label(
+		"Are you sure you want to choose\n%s as your champion?" % hero_name, 16, Color(0.8, 0.75, 0.7)
+	)
 	vbox.add_child(message)
 
 	# Button container
-	var button_hbox := HBoxContainer.new()
-	button_hbox.add_theme_constant_override("separation", 30)
+	var button_hbox := UIStyleFactory.create_hbox(30)
 	button_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(button_hbox)
 

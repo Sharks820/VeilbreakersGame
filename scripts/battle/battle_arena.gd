@@ -474,23 +474,17 @@ func _create_party_sidebar(players: Array[CharacterBase]) -> void:
 	if not battle_ui:
 		return
 
-	var sidebar := PanelContainer.new()
+	var sidebar := UIStyleFactory.create_styled_panel(UIStyleFactory.create_arena_party_sidebar())
 	sidebar.name = "PartySidebar"
 	sidebar.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	sidebar.position = Vector2(10, 70)
 	sidebar.custom_minimum_size = Vector2(170, 0)
 
-	sidebar.add_theme_stylebox_override("panel", UIStyleFactory.create_arena_party_sidebar())
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
+	var vbox := UIStyleFactory.create_vbox(6)
 	sidebar.add_child(vbox)
 
 	# Header
-	var header := Label.new()
-	header.text = "Party"
-	header.add_theme_font_size_override("font_size", 14)
-	header.add_theme_color_override("font_color", Color(0.5, 0.85, 0.65, 1.0))
+	var header := UIStyleFactory.create_label("Party", 14, Color(0.5, 0.85, 0.65, 1.0))
 	vbox.add_child(header)
 
 	# Add each party member
@@ -503,14 +497,11 @@ func _create_party_sidebar(players: Array[CharacterBase]) -> void:
 
 func _create_party_slot(character: CharacterBase) -> PanelContainer:
 	## Create individual party member slot with portrait and HP/MP bars
-	var slot := PanelContainer.new()
+	var slot := UIStyleFactory.create_styled_panel(UIStyleFactory.create_arena_party_slot())
 	slot.custom_minimum_size = Vector2(154, 50)
 
-	slot.add_theme_stylebox_override("panel", UIStyleFactory.create_arena_party_slot())
-
 	# Horizontal layout: portrait | name+bars
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 6)
+	var hbox := UIStyleFactory.create_hbox(6)
 	slot.add_child(hbox)
 
 	# Portrait
@@ -518,25 +509,18 @@ func _create_party_slot(character: CharacterBase) -> PanelContainer:
 	hbox.add_child(portrait)
 
 	# Name and bars column
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 2)
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var vbox := UIStyleFactory.create_vbox(2)
+	UIStyleFactory.expand_horizontal(vbox)
 	hbox.add_child(vbox)
 
 	# Name
-	var name_lbl := Label.new()
-	name_lbl.text = character.character_name
-	name_lbl.add_theme_font_size_override("font_size", 10)
-	name_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.85, 1.0))
+	var name_lbl := UIStyleFactory.create_label(character.character_name, 10, Color(0.9, 0.9, 0.85, 1.0))
 	vbox.add_child(name_lbl)
 
 	# HP Bar
-	var hp_bar := ProgressBar.new()
-	hp_bar.custom_minimum_size = Vector2(90, 10)
+	var hp_bar := UIStyleFactory.create_hp_bar(Vector2(90, 10))
 	hp_bar.max_value = maxf(character.get_max_hp(), 1.0)
 	hp_bar.value = character.current_hp
-	hp_bar.show_percentage = false
-	_style_hp_bar(hp_bar)
 	vbox.add_child(hp_bar)
 
 	# Store reference on character for updates
@@ -544,12 +528,9 @@ func _create_party_slot(character: CharacterBase) -> PanelContainer:
 
 	# MP Bar (if character has MP)
 	if character.base_max_mp > 0:
-		var mp_bar := ProgressBar.new()
-		mp_bar.custom_minimum_size = Vector2(90, 6)
+		var mp_bar := UIStyleFactory.create_mp_bar(Vector2(90, 6))
 		mp_bar.max_value = maxf(character.get_max_mp(), 1.0)
 		mp_bar.value = character.current_mp
-		mp_bar.show_percentage = false
-		_style_mp_bar(mp_bar)
 		vbox.add_child(mp_bar)
 
 		# Store reference on character for updates
@@ -560,22 +541,17 @@ func _create_party_slot(character: CharacterBase) -> PanelContainer:
 
 func _create_portrait(character: CharacterBase, size: int) -> Control:
 	## Create a portrait thumbnail for sidebar
-	var container := PanelContainer.new()
+	var container := UIStyleFactory.create_styled_panel(UIStyleFactory.create_arena_ally_portrait())
 	container.custom_minimum_size = Vector2(size, size)
-
-	# Portrait frame style
-	container.add_theme_stylebox_override("panel", UIStyleFactory.create_arena_ally_portrait())
 
 	# Load sprite texture
 	var sprite_path := _get_character_sprite_path(character)
 	if sprite_path != "" and ResourceLoader.exists(sprite_path):
 		var tex := load(sprite_path)
 		if tex:
-			var tex_rect := TextureRect.new()
+			var tex_rect := UIStyleFactory.create_portrait(Vector2(size - 4, size - 4))
 			tex_rect.texture = tex
 			tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			tex_rect.custom_minimum_size = Vector2(size - 4, size - 4)
 			container.add_child(tex_rect)
 
 	return container
@@ -598,7 +574,7 @@ func _create_enemy_sidebar(enemies: Array[CharacterBase]) -> void:
 	if not battle_ui:
 		return
 
-	var sidebar := PanelContainer.new()
+	var sidebar := UIStyleFactory.create_styled_panel(UIStyleFactory.create_arena_enemy_sidebar())
 	sidebar.name = "EnemySidebar"
 	sidebar.anchor_left = 1.0
 	sidebar.anchor_right = 1.0
@@ -609,17 +585,11 @@ func _create_enemy_sidebar(enemies: Array[CharacterBase]) -> void:
 	sidebar.offset_top = 70.0
 	sidebar.custom_minimum_size = Vector2(170, 0)
 
-	sidebar.add_theme_stylebox_override("panel", UIStyleFactory.create_arena_enemy_sidebar())
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
+	var vbox := UIStyleFactory.create_vbox(6)
 	sidebar.add_child(vbox)
 
 	# Header
-	var header := Label.new()
-	header.text = "Enemies"
-	header.add_theme_font_size_override("font_size", 14)
-	header.add_theme_color_override("font_color", Color(0.9, 0.4, 0.4, 1.0))
+	var header := UIStyleFactory.create_label("Enemies", 14, Color(0.9, 0.4, 0.4, 1.0))
 	vbox.add_child(header)
 
 	# Add each enemy
@@ -632,14 +602,11 @@ func _create_enemy_sidebar(enemies: Array[CharacterBase]) -> void:
 
 func _create_enemy_slot(character: CharacterBase) -> PanelContainer:
 	## Create individual enemy slot with portrait and HP bar - RED style
-	var slot := PanelContainer.new()
+	var slot := UIStyleFactory.create_styled_panel(UIStyleFactory.create_arena_enemy_slot())
 	slot.custom_minimum_size = Vector2(154, 50)
 
-	slot.add_theme_stylebox_override("panel", UIStyleFactory.create_arena_enemy_slot())
-
 	# Horizontal layout: portrait | name+bars
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 6)
+	var hbox := UIStyleFactory.create_hbox(6)
 	slot.add_child(hbox)
 
 	# Portrait with red frame
@@ -647,25 +614,18 @@ func _create_enemy_slot(character: CharacterBase) -> PanelContainer:
 	hbox.add_child(portrait)
 
 	# Name and bars column
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 2)
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var vbox := UIStyleFactory.create_vbox(2)
+	UIStyleFactory.expand_horizontal(vbox)
 	hbox.add_child(vbox)
 
 	# Name
-	var name_lbl := Label.new()
-	name_lbl.text = character.character_name
-	name_lbl.add_theme_font_size_override("font_size", 10)
-	name_lbl.add_theme_color_override("font_color", Color(0.95, 0.85, 0.85, 1.0))
+	var name_lbl := UIStyleFactory.create_label(character.character_name, 10, Color(0.95, 0.85, 0.85, 1.0))
 	vbox.add_child(name_lbl)
 
 	# HP Bar (red)
-	var hp_bar := ProgressBar.new()
-	hp_bar.custom_minimum_size = Vector2(90, 10)
+	var hp_bar := UIStyleFactory.create_enemy_hp_bar(Vector2(90, 10))
 	hp_bar.max_value = maxf(character.get_max_hp(), 1.0)
 	hp_bar.value = character.current_hp
-	hp_bar.show_percentage = false
-	_style_enemy_hp_bar(hp_bar)
 	vbox.add_child(hp_bar)
 
 	# Store reference on character for updates
@@ -676,22 +636,17 @@ func _create_enemy_slot(character: CharacterBase) -> PanelContainer:
 
 func _create_enemy_portrait(character: CharacterBase, size: int) -> Control:
 	## Create a portrait thumbnail for enemy sidebar (red frame)
-	var container := PanelContainer.new()
+	var container := UIStyleFactory.create_styled_panel(UIStyleFactory.create_arena_enemy_portrait())
 	container.custom_minimum_size = Vector2(size, size)
-
-	# Red portrait frame style
-	container.add_theme_stylebox_override("panel", UIStyleFactory.create_arena_enemy_portrait())
 
 	# Load sprite texture
 	var sprite_path := _get_character_sprite_path(character)
 	if sprite_path != "" and ResourceLoader.exists(sprite_path):
 		var tex := load(sprite_path)
 		if tex:
-			var tex_rect := TextureRect.new()
+			var tex_rect := UIStyleFactory.create_portrait(Vector2(size - 4, size - 4))
 			tex_rect.texture = tex
 			tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			tex_rect.custom_minimum_size = Vector2(size - 4, size - 4)
 			container.add_child(tex_rect)
 
 	return container
@@ -956,20 +911,14 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 	container.set_meta("character_ref", character)
 
 	# Name label - position based on sprite size
-	var label := Label.new()
-	label.text = character.character_name
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 12)
+	var label := UIStyleFactory.create_centered_label(character.character_name, 12, UIStyleFactory.COLOR_DEFAULT)
 	container.add_child(label)
 
 	# HP bar above character - size and position based on character type
-	var hp_bar := ProgressBar.new()
+	var hp_bar := UIStyleFactory.create_hp_bar(Vector2(70, 10))
 	hp_bar.max_value = character.get_max_hp()
 	hp_bar.value = character.current_hp
-	hp_bar.show_percentage = false
 	hp_bar.name = "HPBar"
-
-	# Style the HP bar to be visible
 	UIStyleFactory.apply_floating_hp_bar_style(hp_bar)
 
 	container.add_child(hp_bar)
@@ -1513,23 +1462,18 @@ func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> v
 func _spawn_damage_number(
 	pos: Vector2, amount: int, is_critical: bool, is_heal: bool = false
 ) -> void:
-	var label := Label.new()
-	label.text = str(amount) if not is_heal else "+" + str(amount)
-	label.global_position = pos + Vector2(randf_range(-20, 20), 0)
-	label.z_index = 100
-
-	# Styling
+	# Determine styling before creating label
 	var font_size := 32 if is_critical else 24
-	label.add_theme_font_size_override("font_size", font_size)
-
 	var color := Color.WHITE
 	if is_heal:
 		color = Color.LIME_GREEN
 	elif is_critical:
 		color = Color.YELLOW
-	else:
-		color = Color.WHITE
-	label.add_theme_color_override("font_color", color)
+
+	var text := ("+" + str(amount)) if is_heal else str(amount)
+	var label := UIStyleFactory.create_label(text, font_size, color)
+	label.global_position = pos + Vector2(randf_range(-20, 20), 0)
+	label.z_index = 100
 
 	damage_numbers_container.add_child(label)
 
@@ -1869,7 +1813,7 @@ func _on_camera_command(command: String, data: Dictionary) -> void:
 				battle_camera.focus_between(from, to, bias)
 		"focus_group":
 			var targets = data.get("targets", [])
-			if targets.size() > 0:
+			if not targets.is_empty():
 				var typed_targets: Array[Node2D] = []
 				for t in targets:
 					if t is Node2D:
