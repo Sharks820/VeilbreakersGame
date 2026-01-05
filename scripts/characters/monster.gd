@@ -21,7 +21,7 @@ signal purification_progress_updated(progress: float)
 signal purification_completed
 signal purification_failed
 signal recruited
-signal experience_changed(old_exp: int, new_exp: int)
+# NOTE: experience_changed is inherited from CharacterBase - do not redeclare
 
 # =============================================================================
 # MONSTER-SPECIFIC PROPERTIES

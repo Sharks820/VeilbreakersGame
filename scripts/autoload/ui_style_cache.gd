@@ -1,5 +1,5 @@
-class_name UIStyleCache
 extends Node
+## NOTE: No class_name - autoloads cannot have class_name matching singleton name in Godot 4.x
 ## UIStyleCache: Caches and reuses StyleBox instances to prevent memory churn.
 ##
 ## PROBLEM SOLVED:
