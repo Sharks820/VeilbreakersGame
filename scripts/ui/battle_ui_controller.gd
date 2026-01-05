@@ -1129,7 +1129,7 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 	var name_label := Label.new()
 	name_label.text = character.character_name
 	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_BODY)
-	name_label.add_theme_color_override("font_color", Color(0.95, 0.9, 0.8, 1.0))
+	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_PARCHMENT)
 	vbox.add_child(name_label)
 
 	# HP Bar with styling
@@ -1160,7 +1160,7 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 	var hp_label := Label.new()
 	hp_label.text = "%d/%d" % [character.current_hp, character.get_max_hp()]
 	hp_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SMALL)
-	hp_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 1.0))
+	hp_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 	hp_label.name = "HPLabel"
 	vbox.add_child(hp_label)
 
@@ -1302,7 +1302,7 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	name_label.text = enemy.character_name
 	name_label.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-	name_label.add_theme_color_override("font_color", Color(0.95, 0.85, 0.8, 1.0))
+	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_NAME)
 	vbox.add_child(name_label)
 
 	# HP Bar - red themed
@@ -1328,7 +1328,7 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	var hp_label := Label.new()
 	hp_label.text = "%d/%d" % [enemy.current_hp, enemy.get_max_hp()]
 	hp_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TINY)
-	hp_label.add_theme_color_override("font_color", Color(0.7, 0.6, 0.6, 1.0))
+	hp_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_HP_LABEL)
 	hp_label.name = "HPLabel"
 	hp_label.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	vbox.add_child(hp_label)
@@ -2078,7 +2078,7 @@ func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, g
 			else:
 				item_names.append(str(item))
 		items_text.text = ", ".join(item_names)
-		items_text.add_theme_color_override("font_color", Color(0.8, 0.75, 0.65))
+		items_text.add_theme_color_override("font_color", UIStyleFactory.COLOR_ITEM_TEXT)
 	items_text.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
 	items_display.add_child(items_text)
 	
@@ -2112,7 +2112,7 @@ func _add_battle_stats_section(container: VBoxContainer, delay: float) -> void:
 	stats_header.text = "📊 BATTLE STATS"
 	stats_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stats_header.add_theme_font_size_override("font_size", UIStyleFactory.FONT_NORMAL)
-	stats_header.add_theme_color_override("font_color", Color(0.7, 0.85, 1.0))
+	stats_header.add_theme_color_override("font_color", UIStyleFactory.COLOR_STATS_HEADER)
 	container.add_child(stats_header)
 	
 	# Stats grid
@@ -2193,7 +2193,7 @@ func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: f
 	var name_label := Label.new()
 	name_label.text = character.character_name
 	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_NORMAL)
-	name_label.add_theme_color_override("font_color", Color(0.9, 0.95, 0.9))
+	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ALLY_NAME_ALT)
 	name_container.add_child(name_label)
 	
 	var level_label := Label.new()
@@ -2296,7 +2296,7 @@ func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: f
 func _show_level_up_flash(row: PanelContainer, level_label: Label, new_level: int, character: CharacterBase = null) -> void:
 	## Flash effect when character levels up, with stat gains display
 	level_label.text = "Lv. %d ⬆" % new_level
-	level_label.add_theme_color_override("font_color", Color(1.0, 1.0, 0.3))
+	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL_UP)
 	
 	# Flash the row
 	var flash_tween := create_tween()
@@ -2327,7 +2327,7 @@ func _show_level_up_flash(row: PanelContainer, level_label: Label, new_level: in
 	var title := Label.new()
 	title.text = "⭐ LEVEL UP! ⭐"
 	title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_NORMAL)
-	title.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
+	title.add_theme_color_override("font_color", UIStyleFactory.COLOR_VICTORY_TITLE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	popup_vbox.add_child(title)
 	
@@ -2424,7 +2424,7 @@ func _style_victory_panel() -> void:
 	for label in [exp_label, gold_label, items_label]:
 		if label:
 			label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_HEADING)
-			label.add_theme_color_override("font_color", Color(0.85, 0.8, 0.7))  # Parchment
+			label.add_theme_color_override("font_color", UIStyleFactory.COLOR_PARCHMENT_WARM)  # Parchment
 	
 	# Style the continue button - dark with golden accents
 	if continue_button:
@@ -2452,7 +2452,7 @@ func _style_victory_panel() -> void:
 		continue_button.add_theme_stylebox_override("hover", btn_hover)
 		continue_button.add_theme_stylebox_override("pressed", btn_pressed)
 		continue_button.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TITLE)
-		continue_button.add_theme_color_override("font_color", Color(1.0, 0.9, 0.7))
+		continue_button.add_theme_color_override("font_color", UIStyleFactory.COLOR_BUTTON_GOLD)
 		continue_button.text = "CONTINUE"
 
 func _play_victory_screen_flash() -> void:
@@ -2608,13 +2608,13 @@ func _style_defeat_panel() -> void:
 	var title: Label = defeat_panel.get_node_or_null("VBoxContainer/DefeatTitle")
 	if title:
 		title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_DISPLAY)
-		title.add_theme_color_override("font_color", Color(0.9, 0.3, 0.3))
+		title.add_theme_color_override("font_color", UIStyleFactory.COLOR_DEFEAT_TITLE)
 	
 	# Style the message
 	var message: Label = defeat_panel.get_node_or_null("VBoxContainer/DefeatMessage")
 	if message:
 		message.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-		message.add_theme_color_override("font_color", Color(0.8, 0.7, 0.7))
+		message.add_theme_color_override("font_color", UIStyleFactory.COLOR_DEFEAT_MSG)
 	
 	# Style buttons
 	for button in [retry_button, title_button]:
@@ -2638,7 +2638,7 @@ func _style_defeat_panel() -> void:
 		button.add_theme_stylebox_override("hover", btn_hover)
 		button.add_theme_stylebox_override("pressed", btn_hover)
 		button.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-		button.add_theme_color_override("font_color", Color(0.95, 0.9, 0.9))
+		button.add_theme_color_override("font_color", UIStyleFactory.COLOR_BUTTON_LIGHT)
 
 func _on_continue_pressed() -> void:
 	victory_screen.hide()
@@ -2684,7 +2684,7 @@ func _show_level_up_notification(character: CharacterBase, new_level: int, stat_
 	var title := Label.new()
 	title.text = "LEVEL UP!"
 	title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_LARGE_TITLE)
-	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	title.add_theme_color_override("font_color", UIStyleFactory.COLOR_CAPTURE_TITLE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
 
@@ -2708,7 +2708,7 @@ func _show_level_up_notification(character: CharacterBase, new_level: int, stat_
 			var stat_label := Label.new()
 			stat_label.text = "%s +%d" % [stat_name.to_upper().left(3), gain]
 			stat_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_BODY)
-			stat_label.add_theme_color_override("font_color", Color(0.5, 1.0, 0.5))
+			stat_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_STAT_GAIN)
 			stats_container.add_child(stat_label)
 
 	add_child(popup)
@@ -2887,7 +2887,7 @@ func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
 	var name_label := Label.new()
 	name_label.text = enemy.character_name
 	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-	name_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.7))
+	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_CREAM)
 	vbox.add_child(name_label)
 
 	# Level and tier
@@ -2975,7 +2975,7 @@ func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
 			var desc_label := Label.new()
 			desc_label.text = monster.description
 			desc_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SMALL)
-			desc_label.add_theme_color_override("font_color", Color(0.7, 0.65, 0.6))
+			desc_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_DESC_MUTED)
 			desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			desc_label.custom_minimum_size.x = 256
 			vbox.add_child(desc_label)
@@ -3074,7 +3074,7 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 	var name_label := Label.new()
 	name_label.text = character.character_name
 	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-	name_label.add_theme_color_override("font_color", Color(0.85, 1.0, 0.9))
+	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ALLY_NAME)
 	vbox.add_child(name_label)
 
 	# Level info
@@ -3302,7 +3302,7 @@ func _show_sprite_enemy_tooltip(enemy: CharacterBase) -> void:
 	var name_label := Label.new()
 	name_label.text = enemy.character_name
 	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-	name_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.7))
+	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_CREAM)
 	vbox.add_child(name_label)
 	
 	# Level and tier
@@ -3330,7 +3330,7 @@ func _show_sprite_enemy_tooltip(enemy: CharacterBase) -> void:
 	var hp_title := Label.new()
 	hp_title.text = "HP:"
 	hp_title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-	hp_title.add_theme_color_override("font_color", Color(0.8, 0.6, 0.6))
+	hp_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_HP_TITLE)
 	hp_info.add_child(hp_title)
 	
 	var hp_value := Label.new()
@@ -3402,7 +3402,7 @@ func _show_sprite_party_tooltip(character: CharacterBase) -> void:
 	var name_label := Label.new()
 	name_label.text = character.character_name
 	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-	name_label.add_theme_color_override("font_color", Color(0.85, 1.0, 0.9))
+	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ALLY_NAME)
 	vbox.add_child(name_label)
 	
 	# Level info
@@ -3449,7 +3449,7 @@ func _show_sprite_party_tooltip(character: CharacterBase) -> void:
 		var mp_value := Label.new()
 		mp_value.text = "%d / %d" % [character.current_mp, character.get_max_mp()]
 		mp_value.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-		mp_value.add_theme_color_override("font_color", Color(0.5, 0.7, 1.0))
+		mp_value.add_theme_color_override("font_color", UIStyleFactory.COLOR_MP_VALUE_ALT)
 		mp_info.add_child(mp_value)
 	
 	# Brand info for monsters
@@ -3542,7 +3542,7 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	title_label.text = "Your Party"
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_BODY)
-	title_label.add_theme_color_override("font_color", Color(0.7, 0.9, 0.75))
+	title_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_TOOLTIP_TITLE)
 	vbox.add_child(title_label)
 
 	# Populate with party members
@@ -3620,7 +3620,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	var name_label := Label.new()
 	name_label.text = character.character_name
 	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-	name_label.add_theme_color_override("font_color", Color(0.9, 0.95, 0.85))
+	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_TOOLTIP_NAME)
 	name_label.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	vbox.add_child(name_label)
 
@@ -3674,7 +3674,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	hp_label.name = "HPLabel"
 	hp_label.text = "%d/%d" % [character.current_hp, character.get_max_hp()]
 	hp_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TINY)
-	hp_label.add_theme_color_override("font_color", Color(0.65, 0.7, 0.65))
+	hp_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ALLY_HP_LABEL)
 	hp_label.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 	vbox.add_child(hp_label)
 
@@ -3784,7 +3784,7 @@ func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
 	title_label.text = "Enemies"
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_BODY)
-	title_label.add_theme_color_override("font_color", Color(0.9, 0.7, 0.7))
+	title_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_PANEL_TITLE_RED)
 	vbox.add_child(title_label)
 
 	# Populate with enemies
@@ -3862,7 +3862,7 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	var name_label := Label.new()
 	name_label.text = enemy.character_name
 	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SMALL)
-	name_label.add_theme_color_override("font_color", Color(0.95, 0.85, 0.8))
+	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_NAME)
 	name_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	vbox.add_child(name_label)
 
@@ -3902,7 +3902,7 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	hp_label.name = "HPLabel"
 	hp_label.text = "%d/%d" % [enemy.current_hp, enemy.get_max_hp()]
 	hp_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TINY)
-	hp_label.add_theme_color_override("font_color", Color(0.7, 0.6, 0.6))
+	hp_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_HP_LABEL)
 	hp_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	vbox.add_child(hp_label)
 
@@ -4020,7 +4020,7 @@ func _mark_sidebar_panel_dead(panel: PanelContainer) -> void:
 	dead_label.name = "DeadOverlay"
 	dead_label.text = "DEAD"
 	dead_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_NORMAL)
-	dead_label.add_theme_color_override("font_color", Color(0.8, 0.2, 0.2, 0.9))
+	dead_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_DEAD)
 	dead_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dead_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	dead_label.set_anchors_preset(Control.PRESET_CENTER)
@@ -4059,7 +4059,7 @@ func _add_combat_log_drag_handle() -> void:
 	combat_log_drag_handle.text = "━━ ▼ ━━"
 	combat_log_drag_handle.flat = true
 	combat_log_drag_handle.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SMALL)
-	combat_log_drag_handle.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7))
+	combat_log_drag_handle.add_theme_color_override("font_color", UIStyleFactory.COLOR_LOG_HANDLE)
 	combat_log_drag_handle.add_theme_color_override("font_hover_color", Color(0.9, 0.9, 1.0))
 	combat_log_drag_handle.custom_minimum_size = Vector2(0, 20)
 	combat_log_drag_handle.mouse_default_cursor_shape = Control.CURSOR_VSIZE
@@ -4272,7 +4272,7 @@ func _show_corruption_reduction_popup(monster: Node, amount: float) -> void:
 	var popup := Label.new()
 	popup.text = "-%.0f%% CORRUPTION" % amount
 	popup.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-	popup.add_theme_color_override("font_color", Color(0.8, 0.4, 1.0))  # Purple
+	popup.add_theme_color_override("font_color", UIStyleFactory.COLOR_CAPTURE_PURPLE)  # Purple
 	popup.add_theme_color_override("font_outline_color", Color(0.1, 0.0, 0.15))
 	popup.add_theme_constant_override("outline_size", 3)
 	popup.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

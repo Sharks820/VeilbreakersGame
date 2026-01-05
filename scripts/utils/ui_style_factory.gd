@@ -416,6 +416,37 @@ const COLOR_XP := Color(0.7, 0.9, 0.7)                # XP text
 const COLOR_SEPARATOR := Color(0.4, 0.3, 0.35)        # Separator lines
 const COLOR_GREEN_SEP := Color(0.3, 0.4, 0.35)        # Green separator
 
+# Enemy/Ally Variant Colors (v1.14)
+const COLOR_ENEMY_NAME := Color(0.95, 0.85, 0.8)      # Enemy name (warmer parchment)
+const COLOR_ENEMY_HP_LABEL := Color(0.7, 0.6, 0.6)    # Enemy HP label (muted red)
+const COLOR_ENEMY_HP_TITLE := Color(0.8, 0.6, 0.6)    # Enemy HP title
+const COLOR_ALLY_NAME := Color(0.85, 1.0, 0.9)        # Ally name (green tint)
+const COLOR_ALLY_NAME_ALT := Color(0.9, 0.95, 0.9)    # Ally name alternate
+const COLOR_ALLY_HP_LABEL := Color(0.65, 0.7, 0.65)   # Ally HP label
+
+# Victory/Defeat Colors (v1.14)
+const COLOR_VICTORY_TITLE := Color(1.0, 0.9, 0.3)     # Victory screen title
+const COLOR_LEVEL_UP := Color(1.0, 1.0, 0.3)          # Level up yellow
+const COLOR_STAT_GAIN := Color(0.5, 1.0, 0.5)         # Stat gain green
+const COLOR_DEFEAT_TITLE := Color(0.9, 0.3, 0.3)      # Defeat title red
+const COLOR_DEFEAT_MSG := Color(0.8, 0.7, 0.7)        # Defeat message muted
+const COLOR_BUTTON_LIGHT := Color(0.95, 0.9, 0.9)     # Light button text
+
+# Tooltip/Panel Colors (v1.14)
+const COLOR_TOOLTIP_TITLE := Color(0.7, 0.9, 0.75)    # Tooltip title green
+const COLOR_TOOLTIP_NAME := Color(0.9, 0.95, 0.85)    # Tooltip name
+const COLOR_PANEL_TITLE_RED := Color(0.9, 0.7, 0.7)   # Red panel title
+const COLOR_CAPTURE_TITLE := Color(1.0, 0.85, 0.3)    # Capture popup title
+const COLOR_CAPTURE_PURPLE := Color(0.8, 0.4, 1.0)    # Capture purple
+const COLOR_MP_VALUE_ALT := Color(0.5, 0.7, 1.0)      # Alt MP value
+const COLOR_STATS_HEADER := Color(0.7, 0.85, 1.0)     # Stats header blue
+const COLOR_ITEM_TEXT := Color(0.8, 0.75, 0.65)       # Item text warm
+const COLOR_PARCHMENT_WARM := Color(0.85, 0.8, 0.7)   # Warm parchment variant
+const COLOR_BUTTON_GOLD := Color(1.0, 0.9, 0.7)       # Gold button text
+const COLOR_DESC_MUTED := Color(0.7, 0.65, 0.6)       # Description muted
+const COLOR_DEAD := Color(0.8, 0.2, 0.2, 0.9)         # Dead character indicator
+const COLOR_LOG_HANDLE := Color(0.6, 0.6, 0.7)        # Combat log handle
+
 # =============================================================================
 # LABEL CREATION HELPERS (v1.02 - Consolidate 100+ Label.new() patterns)
 # =============================================================================
