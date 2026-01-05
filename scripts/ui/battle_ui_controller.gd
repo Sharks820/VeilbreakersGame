@@ -762,7 +762,7 @@ func _style_action_buttons() -> void:
 		button.add_theme_stylebox_override("focus", focus_style)  # Match hover style
 		
 		# Text styling
-		button.add_theme_color_override("font_color", Color(0.95, 0.9, 0.8))
+		button.add_theme_color_override("font_color", UIStyleFactory.COLOR_PARCHMENT)
 		button.add_theme_color_override("font_hover_color", Color(1.0, 0.95, 0.85))
 		button.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0))
 		button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
@@ -799,7 +799,7 @@ func _on_action_button_unhover(button: Button) -> void:
 	"""Reset button on unhover/unfocus"""
 	var tween := create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(button, "scale", Vector2(1.0, 1.0), 0.1)
+	tween.tween_property(button, "scale", Vector2.ONE, 0.1)
 	tween.tween_property(button, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.1)
 
 # =============================================================================
@@ -896,7 +896,7 @@ func _populate_item_list() -> void:
 	if battle_items.is_empty():
 		var label := Label.new()
 		label.text = "No usable items"
-		label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		label.add_theme_color_override("font_color", UIStyleFactory.COLOR_DIM_LABEL)
 		item_list.add_child(label)
 		return
 
@@ -1778,7 +1778,7 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 			var arrow := Label.new()
 			arrow.text = "►"
 			arrow.add_theme_font_size_override("font_size", 10)
-			arrow.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+			arrow.add_theme_color_override("font_color", UIStyleFactory.COLOR_DIM_LABEL)
 			arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			turn_order_display.add_child(arrow)
 
@@ -1950,7 +1950,7 @@ func show_victory(data_or_exp, gold_gained: int = 0, items_obtained: Array = [])
 		# Fade in with slight delay for flash
 		tween.tween_property(victory_panel, "modulate:a", 1.0, 0.5).set_delay(0.15).set_ease(Tween.EASE_OUT)
 		# Scale up with dramatic bounce
-		tween.tween_property(victory_panel, "scale", Vector2(1.0, 1.0), 0.6).set_delay(0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+		tween.tween_property(victory_panel, "scale", Vector2.ONE, 0.6).set_delay(0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	
 	# 3. Animate the "VICTORY!" title with extra flair
 	await get_tree().create_timer(0.2).timeout
@@ -1978,7 +1978,7 @@ func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, g
 	exp_header.text = "SPOILS OF BATTLE"
 	exp_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_header.add_theme_font_size_override("font_size", 18)
-	exp_header.add_theme_color_override("font_color", Color(0.85, 0.7, 0.45))  # Aged gold
+	exp_header.add_theme_color_override("font_color", UIStyleFactory.COLOR_AGED_GOLD)  # Aged gold
 	exp_header.add_theme_color_override("font_outline_color", Color(0.2, 0.15, 0.1))
 	exp_header.add_theme_constant_override("outline_size", 1)
 	container.add_child(exp_header)
@@ -1997,9 +1997,9 @@ func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, g
 	
 	# Get party members from battle_manager or GameManager
 	var party: Array = []
-	if battle_manager and battle_manager.player_party.size() > 0:
+	if battle_manager and not battle_manager.player_party.is_empty():
 		party = battle_manager.player_party
-	elif GameManager and GameManager.player_party.size() > 0:
+	elif GameManager and not GameManager.player_party.is_empty():
 		party = GameManager.player_party
 	
 	# Calculate XP per member
@@ -2042,13 +2042,13 @@ func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, g
 	var gold_label_text := Label.new()
 	gold_label_text.text = "Gold:"
 	gold_label_text.add_theme_font_size_override("font_size", 16)
-	gold_label_text.add_theme_color_override("font_color", Color(0.7, 0.65, 0.55))
+	gold_label_text.add_theme_color_override("font_color", UIStyleFactory.COLOR_SUBTITLE)
 	gold_display.add_child(gold_label_text)
 	
 	var gold_amount := Label.new()
 	gold_amount.text = "%d" % gold
 	gold_amount.add_theme_font_size_override("font_size", 20)
-	gold_amount.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))  # Golden
+	gold_amount.add_theme_color_override("font_color", UIStyleFactory.COLOR_GOLD)  # Golden
 	gold_amount.add_theme_color_override("font_outline_color", Color(0.3, 0.2, 0.1))
 	gold_amount.add_theme_constant_override("outline_size", 1)
 	gold_display.add_child(gold_amount)
@@ -2061,13 +2061,13 @@ func _build_victory_rewards_display(container: VBoxContainer, exp_gained: int, g
 	var items_label_text := Label.new()
 	items_label_text.text = "Loot:"
 	items_label_text.add_theme_font_size_override("font_size", 16)
-	items_label_text.add_theme_color_override("font_color", Color(0.7, 0.65, 0.55))
+	items_label_text.add_theme_color_override("font_color", UIStyleFactory.COLOR_SUBTITLE)
 	items_display.add_child(items_label_text)
 	
 	var items_text := Label.new()
 	if items.is_empty():
 		items_text.text = "None"
-		items_text.add_theme_color_override("font_color", Color(0.5, 0.45, 0.4))
+		items_text.add_theme_color_override("font_color", UIStyleFactory.COLOR_MUTED)
 	else:
 		var item_names: Array[String] = []
 		for item in items:
@@ -2143,7 +2143,7 @@ func _add_battle_stats_section(container: VBoxContainer, delay: float) -> void:
 		var stat_label := Label.new()
 		stat_label.text = "%s %s:" % [entry.icon, entry.label]
 		stat_label.add_theme_font_size_override("font_size", 12)
-		stat_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+		stat_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 		stats_grid.add_child(stat_label)
 		
 		var stat_value := Label.new()
@@ -2199,7 +2199,7 @@ func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: f
 	var level_label := Label.new()
 	level_label.text = "Lv. %d" % character.level
 	level_label.add_theme_font_size_override("font_size", 12)
-	level_label.add_theme_color_override("font_color", Color(0.6, 0.8, 0.6))
+	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_HP_TITLE)
 	name_container.add_child(level_label)
 	
 	# XP bar section
@@ -2215,13 +2215,13 @@ func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: f
 	var xp_label := Label.new()
 	xp_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	xp_label.add_theme_font_size_override("font_size", 11)
-	xp_label.add_theme_color_override("font_color", Color(0.7, 0.9, 0.7))
+	xp_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_XP)
 	xp_text_row.add_child(xp_label)
 	
 	var xp_gained_label := Label.new()
 	xp_gained_label.text = "+%d XP" % xp_gained
 	xp_gained_label.add_theme_font_size_override("font_size", 12)
-	xp_gained_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))  # Golden to match theme
+	xp_gained_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_GOLD)  # Golden to match theme
 	xp_text_row.add_child(xp_gained_label)
 	
 	# XP progress bar
@@ -2270,7 +2270,7 @@ func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: f
 	if not is_alive:
 		row.modulate = Color(0.5, 0.5, 0.5, 0.7)
 		xp_gained_label.text = "(KO)"
-		xp_gained_label.add_theme_color_override("font_color", Color(0.8, 0.3, 0.3))
+		xp_gained_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_HP)
 	
 	# Animate entrance
 	row.modulate.a = 0.0
@@ -2379,7 +2379,7 @@ func _show_level_up_flash(row: PanelContainer, level_label: Label, new_level: in
 	var popup_tween := create_tween()
 	popup_tween.set_parallel(true)
 	popup_tween.tween_property(popup, "modulate:a", 1.0, 0.2)
-	popup_tween.tween_property(popup, "scale", Vector2(1.0, 1.0), 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	popup_tween.tween_property(popup, "scale", Vector2.ONE, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	popup_tween.tween_property(popup, "position:y", -80.0, 0.5).set_ease(Tween.EASE_OUT)
 	popup_tween.chain().tween_property(popup, "modulate:a", 0.0, 0.5).set_delay(1.5)
 	popup_tween.tween_callback(popup.queue_free)
@@ -2416,7 +2416,7 @@ func _style_victory_panel() -> void:
 	var title: Label = victory_panel.get_node_or_null("VBoxContainer/VictoryTitle")
 	if title:
 		title.add_theme_font_size_override("font_size", 42)
-		title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))  # Golden
+		title.add_theme_color_override("font_color", UIStyleFactory.COLOR_GOLD)  # Golden
 		title.add_theme_color_override("font_outline_color", Color(0.3, 0.2, 0.1))
 		title.add_theme_constant_override("outline_size", 3)
 	
@@ -2504,7 +2504,7 @@ func _animate_victory_title() -> void:
 	title.pivot_offset = title.size / 2
 	var pulse_tween := create_tween()
 	pulse_tween.tween_property(title, "scale", Vector2(1.12, 1.12), 0.12).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	pulse_tween.tween_property(title, "scale", Vector2(1.0, 1.0), 0.15).set_ease(Tween.EASE_IN_OUT)
+	pulse_tween.tween_property(title, "scale", Vector2.ONE, 0.15).set_ease(Tween.EASE_IN_OUT)
 	
 	# Add golden glow pulse effect
 	var glow_tween := create_tween()
@@ -2537,7 +2537,7 @@ func show_defeat(data: Dictionary = {}) -> void:
 		tween.set_parallel(true)
 		# Slower, more somber fade in
 		tween.tween_property(defeat_panel, "modulate:a", 1.0, 0.8).set_delay(0.3).set_ease(Tween.EASE_OUT)
-		tween.tween_property(defeat_panel, "scale", Vector2(1.0, 1.0), 0.6).set_delay(0.3).set_ease(Tween.EASE_OUT)
+		tween.tween_property(defeat_panel, "scale", Vector2.ONE, 0.6).set_delay(0.3).set_ease(Tween.EASE_OUT)
 	
 	# 3. Animate the defeat title
 	await get_tree().create_timer(0.4).timeout
@@ -2728,7 +2728,7 @@ func _show_level_up_notification(character: CharacterBase, new_level: int, stat_
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(popup, "modulate:a", 1.0, 0.3).set_ease(Tween.EASE_OUT)
-	tween.tween_property(popup, "scale", Vector2(1.0, 1.0), 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(popup, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 
 	# Hold and fade out
 	tween.set_parallel(false)
@@ -2899,7 +2899,7 @@ func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
 	else:
 		level_label.text = "Level %d" % enemy.level
 	level_label.add_theme_font_size_override("font_size", 11)
-	level_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 	vbox.add_child(level_label)
 
 	# Separator
@@ -2935,7 +2935,7 @@ func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
 		var brand_title := Label.new()
 		brand_title.text = "Brand:"
 		brand_title.add_theme_font_size_override("font_size", 10)
-		brand_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		brand_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_DIM_LABEL)
 		brand_info.add_child(brand_title)
 
 		# Brand icon (colored indicator)
@@ -2956,14 +2956,14 @@ func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
 		var corruption_title := Label.new()
 		corruption_title.text = "Corruption:"
 		corruption_title.add_theme_font_size_override("font_size", 10)
-		corruption_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		corruption_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_DIM_LABEL)
 		corruption_info.add_child(corruption_title)
 
 		var corruption_percent := (monster.corruption_level / monster.max_corruption) * 100.0
 		var corruption_value := Label.new()
 		corruption_value.text = "%.0f%%" % corruption_percent
 		corruption_value.add_theme_font_size_override("font_size", 10)
-		corruption_value.add_theme_color_override("font_color", Color(0.6, 0.2, 0.7))
+		corruption_value.add_theme_color_override("font_color", UIStyleFactory.COLOR_CORRUPTION)
 		corruption_info.add_child(corruption_value)
 
 		# Description if available
@@ -3001,7 +3001,7 @@ func _add_stat_row(grid: GridContainer, stat_name: String, value: int, color: Co
 	var name_label := Label.new()
 	name_label.text = stat_name + ":"
 	name_label.add_theme_font_size_override("font_size", 10)
-	name_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_DIM_LABEL)
 	grid.add_child(name_label)
 
 	var value_label := Label.new()
@@ -3081,7 +3081,7 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 	var level_label := Label.new()
 	level_label.text = "Level %d" % character.level
 	level_label.add_theme_font_size_override("font_size", 11)
-	level_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 	vbox.add_child(level_label)
 
 	# Separator
@@ -3097,13 +3097,13 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 	var hp_title := Label.new()
 	hp_title.text = "HP:"
 	hp_title.add_theme_font_size_override("font_size", 11)
-	hp_title.add_theme_color_override("font_color", Color(0.6, 0.8, 0.6))
+	hp_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_HP_TITLE)
 	hp_info.add_child(hp_title)
 
 	var hp_value := Label.new()
 	hp_value.text = "%d / %d" % [character.current_hp, character.get_max_hp()]
 	hp_value.add_theme_font_size_override("font_size", 11)
-	hp_value.add_theme_color_override("font_color", Color(0.4, 0.9, 0.4))
+	hp_value.add_theme_color_override("font_color", UIStyleFactory.COLOR_HP_VALUE)
 	hp_info.add_child(hp_value)
 
 	# MP info if character has MP
@@ -3115,13 +3115,13 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 		var mp_title := Label.new()
 		mp_title.text = "MP:"
 		mp_title.add_theme_font_size_override("font_size", 11)
-		mp_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.8))
+		mp_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_MP_TITLE)
 		mp_info.add_child(mp_title)
 
 		var mp_value := Label.new()
 		mp_value.text = "%d / %d" % [character.current_mp, character.get_max_mp()]
 		mp_value.add_theme_font_size_override("font_size", 11)
-		mp_value.add_theme_color_override("font_color", Color(0.4, 0.6, 1.0))
+		mp_value.add_theme_color_override("font_color", UIStyleFactory.COLOR_MP_VALUE)
 		mp_info.add_child(mp_value)
 
 	# Separator
@@ -3157,7 +3157,7 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 			var brand_title := Label.new()
 			brand_title.text = "Brand:"
 			brand_title.add_theme_font_size_override("font_size", 10)
-			brand_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+			brand_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_DIM_LABEL)
 			brand_info.add_child(brand_title)
 
 			# Brand icon (colored indicator)
@@ -3185,7 +3185,7 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 		var path_title := Label.new()
 		path_title.text = "Path:"
 		path_title.add_theme_font_size_override("font_size", 10)
-		path_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		path_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_DIM_LABEL)
 		path_info.add_child(path_title)
 
 		var path_value := Label.new()
@@ -3314,7 +3314,7 @@ func _show_sprite_enemy_tooltip(enemy: CharacterBase) -> void:
 	else:
 		level_label.text = "Level %d" % enemy.level
 	level_label.add_theme_font_size_override("font_size", 11)
-	level_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 	vbox.add_child(level_label)
 	
 	# Separator
@@ -3336,7 +3336,7 @@ func _show_sprite_enemy_tooltip(enemy: CharacterBase) -> void:
 	var hp_value := Label.new()
 	hp_value.text = "%d / %d" % [enemy.current_hp, enemy.get_max_hp()]
 	hp_value.add_theme_font_size_override("font_size", 11)
-	hp_value.add_theme_color_override("font_color", Color(0.9, 0.4, 0.4))
+	hp_value.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_HP)
 	hp_info.add_child(hp_value)
 	
 	# Brand info for monsters
@@ -3349,7 +3349,7 @@ func _show_sprite_enemy_tooltip(enemy: CharacterBase) -> void:
 		var brand_title := Label.new()
 		brand_title.text = "Brand:"
 		brand_title.add_theme_font_size_override("font_size", 11)
-		brand_title.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+		brand_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 		brand_info.add_child(brand_title)
 		
 		var brand_value := Label.new()
@@ -3409,7 +3409,7 @@ func _show_sprite_party_tooltip(character: CharacterBase) -> void:
 	var level_label := Label.new()
 	level_label.text = "Level %d" % character.level
 	level_label.add_theme_font_size_override("font_size", 11)
-	level_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 	vbox.add_child(level_label)
 	
 	# Separator
@@ -3425,13 +3425,13 @@ func _show_sprite_party_tooltip(character: CharacterBase) -> void:
 	var hp_title := Label.new()
 	hp_title.text = "HP:"
 	hp_title.add_theme_font_size_override("font_size", 11)
-	hp_title.add_theme_color_override("font_color", Color(0.6, 0.8, 0.6))
+	hp_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_HP_TITLE)
 	hp_info.add_child(hp_title)
 	
 	var hp_value := Label.new()
 	hp_value.text = "%d / %d" % [character.current_hp, character.get_max_hp()]
 	hp_value.add_theme_font_size_override("font_size", 11)
-	hp_value.add_theme_color_override("font_color", Color(0.4, 0.9, 0.4))
+	hp_value.add_theme_color_override("font_color", UIStyleFactory.COLOR_HP_VALUE)
 	hp_info.add_child(hp_value)
 	
 	# MP info if character has MP
@@ -3443,7 +3443,7 @@ func _show_sprite_party_tooltip(character: CharacterBase) -> void:
 		var mp_title := Label.new()
 		mp_title.text = "MP:"
 		mp_title.add_theme_font_size_override("font_size", 11)
-		mp_title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.8))
+		mp_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_MP_TITLE)
 		mp_info.add_child(mp_title)
 		
 		var mp_value := Label.new()
@@ -3462,7 +3462,7 @@ func _show_sprite_party_tooltip(character: CharacterBase) -> void:
 		var brand_title := Label.new()
 		brand_title.text = "Brand:"
 		brand_title.add_theme_font_size_override("font_size", 11)
-		brand_title.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+		brand_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 		brand_info.add_child(brand_title)
 		
 		var brand_value := Label.new()
@@ -4454,10 +4454,10 @@ func _show_capture_result_popup(success: bool, monster_name: String, method_name
 	var title := Label.new()
 	if success:
 		title.text = "★ CAPTURED! ★"
-		title.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
+		title.add_theme_color_override("font_color", UIStyleFactory.COLOR_SUCCESS)
 	else:
 		title.text = "✗ ESCAPED!"
-		title.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
+		title.add_theme_color_override("font_color", UIStyleFactory.COLOR_ERROR)
 	title.add_theme_font_size_override("font_size", 32)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
@@ -4474,7 +4474,7 @@ func _show_capture_result_popup(success: bool, monster_name: String, method_name
 	var method_label := Label.new()
 	method_label.text = "via %s" % method_name
 	method_label.add_theme_font_size_override("font_size", 14)
-	method_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	method_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
 	method_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(method_label)
 	
@@ -4493,7 +4493,7 @@ func _show_capture_result_popup(success: bool, monster_name: String, method_name
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(popup, "modulate:a", 1.0, 0.3).set_ease(Tween.EASE_OUT)
-	tween.tween_property(popup, "scale", Vector2(1.0, 1.0), 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(popup, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	
 	# Hold and fade out
 	tween.set_parallel(false)
