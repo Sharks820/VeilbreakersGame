@@ -148,7 +148,7 @@ func _process(_delta: float) -> void:
 	_check_arena_sprite_hover(mouse_canvas)
 
 func _check_arena_sprite_hover(mouse_pos: Vector2) -> void:
-	"""Check if mouse is hovering over any character sprite"""
+	## Check if mouse is hovering over any character sprite
 	var hovered: CharacterBase = null
 	
 	for character in _sprite_hitboxes:
@@ -189,7 +189,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_check_sprite_click(mouse_world_pos)
 
 func _check_sprite_hover(mouse_pos: Vector2) -> void:
-	"""Check if mouse is hovering over any character sprite"""
+	## Check if mouse is hovering over any character sprite
 	var hovered: CharacterBase = null
 	var hovered_container: Node2D = null
 	
@@ -217,7 +217,7 @@ func _check_sprite_hover(mouse_pos: Vector2) -> void:
 			_on_character_sprite_mouse_entered(_hovered_character, hovered_container)
 
 func _check_sprite_click(mouse_pos: Vector2) -> void:
-	"""Check if mouse clicked on a character sprite"""
+	## Check if mouse clicked on a character sprite
 	for character in _sprite_hitboxes:
 		# Skip dead characters - they can't be clicked
 		if character.is_dead():
@@ -228,14 +228,14 @@ func _check_sprite_click(mouse_pos: Vector2) -> void:
 			break
 
 func _on_character_sprite_clicked(character: CharacterBase) -> void:
-	"""Handle click on character sprite"""
+	## Handle click on character sprite
 	# Emit target_selected signal - let the UI controller handle the logic
 	# The UI controller knows if we're in target selection mode
 	EventBus.target_selected.emit(character)
 	print("[BATTLE_ARENA] Target clicked via sprite: %s" % character.character_name)
 
 func _setup_background() -> void:
-	"""Load a battle background"""
+	## Load a battle background
 	var bg_layer: CanvasLayer = get_node_or_null("Background")
 	if not bg_layer:
 		push_warning("[BattleArena] Background CanvasLayer not found")
@@ -299,7 +299,7 @@ func _connect_signals() -> void:
 		battle_sequencer.action_execution_started.connect(_on_action_execution_started)
 
 func _setup_animation_systems() -> void:
-	"""Initialize and configure animation systems"""
+	## Initialize and configure animation systems
 	# Configure VFX Manager
 	if vfx_manager:
 		vfx_manager.effect_spawned.connect(_on_vfx_spawned)
@@ -319,7 +319,7 @@ func _setup_animation_systems() -> void:
 	EventBus.emit_debug("Animation systems initialized")
 
 func _setup_screen_effects() -> void:
-	"""Configure screen effects manager with node references"""
+	## Configure screen effects manager with node references
 	if screen_effects:
 		# Assign the effect rects (they're child nodes)
 		screen_effects.flash_rect = screen_effects.get_node_or_null("FlashRect")
@@ -417,7 +417,7 @@ func initialize_battle(players: Array[CharacterBase], enemies: Array[CharacterBa
 	EventBus.emit_debug("Battle initialized with %d players vs %d enemies" % [players.size(), enemies.size()])
 
 func _create_party_sidebar(players: Array[CharacterBase]) -> void:
-	"""Create party sidebar with HP/MP bars on battle_ui"""
+	## Create party sidebar with HP/MP bars on battle_ui
 	if not battle_ui:
 		return
 
@@ -457,7 +457,7 @@ func _create_party_sidebar(players: Array[CharacterBase]) -> void:
 	battle_ui.add_child(sidebar)
 
 func _create_party_slot(character: CharacterBase) -> PanelContainer:
-	"""Create individual party member slot with portrait and HP/MP bars"""
+	## Create individual party member slot with portrait and HP/MP bars
 	var slot := PanelContainer.new()
 	slot.custom_minimum_size = Vector2(154, 50)
 
@@ -522,7 +522,7 @@ func _create_party_slot(character: CharacterBase) -> PanelContainer:
 	return slot
 
 func _create_portrait(character: CharacterBase, size: int) -> Control:
-	"""Create a portrait thumbnail for sidebar"""
+	## Create a portrait thumbnail for sidebar
 	var container := PanelContainer.new()
 	container.custom_minimum_size = Vector2(size, size)
 
@@ -549,7 +549,7 @@ func _create_portrait(character: CharacterBase, size: int) -> Control:
 	return container
 
 func _style_hp_bar(bar: ProgressBar) -> void:
-	"""Style HP bar with green fill"""
+	## Style HP bar with green fill
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = Color(0.15, 0.1, 0.1, 1.0)
 	bg.set_corner_radius_all(2)
@@ -561,7 +561,7 @@ func _style_hp_bar(bar: ProgressBar) -> void:
 	bar.add_theme_stylebox_override("fill", fill)
 
 func _style_mp_bar(bar: ProgressBar) -> void:
-	"""Style MP bar with blue fill"""
+	## Style MP bar with blue fill
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = Color(0.1, 0.1, 0.15, 1.0)
 	bg.set_corner_radius_all(2)
@@ -573,7 +573,7 @@ func _style_mp_bar(bar: ProgressBar) -> void:
 	bar.add_theme_stylebox_override("fill", fill)
 
 func _create_enemy_sidebar(enemies: Array[CharacterBase]) -> void:
-	"""Create enemy sidebar with HP bars - matches party sidebar but RED"""
+	## Create enemy sidebar with HP bars - matches party sidebar but RED
 	if not battle_ui:
 		return
 
@@ -618,7 +618,7 @@ func _create_enemy_sidebar(enemies: Array[CharacterBase]) -> void:
 	battle_ui.add_child(sidebar)
 
 func _create_enemy_slot(character: CharacterBase) -> PanelContainer:
-	"""Create individual enemy slot with portrait and HP bar - RED style"""
+	## Create individual enemy slot with portrait and HP bar - RED style
 	var slot := PanelContainer.new()
 	slot.custom_minimum_size = Vector2(154, 50)
 
@@ -670,7 +670,7 @@ func _create_enemy_slot(character: CharacterBase) -> PanelContainer:
 	return slot
 
 func _create_enemy_portrait(character: CharacterBase, size: int) -> Control:
-	"""Create a portrait thumbnail for enemy sidebar (red frame)"""
+	## Create a portrait thumbnail for enemy sidebar (red frame)
 	var container := PanelContainer.new()
 	container.custom_minimum_size = Vector2(size, size)
 
@@ -697,7 +697,7 @@ func _create_enemy_portrait(character: CharacterBase, size: int) -> Control:
 	return container
 
 func _style_enemy_hp_bar(bar: ProgressBar) -> void:
-	"""Style enemy HP bar with red fill"""
+	## Style enemy HP bar with red fill
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = Color(0.1, 0.08, 0.08, 1.0)
 	bg.set_corner_radius_all(2)
@@ -736,7 +736,7 @@ func _place_characters(characters: Array[CharacterBase], positions_node: Node2D,
 		_register_sprite_hitbox(character, sprite)
 
 func _register_sprite_hitbox(character: CharacterBase, sprite_container: Node2D) -> void:
-	"""Register a character's sprite hitbox for mouse hover/click detection"""
+	## Register a character's sprite hitbox for mouse hover/click detection
 	var hitbox_size: Vector2 = sprite_container.get_meta("hitbox_size", Vector2(80, 120))
 	var hitbox_offset: Vector2 = sprite_container.get_meta("hitbox_offset", Vector2(0, -60))
 	
@@ -752,7 +752,7 @@ func _register_sprite_hitbox(character: CharacterBase, sprite_container: Node2D)
 		battle_ui.register_sprite_hitbox(character, hitbox)
 
 func _calculate_formation_positions(characters: Array[CharacterBase], positions_node: Node2D, is_player_party: bool) -> Array[Vector2]:
-	"""Calculate intelligent formation positions based on party size"""
+	## Calculate intelligent formation positions based on party size
 	var positions: Array[Vector2] = []
 	var base_pos := positions_node.global_position
 	var markers := positions_node.get_children()
@@ -1116,7 +1116,7 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 # =============================================================================
 
 func _play_attack_movement_tween(sprite: Node2D, original_global_pos: Vector2, original_scale: Vector2, original_rot: float, target_global_pos: Vector2) -> void:
-	"""Movement tween for attack - used alongside sprite sheet animations"""
+	## Movement tween for attack - used alongside sprite sheet animations
 	# Calculate direction and strike position (stop just before target for contact)
 	var direction := (target_global_pos - original_global_pos).normalized()
 	var distance := original_global_pos.distance_to(target_global_pos)
@@ -1137,7 +1137,7 @@ func _play_attack_movement_tween(sprite: Node2D, original_global_pos: Vector2, o
 	tween.tween_property(sprite, "global_position", original_global_pos, 0.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 
 func _play_skill_movement_tween(sprite: Node2D, original_global_pos: Vector2, original_scale: Vector2, target_global_pos: Vector2) -> void:
-	"""Movement tween for skills - used alongside sprite sheet animations"""
+	## Movement tween for skills - used alongside sprite sheet animations
 	# Calculate direction toward target
 	var direction := (target_global_pos - original_global_pos).normalized()
 	var thrust_global_pos := original_global_pos + direction * 70  # Move partway toward target
@@ -1606,7 +1606,7 @@ func _on_healing_done(_source: Node, target: Node, amount: int) -> void:
 	_play_heal_animation(sprite)
 
 func _on_action_executed(character: Node, action: int, _results: Dictionary) -> void:
-	"""Update sidebar bars after any action (especially for MP after skill use)"""
+	## Update sidebar bars after any action (especially for MP after skill use)
 	if not character is CharacterBase:
 		return
 
@@ -1641,7 +1641,7 @@ func _on_battle_defeat() -> void:
 # =============================================================================
 
 func _on_camera_command(command: String, data: Dictionary) -> void:
-	"""Handle camera commands from the battle sequencer"""
+	## Handle camera commands from the battle sequencer
 	if not battle_camera:
 		return
 
@@ -1687,13 +1687,15 @@ func _on_camera_command(command: String, data: Dictionary) -> void:
 			if target:
 				battle_camera.focus_on(target, 1.2, 0.3)
 				battle_camera.shake(Vector2(15, 15), 1.0)
-		"victory_pan", "defeat_pan":
+		"victory_pan":
+			battle_camera.release_focus(1.0)
+		"defeat_pan":
 			battle_camera.release_focus(1.0)
 		_:
 			EventBus.emit_debug("Unknown camera command: %s" % command)
 
 func _on_vfx_command(command: String, data: Dictionary) -> void:
-	"""Handle VFX commands from the battle sequencer"""
+	## Handle VFX commands from the battle sequencer
 	match command:
 		"spawn_hit_effect":
 			if vfx_manager:
@@ -1717,13 +1719,28 @@ func _on_vfx_command(command: String, data: Dictionary) -> void:
 		"skill_charge":
 			if vfx_manager:
 				vfx_manager.spawn_skill_charge(data)
-		"buff_effect", "debuff_effect":
+		"buff_effect":
+			if vfx_manager:
+				vfx_manager.spawn_status_apply(data)
+		"debuff_effect":
 			if vfx_manager:
 				vfx_manager.spawn_status_apply(data)
 		"status_apply":
 			if vfx_manager:
 				vfx_manager.spawn_status_apply(data)
-		"poison_tick", "burn_tick", "bleed_tick", "regen_tick":
+		"poison_tick":
+			if vfx_manager:
+				data["status"] = command.replace("_tick", "")
+				vfx_manager.spawn_status_tick(data)
+		"burn_tick":
+			if vfx_manager:
+				data["status"] = command.replace("_tick", "")
+				vfx_manager.spawn_status_tick(data)
+		"bleed_tick":
+			if vfx_manager:
+				data["status"] = command.replace("_tick", "")
+				vfx_manager.spawn_status_tick(data)
+		"regen_tick":
 			if vfx_manager:
 				data["status"] = command.replace("_tick", "")
 				vfx_manager.spawn_status_tick(data)
@@ -1744,7 +1761,10 @@ func _on_vfx_command(command: String, data: Dictionary) -> void:
 		"capture_break":
 			if vfx_manager:
 				vfx_manager.spawn_capture_break(data)
-		"monster_summon", "monster_return":
+		"monster_summon":
+			if vfx_manager:
+				vfx_manager.spawn_summon_effect(data)
+		"monster_return":
 			if vfx_manager:
 				vfx_manager.spawn_summon_effect(data)
 		"boss_death_explosion":
@@ -1757,7 +1777,7 @@ func _on_vfx_command(command: String, data: Dictionary) -> void:
 			EventBus.emit_debug("Unknown VFX command: %s" % command)
 
 func _on_ui_command(command: String, data: Dictionary) -> void:
-	"""Handle UI commands from the battle sequencer"""
+	## Handle UI commands from the battle sequencer
 	if not battle_ui:
 		return
 
@@ -1802,7 +1822,7 @@ func _on_ui_command(command: String, data: Dictionary) -> void:
 			EventBus.emit_debug("Unknown UI command: %s" % command)
 
 func _on_audio_command(command: String, data: Dictionary) -> void:
-	"""Handle audio commands from the battle sequencer"""
+	## Handle audio commands from the battle sequencer
 	match command:
 		"play_sfx":
 			var sound: String = data.get("sound", "")
@@ -1818,12 +1838,12 @@ func _on_audio_command(command: String, data: Dictionary) -> void:
 				AudioManager.play_jingle(jingle)
 		"intensify_music":
 			# TODO: Add music intensity logic here
-			# var phase: int = data.get("phase", 1)
+			pass  # var phase: int = data.get("phase", 1)
 		_:
 			EventBus.emit_debug("Unknown audio command: %s" % command)
 
 func _on_sequencer_turn_started(entity: Node, turn_number: int) -> void:
-	"""Handle turn started from sequencer"""
+	## Handle turn started from sequencer
 	EventBus.emit_debug("Turn %d started for %s" % [turn_number, entity.name if entity else "unknown"])
 
 	# Register entity with camera
@@ -1831,7 +1851,7 @@ func _on_sequencer_turn_started(entity: Node, turn_number: int) -> void:
 		battle_camera.register_combatant(entity)
 
 func _on_action_execution_started(action: Dictionary) -> void:
-	"""Handle action execution started"""
+	## Handle action execution started
 	var source = action.get("source")
 	EventBus.emit_debug("Action started: %s" % str(action.get("type", "unknown")))
 
@@ -1855,7 +1875,7 @@ func _on_camera_focus_completed() -> void:
 	pass  # Camera focus transition done
 
 func _on_target_highlight_changed(target: CharacterBase) -> void:
-	"""Highlight/unhighlight character sprite when hovering targets in UI with breathing animation"""
+	## Highlight/unhighlight character sprite when hovering targets in UI with breathing animation
 	# Kill existing breathing tween
 	if _highlight_breathing_tween and _highlight_breathing_tween.is_valid():
 		_highlight_breathing_tween.kill()
@@ -1905,7 +1925,7 @@ func _on_target_highlight_changed(target: CharacterBase) -> void:
 			_highlight_breathing_tween.parallel().tween_property(sprite, "modulate", base_color, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 func clear_target_highlight() -> void:
-	"""Clear any existing target highlight and breathing animation"""
+	## Clear any existing target highlight and breathing animation
 	# Stop breathing tween
 	if _highlight_breathing_tween and _highlight_breathing_tween.is_valid():
 		_highlight_breathing_tween.kill()
@@ -1924,7 +1944,7 @@ func clear_target_highlight() -> void:
 # =============================================================================
 
 func _spawn_advanced_damage_number(data: Dictionary) -> void:
-	"""Spawn damage number using the advanced system or fallback"""
+	## Spawn damage number using the advanced system or fallback
 	var position = data.get("position", Vector2.ZERO)
 	var amount = data.get("amount", 0)
 	var is_critical = data.get("is_critical", false)
@@ -1944,7 +1964,7 @@ func _spawn_advanced_damage_number(data: Dictionary) -> void:
 # =============================================================================
 
 func shake_camera(intensity: float = 5.0, duration: float = 0.2) -> void:
-	"""Legacy camera shake - now routes to battle camera"""
+	## Legacy camera shake - now routes to battle camera
 	if battle_camera:
 		battle_camera.shake(Vector2(intensity, intensity), duration)
 	else:
@@ -1952,7 +1972,7 @@ func shake_camera(intensity: float = 5.0, duration: float = 0.2) -> void:
 		_legacy_shake_camera(intensity, duration)
 
 func _legacy_shake_camera(intensity: float, duration: float) -> void:
-	"""Original camera shake implementation as fallback"""
+	## Original camera shake implementation as fallback
 	var camera_node: Camera2D = get_node_or_null("BattleCamera") as Camera2D
 	if not camera_node:
 		return
