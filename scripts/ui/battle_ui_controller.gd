@@ -201,20 +201,7 @@ func _force_ui_layout() -> void:
 			# Make sure mouse filter allows scrolling
 			combat_log_scroll.mouse_filter = Control.MOUSE_FILTER_STOP
 			# Style the scrollbar to be visible
-			var scrollbar := combat_log_scroll.get_v_scroll_bar()
-			if scrollbar:
-				scrollbar.custom_minimum_size.x = 8  # Make scrollbar wider/visible
-				# Create a visible style for the scrollbar
-				var grabber_style := StyleBoxFlat.new()
-				grabber_style.bg_color = Color(0.5, 0.45, 0.4, 0.8)
-				grabber_style.set_corner_radius_all(4)
-				scrollbar.add_theme_stylebox_override("grabber", grabber_style)
-				scrollbar.add_theme_stylebox_override("grabber_highlight", grabber_style)
-				scrollbar.add_theme_stylebox_override("grabber_pressed", grabber_style)
-				var scroll_bg := StyleBoxFlat.new()
-				scroll_bg.bg_color = Color(0.15, 0.12, 0.1, 0.6)
-				scroll_bg.set_corner_radius_all(4)
-				scrollbar.add_theme_stylebox_override("scroll", scroll_bg)
+			UIStyleFactory.apply_scrollbar_style(combat_log_scroll)
 		if combat_log_text:
 			combat_log_text.bbcode_enabled = true
 			combat_log_text.fit_content = true
@@ -1140,21 +1127,8 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 	hp_bar.custom_minimum_size = Vector2(110, 14)
 	hp_bar.name = "HPBar"
 
-	var hp_fill := StyleBoxFlat.new()
-	hp_fill.bg_color = Color(0.2, 0.8, 0.3, 1.0)
-	hp_fill.corner_radius_top_left = 2
-	hp_fill.corner_radius_top_right = 2
-	hp_fill.corner_radius_bottom_left = 2
-	hp_fill.corner_radius_bottom_right = 2
-	hp_bar.add_theme_stylebox_override("fill", hp_fill)
-
-	var hp_bg := StyleBoxFlat.new()
-	hp_bg.bg_color = Color(0.15, 0.1, 0.1, 0.9)
-	hp_bg.corner_radius_top_left = 2
-	hp_bg.corner_radius_top_right = 2
-	hp_bg.corner_radius_bottom_left = 2
-	hp_bg.corner_radius_bottom_right = 2
-	hp_bar.add_theme_stylebox_override("background", hp_bg)
+	hp_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_hp_bar_fill())
+	hp_bar.add_theme_stylebox_override("background", UIStyleFactory.create_hp_bar_bg())
 	vbox.add_child(hp_bar)
 
 	var hp_label := Label.new()
@@ -1173,21 +1147,8 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 		mp_bar.custom_minimum_size = Vector2(110, 10)
 		mp_bar.name = "MPBar"
 
-		var mp_fill := StyleBoxFlat.new()
-		mp_fill.bg_color = Color(0.2, 0.4, 0.9, 1.0)
-		mp_fill.corner_radius_top_left = 2
-		mp_fill.corner_radius_top_right = 2
-		mp_fill.corner_radius_bottom_left = 2
-		mp_fill.corner_radius_bottom_right = 2
-		mp_bar.add_theme_stylebox_override("fill", mp_fill)
-
-		var mp_bg := StyleBoxFlat.new()
-		mp_bg.bg_color = Color(0.1, 0.1, 0.15, 0.9)
-		mp_bg.corner_radius_top_left = 2
-		mp_bg.corner_radius_top_right = 2
-		mp_bg.corner_radius_bottom_left = 2
-		mp_bg.corner_radius_bottom_right = 2
-		mp_bar.add_theme_stylebox_override("background", mp_bg)
+		mp_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_mp_bar_fill())
+		mp_bar.add_theme_stylebox_override("background", UIStyleFactory.create_mp_bar_bg())
 		vbox.add_child(mp_bar)
 
 	# Brand display for monsters
@@ -1269,12 +1230,7 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	var portrait_container := PanelContainer.new()
 	portrait_container.custom_minimum_size = Vector2(45, 45)
 	portrait_container.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
-	var portrait_style := StyleBoxFlat.new()
-	portrait_style.bg_color = Color(0.2, 0.1, 0.1, 1.0)
-	portrait_style.border_color = Color(0.6, 0.3, 0.3, 1.0)
-	portrait_style.set_border_width_all(2)
-	portrait_style.set_corner_radius_all(3)
-	portrait_container.add_theme_stylebox_override("panel", portrait_style)
+	portrait_container.add_theme_stylebox_override("panel", UIStyleFactory.create_sidebar_portrait_frame(true))
 	hbox.add_child(portrait_container)
 
 	# Load portrait texture
@@ -1314,15 +1270,8 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	hp_bar.name = "HPBar"
 	hp_bar.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 
-	var hp_fill := StyleBoxFlat.new()
-	hp_fill.bg_color = Color(0.8, 0.2, 0.2, 1.0)  # Red for enemies
-	hp_fill.set_corner_radius_all(2)
-	hp_bar.add_theme_stylebox_override("fill", hp_fill)
-
-	var hp_bg := StyleBoxFlat.new()
-	hp_bg.bg_color = Color(0.15, 0.1, 0.1, 0.9)
-	hp_bg.set_corner_radius_all(2)
-	hp_bar.add_theme_stylebox_override("background", hp_bg)
+	hp_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_enemy_hp_bar_fill())
+	hp_bar.add_theme_stylebox_override("background", UIStyleFactory.create_hp_bar_bg())
 	vbox.add_child(hp_bar)
 
 	var hp_label := Label.new()
@@ -1345,15 +1294,8 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 		corruption_bar.name = "CorruptionBar"
 		corruption_bar.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 
-		var corruption_fill := StyleBoxFlat.new()
-		corruption_fill.bg_color = Color(0.5, 0.1, 0.6, 1.0)  # Purple for corruption
-		corruption_fill.set_corner_radius_all(2)
-		corruption_bar.add_theme_stylebox_override("fill", corruption_fill)
-
-		var corruption_bg := StyleBoxFlat.new()
-		corruption_bg.bg_color = Color(0.1, 0.05, 0.1, 0.9)
-		corruption_bg.set_corner_radius_all(2)
-		corruption_bar.add_theme_stylebox_override("background", corruption_bg)
+		corruption_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_corruption_bar_fill())
+		corruption_bar.add_theme_stylebox_override("background", UIStyleFactory.create_corruption_bar_bg())
 		vbox.add_child(corruption_bar)
 
 		# Brand display
@@ -2664,17 +2606,7 @@ func _show_level_up_notification(character: CharacterBase, new_level: int, stat_
 	var popup := PanelContainer.new()
 	popup.name = "LevelUpPopup"
 	popup.z_index = 100
-
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.1, 0.15, 0.3, 0.95)
-	style.border_color = Color(1.0, 0.85, 0.3)
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(8)
-	style.content_margin_left = 20
-	style.content_margin_right = 20
-	style.content_margin_top = 15
-	style.content_margin_bottom = 15
-	popup.add_theme_stylebox_override("panel", style)
+	popup.add_theme_stylebox_override("panel", UIStyleFactory.create_capture_popup_style())
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 8)
@@ -2826,14 +2758,7 @@ func _create_brand_icon(brand: Enums.Brand) -> PanelContainer:
 	"""Create a colored icon indicator for the brand"""
 	var icon := PanelContainer.new()
 	icon.custom_minimum_size = Vector2(14, 14)
-
-	var style := StyleBoxFlat.new()
-	style.bg_color = _get_brand_color(brand)
-	style.set_corner_radius_all(3)  # Slightly rounded
-	style.border_color = _get_brand_color(brand).lightened(0.3)
-	style.set_border_width_all(1)
-	icon.add_theme_stylebox_override("panel", style)
-
+	icon.add_theme_stylebox_override("panel", UIStyleFactory.create_brand_indicator(_get_brand_color(brand)))
 	return icon
 
 func _get_path_color() -> Color:
@@ -2868,16 +2793,7 @@ func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
 	enemy_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	# Style the tooltip
-	var tooltip_style := StyleBoxFlat.new()
-	tooltip_style.bg_color = Color(0.08, 0.06, 0.1, 0.95)
-	tooltip_style.border_color = Color(0.6, 0.3, 0.4, 1.0)
-	tooltip_style.set_border_width_all(2)
-	tooltip_style.set_corner_radius_all(6)
-	tooltip_style.content_margin_left = 12
-	tooltip_style.content_margin_right = 12
-	tooltip_style.content_margin_top = 10
-	tooltip_style.content_margin_bottom = 10
-	enemy_tooltip.add_theme_stylebox_override("panel", tooltip_style)
+	enemy_tooltip.add_theme_stylebox_override("panel", UIStyleFactory.create_enemy_tooltip_style())
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
@@ -3055,16 +2971,7 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 	party_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	# Style the tooltip with green/ally theme
-	var tooltip_style := StyleBoxFlat.new()
-	tooltip_style.bg_color = Color(0.06, 0.1, 0.08, 0.95)
-	tooltip_style.border_color = Color(0.3, 0.6, 0.4, 1.0)
-	tooltip_style.set_border_width_all(2)
-	tooltip_style.set_corner_radius_all(6)
-	tooltip_style.content_margin_left = 12
-	tooltip_style.content_margin_right = 12
-	tooltip_style.content_margin_top = 10
-	tooltip_style.content_margin_bottom = 10
-	party_tooltip.add_theme_stylebox_override("panel", tooltip_style)
+	party_tooltip.add_theme_stylebox_override("panel", UIStyleFactory.create_ally_tooltip_style())
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
@@ -3283,16 +3190,7 @@ func _show_sprite_enemy_tooltip(enemy: CharacterBase) -> void:
 	enemy_tooltip.custom_minimum_size = Vector2(280, 0)
 	enemy_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
-	var tooltip_style := StyleBoxFlat.new()
-	tooltip_style.bg_color = Color(0.08, 0.06, 0.1, 0.95)
-	tooltip_style.border_color = Color(0.6, 0.3, 0.4, 1.0)
-	tooltip_style.set_border_width_all(2)
-	tooltip_style.set_corner_radius_all(6)
-	tooltip_style.content_margin_left = 12
-	tooltip_style.content_margin_right = 12
-	tooltip_style.content_margin_top = 10
-	tooltip_style.content_margin_bottom = 10
-	enemy_tooltip.add_theme_stylebox_override("panel", tooltip_style)
+	enemy_tooltip.add_theme_stylebox_override("panel", UIStyleFactory.create_enemy_tooltip_style())
 	
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
@@ -3383,16 +3281,7 @@ func _show_sprite_party_tooltip(character: CharacterBase) -> void:
 	party_tooltip.custom_minimum_size = Vector2(280, 0)
 	party_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
-	var tooltip_style := StyleBoxFlat.new()
-	tooltip_style.bg_color = Color(0.06, 0.1, 0.08, 0.95)
-	tooltip_style.border_color = Color(0.3, 0.6, 0.4, 1.0)
-	tooltip_style.set_border_width_all(2)
-	tooltip_style.set_corner_radius_all(6)
-	tooltip_style.content_margin_left = 12
-	tooltip_style.content_margin_right = 12
-	tooltip_style.content_margin_top = 10
-	tooltip_style.content_margin_bottom = 10
-	party_tooltip.add_theme_stylebox_override("panel", tooltip_style)
+	party_tooltip.add_theme_stylebox_override("panel", UIStyleFactory.create_ally_tooltip_style())
 	
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
@@ -3520,17 +3409,8 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	left_party_sidebar.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	left_party_sidebar.position = Vector2(10, 70)  # Below top bar
 
-	# Style the sidebar with BRIGHT debug colors so we can see it
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.1, 0.15, 0.2, 0.95)  # Dark blue-gray
-	style.border_color = Color(0.3, 0.8, 0.5, 1.0)  # Bright green border
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 8
-	style.content_margin_right = 8
-	style.content_margin_top = 8
-	style.content_margin_bottom = 8
-	left_party_sidebar.add_theme_stylebox_override("panel", style)
+	# Style the sidebar with green/ally theme
+	left_party_sidebar.add_theme_stylebox_override("panel", UIStyleFactory.create_party_sidebar_header())
 
 	var vbox := VBoxContainer.new()
 	vbox.name = "PartyList"
@@ -3589,12 +3469,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	var portrait_container := PanelContainer.new()
 	portrait_container.custom_minimum_size = Vector2(36, 36)
 	portrait_container.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
-	var portrait_style := StyleBoxFlat.new()
-	portrait_style.bg_color = Color(0.15, 0.18, 0.2, 1.0)
-	portrait_style.border_color = Color(0.4, 0.5, 0.45, 1.0)
-	portrait_style.set_border_width_all(1)
-	portrait_style.set_corner_radius_all(3)
-	portrait_container.add_theme_stylebox_override("panel", portrait_style)
+	portrait_container.add_theme_stylebox_override("panel", UIStyleFactory.create_sidebar_portrait_frame(false))
 	hbox.add_child(portrait_container)
 
 	var portrait := TextureRect.new()
@@ -3658,15 +3533,8 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	hp_bar.custom_minimum_size = Vector2(85, 12)
 	hp_bar.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 
-	var hp_fill := StyleBoxFlat.new()
-	hp_fill.bg_color = Color(0.3, 0.8, 0.35, 1.0)
-	hp_fill.set_corner_radius_all(2)
-	hp_bar.add_theme_stylebox_override("fill", hp_fill)
-
-	var hp_bg := StyleBoxFlat.new()
-	hp_bg.bg_color = Color(0.2, 0.15, 0.15, 0.9)
-	hp_bg.set_corner_radius_all(2)
-	hp_bar.add_theme_stylebox_override("background", hp_bg)
+	hp_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_hp_bar_fill())
+	hp_bar.add_theme_stylebox_override("background", UIStyleFactory.create_hp_bar_bg())
 	vbox.add_child(hp_bar)
 
 	# HP Label
@@ -3688,15 +3556,8 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 		mp_bar.custom_minimum_size = Vector2(85, 8)
 		mp_bar.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
 
-		var mp_fill := StyleBoxFlat.new()
-		mp_fill.bg_color = Color(0.3, 0.5, 0.9, 1.0)
-		mp_fill.set_corner_radius_all(2)
-		mp_bar.add_theme_stylebox_override("fill", mp_fill)
-
-		var mp_bg := StyleBoxFlat.new()
-		mp_bg.bg_color = Color(0.12, 0.12, 0.18, 0.9)
-		mp_bg.set_corner_radius_all(2)
-		mp_bar.add_theme_stylebox_override("background", mp_bg)
+		mp_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_mp_bar_fill())
+		mp_bar.add_theme_stylebox_override("background", UIStyleFactory.create_mp_bar_bg())
 		vbox.add_child(mp_bar)
 
 	# Status icons container - displays active buffs/debuffs
@@ -3763,16 +3624,7 @@ func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
 	print("[BATTLE_UI] Enemy sidebar position set to: %s" % str(right_enemy_sidebar.position))
 
 	# Style with red theme for enemies
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.2, 0.1, 0.1, 0.95)  # Dark red-gray
-	style.border_color = Color(0.8, 0.3, 0.3, 1.0)  # Red border
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 8
-	style.content_margin_right = 8
-	style.content_margin_top = 8
-	style.content_margin_bottom = 8
-	right_enemy_sidebar.add_theme_stylebox_override("panel", style)
+	right_enemy_sidebar.add_theme_stylebox_override("panel", UIStyleFactory.create_enemy_sidebar_header())
 
 	var vbox := VBoxContainer.new()
 	vbox.name = "EnemyList"
@@ -3831,12 +3683,7 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	var portrait_container := PanelContainer.new()
 	portrait_container.custom_minimum_size = Vector2(36, 36)
 	portrait_container.mouse_filter = Control.MOUSE_FILTER_PASS
-	var portrait_style := StyleBoxFlat.new()
-	portrait_style.bg_color = Color(0.2, 0.12, 0.12, 1.0)
-	portrait_style.border_color = Color(0.6, 0.35, 0.35, 1.0)
-	portrait_style.set_border_width_all(1)
-	portrait_style.set_corner_radius_all(3)
-	portrait_container.add_theme_stylebox_override("panel", portrait_style)
+	portrait_container.add_theme_stylebox_override("panel", UIStyleFactory.create_sidebar_portrait_frame(true))
 	hbox.add_child(portrait_container)
 
 	var portrait := TextureRect.new()
@@ -3886,15 +3733,8 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	hp_bar.custom_minimum_size = Vector2(85, 10)
 	hp_bar.mouse_filter = Control.MOUSE_FILTER_PASS
 
-	var hp_fill := StyleBoxFlat.new()
-	hp_fill.bg_color = Color(0.8, 0.25, 0.25, 1.0)  # Red for enemies
-	hp_fill.set_corner_radius_all(2)
-	hp_bar.add_theme_stylebox_override("fill", hp_fill)
-
-	var hp_bg := StyleBoxFlat.new()
-	hp_bg.bg_color = Color(0.2, 0.12, 0.12, 0.9)
-	hp_bg.set_corner_radius_all(2)
-	hp_bar.add_theme_stylebox_override("background", hp_bg)
+	hp_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_enemy_hp_bar_fill())
+	hp_bar.add_theme_stylebox_override("background", UIStyleFactory.create_hp_bar_bg())
 	vbox.add_child(hp_bar)
 
 	# HP Label (numeric) - matches party sidebar
@@ -3918,15 +3758,8 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 		corruption_bar.custom_minimum_size = Vector2(85, 6)
 		corruption_bar.mouse_filter = Control.MOUSE_FILTER_PASS
 
-		var corr_fill := StyleBoxFlat.new()
-		corr_fill.bg_color = Color(0.6, 0.2, 0.7, 1.0)  # Purple for corruption
-		corr_fill.set_corner_radius_all(2)
-		corruption_bar.add_theme_stylebox_override("fill", corr_fill)
-
-		var corr_bg := StyleBoxFlat.new()
-		corr_bg.bg_color = Color(0.15, 0.1, 0.15, 0.9)
-		corr_bg.set_corner_radius_all(2)
-		corruption_bar.add_theme_stylebox_override("background", corr_bg)
+		corruption_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_corruption_bar_fill())
+		corruption_bar.add_theme_stylebox_override("background", UIStyleFactory.create_corruption_bar_bg())
 		vbox.add_child(corruption_bar)
 
 	# Store reference for updates
