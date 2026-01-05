@@ -40,6 +40,15 @@ const BattleMonsterSpriteScript := preload(
 @onready var battle_sequencer: BattleSequencer = $Systems/BattleSequencer
 
 # =============================================================================
+# EXPORTS (For direct scene testing)
+# =============================================================================
+
+@export var auto_start_test_battle: bool = false  ## Enable to auto-start when running scene directly
+@export var test_enemy_count: int = 2
+@export var test_enemy_type: String = "hollow"
+@export var test_party_level: int = 10
+
+# =============================================================================
 # STATE
 # =============================================================================
 
@@ -65,6 +74,11 @@ func _ready() -> void:
 	_setup_animation_systems()
 	_setup_screen_effects()
 	EventBus.emit_debug("BattleArena ready with animation systems")
+	
+	# Auto-start test battle if enabled (for running scene directly)
+	if auto_start_test_battle:
+		await get_tree().process_frame
+		_auto_start_test_battle()
 
 
 func _exit_tree() -> void:
@@ -1530,6 +1544,55 @@ func _spawn_damage_number(
 # =============================================================================
 # SIGNAL HANDLERS
 # =============================================================================
+
+
+func _auto_start_test_battle() -> void:
+	## Auto-start a test battle when running scene directly (for debugging)
+	print("[DEBUG] Auto-starting test battle...")
+	
+	# Create test player party
+	var players: Array[CharacterBase] = []
+	
+	# Check if player already exists in GameManager
+	var player_char: PlayerCharacter = GameManager.get_player_character()
+	if not player_char:
+		# Create a test protagonist
+		player_char = PlayerCharacter.new()
+		player_char.character_name = "Test Hero"
+		player_char.is_protagonist = true
+		player_char.level = test_party_level
+		player_char.base_max_hp = 100 + (test_party_level * 10)
+		player_char.current_hp = player_char.base_max_hp
+		player_char.base_attack = 15 + test_party_level
+		player_char.base_defense = 10 + test_party_level
+		player_char.base_magic = 12 + test_party_level
+		player_char.base_speed = 10 + test_party_level
+		player_char.known_skills = ["basic_attack", "power_strike"]
+		GameManager.player_party.clear()
+		GameManager.player_party.append(player_char)
+	
+	players.append(player_char)
+	
+	# Create test enemies
+	var enemies: Array[CharacterBase] = []
+	for i in range(test_enemy_count):
+		var enemy := Monster.new()
+		enemy.monster_id = test_enemy_type
+		enemy.character_name = "%s %d" % [test_enemy_type.capitalize(), i + 1]
+		enemy.level = test_party_level
+		enemy.is_corrupted = true
+		enemy.corruption_level = 80.0 + randf() * 20.0
+		enemy.base_max_hp = 40 + (test_party_level * 8)
+		enemy.current_hp = enemy.base_max_hp
+		enemy.base_attack = 10 + (test_party_level * 2)
+		enemy.base_defense = 6 + test_party_level
+		enemy.base_magic = 8 + test_party_level
+		enemy.base_speed = 8 + test_party_level
+		enemy.known_skills = ["basic_attack"]
+		enemies.append(enemy)
+	
+	print("[DEBUG] Created %d players and %d enemies" % [players.size(), enemies.size()])
+	initialize_battle(players, enemies)
 
 
 func _on_battle_started(enemy_data: Array) -> void:
