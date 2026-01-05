@@ -40,7 +40,7 @@ func _ready() -> void:
 
 
 func _setup_window_size() -> void:
-	"""Configure window to fit screen with taskbar - runs FIRST"""
+	## Configure window to fit screen with taskbar - runs FIRST
 	# Only adjust in windowed mode
 	if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN:
 		return

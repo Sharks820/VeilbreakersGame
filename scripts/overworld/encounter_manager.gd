@@ -160,18 +160,8 @@ func _create_monster(monster_id: String, level: int) -> Monster:
 
 
 func set_area_encounters(encounters: Array[Dictionary]) -> void:
-	"""
-	Set encounters for current area.
-	Format:
-	[
-		{
-			"weight": 1.0,
-			"monsters": [
-				{"id": "shadow_imp", "level": 5, "count": 2, "level_variance": 1}
-			]
-		}
-	]
-	"""
+	## Set encounters for current area.
+	## Format: [{"weight": 1.0, "monsters": [{"id": "shadow_imp", "level": 5, "count": 2}]}]
 	current_area_encounters = encounters
 
 
@@ -201,7 +191,7 @@ func reset_rate_modifier() -> void:
 
 
 func trigger_scripted_encounter(encounter: Dictionary) -> void:
-	"""Trigger a specific encounter, bypassing random selection."""
+	## Trigger a specific encounter, bypassing random selection.
 	var enemies := _create_enemies(encounter)
 
 	if not enemies.is_empty():
@@ -210,7 +200,7 @@ func trigger_scripted_encounter(encounter: Dictionary) -> void:
 
 
 func trigger_boss_encounter(boss_id: String, level: int, minions: Array[Dictionary] = []) -> void:
-	"""Trigger a boss encounter."""
+	## Trigger a boss encounter.
 	var enemies: Array[CharacterBase] = []
 
 	var boss := _create_monster(boss_id, level)

@@ -108,7 +108,7 @@ static func spawn_hit_effect(
 	brand: Enums.Brand = Enums.Brand.NONE,
 	is_critical: bool = false
 ) -> GPUParticles2D:
-	"""Spawn a hit effect at the given position"""
+	## Spawn a hit effect at the given position
 	var effect: GPUParticles2D = HIT_EFFECT.instantiate()
 	parent.add_child(effect)
 	effect.global_position = position
@@ -136,7 +136,7 @@ static func spawn_hit_effect(
 
 
 static func spawn_heal_effect(parent: Node, position: Vector2) -> GPUParticles2D:
-	"""Spawn a healing effect at the given position"""
+	## Spawn a healing effect at the given position
 	var effect: GPUParticles2D = HEAL_EFFECT.instantiate()
 	parent.add_child(effect)
 	effect.global_position = position
@@ -148,7 +148,7 @@ static func spawn_heal_effect(parent: Node, position: Vector2) -> GPUParticles2D
 static func spawn_buff_effect(
 	parent: Node, position: Vector2, color: Color = Color(1, 0.9, 0.3)
 ) -> GPUParticles2D:
-	"""Spawn a buff application effect"""
+	## Spawn a buff application effect
 	var effect: GPUParticles2D = BUFF_EFFECT.instantiate()
 	parent.add_child(effect)
 	effect.global_position = position
@@ -165,7 +165,7 @@ static func spawn_buff_effect(
 static func spawn_debuff_effect(
 	parent: Node, position: Vector2, color: Color = Color(0.6, 0.2, 0.6)
 ) -> GPUParticles2D:
-	"""Spawn a debuff application effect"""
+	## Spawn a debuff application effect
 	var effect: GPUParticles2D = DEBUFF_EFFECT.instantiate()
 	parent.add_child(effect)
 	effect.global_position = position
@@ -182,7 +182,7 @@ static func spawn_debuff_effect(
 static func spawn_death_effect(
 	parent: Node, position: Vector2, brand: Enums.Brand = Enums.Brand.NONE
 ) -> GPUParticles2D:
-	"""Spawn a death effect at the given position"""
+	## Spawn a death effect at the given position
 	var effect: GPUParticles2D = DEATH_EFFECT.instantiate()
 	parent.add_child(effect)
 	effect.global_position = position
@@ -209,7 +209,7 @@ static func spawn_skill_effect(
 	target_pos: Vector2,
 	brand: Enums.Brand
 ) -> void:
-	"""Spawn appropriate effects based on skill type with unique visual styles"""
+	## Spawn appropriate effects based on skill type with unique visual styles
 	if not skill_data:
 		return
 
@@ -233,7 +233,7 @@ static func spawn_skill_effect(
 static func spawn_damage_skill_effect(
 	parent: Node, position: Vector2, brand: Enums.Brand, skill_data: SkillData
 ) -> GPUParticles2D:
-	"""Spawn damage skill effect with brand-colored burst"""
+	## Spawn damage skill effect with brand-colored burst
 	var effect: GPUParticles2D = HIT_EFFECT.instantiate()
 	parent.add_child(effect)
 	effect.global_position = position
@@ -265,7 +265,7 @@ static func spawn_damage_skill_effect(
 static func spawn_heal_skill_effect(
 	parent: Node, position: Vector2, skill_data: SkillData
 ) -> GPUParticles2D:
-	"""Spawn healing effect with rising green particles"""
+	## Spawn healing effect with rising green particles
 	var effect: GPUParticles2D = HEAL_EFFECT.instantiate()
 	parent.add_child(effect)
 	effect.global_position = position
@@ -292,7 +292,7 @@ static func spawn_heal_skill_effect(
 static func spawn_buff_skill_effect(
 	parent: Node, position: Vector2, skill_data: SkillData
 ) -> GPUParticles2D:
-	"""Spawn buff effect with golden rising sparkles"""
+	## Spawn buff effect with golden rising sparkles
 	var effect: GPUParticles2D = BUFF_EFFECT.instantiate()
 	parent.add_child(effect)
 	effect.global_position = position
@@ -319,7 +319,7 @@ static func spawn_buff_skill_effect(
 static func spawn_debuff_skill_effect(
 	parent: Node, position: Vector2, brand: Enums.Brand, skill_data: SkillData
 ) -> GPUParticles2D:
-	"""Spawn debuff effect with sinking dark particles"""
+	## Spawn debuff effect with sinking dark particles
 	var effect: GPUParticles2D = DEBUFF_EFFECT.instantiate()
 	parent.add_child(effect)
 	effect.global_position = position
@@ -350,7 +350,7 @@ static func spawn_debuff_skill_effect(
 static func spawn_status_skill_effect(
 	parent: Node, position: Vector2, brand: Enums.Brand, skill_data: SkillData
 ) -> GPUParticles2D:
-	"""Spawn status effect with orbiting particles"""
+	## Spawn status effect with orbiting particles
 	var effect: GPUParticles2D = DEBUFF_EFFECT.instantiate()  # Reuse debuff base
 	parent.add_child(effect)
 	effect.global_position = position
@@ -387,7 +387,7 @@ static func spawn_status_skill_effect(
 
 
 static func get_status_color(effect: Enums.StatusEffect) -> Color:
-	"""Get the color associated with a status effect"""
+	## Get the color associated with a status effect
 	match effect:
 		Enums.StatusEffect.POISON:
 			return Color(0.3, 0.8, 0.2)

@@ -145,12 +145,12 @@ func _ready() -> void:
 
 
 func _on_viewport_size_changed() -> void:
-	"""Called when viewport size changes (windowed mode resize) - reposition all UI elements"""
+	## Called when viewport size changes (windowed mode resize) - reposition all UI elements
 	_force_ui_layout()
 
 
 func _force_ui_layout() -> void:
-	"""Force UI elements to correct positions for CanvasLayer rendering - RESPONSIVE"""
+	## Force UI elements to correct positions for CanvasLayer rendering - RESPONSIVE
 	var viewport_size := Vector2(1920, 1080)
 	var queried_size := get_viewport().get_visible_rect().size
 	if queried_size.x > 0 and queried_size.y > 0:
@@ -352,7 +352,7 @@ func _on_round_started(round_number: int) -> void:
 
 
 func _on_turn_started_update_order(character: CharacterBase) -> void:
-	"""Update turn order display when a new character's turn starts"""
+	## Update turn order display when a new character's turn starts
 	if not battle_manager:
 		return
 	# Rebuild turn order starting from the current character
@@ -490,18 +490,18 @@ func _input(event: InputEvent) -> void:
 
 
 func register_sprite_hitbox(character: CharacterBase, hitbox: Rect2) -> void:
-	"""Register a character's sprite hitbox for mouse detection (called from BattleArena)"""
+	## Register a character's sprite hitbox for mouse detection (called from BattleArena)
 	_sprite_hitboxes[character] = hitbox
 
 
 func clear_sprite_hitboxes() -> void:
-	"""Clear all sprite hitboxes"""
+	## Clear all sprite hitboxes
 	_sprite_hitboxes.clear()
 	_hovered_sprite_character = null
 
 
 func _check_sprite_hover_at(mouse_pos: Vector2) -> void:
-	"""Check if mouse is over any character sprite hitbox (called from BattleArena)"""
+	## Check if mouse is over any character sprite hitbox (called from BattleArena)
 	var hovered: CharacterBase = null
 
 	for character in _sprite_hitboxes:
@@ -523,7 +523,7 @@ func _check_sprite_hover_at(mouse_pos: Vector2) -> void:
 
 
 func _check_sprite_click_at(mouse_pos: Vector2) -> void:
-	"""Check if mouse clicked on a character sprite"""
+	## Check if mouse clicked on a character sprite
 	if current_state != UIState.TARGET_SELECT:
 		return
 
@@ -772,7 +772,7 @@ func _on_flee_pressed() -> void:
 
 
 func _style_action_buttons() -> void:
-	"""Apply polished AAA styling to action buttons with icons"""
+	## Apply polished AAA styling to action buttons with icons
 	var button_data := {
 		attack_button:
 		{"icon": "res://assets/ui/icons/actions/attack.png", "color": Color(0.9, 0.3, 0.3)},
@@ -869,7 +869,7 @@ func _style_action_buttons() -> void:
 
 
 func _on_action_button_hover(button: Button) -> void:
-	"""Highlight button on hover/focus with scale and color tween"""
+	## Highlight button on hover/focus with scale and color tween
 	# Grab focus when mouse hovers - this syncs the focus indicator with mouse
 	button.grab_focus()
 
@@ -882,7 +882,7 @@ func _on_action_button_hover(button: Button) -> void:
 
 
 func _on_action_button_unhover(button: Button) -> void:
-	"""Reset button on unhover/unfocus"""
+	## Reset button on unhover/unfocus
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(button, "scale", Vector2.ONE, 0.1)
@@ -1009,7 +1009,7 @@ func _populate_item_list() -> void:
 
 
 func _populate_item_list_fallback() -> void:
-	"""Fallback for when inventory is empty (test purposes)"""
+	## Fallback for when inventory is empty (test purposes)
 	var items := ["Potion", "Ether", "Antidote"]
 
 	for item_name in items:
@@ -1319,7 +1319,7 @@ func _get_portrait_path(character: CharacterBase) -> String:
 
 
 func _update_enemy_sidebar() -> void:
-	"""Populate the enemy sidebar with all enemies"""
+	## Populate the enemy sidebar with all enemies
 	# Clear existing enemy entries
 	for child in enemy_status_container.get_children():
 		child.queue_free()
@@ -1330,7 +1330,7 @@ func _update_enemy_sidebar() -> void:
 
 
 func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
-	"""Create a panel for one enemy in the sidebar"""
+	## Create a panel for one enemy in the sidebar
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(190, 80)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -1458,7 +1458,7 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 
 
 func _highlight_all_valid_targets(target_allies: bool) -> void:
-	"""Highlight ALL valid targets - RED for enemies, BLUE for allies"""
+	## Highlight ALL valid targets - RED for enemies, BLUE for allies
 	if target_allies:
 		# Highlight all valid ally targets in BLUE
 		for ally in party_members:
@@ -1473,7 +1473,7 @@ func _highlight_all_valid_targets(target_allies: bool) -> void:
 
 
 func _highlight_enemy_in_sidebar(target: CharacterBase) -> void:
-	"""Highlight the SELECTED enemy target (brighter red), others stay dimmer red"""
+	## Highlight the SELECTED enemy target (brighter red), others stay dimmer red
 	for enemy in enemies:
 		# Check both ui_panel and enemy_sidebar_panel
 		var panels: Array[PanelContainer] = []
@@ -1509,7 +1509,7 @@ func _highlight_enemy_in_sidebar(target: CharacterBase) -> void:
 
 
 func _highlight_ally_in_sidebar(target: CharacterBase) -> void:
-	"""Highlight the SELECTED ally target (brighter blue), others stay dimmer blue"""
+	## Highlight the SELECTED ally target (brighter blue), others stay dimmer blue
 	for ally in party_members:
 		# Check sidebar_panel (left sidebar) - this is the main ally panel
 		if ally.has_meta("sidebar_panel"):
@@ -1539,7 +1539,7 @@ func _highlight_ally_in_sidebar(target: CharacterBase) -> void:
 func _set_panel_highlight(
 	character: CharacterBase, meta_key: String, color: Color, width: int
 ) -> void:
-	"""Helper to set panel highlight by meta key"""
+	## Helper to set panel highlight by meta key
 	if character.has_meta(meta_key):
 		var panel: PanelContainer = character.get_meta(meta_key)
 		if is_instance_valid(panel):
@@ -1552,7 +1552,7 @@ func _set_panel_highlight(
 
 
 func _clear_all_sidebar_highlights() -> void:
-	"""Clear all target highlights from both enemy and party sidebars"""
+	## Clear all target highlights from both enemy and party sidebars
 	# Reset enemy sidebar to normal state (check both ui_panel and enemy_sidebar_panel)
 	for enemy in enemies:
 		if enemy.has_meta("ui_panel"):
@@ -1597,7 +1597,7 @@ func _clear_all_sidebar_highlights() -> void:
 
 
 func update_enemy_hp(enemy: CharacterBase) -> void:
-	"""Update a single enemy's HP display in the sidebar"""
+	## Update a single enemy's HP display in the sidebar
 	if enemy.has_meta("ui_panel"):
 		var panel: PanelContainer = enemy.get_meta("ui_panel")
 		if is_instance_valid(panel):
@@ -1610,7 +1610,7 @@ func update_enemy_hp(enemy: CharacterBase) -> void:
 
 
 func _get_status_effect_icon_path(effect: Enums.StatusEffect) -> String:
-	"""Map status effects to icon paths"""
+	## Map status effects to icon paths
 	match effect:
 		# Debuffs
 		Enums.StatusEffect.POISON:
@@ -1663,7 +1663,7 @@ func _get_status_effect_icon_path(effect: Enums.StatusEffect) -> String:
 
 
 func _get_status_effect_name(effect: Enums.StatusEffect) -> String:
-	"""Get display name for status effect tooltip"""
+	## Get display name for status effect tooltip
 	return Enums.StatusEffect.keys()[effect].capitalize().replace("_", " ")
 
 
@@ -1673,13 +1673,13 @@ func _get_status_effect_name(effect: Enums.StatusEffect) -> String:
 
 
 func _on_status_effect_changed(target: Node, _effect: int, _extra: int = 0) -> void:
-	"""Called when a status effect is applied or removed - update icons"""
+	## Called when a status effect is applied or removed - update icons
 	if target is CharacterBase:
 		_update_character_status_icons(target as CharacterBase)
 
 
 func _update_character_status_icons(character: CharacterBase) -> void:
-	"""Update the status icon display for a character's panel"""
+	## Update the status icon display for a character's panel
 	if not character.has_meta("status_icons"):
 		return
 
@@ -1761,7 +1761,7 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 
 
 func _refresh_all_status_icons() -> void:
-	"""Refresh status icons for all party members and enemies"""
+	## Refresh status icons for all party members and enemies
 	for member in party_members:
 		_update_character_status_icons(member)
 	for enemy in enemies:
@@ -1930,7 +1930,7 @@ func log_action(
 
 
 func log_skill_use(attacker_name: String, skill_id: String, target_name: String = "") -> void:
-	"""Log a skill use with proper skill display name"""
+	## Log a skill use with proper skill display name
 	var skill_display_name := _get_skill_display_name(skill_id)
 	log_action(attacker_name, "Skill", target_name, skill_display_name)
 
@@ -1982,7 +1982,7 @@ func _append_to_log(entry: String) -> void:
 
 
 func _schedule_auto_scroll() -> void:
-	"""Schedule auto-scroll after frame to ensure text layout is complete"""
+	## Schedule auto-scroll after frame to ensure text layout is complete
 	if not combat_log_scroll:
 		return
 	# Skip if user manually scrolled away (but still allow if they scrolled back to bottom)
@@ -2593,7 +2593,7 @@ func _show_level_up_flash(
 
 
 func _style_victory_panel() -> void:
-	"""Apply dark fantasy styling to victory screen"""
+	## Apply dark fantasy styling to victory screen
 	var victory_panel: PanelContainer = victory_screen.get_node_or_null("VictoryPanel")
 	if not victory_panel:
 		return
@@ -2808,7 +2808,7 @@ func _animate_defeat_title() -> void:
 
 
 func _style_defeat_panel() -> void:
-	"""Apply polished styling to defeat screen"""
+	## Apply polished styling to defeat screen
 	var defeat_panel: PanelContainer = defeat_screen.get_node_or_null("DefeatPanel")
 	if not defeat_panel:
 		return
@@ -3011,7 +3011,7 @@ func shake_screen(intensity: float = 5.0, duration: float = 0.2) -> void:
 
 
 func _get_brand_name(brand: Enums.Brand) -> String:
-	"""Get display name for monster brand"""
+	## Get display name for monster brand
 	# Handle invalid brand values (can happen with old .tres files)
 	var brand_int := int(brand)
 	if brand_int < 0 or brand_int > 11:
@@ -3051,12 +3051,12 @@ func _get_brand_name(brand: Enums.Brand) -> String:
 
 
 func _get_brand_color(brand: Enums.Brand) -> Color:
-	"""Get color for monster brand display - delegates to Helpers for consistency"""
+	## Get color for monster brand display - delegates to Helpers for consistency
 	return BrandSystem.get_brand_color(brand)
 
 
 func _create_brand_icon(brand: Enums.Brand) -> PanelContainer:
-	"""Create a colored icon indicator for the brand"""
+	## Create a colored icon indicator for the brand
 	var icon := PanelContainer.new()
 	icon.custom_minimum_size = Vector2(14, 14)
 	icon.add_theme_stylebox_override(
@@ -3066,7 +3066,7 @@ func _create_brand_icon(brand: Enums.Brand) -> PanelContainer:
 
 
 func _get_path_color() -> Color:
-	"""Get color for player's Path based on alignment"""
+	## Get color for player's Path based on alignment
 	var alignment := GameManager.path_alignment if GameManager else 0.0
 	if alignment > 30:
 		return Color(0.9, 0.85, 0.4)  # Gold/yellow for Seraph (light path)
@@ -3082,7 +3082,7 @@ func _get_path_color() -> Color:
 
 
 func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
-	"""Show tooltip with enemy details on hover, also select as target if in TARGET_SELECT"""
+	## Show tooltip with enemy details on hover, also select as target if in TARGET_SELECT
 	_hide_enemy_tooltip()  # Hide any existing tooltip
 
 	# If in target selection mode, hovering selects this enemy
@@ -3220,7 +3220,7 @@ func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
 
 
 func _add_stat_row(grid: GridContainer, stat_name: String, value: int, color: Color) -> void:
-	"""Helper to add a stat row to the tooltip grid"""
+	## Helper to add a stat row to the tooltip grid
 	var name_label := Label.new()
 	name_label.text = stat_name + ":"
 	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SMALL)
@@ -3235,12 +3235,12 @@ func _add_stat_row(grid: GridContainer, stat_name: String, value: int, color: Co
 
 
 func _on_enemy_panel_unhover() -> void:
-	"""Hide tooltip when mouse leaves enemy panel"""
+	## Hide tooltip when mouse leaves enemy panel
 	_hide_enemy_tooltip()
 
 
 func _on_enemy_panel_clicked(event: InputEvent, enemy: CharacterBase) -> void:
-	"""Handle click on enemy panel - select and confirm target"""
+	## Handle click on enemy panel - select and confirm target
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		# If in target selection mode, clicking confirms this target
 		if current_state == UIState.TARGET_SELECT and enemy in valid_targets:
@@ -3260,7 +3260,7 @@ func _on_enemy_panel_clicked(event: InputEvent, enemy: CharacterBase) -> void:
 
 
 func _hide_enemy_tooltip() -> void:
-	"""Remove and destroy the tooltip"""
+	## Remove and destroy the tooltip
 	if enemy_tooltip and is_instance_valid(enemy_tooltip):
 		enemy_tooltip.queue_free()
 		enemy_tooltip = null
@@ -3273,7 +3273,7 @@ func _hide_enemy_tooltip() -> void:
 
 
 func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> void:
-	"""Show tooltip with party member details on hover"""
+	## Show tooltip with party member details on hover
 	_hide_party_tooltip()  # Hide any existing tooltip
 
 	# Create tooltip panel
@@ -3431,12 +3431,12 @@ func _on_party_panel_hover(character: CharacterBase, panel: PanelContainer) -> v
 
 
 func _on_party_panel_unhover() -> void:
-	"""Hide tooltip when mouse leaves party panel"""
+	## Hide tooltip when mouse leaves party panel
 	_hide_party_tooltip()
 
 
 func _hide_party_tooltip() -> void:
-	"""Remove and destroy the party tooltip"""
+	## Remove and destroy the party tooltip
 	if party_tooltip and is_instance_valid(party_tooltip):
 		party_tooltip.queue_free()
 		party_tooltip = null
@@ -3448,7 +3448,7 @@ func _hide_party_tooltip() -> void:
 
 
 func _on_character_sprite_hovered(character: Node) -> void:
-	"""Handle hover on character sprite in battle arena - show tooltip and update target if in TARGET_SELECT"""
+	## Handle hover on character sprite in battle arena - show tooltip and update target if in TARGET_SELECT
 	if not character is CharacterBase:
 		return
 	var char := character as CharacterBase
@@ -3474,13 +3474,13 @@ func _on_character_sprite_hovered(character: Node) -> void:
 
 
 func _on_character_sprite_unhovered(character: Node) -> void:
-	"""Hide tooltips when mouse leaves character sprite"""
+	## Hide tooltips when mouse leaves character sprite
 	_hide_enemy_tooltip()
 	_hide_party_tooltip()
 
 
 func _on_target_selected_from_sprite(character: Node) -> void:
-	"""Handle target selection from clicking on character sprite"""
+	## Handle target selection from clicking on character sprite
 	if not character is CharacterBase:
 		return
 	var char := character as CharacterBase
@@ -3500,7 +3500,7 @@ func _on_target_selected_from_sprite(character: Node) -> void:
 
 
 func _show_sprite_enemy_tooltip(enemy: CharacterBase) -> void:
-	"""Show enemy tooltip near mouse position when hovering arena sprite"""
+	## Show enemy tooltip near mouse position when hovering arena sprite
 	_hide_enemy_tooltip()
 
 	# Create tooltip (same as _on_enemy_panel_hover but positioned at mouse)
@@ -3593,7 +3593,7 @@ func _show_sprite_enemy_tooltip(enemy: CharacterBase) -> void:
 
 
 func _show_sprite_party_tooltip(character: CharacterBase) -> void:
-	"""Show party tooltip near mouse position when hovering arena sprite"""
+	## Show party tooltip near mouse position when hovering arena sprite
 	_hide_party_tooltip()
 
 	party_tooltip = PanelContainer.new()
@@ -3710,7 +3710,7 @@ var right_enemy_sidebar: PanelContainer = null
 
 
 func _create_left_party_sidebar(viewport_size: Vector2) -> void:
-	"""Create a vertical party sidebar on the left side of the screen"""
+	## Create a vertical party sidebar on the left side of the screen
 	print(
 		(
 			"[BATTLE_UI] _create_left_party_sidebar called, party_members: %d, viewport: %s"
@@ -3778,7 +3778,7 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 
 
 func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
-	"""Create a compact party member slot for the left sidebar"""
+	## Create a compact party member slot for the left sidebar
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(144, 60)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -3922,7 +3922,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 
 
 func update_party_sidebar() -> void:
-	"""Update HP/MP bars in the left party sidebar"""
+	## Update HP/MP bars in the left party sidebar
 	for member in party_members:
 		if member.has_meta("sidebar_panel"):
 			var panel: PanelContainer = member.get_meta("sidebar_panel")
@@ -3948,7 +3948,7 @@ func update_party_sidebar() -> void:
 
 
 func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
-	"""Create a vertical enemy sidebar on the right side - mirrors party sidebar"""
+	## Create a vertical enemy sidebar on the right side - mirrors party sidebar
 	print(
 		(
 			"[BATTLE_UI] _create_right_enemy_sidebar called, enemies: %d, viewport: %s"
@@ -4011,7 +4011,7 @@ func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
 
 
 func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
-	"""Create a compact enemy slot for the right sidebar"""
+	## Create a compact enemy slot for the right sidebar
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(144, 70)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -4136,7 +4136,7 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 
 
 func update_enemy_sidebar() -> void:
-	"""Update HP/corruption bars in the right enemy sidebar"""
+	## Update HP/corruption bars in the right enemy sidebar
 	for enemy in enemies:
 		if enemy.has_meta("enemy_sidebar_panel"):
 			var panel: PanelContainer = enemy.get_meta("enemy_sidebar_panel")
@@ -4165,7 +4165,7 @@ func update_enemy_sidebar() -> void:
 
 
 func _auto_scroll_combat_log() -> void:
-	"""Auto-scroll combat log to bottom - ALWAYS scrolls to latest entry"""
+	## Auto-scroll combat log to bottom - ALWAYS scrolls to latest entry
 	if not combat_log_scroll:
 		return
 
@@ -4181,12 +4181,12 @@ func _auto_scroll_combat_log() -> void:
 
 
 func _reset_auto_scroll_flag() -> void:
-	"""Reset the auto-scroll flag after scroll completes"""
+	## Reset the auto-scroll flag after scroll completes
 	_is_auto_scrolling = false
 
 
 func _on_combat_log_scrolled(_value: float) -> void:
-	"""Called when user manually scrolls the combat log"""
+	## Called when user manually scrolls the combat log
 	# Ignore scroll events triggered by auto-scroll
 	if _is_auto_scrolling:
 		return
@@ -4203,13 +4203,13 @@ func _on_combat_log_scrolled(_value: float) -> void:
 
 
 func _reset_combat_log_scroll() -> void:
-	"""Reset scroll state when user interacts with battle (button press, target select, etc.)"""
+	## Reset scroll state when user interacts with battle (button press, target select, etc.)
 	user_scrolled_log = false
 	_auto_scroll_combat_log()
 
 
 func _mark_sidebar_panel_dead(panel: PanelContainer) -> void:
-	"""Mark a sidebar panel as dead with visual feedback"""
+	## Mark a sidebar panel as dead with visual feedback
 	if not is_instance_valid(panel):
 		return
 
@@ -4238,7 +4238,7 @@ func _mark_sidebar_panel_dead(panel: PanelContainer) -> void:
 
 
 func _update_combat_log_size() -> void:
-	"""Update combat log size - LARGER default 300x220px, draggable to expand"""
+	## Update combat log size - LARGER default 300x220px, draggable to expand
 	if not combat_log:
 		return
 	# LARGER default size: 300x220 px
@@ -4255,7 +4255,7 @@ func _update_combat_log_size() -> void:
 
 
 func _add_combat_log_drag_handle() -> void:
-	"""Add a draggable handle to resize the combat log"""
+	## Add a draggable handle to resize the combat log
 	if combat_log_drag_handle and is_instance_valid(combat_log_drag_handle):
 		return  # Already exists
 
@@ -4285,7 +4285,7 @@ func _add_combat_log_drag_handle() -> void:
 
 
 func _on_combat_log_drag_input(event: InputEvent) -> void:
-	"""Handle drag input on combat log handle"""
+	## Handle drag input on combat log handle
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT:
@@ -4319,7 +4319,7 @@ func _on_combat_log_drag_input(event: InputEvent) -> void:
 
 
 func _get_path_aligned_brand(path: Enums.Path) -> String:
-	"""Get the primary aligned brand for a given Path"""
+	## Get the primary aligned brand for a given Path
 	match path:
 		Enums.Path.IRONBOUND:
 			return "IRON"
@@ -4333,7 +4333,7 @@ func _get_path_aligned_brand(path: Enums.Path) -> String:
 
 
 func _get_path_type_color(path: Enums.Path) -> Color:
-	"""Get the display color for a given Path type (IRONBOUND, FANGBORN, etc.)"""
+	## Get the display color for a given Path type (IRONBOUND, FANGBORN, etc.)
 	match path:
 		Enums.Path.IRONBOUND:
 			return Color(0.6, 0.65, 0.75)  # Steel blue
@@ -4396,7 +4396,7 @@ var _capture_overlay: ColorRect = null
 
 
 func _connect_capture_signals() -> void:
-	"""Connect to CaptureSystem signals for animated UI feedback"""
+	## Connect to CaptureSystem signals for animated UI feedback
 	# These signals come from CaptureSystem - connect if it exists
 	var capture_system := get_node_or_null("/root/BattleManager/CaptureSystem")
 	if capture_system:
@@ -4421,7 +4421,7 @@ func _connect_capture_signals() -> void:
 
 
 func _on_corruption_reduced(monster: Node, old_value: float, new_value: float) -> void:
-	"""Animate corruption bar decrease with dramatic effect"""
+	## Animate corruption bar decrease with dramatic effect
 	if not monster or not is_instance_valid(monster):
 		return
 
@@ -4480,7 +4480,7 @@ func _on_corruption_reduced(monster: Node, old_value: float, new_value: float) -
 
 
 func _get_monster_corruption_bar(monster: Node) -> ProgressBar:
-	"""Find the corruption bar for a monster in the UI"""
+	## Find the corruption bar for a monster in the UI
 	# Check enemy_sidebar_panel first (right sidebar)
 	if monster.has_meta("enemy_sidebar_panel"):
 		var panel: PanelContainer = monster.get_meta("enemy_sidebar_panel")
@@ -4497,7 +4497,7 @@ func _get_monster_corruption_bar(monster: Node) -> ProgressBar:
 
 
 func _show_corruption_reduction_popup(monster: Node, amount: float) -> void:
-	"""Show floating popup when corruption is reduced"""
+	## Show floating popup when corruption is reduced
 	var popup := Label.new()
 	popup.text = "-%.0f%% CORRUPTION" % amount
 	popup.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
@@ -4527,7 +4527,7 @@ func _show_corruption_reduction_popup(monster: Node, amount: float) -> void:
 
 
 func _on_capture_attempt_started(monster: Node, vessel_tier: int, chance: float) -> void:
-	"""Show capture attempt UI with chance display"""
+	## Show capture attempt UI with chance display
 	if not monster or not is_instance_valid(monster):
 		return
 
@@ -4541,7 +4541,7 @@ func _on_capture_attempt_started(monster: Node, vessel_tier: int, chance: float)
 
 
 func _start_corruption_bar_pulse(monster: Node) -> void:
-	"""Make corruption bar pulse during capture attempt"""
+	## Make corruption bar pulse during capture attempt
 	var corruption_bar := _get_monster_corruption_bar(monster)
 	if not corruption_bar:
 		return
@@ -4553,7 +4553,7 @@ func _start_corruption_bar_pulse(monster: Node) -> void:
 
 
 func _on_corruption_battle_started(monster: Node, passes_needed: int) -> void:
-	"""Show corruption battle UI overlay"""
+	## Show corruption battle UI overlay
 	if not monster or not is_instance_valid(monster):
 		return
 
@@ -4568,12 +4568,12 @@ func _on_corruption_battle_started(monster: Node, passes_needed: int) -> void:
 
 
 func _on_corruption_battle_started_event(monster: Node, passes: int) -> void:
-	"""EventBus version of corruption battle started"""
+	## EventBus version of corruption battle started
 	_on_corruption_battle_started(monster, passes)
 
 
 func _on_corruption_battle_pass(monster: Node, current_pass: int, total_passes: int) -> void:
-	"""Show progress during corruption battle"""
+	## Show progress during corruption battle
 	_append_to_log("[color=purple]Pass %d/%d complete![/color]" % [current_pass, total_passes])
 
 	# Flash the corruption bar
@@ -4585,12 +4585,12 @@ func _on_corruption_battle_pass(monster: Node, current_pass: int, total_passes: 
 
 
 func _on_corruption_battle_pass_event(monster: Node, current: int, total: int) -> void:
-	"""EventBus version of corruption battle pass"""
+	## EventBus version of corruption battle pass
 	_on_corruption_battle_pass(monster, current, total)
 
 
 func _on_capture_succeeded(monster: Node, method: int, bonus_data: Dictionary) -> void:
-	"""Show dramatic capture success animation"""
+	## Show dramatic capture success animation
 	if not monster or not is_instance_valid(monster):
 		return
 
@@ -4611,7 +4611,7 @@ func _on_capture_succeeded(monster: Node, method: int, bonus_data: Dictionary) -
 
 
 func _on_capture_failed(monster: Node, method: int, reason: String) -> void:
-	"""Show capture failure animation"""
+	## Show capture failure animation
 	if not monster or not is_instance_valid(monster):
 		return
 
@@ -4632,7 +4632,7 @@ func _on_capture_failed(monster: Node, method: int, reason: String) -> void:
 
 
 func _get_capture_method_name(method: int) -> String:
-	"""Get display name for capture method"""
+	## Get display name for capture method
 	match method:
 		0:
 			return "SOULBIND"
@@ -4647,7 +4647,7 @@ func _get_capture_method_name(method: int) -> String:
 
 
 func _show_capture_overlay(color: Color) -> void:
-	"""Show semi-transparent overlay during capture"""
+	## Show semi-transparent overlay during capture
 	if _capture_overlay and is_instance_valid(_capture_overlay):
 		_capture_overlay.queue_free()
 
@@ -4666,7 +4666,7 @@ func _show_capture_overlay(color: Color) -> void:
 
 
 func _hide_capture_overlay() -> void:
-	"""Hide and remove capture overlay"""
+	## Hide and remove capture overlay
 	if _capture_overlay and is_instance_valid(_capture_overlay):
 		var tween := create_tween()
 		tween.tween_property(_capture_overlay, "modulate:a", 0.0, 0.3)
@@ -4675,7 +4675,7 @@ func _hide_capture_overlay() -> void:
 
 
 func _show_capture_result_popup(success: bool, monster_name: String, method_name: String) -> void:
-	"""Show dramatic capture result popup"""
+	## Show dramatic capture result popup
 	var popup := PanelContainer.new()
 	popup.name = "CaptureResultPopup"
 	popup.z_index = 100
@@ -4755,7 +4755,7 @@ func _show_capture_result_popup(success: bool, monster_name: String, method_name
 
 
 func _flash_monster_panel(monster: Node, color: Color) -> void:
-	"""Flash a monster's sidebar panel with a color"""
+	## Flash a monster's sidebar panel with a color
 	var panel: PanelContainer = null
 	if monster.has_meta("enemy_sidebar_panel"):
 		panel = monster.get_meta("enemy_sidebar_panel")
@@ -4773,7 +4773,7 @@ func _flash_monster_panel(monster: Node, color: Color) -> void:
 
 
 func animate_corruption_change(monster: Node, new_corruption: float) -> void:
-	"""Public method to animate corruption bar change (called from battle system)"""
+	## Public method to animate corruption bar change (called from battle system)
 	if not monster or not is_instance_valid(monster):
 		return
 

@@ -372,7 +372,7 @@ func _preload_sounds() -> void:
 func play_sound(
 	sound_id: String, position: Vector2 = Vector2.ZERO, positional: bool = false
 ) -> void:
-	"""Play a sound by ID with optional position"""
+	## Play a sound by ID with optional position
 	if not SOUNDS.has(sound_id):
 		push_warning("AnimationAudioSync: Unknown sound: " + sound_id)
 		return
@@ -408,7 +408,7 @@ func play_sound(
 func play_hit_sound(
 	brand: String, is_critical: bool = false, position: Vector2 = Vector2.ZERO
 ) -> void:
-	"""Play appropriate hit sound for brand"""
+	## Play appropriate hit sound for brand
 	if is_critical:
 		play_sound("hit_critical", position, true)
 	else:
@@ -420,7 +420,7 @@ func play_hit_sound(
 
 
 func play_animation_sounds(animation_name: String, current_frame: int, position: Vector2) -> void:
-	"""Check and play any sounds for current animation frame"""
+	## Check and play any sounds for current animation frame
 	if not ANIMATION_SOUNDS.has(animation_name):
 		return
 
@@ -467,7 +467,7 @@ func _get_available_player(positional: bool) -> Node:
 # ANIMATION CONTROLLER INTEGRATION
 # -----------------------------------------------------------------------------
 func connect_to_animation_controller(controller: Node) -> void:
-	"""Connect this audio system to an animation controller"""
+	## Connect this audio system to an animation controller
 	if controller.has_signal("animation_event"):
 		controller.animation_event.connect(_on_animation_event)
 

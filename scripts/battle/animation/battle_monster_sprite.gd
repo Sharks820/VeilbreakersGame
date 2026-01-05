@@ -80,7 +80,7 @@ func _ready() -> void:
 
 
 func setup(p_monster_id: String, p_is_enemy: bool = true) -> void:
-	"""Initialize the battle sprite for a specific monster"""
+	## Initialize the battle sprite for a specific monster
 	monster_id = p_monster_id
 	is_enemy = p_is_enemy
 
@@ -122,7 +122,7 @@ func setup(p_monster_id: String, p_is_enemy: bool = true) -> void:
 
 
 func _setup_static_sprite() -> void:
-	"""Setup for monsters without sprite sheets"""
+	## Setup for monsters without sprite sheets
 	# Load static sprite from monster data
 	var monster_data: MonsterData = DataManager.get_monster(monster_id)
 	if monster_data and monster_data.sprite_path:
@@ -139,7 +139,7 @@ func _setup_static_sprite() -> void:
 
 
 func _create_shadow() -> void:
-	"""Create a shadow under the monster - special red pulsing shadow for Hollow"""
+	## Create a shadow under the monster - special red pulsing shadow for Hollow
 	shadow_sprite = Sprite2D.new()
 	shadow_sprite.name = "Shadow"
 
@@ -180,7 +180,7 @@ var _shadow_pulse_tween: Tween = null
 
 
 func _start_hollow_shadow_pulse() -> void:
-	"""Start the red pulsing/cycling animation for Hollow's shadow"""
+	## Start the red pulsing/cycling animation for Hollow's shadow
 	if not shadow_sprite:
 		return
 
@@ -225,7 +225,7 @@ func _start_hollow_shadow_pulse() -> void:
 
 
 func _update_shadow() -> void:
-	"""Update shadow size based on monster scale"""
+	## Update shadow size based on monster scale
 	if shadow_sprite and main_sprite:
 		var monster_scale: float = main_sprite.scale.x
 		# Don't override Hollow's pulsing shadow scale
@@ -234,7 +234,7 @@ func _update_shadow() -> void:
 
 
 func _create_particle_systems() -> void:
-	"""Create reusable particle emitters for various effects"""
+	## Create reusable particle emitters for various effects
 	# Hit particles
 	var hit_particles := _create_particle_emitter("hit", _brand_color, 16)
 	hit_particles.position = Vector2.ZERO
@@ -252,7 +252,7 @@ func _create_particle_systems() -> void:
 
 
 func _create_particle_emitter(effect_type: String, color: Color, amount: int) -> GPUParticles2D:
-	"""Create a configured particle emitter"""
+	## Create a configured particle emitter
 	var particles := GPUParticles2D.new()
 	particles.name = effect_type + "_particles"
 	particles.emitting = false
@@ -302,21 +302,21 @@ func _create_particle_emitter(effect_type: String, color: Color, amount: int) ->
 
 
 func play_idle() -> void:
-	"""Return to idle animation"""
+	## Return to idle animation
 	if _is_dead:
 		return
 	_animator.play_idle()
 
 
 func play_attack(on_hit: Callable = Callable()) -> void:
-	"""Play attack animation"""
+	## Play attack animation
 	if _is_dead:
 		return
 	_animator.play_attack(on_hit)
 
 
 func play_attack_heavy(on_hit: Callable = Callable()) -> void:
-	"""Play heavy attack animation"""
+	## Play heavy attack animation
 	if _is_dead:
 		return
 	if _animator._animations.has("attack_heavy"):
@@ -328,7 +328,7 @@ func play_attack_heavy(on_hit: Callable = Callable()) -> void:
 
 
 func play_skill(skill_name: String, on_cast: Callable = Callable()) -> void:
-	"""Play skill animation"""
+	## Play skill animation
 	if _is_dead:
 		return
 
@@ -339,7 +339,7 @@ func play_skill(skill_name: String, on_cast: Callable = Callable()) -> void:
 
 
 func play_hurt(is_critical: bool = false) -> void:
-	"""Play hurt reaction"""
+	## Play hurt reaction
 	if _is_dead:
 		return
 
@@ -354,7 +354,7 @@ func play_hurt(is_critical: bool = false) -> void:
 
 
 func play_death() -> void:
-	"""Play death animation"""
+	## Play death animation
 	_is_dead = true
 
 	# Emit death particles
@@ -369,13 +369,13 @@ func play_death() -> void:
 
 
 func play_spawn() -> void:
-	"""Play spawn/summon animation"""
+	## Play spawn/summon animation
 	_is_dead = false
 	_animator.play_spawn()
 
 
 func play_victory() -> void:
-	"""Play victory animation"""
+	## Play victory animation
 	if _is_dead:
 		return
 	_animator.play_victory()
@@ -387,7 +387,7 @@ func play_victory() -> void:
 
 
 func _emit_particles(effect_type: String) -> void:
-	"""Trigger particle emission"""
+	## Trigger particle emission
 	if _particle_emitters.has(effect_type):
 		var particles: GPUParticles2D = _particle_emitters[effect_type]
 		particles.restart()
@@ -395,7 +395,7 @@ func _emit_particles(effect_type: String) -> void:
 
 
 func emit_custom_particles(color: Color, amount: int, direction: Vector2 = Vector2.UP) -> void:
-	"""Emit custom one-shot particles"""
+	## Emit custom one-shot particles
 	var particles := GPUParticles2D.new()
 	particles.one_shot = true
 	particles.emitting = true
@@ -425,7 +425,7 @@ func emit_custom_particles(color: Color, amount: int, direction: Vector2 = Vecto
 
 
 func flash_color(color: Color, duration: float = 0.1) -> void:
-	"""Flash the sprite a color"""
+	## Flash the sprite a color
 	if not main_sprite:
 		return
 
@@ -437,7 +437,7 @@ func flash_color(color: Color, duration: float = 0.1) -> void:
 
 
 func set_glow(enabled: bool, intensity: float = 1.0) -> void:
-	"""Enable/disable glow effect"""
+	## Enable/disable glow effect
 	if not main_sprite:
 		return
 
@@ -449,7 +449,7 @@ func set_glow(enabled: bool, intensity: float = 1.0) -> void:
 
 
 func pulse_glow(duration: float = 0.5, intensity: float = 0.5) -> void:
-	"""Pulse glow effect"""
+	## Pulse glow effect
 	if not main_sprite:
 		return
 
@@ -461,7 +461,7 @@ func pulse_glow(duration: float = 0.5, intensity: float = 0.5) -> void:
 
 
 func shake(intensity: float = 5.0, duration: float = 0.3) -> void:
-	"""Shake the sprite"""
+	## Shake the sprite
 	var original_pos := position
 	var tween := create_tween()
 	var shake_count := int(duration / 0.03)
@@ -532,7 +532,7 @@ func is_dead() -> bool:
 
 
 func reset() -> void:
-	"""Reset to initial state"""
+	## Reset to initial state
 	_is_dead = false
 	if main_sprite:
 		main_sprite.modulate = Color.WHITE

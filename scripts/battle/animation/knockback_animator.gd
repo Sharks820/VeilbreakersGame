@@ -29,17 +29,9 @@ static func apply_knockback(
 	intensity: float = 1.0,
 	is_critical: bool = false
 ) -> Tween:
-	"""Apply knockback to a character sprite with smooth return animation.
-
-	Args:
-		target: The Node2D to knockback (usually a sprite)
-		direction: Direction of knockback (normalized or will be normalized)
-		intensity: Multiplier for knockback distance (1.0 = normal)
-		is_critical: If true, uses larger knockback distance
-
-	Returns:
-		The Tween controlling the animation (can be awaited)
-	"""
+	## Apply knockback to a character sprite with smooth return animation.
+	## Args: target (Node2D), direction, intensity (1.0 = normal), is_critical
+	## Returns: The Tween controlling the animation (can be awaited)
 	if not is_instance_valid(target):
 		return null
 
@@ -73,17 +65,8 @@ static func apply_knockback(
 static func apply_knockback_from_attacker(
 	target: Node2D, attacker: Node2D, intensity: float = 1.0, is_critical: bool = false
 ) -> Tween:
-	"""Apply knockback away from an attacker's position.
-
-	Args:
-		target: The Node2D to knockback
-		attacker: The attacking Node2D (knockback goes away from this)
-		intensity: Multiplier for knockback distance
-		is_critical: If true, uses larger knockback distance
-
-	Returns:
-		The Tween controlling the animation
-	"""
+	## Apply knockback away from an attacker's position.
+	## Args: target, attacker (knockback goes away from this), intensity, is_critical
 	if not is_instance_valid(target) or not is_instance_valid(attacker):
 		return null
 
@@ -98,15 +81,7 @@ static func apply_knockback_from_attacker(
 
 
 static func apply_heavy_knockback(target: Node2D, direction: Vector2 = Vector2.LEFT) -> Tween:
-	"""Apply heavy knockback (for boss attacks, finishers, etc.)
-
-	Args:
-		target: The Node2D to knockback
-		direction: Direction of knockback
-
-	Returns:
-		The Tween controlling the animation
-	"""
+	## Apply heavy knockback (for boss attacks, finishers, etc.)
 	if not is_instance_valid(target):
 		return null
 
@@ -130,15 +105,7 @@ static func apply_heavy_knockback(target: Node2D, direction: Vector2 = Vector2.L
 
 
 static func apply_flinch(target: Node2D, direction: Vector2 = Vector2.LEFT) -> Tween:
-	"""Apply a small flinch/recoil (for blocked attacks, light hits)
-
-	Args:
-		target: The Node2D to flinch
-		direction: Direction of flinch
-
-	Returns:
-		The Tween controlling the animation
-	"""
+	## Apply a small flinch/recoil (for blocked attacks, light hits)
 	if not is_instance_valid(target):
 		return null
 
@@ -158,16 +125,7 @@ static func apply_flinch(target: Node2D, direction: Vector2 = Vector2.LEFT) -> T
 
 
 static func apply_shake(target: Node2D, intensity: float = 3.0, duration: float = 0.2) -> Tween:
-	"""Apply a shake effect (for status effects, charging, etc.)
-
-	Args:
-		target: The Node2D to shake
-		intensity: How far the shake moves (pixels)
-		duration: How long to shake
-
-	Returns:
-		The Tween controlling the animation
-	"""
+	## Apply a shake effect (for status effects, charging, etc.)
 	if not is_instance_valid(target):
 		return null
 
@@ -190,15 +148,7 @@ static func apply_shake(target: Node2D, intensity: float = 3.0, duration: float 
 
 
 static func apply_death_fall(target: Node2D, direction: Vector2 = Vector2.LEFT) -> Tween:
-	"""Apply a dramatic death fall animation.
-
-	Args:
-		target: The Node2D to animate
-		direction: Direction of fall
-
-	Returns:
-		The Tween controlling the animation
-	"""
+	## Apply a dramatic death fall animation.
 	if not is_instance_valid(target):
 		return null
 

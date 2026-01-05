@@ -243,7 +243,7 @@ func _process(delta: float) -> void:
 
 
 func _setup_brand_visuals() -> void:
-	"""Configure visuals based on brand"""
+	## Configure visuals based on brand
 	if brand_glow_material and brand in BRAND_CONFIG:
 		brand_glow_material.set_shader_parameter("brand_color", BRAND_CONFIG[brand].color)
 		brand_glow_material.set_shader_parameter("glow_color", BRAND_CONFIG[brand].glow)
@@ -444,7 +444,7 @@ func _request_special_effect() -> void:
 # PUBLIC API - Combat Actions
 # -----------------------------------------------------------------------------
 func enter_combat() -> void:
-	"""Called when battle starts"""
+	## Called when battle starts
 	is_in_combat = true
 	current_state = State.COMBAT_IDLE
 	if _has_animation("combat_ready"):
@@ -454,7 +454,7 @@ func enter_combat() -> void:
 
 
 func exit_combat() -> void:
-	"""Called when battle ends"""
+	## Called when battle ends
 	is_in_combat = false
 	current_state = State.IDLE
 	_play_animation("idle", false)
@@ -468,36 +468,36 @@ func play_idle() -> void:
 # ATTACK ANIMATIONS
 # -----------------------------------------------------------------------------
 func play_attack() -> void:
-	"""Standard attack sequence"""
+	## Standard attack sequence
 	current_state = State.ATTACKING
 	_play_animation("attack_anticipate")
 
 
 func play_attack_heavy() -> void:
-	"""Heavy attack sequence"""
+	## Heavy attack sequence
 	current_state = State.ATTACKING
 	_play_animation("attack_heavy_anticipate")
 
 
 func play_special() -> void:
-	"""Special/skill attack"""
+	## Special/skill attack
 	current_state = State.SPECIAL
 	_play_animation("special_charge")
 
 
 func play_attack_windup() -> void:
-	"""Just the windup portion"""
+	## Just the windup portion
 	current_state = State.ATTACKING
 	_play_animation("attack_anticipate")
 
 
 func play_attack_strike() -> void:
-	"""Just the strike portion"""
+	## Just the strike portion
 	_play_animation("attack_strike")
 
 
 func play_attack_recovery() -> void:
-	"""Just the recovery portion"""
+	## Just the recovery portion
 	_play_animation("attack_recover")
 
 
@@ -505,7 +505,7 @@ func play_attack_recovery() -> void:
 # REACTION ANIMATIONS
 # -----------------------------------------------------------------------------
 func play_hurt(is_critical: bool = false) -> void:
-	"""Play hurt reaction"""
+	## Play hurt reaction
 	current_state = State.HURT
 
 	# Flash white
@@ -545,7 +545,7 @@ func _flash_white() -> void:
 
 
 func _squash() -> void:
-	"""Squash on impact, stretch on recovery"""
+	## Squash on impact, stretch on recovery
 	# HIGH FIX: Kill previous squash tween to prevent stacking
 	if _squash_tween and _squash_tween.is_valid():
 		_squash_tween.kill()
@@ -579,7 +579,7 @@ func _squash() -> void:
 # DEATH ANIMATIONS
 # -----------------------------------------------------------------------------
 func play_death() -> void:
-	"""Full death sequence"""
+	## Full death sequence
 	current_state = State.DYING
 
 	# Initial impact
@@ -609,18 +609,18 @@ func is_dead() -> bool:
 # CAPTURE ANIMATIONS
 # -----------------------------------------------------------------------------
 func play_capture_react() -> void:
-	"""Initial capture reaction"""
+	## Initial capture reaction
 	current_state = State.BEING_CAPTURED
 	_play_animation("capture_react")
 
 
 func play_capture_struggle() -> void:
-	"""Each shake/struggle"""
+	## Each shake/struggle
 	_play_animation("capture_struggle")
 
 
 func play_capture_success() -> void:
-	"""Being successfully captured"""
+	## Being successfully captured
 	_play_animation("capture_success")
 
 	# Shrink into capture
@@ -630,7 +630,7 @@ func play_capture_success() -> void:
 
 
 func play_capture_break() -> void:
-	"""Breaking free from capture"""
+	## Breaking free from capture
 	_play_animation("capture_break")
 
 	# Burst out effect
@@ -643,7 +643,7 @@ func play_capture_break() -> void:
 # SPAWN ANIMATIONS
 # -----------------------------------------------------------------------------
 func play_spawn() -> void:
-	"""Monster entering battle"""
+	## Monster entering battle
 	current_state = State.SPAWNING
 
 	# Start invisible/small
@@ -671,7 +671,7 @@ func play_spawn() -> void:
 
 
 func play_intro() -> void:
-	"""Boss intro animation"""
+	## Boss intro animation
 	if not is_boss:
 		return
 
@@ -682,7 +682,7 @@ func play_intro() -> void:
 # STATUS EFFECT VISUALS
 # -----------------------------------------------------------------------------
 func show_status_effect(status: String) -> void:
-	"""Show persistent status effect visual"""
+	## Show persistent status effect visual
 	if status in active_statuses:
 		return
 
@@ -706,7 +706,7 @@ func show_status_effect(status: String) -> void:
 
 
 func hide_status_effect(status: String) -> void:
-	"""Remove status effect visual"""
+	## Remove status effect visual
 	active_statuses.erase(status)
 
 	if active_statuses.is_empty():
@@ -726,7 +726,7 @@ func _clear_status_tint() -> void:
 # BOSS ANIMATIONS
 # -----------------------------------------------------------------------------
 func play_phase_transition(phase: int) -> void:
-	"""Boss phase transition"""
+	## Boss phase transition
 	if not is_boss:
 		return
 
@@ -748,7 +748,7 @@ func play_phase_transition(phase: int) -> void:
 
 
 func play_enrage() -> void:
-	"""Boss enrage animation"""
+	## Boss enrage animation
 	if _has_animation("enrage"):
 		_play_animation("enrage")
 
@@ -758,7 +758,7 @@ func play_enrage() -> void:
 
 
 func play_signature_attack() -> void:
-	"""Boss signature move"""
+	## Boss signature move
 	current_state = State.SPECIAL
 	_play_animation("signature_charge")
 
@@ -767,7 +767,7 @@ func play_signature_attack() -> void:
 # VICTORY/DEFEAT
 # -----------------------------------------------------------------------------
 func play_victory() -> void:
-	"""Victory pose"""
+	## Victory pose
 	if _has_animation("victory"):
 		_play_animation("victory")
 	elif _has_animation("taunt"):
@@ -775,7 +775,7 @@ func play_victory() -> void:
 
 
 func play_taunt() -> void:
-	"""Taunt animation"""
+	## Taunt animation
 	if _has_animation("taunt"):
 		_play_animation("taunt")
 
@@ -784,7 +784,7 @@ func play_taunt() -> void:
 # SKILL ANIMATIONS (called with skill name)
 # -----------------------------------------------------------------------------
 func play_skill_cast(skill_name: String) -> void:
-	"""Play skill-specific cast animation or default"""
+	## Play skill-specific cast animation or default
 	var skill_anim = "skill_" + skill_name.to_lower().replace(" ", "_")
 
 	if _has_animation(skill_anim + "_charge"):

@@ -172,7 +172,7 @@ func _exit_tree() -> void:
 # PUBLIC API - Called by BargainSystem
 # -----------------------------------------------------------------------------
 func enter_mindscape(creature: Node, brand: String) -> void:
-	"""Begin the mindscape visual transition"""
+	## Begin the mindscape visual transition
 	current_brand = brand
 	var colors: Dictionary = BRAND_MINDSCAPE_COLORS.get(brand, BRAND_MINDSCAPE_COLORS["SAVAGE"])
 
@@ -207,7 +207,7 @@ func enter_mindscape(creature: Node, brand: String) -> void:
 
 
 func exit_mindscape() -> void:
-	"""Exit the mindscape"""
+	## Exit the mindscape
 	choice_container.visible = false
 	dialogue_container.visible = false
 
@@ -220,7 +220,7 @@ func exit_mindscape() -> void:
 
 
 func show_dialogue(speaker: String, text: String, response_type: String = "") -> void:
-	"""Display dialogue with typewriter effect"""
+	## Display dialogue with typewriter effect
 	dialogue_container.visible = true
 	choice_container.visible = false
 	is_showing_dialogue = true
@@ -253,7 +253,7 @@ func show_dialogue(speaker: String, text: String, response_type: String = "") ->
 
 
 func show_choices(approaches: Dictionary) -> void:
-	"""Show the three approach choices"""
+	## Show the three approach choices
 	current_approaches = approaches
 	dialogue_container.visible = false
 	choice_container.visible = true
@@ -286,7 +286,7 @@ func show_choices(approaches: Dictionary) -> void:
 
 
 func hide_choices() -> void:
-	"""Hide the choice panel"""
+	## Hide the choice panel
 	choice_container.visible = false
 	is_showing_choices = false
 
@@ -315,7 +315,7 @@ func _process_typewriter(delta: float) -> void:
 
 
 func _style_dialogue(text: String, response_type: String) -> String:
-	"""Add BBCode styling based on response type"""
+	## Add BBCode styling based on response type
 	match response_type:
 		"PLAYER_DOMINATE":
 			return "[color=#ff4444][b]" + text + "[/b][/color]"
@@ -337,7 +337,7 @@ func _style_dialogue(text: String, response_type: String) -> String:
 # CHOICE HANDLING
 # -----------------------------------------------------------------------------
 func _style_choice_button(button: Button, approach: String, chance: float) -> void:
-	"""Style a choice button based on success chance"""
+	## Style a choice button based on success chance
 	var chance_text = ""
 	var chance_color = Color.WHITE
 
@@ -356,7 +356,7 @@ func _style_choice_button(button: Button, approach: String, chance: float) -> vo
 
 
 func _on_choice_hovered(choice_index: int) -> void:
-	"""Show description for hovered choice"""
+	## Show description for hovered choice
 	if choice_hover_sound:
 		choice_hover_sound.play()
 
@@ -421,7 +421,7 @@ func _on_break_pressed() -> void:
 # ANIMATIONS
 # -----------------------------------------------------------------------------
 func _animate_enter(colors: Dictionary) -> void:
-	"""Animate entering the mindscape"""
+	## Animate entering the mindscape
 	var tween = create_tween()
 	tween.set_parallel(true)
 
@@ -460,7 +460,7 @@ func _animate_enter(colors: Dictionary) -> void:
 
 
 func _animate_exit() -> void:
-	"""Animate exiting the mindscape"""
+	## Animate exiting the mindscape
 	var tween = create_tween()
 	tween.set_parallel(true)
 
@@ -486,7 +486,7 @@ func _animate_exit() -> void:
 # SUCCESS/FAILURE ANIMATIONS
 # -----------------------------------------------------------------------------
 func animate_success(approach: int) -> void:
-	"""Play success visual feedback"""
+	## Play success visual feedback
 	var tween = create_tween()
 
 	# Flash based on approach
@@ -511,7 +511,7 @@ func animate_success(approach: int) -> void:
 
 
 func animate_failure(is_rage: bool) -> void:
-	"""Play failure visual feedback"""
+	## Play failure visual feedback
 	var tween = create_tween()
 
 	# Screen shake via viewport

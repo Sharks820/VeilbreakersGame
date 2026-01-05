@@ -168,7 +168,7 @@ func _apply_styling() -> void:
 
 
 func set_value(new_value: float, animate: bool = true) -> void:
-	"""Set the current value with optional animation"""
+	## Set the current value with optional animation
 	var old := current_value
 	current_value = clampf(new_value, 0.0, max_value)
 
@@ -181,7 +181,7 @@ func set_value(new_value: float, animate: bool = true) -> void:
 
 
 func set_max_value(new_max: float, keep_percent: bool = false) -> void:
-	"""Set max value, optionally keeping the same percentage"""
+	## Set max value, optionally keeping the same percentage
 	var percent := current_value / max_value if max_value > 0 else 1.0
 	max_value = maxf(1.0, new_max)
 	if keep_percent:
@@ -190,7 +190,7 @@ func set_max_value(new_max: float, keep_percent: bool = false) -> void:
 
 
 func get_percent() -> float:
-	"""Get current value as percentage (0.0 - 1.0)"""
+	## Get current value as percentage (0.0 - 1.0)
 	return current_value / max_value if max_value > 0 else 0.0
 
 
@@ -390,7 +390,7 @@ func _update_text() -> void:
 
 
 func shake(intensity: float = 3.0, duration: float = 0.15) -> void:
-	"""Shake the bar (for damage feedback)"""
+	## Shake the bar (for damage feedback)
 	var original_pos := position
 	var tween := create_tween()
 
@@ -404,7 +404,7 @@ func shake(intensity: float = 3.0, duration: float = 0.15) -> void:
 
 
 func highlight(color: Color = Color.WHITE, duration: float = 0.3) -> void:
-	"""Highlight the bar temporarily"""
+	## Highlight the bar temporarily
 	var original_border := border_color
 
 	var style := (

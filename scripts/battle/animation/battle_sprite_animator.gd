@@ -341,7 +341,7 @@ const ANIM_VICTORY := {
 
 
 func setup(target_sprite: Node2D, is_enemy_sprite: bool = false) -> void:
-	"""Initialize the animator with a sprite to control"""
+	## Initialize the animator with a sprite to control
 	sprite = target_sprite
 	_is_enemy = is_enemy_sprite
 
@@ -372,7 +372,7 @@ func _process(delta: float) -> void:
 
 
 func play_idle() -> void:
-	"""Return to idle state with breathing"""
+	## Return to idle state with breathing
 	_stop_all_tweens()
 	_is_animating = false
 	_breathing_enabled = true
@@ -381,50 +381,50 @@ func play_idle() -> void:
 
 
 func play_attack(is_heavy: bool = false) -> void:
-	"""Play attack animation"""
+	## Play attack animation
 	var config: Dictionary = ANIM_ATTACK_HEAVY if is_heavy else ANIM_ATTACK
 	await _play_phased_animation("attack", config)
 
 
 func play_skill() -> void:
-	"""Play skill/magic animation"""
+	## Play skill/magic animation
 	await _play_phased_animation("skill", ANIM_SKILL)
 
 
 func play_hurt(is_critical: bool = false) -> void:
-	"""Play hurt reaction"""
+	## Play hurt reaction
 	var config: Dictionary = ANIM_HURT_CRITICAL if is_critical else ANIM_HURT
 	await _play_phased_animation("hurt", config)
 
 
 func play_death() -> void:
-	"""Play death animation - does NOT return to idle"""
+	## Play death animation - does NOT return to idle
 	_breathing_enabled = false
 	await _play_phased_animation("death", ANIM_DEATH, false)
 
 
 func play_defend() -> void:
-	"""Play defend stance"""
+	## Play defend stance
 	await _play_phased_animation("defend", ANIM_DEFEND, false)
 
 
 func play_purify() -> void:
-	"""Play purify/capture animation"""
+	## Play purify/capture animation
 	await _play_phased_animation("purify", ANIM_PURIFY)
 
 
 func play_flee() -> void:
-	"""Play flee animation"""
+	## Play flee animation
 	await _play_phased_animation("flee", ANIM_FLEE, false)
 
 
 func play_spawn() -> void:
-	"""Play spawn/summon animation"""
+	## Play spawn/summon animation
 	await _play_phased_animation("spawn", ANIM_SPAWN)
 
 
 func play_victory() -> void:
-	"""Play victory celebration"""
+	## Play victory celebration
 	await _play_phased_animation("victory", ANIM_VICTORY)
 
 
@@ -436,7 +436,7 @@ func play_victory() -> void:
 func _play_phased_animation(
 	anim_name: String, config: Dictionary, return_to_idle: bool = true
 ) -> void:
-	"""Execute a multi-phase animation sequence"""
+	## Execute a multi-phase animation sequence
 	_stop_all_tweens()
 	_breathing_enabled = false
 	_is_animating = true
@@ -520,7 +520,7 @@ func _play_phased_animation(
 
 
 func _apply_phase_instant(phase: Dictionary, dir: float) -> void:
-	"""Apply phase properties instantly (for duration=0 phases)"""
+	## Apply phase properties instantly (for duration=0 phases)
 	if phase.has("offset"):
 		var offset: Vector2 = phase["offset"]
 		offset.x *= dir
@@ -534,7 +534,7 @@ func _apply_phase_instant(phase: Dictionary, dir: float) -> void:
 
 
 func _apply_flash(color: Color, duration: float) -> void:
-	"""Quick flash effect"""
+	## Quick flash effect
 	var original := sprite.modulate
 	sprite.modulate = color
 
@@ -544,7 +544,7 @@ func _apply_flash(color: Color, duration: float) -> void:
 
 
 func _apply_shake(intensity: float, duration: float) -> void:
-	"""Shake effect"""
+	## Shake effect
 	var original_pos := sprite.position
 	var shake_count := int(duration / 0.03)
 
@@ -560,7 +560,7 @@ func _apply_shake(intensity: float, duration: float) -> void:
 
 
 func _reset_to_original() -> void:
-	"""Reset sprite to original transform"""
+	## Reset sprite to original transform
 	if not sprite:
 		return
 	sprite.position = _original_position
@@ -570,7 +570,7 @@ func _reset_to_original() -> void:
 
 
 func _stop_all_tweens() -> void:
-	"""Kill all active tweens"""
+	## Kill all active tweens
 	for tween in _active_tweens:
 		if tween and tween.is_valid():
 			tween.kill()

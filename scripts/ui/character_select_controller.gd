@@ -78,7 +78,7 @@ func _ready() -> void:
 
 
 func _load_all_data() -> void:
-	"""Load all hero and monster data"""
+	## Load all hero and monster data
 	# Load heroes
 	for hero_id in HERO_IDS:
 		var path := "res://data/heroes/%s.tres" % hero_id
@@ -111,7 +111,7 @@ func _load_all_data() -> void:
 
 
 func _build_ui() -> void:
-	"""Build the complete AAA-quality UI"""
+	## Build the complete AAA-quality UI
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 
 	# === BACKGROUND ===
@@ -163,7 +163,7 @@ func _build_ui() -> void:
 
 
 func _create_background() -> void:
-	"""Create atmospheric dark background"""
+	## Create atmospheric dark background
 	var bg := ColorRect.new()
 	bg.name = "Background"
 	bg.color = Color(0.04, 0.04, 0.06, 1.0)
@@ -192,7 +192,7 @@ func _create_background() -> void:
 
 
 func _create_title_bar(parent: Control) -> void:
-	"""Create the title bar with game logo feel"""
+	## Create the title bar with game logo feel
 	var title_container := HBoxContainer.new()
 	title_container.add_theme_constant_override("separation", 20)
 	parent.add_child(title_container)
@@ -223,7 +223,7 @@ func _create_title_bar(parent: Control) -> void:
 
 
 func _create_hero_cards_panel() -> PanelContainer:
-	"""Create the left panel with hero selection cards"""
+	## Create the left panel with hero selection cards
 	var panel := PanelContainer.new()
 	panel.name = "HeroCardsPanel"
 
@@ -264,7 +264,7 @@ func _create_hero_cards_panel() -> PanelContainer:
 
 
 func _create_hero_card(hero_id: String, index: int) -> PanelContainer:
-	"""Create a single hero selection card"""
+	## Create a single hero selection card
 	var card := PanelContainer.new()
 	card.name = "HeroCard_%s" % hero_id
 	card.custom_minimum_size = Vector2(230, 110)
@@ -349,7 +349,7 @@ func _create_hero_card(hero_id: String, index: int) -> PanelContainer:
 
 
 func _create_hero_display() -> Control:
-	"""Create the center panel with large hero display"""
+	## Create the center panel with large hero display
 	var container := Control.new()
 	container.name = "HeroDisplay"
 
@@ -418,7 +418,7 @@ func _create_hero_display() -> Control:
 
 
 func _create_info_panel() -> PanelContainer:
-	"""Create the right panel with stats, path/brand info, and monster showcase"""
+	## Create the right panel with stats, path/brand info, and monster showcase
 	var panel := PanelContainer.new()
 	panel.name = "InfoPanel"
 
@@ -535,7 +535,7 @@ func _create_info_panel() -> PanelContainer:
 
 
 func _create_section_header(title: String) -> VBoxContainer:
-	"""Create a styled section header"""
+	## Create a styled section header
 	var container := VBoxContainer.new()
 	container.add_theme_constant_override("separation", 8)
 
@@ -553,7 +553,7 @@ func _create_section_header(title: String) -> VBoxContainer:
 
 
 func _create_monster_card(monster_id: String) -> PanelContainer:
-	"""Create a small monster showcase card"""
+	## Create a small monster showcase card
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(110, 130)
 
@@ -617,7 +617,7 @@ func _create_monster_card(monster_id: String) -> PanelContainer:
 
 
 func _create_vera_panel(parent: Control) -> void:
-	"""Create the VERA introduction panel at the bottom - dynamic and engaging"""
+	## Create the VERA introduction panel at the bottom - dynamic and engaging
 	vera_panel = PanelContainer.new()
 	vera_panel.name = "VERAPanel"
 	vera_panel.custom_minimum_size.y = 120
@@ -697,7 +697,7 @@ var _vera_portrait_tween: Tween = null
 
 
 func _start_vera_portrait_animation() -> void:
-	"""Animate VERA portrait with subtle pulse and glow"""
+	## Animate VERA portrait with subtle pulse and glow
 	if _vera_portrait_tween and _vera_portrait_tween.is_valid():
 		_vera_portrait_tween.kill()
 
@@ -722,7 +722,7 @@ func _start_vera_portrait_animation() -> void:
 
 
 func _create_button_bar(parent: Control) -> void:
-	"""Create the bottom button bar"""
+	## Create the bottom button bar
 	var button_container := HBoxContainer.new()
 	button_container.add_theme_constant_override("separation", 20)
 	parent.add_child(button_container)
@@ -744,7 +744,7 @@ func _create_button_bar(parent: Control) -> void:
 
 
 func _create_styled_button(text: String, color: Color, min_width: int = 150) -> Button:
-	"""Create a styled button"""
+	## Create a styled button
 	var button := Button.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(min_width, 55)
@@ -785,7 +785,7 @@ func _create_styled_button(text: String, color: Color, min_width: int = 150) -> 
 
 
 func _select_hero(index: int) -> void:
-	"""Select a hero and update all displays"""
+	## Select a hero and update all displays
 	if index < 0 or index >= HERO_IDS.size():
 		return
 
@@ -805,7 +805,7 @@ func _select_hero(index: int) -> void:
 
 
 func _update_card_highlights() -> void:
-	"""Update visual state of all hero cards"""
+	## Update visual state of all hero cards
 	for i in range(hero_cards.size()):
 		var card := hero_cards[i] as PanelContainer
 		if not card:
@@ -840,7 +840,7 @@ func _update_card_highlights() -> void:
 
 
 func _animate_hero_change(data: HeroData) -> void:
-	"""Animate the hero portrait change"""
+	## Animate the hero portrait change
 	if _selection_tween and _selection_tween.is_valid():
 		_selection_tween.kill()
 
@@ -890,7 +890,7 @@ func _animate_hero_change(data: HeroData) -> void:
 
 
 func _update_info_panel(data: HeroData) -> void:
-	"""Update the info panel with hero data"""
+	## Update the info panel with hero data
 	# Path & Brand - use centralized color systems
 	var path_color: Color = PathSystem.get_path_color(data.primary_path)
 	path_label.text = Enums.get_path_name(data.primary_path)
@@ -944,7 +944,7 @@ func _update_info_panel(data: HeroData) -> void:
 
 
 func _update_monster_showcase(data: HeroData) -> void:
-	"""Update the monster showcase with recommended monsters"""
+	## Update the monster showcase with recommended monsters
 	# Clear existing
 	for child in monster_showcase.get_children():
 		child.queue_free()
@@ -956,7 +956,7 @@ func _update_monster_showcase(data: HeroData) -> void:
 
 
 func _update_vera_dialogue(data: HeroData) -> void:
-	"""Update VERA's dialogue based on selected hero"""
+	## Update VERA's dialogue based on selected hero
 	var dialogues := {
 		"bastion":
 		"[color=#9999bb]Bastion walks the IRONBOUND path.[/color] A living fortress. Monsters of the IRON brand will find their defensive capabilities amplified under their command. The Veil's corruption breaks against such resolve.",
@@ -973,7 +973,7 @@ func _update_vera_dialogue(data: HeroData) -> void:
 
 
 func _show_vera_dialogue(text: String) -> void:
-	"""Show VERA dialogue with dynamic typing effect and portrait reaction"""
+	## Show VERA dialogue with dynamic typing effect and portrait reaction
 	if _vera_tween and _vera_tween.is_valid():
 		_vera_tween.kill()
 
@@ -1005,12 +1005,12 @@ func _show_vera_dialogue(text: String) -> void:
 
 
 func _setup_animations() -> void:
-	"""Setup idle animations"""
+	## Setup idle animations
 	_start_breathing_animation()
 
 
 func _start_breathing_animation() -> void:
-	"""Start smooth tween-based breathing animation on hero portrait"""
+	## Start smooth tween-based breathing animation on hero portrait
 	if not hero_portrait:
 		return
 
@@ -1052,7 +1052,7 @@ func _start_breathing_animation() -> void:
 
 
 func _stop_breathing_animation() -> void:
-	"""Stop breathing animation and smoothly reset scale"""
+	## Stop breathing animation and smoothly reset scale
 	if _breathing_tween and _breathing_tween.is_valid():
 		_breathing_tween.kill()
 	_breathing_tween = null
@@ -1098,14 +1098,14 @@ func _on_card_focus(index: int) -> void:
 
 
 func _on_card_unhover(index: int) -> void:
-	"""Handle mouse exiting a card"""
+	## Handle mouse exiting a card
 	if _hovered_index == index:
 		_hovered_index = -1
 		_update_card_hover_visual(-1)
 
 
 func _update_card_hover_visual(hovered_index: int) -> void:
-	"""Update hover visual without changing selection"""
+	## Update hover visual without changing selection
 	for i in range(hero_cards.size()):
 		var card := hero_cards[i] as PanelContainer
 		if not card:
@@ -1177,7 +1177,7 @@ func _on_confirm_pressed() -> void:
 
 
 func _show_confirmation_popup(hero_name: String, hero_id: String) -> void:
-	"""Show confirmation dialog before starting the game"""
+	## Show confirmation dialog before starting the game
 	# Remove existing popup if any
 	if _confirmation_popup and is_instance_valid(_confirmation_popup):
 		_confirmation_popup.queue_free()
@@ -1277,7 +1277,7 @@ func _show_confirmation_popup(hero_name: String, hero_id: String) -> void:
 
 
 func _on_confirmation_cancel(overlay: Control) -> void:
-	"""Cancel the confirmation and close popup"""
+	## Cancel the confirmation and close popup
 	if overlay and is_instance_valid(overlay):
 		overlay.queue_free()
 	_confirmation_popup = null
@@ -1285,7 +1285,7 @@ func _on_confirmation_cancel(overlay: Control) -> void:
 
 
 func _on_confirmation_confirm(hero_id: String, overlay: Control) -> void:
-	"""Confirm selection and start the game"""
+	## Confirm selection and start the game
 	print("[CHARACTER_SELECT] Confirmed hero: %s" % hero_id)
 
 	# Close popup

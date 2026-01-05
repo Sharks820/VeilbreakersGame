@@ -1333,7 +1333,7 @@ static func get_action_animation_type(action: Enums.BattleAction) -> String:
 
 
 static func _apply_flash(sprite: Node2D, color: Color, duration: float) -> void:
-	"""Apply a quick flash effect to the sprite"""
+	## Apply a quick flash effect to the sprite
 	var original := sprite.modulate
 	sprite.modulate = color
 
@@ -1342,7 +1342,7 @@ static func _apply_flash(sprite: Node2D, color: Color, duration: float) -> void:
 
 
 static func _apply_glow(sprite: Node2D, color: Color, intensity: float, duration: float) -> void:
-	"""Apply a glow effect (using modulate for now, could use shader)"""
+	## Apply a glow effect (using modulate for now, could use shader)
 	var glow_modulate := Color(
 		1.0 + (color.r * intensity * 0.3),
 		1.0 + (color.g * intensity * 0.3),
@@ -1356,7 +1356,7 @@ static func _apply_glow(sprite: Node2D, color: Color, intensity: float, duration
 
 
 static func _apply_shake(sprite: Node2D, amount: Vector2, duration: float) -> void:
-	"""Apply a shake effect to the sprite"""
+	## Apply a shake effect to the sprite
 	var original_pos := sprite.position
 	var shake_count := int(duration / 0.05)
 

@@ -126,8 +126,8 @@ func _generate_beat_sequence() -> void:
 
 
 func register_input_success(timing_quality: float = 1.0) -> void:
-	"""Called when player successfully completes a minigame action.
-	timing_quality: 0.5-1.5, where 1.0 is normal, 1.5 is perfect timing"""
+	## Called when player successfully completes a minigame action.
+	## timing_quality: 0.5-1.5, where 1.0 is normal, 1.5 is perfect timing
 	if not is_active:
 		return
 
@@ -150,7 +150,7 @@ func register_input_success(timing_quality: float = 1.0) -> void:
 
 
 func register_input_failure() -> void:
-	"""Called when player fails a minigame action"""
+	## Called when player fails a minigame action
 	if not is_active:
 		return
 
@@ -165,8 +165,8 @@ func register_input_failure() -> void:
 
 
 func check_beat_timing() -> Dictionary:
-	"""Check if player input is within timing window of current beat.
-	Returns {hit: bool, quality: float (0.5-1.5), early: bool, late: bool}"""
+	## Check if player input is within timing window of current beat.
+	## Returns {hit: bool, quality: float (0.5-1.5), early: bool, late: bool}
 	var current_time := TIME_LIMIT - time_remaining
 
 	if current_beat_index >= beat_sequence.size():

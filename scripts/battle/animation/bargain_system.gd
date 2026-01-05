@@ -225,7 +225,7 @@ var available_exploits: Array = []
 # PUBLIC API
 # -----------------------------------------------------------------------------
 func initiate_bargain(creature: Node, player: Node) -> void:
-	"""Begin the bargain sequence"""
+	## Begin the bargain sequence
 	if is_bargaining:
 		return
 
@@ -246,7 +246,7 @@ func initiate_bargain(creature: Node, player: Node) -> void:
 
 
 func make_choice(approach: Approach) -> void:
-	"""Player has chosen their approach"""
+	## Player has chosen their approach
 	if not is_bargaining:
 		return
 
@@ -258,7 +258,7 @@ func make_choice(approach: Approach) -> void:
 
 
 func get_available_approaches() -> Dictionary:
-	"""Returns which approaches are available and their descriptions"""
+	## Returns which approaches are available and their descriptions
 	var approaches = {}
 
 	# DOMINATE - always available but chance varies
@@ -294,7 +294,7 @@ func get_available_approaches() -> Dictionary:
 # ANALYSIS
 # -----------------------------------------------------------------------------
 func _analyze_creature(creature: Node) -> void:
-	"""Gather all relevant info about the creature"""
+	## Gather all relevant info about the creature
 
 	# Brand
 	if creature.has_method("get_brand"):
@@ -331,7 +331,7 @@ func _analyze_creature(creature: Node) -> void:
 
 
 func _calculate_chances() -> void:
-	"""Calculate success chance for each approach"""
+	## Calculate success chance for each approach
 
 	# === DOMINATE ===
 	dominate_chance = 0.1  # Very low base
@@ -409,7 +409,7 @@ func _calculate_chances() -> void:
 # MINDSCAPE TRANSITION
 # -----------------------------------------------------------------------------
 func _enter_mindscape() -> void:
-	"""Cinematic transition into the creature's mind"""
+	## Cinematic transition into the creature's mind
 	mindscape_entered.emit()
 
 	# The visual transition would be handled by listening systems:
@@ -429,7 +429,7 @@ func _enter_mindscape() -> void:
 
 
 func _exit_mindscape() -> void:
-	"""Return from the mindscape"""
+	## Return from the mindscape
 	mindscape_exited.emit()
 
 	await get_tree().create_timer(mindscape_transition_time).timeout
@@ -444,7 +444,7 @@ func _exit_mindscape() -> void:
 # BARGAIN RESOLUTION
 # -----------------------------------------------------------------------------
 func _resolve_bargain(approach: Approach) -> void:
-	"""Resolve the player's choice"""
+	## Resolve the player's choice
 
 	var success_chance: float
 	var approach_name = Approach.keys()[approach]
@@ -475,7 +475,7 @@ func _resolve_bargain(approach: Approach) -> void:
 
 
 func _play_dominate_sequence(chance: float) -> void:
-	"""Play the domination attempt visuals"""
+	## Play the domination attempt visuals
 	var dialogue = _get_dominate_description()
 	creature_response.emit("PLAYER_DOMINATE", dialogue)
 
@@ -491,7 +491,7 @@ func _play_dominate_sequence(chance: float) -> void:
 
 
 func _play_promise_sequence(chance: float) -> void:
-	"""Play the promise/vow sequence"""
+	## Play the promise/vow sequence
 	var vow = _get_promise_vow()
 	creature_response.emit("PLAYER_PROMISE", vow)
 
@@ -509,7 +509,7 @@ func _play_promise_sequence(chance: float) -> void:
 
 
 func _play_break_sequence(chance: float) -> void:
-	"""Play the exploitation sequence"""
+	## Play the exploitation sequence
 	if available_exploits.is_empty():
 		creature_response.emit("PLAYER_BREAK", "I... see no weakness to exploit.")
 		await get_tree().create_timer(dialogue_display_time).timeout
@@ -530,7 +530,7 @@ func _play_break_sequence(chance: float) -> void:
 # SUCCESS HANDLING
 # -----------------------------------------------------------------------------
 func _handle_success(approach: Approach) -> void:
-	"""Handle successful bargain"""
+	## Handle successful bargain
 	var approach_name = Approach.keys()[approach]
 
 	# Calculate purification bonus
@@ -575,7 +575,7 @@ func _handle_success(approach: Approach) -> void:
 # FAILURE HANDLING
 # -----------------------------------------------------------------------------
 func _handle_failure(approach: Approach, roll: float) -> void:
-	"""Handle failed bargain - creature counterattacks"""
+	## Handle failed bargain - creature counterattacks
 	var approach_name = Approach.keys()[approach]
 
 	# Determine severity of failure
@@ -627,7 +627,7 @@ func _handle_failure(approach: Approach, roll: float) -> void:
 # DIALOGUE HELPERS
 # -----------------------------------------------------------------------------
 func _get_creature_resistance_dialogue() -> String:
-	"""Initial resistance dialogue when entering mindscape"""
+	## Initial resistance dialogue when entering mindscape
 	var dialogues = {
 		"SAVAGE": "You enter my mind? Foolish prey. I am the hunter here.",
 		"IRON": "Accessing... denied. This unit does not accept new directives.",
@@ -640,7 +640,7 @@ func _get_creature_resistance_dialogue() -> String:
 
 
 func _get_dominate_description() -> String:
-	"""Get the dominate dialogue based on conditions"""
+	## Get the dominate dialogue based on conditions
 	if creature_hp_percent < 0.25:
 		return "Your strength fades. There is no escape. Submit."
 	if "stunned" in creature_statuses:
@@ -653,19 +653,19 @@ func _get_dominate_description() -> String:
 
 
 func _get_promise_description() -> String:
-	"""Description of what promise means for this creature"""
+	## Description of what promise means for this creature
 	var brand_data = BRAND_PROMISES.get(creature_brand, BRAND_PROMISES["SAVAGE"])
 	return "This creature desires " + brand_data.desire + "."
 
 
 func _get_promise_vow() -> String:
-	"""Get a specific vow for this creature's brand"""
+	## Get a specific vow for this creature's brand
 	var brand_data = BRAND_PROMISES.get(creature_brand, BRAND_PROMISES["SAVAGE"])
 	return brand_data.vows.pick_random()
 
 
 func _get_break_description() -> String:
-	"""Description of available exploits"""
+	## Description of available exploits
 	if available_exploits.is_empty():
 		return "No obvious weakness to exploit."
 

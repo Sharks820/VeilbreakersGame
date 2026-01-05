@@ -111,7 +111,7 @@ func get_stat_at_level(
 
 
 func _get_evolution_stat_multiplier(evo_stage: Enums.EvolutionStage, level: int) -> float:
-	"""Get stat multiplier based on evolution stage and level (v5.0)"""
+	## Get stat multiplier based on evolution stage and level (v5.0)
 	match evo_stage:
 		Enums.EvolutionStage.BIRTH:
 			return Constants.STAT_GROWTH_NORMAL
@@ -133,7 +133,7 @@ func _get_evolution_stat_multiplier(evo_stage: Enums.EvolutionStage, level: int)
 
 
 func get_max_level() -> int:
-	"""Get max level based on brand tier (v5.0)"""
+	## Get max level based on brand tier (v5.0)
 	match brand_tier:
 		Enums.MonsterBrandTier.PRIMAL:
 			return Constants.MAX_LEVEL_PRIMAL  # 120
@@ -142,7 +142,7 @@ func get_max_level() -> int:
 
 
 func get_xp_multiplier(evo_stage: Enums.EvolutionStage) -> float:
-	"""Get XP requirement multiplier based on tier and stage (v5.0)"""
+	## Get XP requirement multiplier based on tier and stage (v5.0)
 	match brand_tier:
 		Enums.MonsterBrandTier.PRIMAL:
 			match evo_stage:
@@ -165,7 +165,7 @@ func get_xp_multiplier(evo_stage: Enums.EvolutionStage) -> float:
 
 
 func can_evolve(current_level: int, current_stage: Enums.EvolutionStage) -> bool:
-	"""Check if monster can evolve at current level (v5.0)"""
+	## Check if monster can evolve at current level (v5.0)
 	match brand_tier:
 		Enums.MonsterBrandTier.PRIMAL:
 			# PRIMAL: Birth → Evolved (only 1 evolution)
@@ -185,7 +185,7 @@ func can_evolve(current_level: int, current_stage: Enums.EvolutionStage) -> bool
 
 
 func get_next_evolution_stage(current_stage: Enums.EvolutionStage) -> Enums.EvolutionStage:
-	"""Get the next evolution stage (v5.0)"""
+	## Get the next evolution stage (v5.0)
 	match brand_tier:
 		Enums.MonsterBrandTier.PRIMAL:
 			if current_stage == Enums.EvolutionStage.BIRTH:

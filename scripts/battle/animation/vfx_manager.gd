@@ -109,7 +109,7 @@ func _ready() -> void:
 
 
 func _initialize_pools() -> void:
-	"""Pre-create commonly used effects"""
+	## Pre-create commonly used effects
 	var effects_to_pool = [
 		["hit_savage", hit_savage],
 		["hit_iron", hit_iron],
@@ -154,7 +154,7 @@ func _create_pool(effect_name: String, scene: PackedScene, size: int) -> void:
 # PUBLIC API - Spawn Effects
 # -----------------------------------------------------------------------------
 func spawn_hit_effect(data: Dictionary) -> Node:
-	"""Spawn a hit effect at a position"""
+	## Spawn a hit effect at a position
 	var brand = data.get("brand", "NEUTRAL").to_upper()
 	var position = data.get("position", Vector2.ZERO)
 	var is_critical = data.get("is_critical", false)
@@ -174,7 +174,7 @@ func spawn_hit_effect(data: Dictionary) -> Node:
 
 
 func spawn_status_tick(data: Dictionary) -> Node:
-	"""Spawn status effect tick (poison drip, burn flare, etc.)"""
+	## Spawn status effect tick (poison drip, burn flare, etc.)
 	var status = data.get("status", "poison")
 	var position = data.get("position", Vector2.ZERO)
 
@@ -192,7 +192,7 @@ func spawn_status_tick(data: Dictionary) -> Node:
 
 
 func spawn_status_apply(data: Dictionary) -> Node:
-	"""Spawn status application effect"""
+	## Spawn status application effect
 	var status = data.get("status", "poison")
 	var position = data.get("position", Vector2.ZERO)
 	var brand = data.get("brand", "NEUTRAL")
@@ -211,7 +211,7 @@ func spawn_status_apply(data: Dictionary) -> Node:
 
 
 func spawn_capture_projectile(data: Dictionary) -> Node:
-	"""Spawn capture throw projectile"""
+	## Spawn capture throw projectile
 	var from_pos = data.get("from", Vector2.ZERO)
 	var to_pos = data.get("to", Vector2.ZERO)
 	var duration = data.get("duration", 0.5)
@@ -233,7 +233,7 @@ func spawn_capture_projectile(data: Dictionary) -> Node:
 
 
 func spawn_capture_beam(data: Dictionary) -> Node:
-	"""Spawn capture beam effect around target"""
+	## Spawn capture beam effect around target
 	var position = data.get("position", Vector2.ZERO)
 	var brand = data.get("brand", "NEUTRAL")
 
@@ -250,7 +250,7 @@ func spawn_capture_beam(data: Dictionary) -> Node:
 
 
 func spawn_capture_shake(data: Dictionary) -> Node:
-	"""Spawn single capture shake effect"""
+	## Spawn single capture shake effect
 	var position = data.get("position", Vector2.ZERO)
 	var shake_number = data.get("shake_number", 1)
 
@@ -266,7 +266,7 @@ func spawn_capture_shake(data: Dictionary) -> Node:
 
 
 func spawn_capture_success(data: Dictionary) -> Node:
-	"""Spawn capture success celebration"""
+	## Spawn capture success celebration
 	var position = data.get("position", Vector2.ZERO)
 
 	if not capture_success:
@@ -281,7 +281,7 @@ func spawn_capture_success(data: Dictionary) -> Node:
 
 
 func spawn_capture_break(data: Dictionary) -> Node:
-	"""Spawn capture break/fail effect"""
+	## Spawn capture break/fail effect
 	var position = data.get("position", Vector2.ZERO)
 
 	if not capture_break:
@@ -296,7 +296,7 @@ func spawn_capture_break(data: Dictionary) -> Node:
 
 
 func spawn_heal_effect(data: Dictionary) -> Node:
-	"""Spawn healing visual"""
+	## Spawn healing visual
 	var position = data.get("position", Vector2.ZERO)
 
 	var effect = _get_from_pool("heal_effect")
@@ -312,7 +312,7 @@ func spawn_heal_effect(data: Dictionary) -> Node:
 
 
 func spawn_death_effect(data: Dictionary) -> Node:
-	"""Spawn death/defeat effect"""
+	## Spawn death/defeat effect
 	var position = data.get("position", Vector2.ZERO)
 	var brand = data.get("brand", "NEUTRAL")
 
@@ -329,7 +329,7 @@ func spawn_death_effect(data: Dictionary) -> Node:
 
 
 func spawn_summon_effect(data: Dictionary) -> Node:
-	"""Spawn monster summon/enter effect"""
+	## Spawn monster summon/enter effect
 	var position = data.get("position", Vector2.ZERO)
 	var brand = data.get("brand", "NEUTRAL")
 
@@ -346,7 +346,7 @@ func spawn_summon_effect(data: Dictionary) -> Node:
 
 
 func spawn_defend_effect(data: Dictionary) -> Node:
-	"""Spawn defend/guard effect"""
+	## Spawn defend/guard effect
 	var position = data.get("position", Vector2.ZERO)
 
 	if not defend_effect:
@@ -361,7 +361,7 @@ func spawn_defend_effect(data: Dictionary) -> Node:
 
 
 func spawn_skill_charge(data: Dictionary) -> Node:
-	"""Spawn skill charging effect"""
+	## Spawn skill charging effect
 	var position = data.get("position", Vector2.ZERO)
 	var brand = data.get("brand", "NEUTRAL")
 	var duration = data.get("duration", 0.5)
@@ -386,7 +386,7 @@ func spawn_skill_charge(data: Dictionary) -> Node:
 
 
 func spawn_dust_cloud(data: Dictionary) -> Node:
-	"""Spawn dust/impact cloud"""
+	## Spawn dust/impact cloud
 	var position = data.get("position", Vector2.ZERO)
 
 	var effect = _get_from_pool("dust_cloud")
@@ -405,7 +405,7 @@ func spawn_dust_cloud(data: Dictionary) -> Node:
 # BOSS EFFECTS
 # -----------------------------------------------------------------------------
 func spawn_boss_death_explosion(data: Dictionary) -> Node:
-	"""Epic boss death explosion"""
+	## Epic boss death explosion
 	var position = data.get("position", Vector2.ZERO)
 
 	if not boss_death_explosion:
@@ -420,7 +420,7 @@ func spawn_boss_death_explosion(data: Dictionary) -> Node:
 
 
 func spawn_boss_rage_aura(data: Dictionary) -> Node:
-	"""Boss rage/phase transition aura"""
+	## Boss rage/phase transition aura
 	var position = data.get("position", Vector2.ZERO)
 	var phase = data.get("phase", 2)
 
@@ -444,7 +444,7 @@ func spawn_boss_rage_aura(data: Dictionary) -> Node:
 # SCREEN EFFECTS
 # -----------------------------------------------------------------------------
 func screen_flash(data: Dictionary) -> void:
-	"""Flash the entire screen"""
+	## Flash the entire screen
 	var color = data.get("color", Color.WHITE)
 	var duration = data.get("duration", 0.1)
 
@@ -501,7 +501,7 @@ func _on_effect_finished(effect_name: String, instance: Node) -> void:
 
 
 func _spawn_direct(effect_name: String, scene: PackedScene) -> Node:
-	"""Spawn an effect without pooling"""
+	## Spawn an effect without pooling
 	if not scene:
 		return null
 
@@ -525,7 +525,7 @@ func _spawn_direct(effect_name: String, scene: PackedScene) -> Node:
 
 
 func _activate_effect(effect: Node, position: Vector2, data: Dictionary) -> void:
-	"""Activate a pooled effect at a position"""
+	## Activate a pooled effect at a position
 	effect.visible = true
 	_active_effects.append(effect)
 
@@ -545,7 +545,7 @@ func _activate_effect(effect: Node, position: Vector2, data: Dictionary) -> void
 
 
 func _apply_color(effect: Node, colors: Dictionary) -> void:
-	"""Apply brand colors to an effect"""
+	## Apply brand colors to an effect
 	if effect is CanvasItem:
 		effect.modulate = colors.get("primary", Color.WHITE)
 

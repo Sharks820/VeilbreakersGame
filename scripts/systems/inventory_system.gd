@@ -310,7 +310,7 @@ func get_key_items() -> Array[ItemData]:
 
 
 func get_battle_usable_items() -> Array[Dictionary]:
-	"""Get all items that can be used in battle"""
+	## Get all items that can be used in battle
 	var result: Array[Dictionary] = []
 
 	for item_id in items:

@@ -129,7 +129,7 @@ func flash_capture() -> void:
 
 
 func flash_custom(color: Color, duration: float, hold_time: float = 0.0) -> void:
-	"""Flash with optional hold before fade"""
+	## Flash with optional hold before fade
 	if not flash_rect:
 		return
 
@@ -174,7 +174,7 @@ func _update_vignette(delta: float) -> void:
 
 
 func pulse_vignette(intensity: float = 0.5, duration: float = 0.3) -> void:
-	"""One-shot vignette pulse (for hits)"""
+	## One-shot vignette pulse (for hits)
 	if not vignette_rect:
 		return
 
@@ -215,12 +215,12 @@ func chromatic_aberration(intensity: float = -1.0, duration: float = -1.0) -> vo
 
 
 func chromatic_hit() -> void:
-	"""Quick chromatic burst for getting hit"""
+	## Quick chromatic burst for getting hit
 	chromatic_aberration(2.0, 0.15)
 
 
 func chromatic_crit() -> void:
-	"""Stronger chromatic for critical damage"""
+	## Stronger chromatic for critical damage
 	chromatic_aberration(4.0, 0.2)
 
 
@@ -265,7 +265,7 @@ func fade_in(duration: float = 0.5) -> Signal:
 
 
 func crossfade(duration: float = 1.0) -> void:
-	"""Fade out then back in"""
+	## Fade out then back in
 	await fade_out(Color.BLACK, duration * 0.5)
 	await fade_in(duration * 0.5)
 
@@ -344,26 +344,26 @@ func toggle_letterbox() -> void:
 # COMBINED EFFECTS (Presets)
 # -----------------------------------------------------------------------------
 func on_player_hit(damage_percent: float = 0.1) -> void:
-	"""All effects for when player takes damage"""
+	## All effects for when player takes damage
 	flash_damage()
 	pulse_vignette(0.3 + damage_percent * 0.5, 0.2)
 	chromatic_hit()
 
 
 func on_player_crit_hit() -> void:
-	"""Effects for critical hit on player"""
+	## Effects for critical hit on player
 	flash(Color(1, 0, 0, 0.5), 0.2)
 	pulse_vignette(0.7, 0.3)
 	chromatic_crit()
 
 
 func on_enemy_death() -> void:
-	"""Effects when enemy dies"""
+	## Effects when enemy dies
 	flash(Color(1, 1, 1, 0.2), 0.15)
 
 
 func on_boss_phase_change() -> void:
-	"""Dramatic phase transition"""
+	## Dramatic phase transition
 	show_letterbox()
 	await get_tree().create_timer(0.2).timeout
 	flash(Color.WHITE, 0.3)
@@ -371,14 +371,14 @@ func on_boss_phase_change() -> void:
 
 
 func on_capture_success() -> void:
-	"""Capture celebration"""
+	## Capture celebration
 	flash_capture()
 	await get_tree().create_timer(0.1).timeout
 	flash(Color.WHITE, 0.2)
 
 
 func on_level_up() -> void:
-	"""Level up celebration"""
+	## Level up celebration
 	flash(Color(1, 0.9, 0.3, 0.4), 0.3)
 
 

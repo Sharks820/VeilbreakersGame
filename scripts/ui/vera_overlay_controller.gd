@@ -288,7 +288,7 @@ func toggle_overlay() -> void:
 
 
 func pulse_corruption() -> void:
-	"""Visual pulse effect when corruption changes"""
+	## Visual pulse effect when corruption changes
 	if _pulse_tween:
 		_pulse_tween.kill()
 

@@ -80,7 +80,7 @@ func _exit_tree() -> void:
 # TURN ORDER BAR
 # -----------------------------------------------------------------------------
 func show_turn_order(order: Array) -> void:
-	"""Display/update turn order with animation"""
+	## Display/update turn order with animation
 	if not turn_order_bar or not turn_icon_template:
 		return
 
@@ -119,7 +119,7 @@ func show_turn_order(order: Array) -> void:
 
 
 func _setup_turn_icon(icon: Control, entity: Node, index: int) -> void:
-	"""Configure a turn order icon for an entity"""
+	## Configure a turn order icon for an entity
 	# Assuming icon has: portrait texture, name label, highlight, brand indicator
 	if icon.has_node("Portrait") and entity.has_method("get_portrait"):
 		icon.get_node("Portrait").texture = entity.get_portrait()
@@ -137,7 +137,7 @@ func _setup_turn_icon(icon: Control, entity: Node, index: int) -> void:
 
 
 func highlight_current_turn(entity: Node) -> void:
-	"""Highlight the current actor's turn icon"""
+	## Highlight the current actor's turn icon
 	for i in range(turn_icons.size()):
 		var icon = turn_icons[i]
 		if not is_instance_valid(icon):
@@ -159,7 +159,7 @@ func highlight_current_turn(entity: Node) -> void:
 
 
 func advance_turn_order() -> void:
-	"""Animate the turn order advancing (first icon out, rest slide left)"""
+	## Animate the turn order advancing (first icon out, rest slide left)
 	if turn_icons.is_empty():
 		return
 
@@ -189,7 +189,7 @@ func advance_turn_order() -> void:
 # ACTION MENU
 # -----------------------------------------------------------------------------
 func show_action_menu(entity: Node) -> void:
-	"""Animate action menu appearing"""
+	## Animate action menu appearing
 	if not action_menu:
 		return
 
@@ -212,7 +212,7 @@ func show_action_menu(entity: Node) -> void:
 
 
 func hide_action_menu() -> void:
-	"""Animate action menu disappearing"""
+	## Animate action menu disappearing
 	if not action_menu or not action_menu.visible:
 		return
 
@@ -227,7 +227,7 @@ func hide_action_menu() -> void:
 # SKILL NAME DISPLAY
 # -----------------------------------------------------------------------------
 func show_skill_name(skill_name: String, brand: String = "NEUTRAL") -> void:
-	"""Display skill name with dramatic animation"""
+	## Display skill name with dramatic animation
 	if not skill_name_display:
 		return
 
@@ -274,7 +274,7 @@ func show_skill_name(skill_name: String, brand: String = "NEUTRAL") -> void:
 # STATUS POPUPS
 # -----------------------------------------------------------------------------
 func show_status_popup(target: Node, status_text: String, is_positive: bool) -> void:
-	"""Show floating status text near a target"""
+	## Show floating status text near a target
 	if not status_popup_template or not status_popup_container:
 		return
 
@@ -314,7 +314,7 @@ func show_status_popup(target: Node, status_text: String, is_positive: bool) -> 
 # MESSAGE DISPLAY
 # -----------------------------------------------------------------------------
 func show_message(text: String, position: Vector2 = Vector2.ZERO) -> void:
-	"""Show a message (like 'MISS!' or 'RESISTED!')"""
+	## Show a message (like 'MISS!' or 'RESISTED!')
 	if not message_display:
 		return
 
@@ -345,7 +345,7 @@ func show_message(text: String, position: Vector2 = Vector2.ZERO) -> void:
 # CAPTURE ANNOUNCEMENT
 # -----------------------------------------------------------------------------
 func show_capture_announcement(monster_name: String, brand: String) -> void:
-	"""Celebratory capture success announcement"""
+	## Celebratory capture success announcement
 	# This would be a more elaborate UI element
 	# For now, use message display
 	show_message("CAPTURED: " + monster_name + "!")
@@ -355,7 +355,7 @@ func show_capture_announcement(monster_name: String, brand: String) -> void:
 # PHASE ANNOUNCEMENT
 # -----------------------------------------------------------------------------
 func show_phase_announcement(boss_name: String, phase: int, phase_name: String) -> void:
-	"""Boss phase transition announcement"""
+	## Boss phase transition announcement
 	show_message(boss_name + " - " + phase_name)
 
 
@@ -363,13 +363,13 @@ func show_phase_announcement(boss_name: String, phase: int, phase_name: String) 
 # VICTORY/DEFEAT SCREENS
 # -----------------------------------------------------------------------------
 func show_victory_screen(data: Dictionary) -> void:
-	"""Victory screen with exp, drops, stats"""
+	## Victory screen with exp, drops, stats
 	# Would animate in a full victory panel
 	show_message("VICTORY!")
 
 
 func show_defeat_screen(data: Dictionary) -> void:
-	"""Defeat screen"""
+	## Defeat screen
 	show_message("DEFEATED...")
 
 
@@ -377,7 +377,7 @@ func show_defeat_screen(data: Dictionary) -> void:
 # TARGET SELECTION
 # -----------------------------------------------------------------------------
 func start_target_selection(valid_targets: Array, selection_type: String = "single") -> void:
-	"""Enable target selection mode"""
+	## Enable target selection mode
 	if not target_selector:
 		return
 
@@ -387,7 +387,7 @@ func start_target_selection(valid_targets: Array, selection_type: String = "sing
 
 
 func end_target_selection() -> void:
-	"""Disable target selection mode"""
+	## Disable target selection mode
 	if target_selector:
 		target_selector.visible = false
 
@@ -396,7 +396,7 @@ func end_target_selection() -> void:
 # HIDE/SHOW ALL UI
 # -----------------------------------------------------------------------------
 func hide_all_ui() -> void:
-	"""Hide all battle UI for cinematics"""
+	## Hide all battle UI for cinematics
 	var tween = create_tween()
 	tween.set_parallel(true)
 
@@ -407,7 +407,7 @@ func hide_all_ui() -> void:
 
 
 func show_all_ui() -> void:
-	"""Restore battle UI after cinematics"""
+	## Restore battle UI after cinematics
 	var tween = create_tween()
 	tween.set_parallel(true)
 
@@ -420,7 +420,7 @@ func show_all_ui() -> void:
 # BOSS TITLE CARD
 # -----------------------------------------------------------------------------
 func show_boss_title_card(boss_name: String, title: String) -> void:
-	"""Dramatic boss introduction title"""
+	## Dramatic boss introduction title
 	# Would be a custom title card UI element
 	# With the boss name in large text, title below
 	# Animated with dramatic flair
@@ -435,7 +435,7 @@ func show_boss_title_card(boss_name: String, title: String) -> void:
 func animate_health_change(
 	_entity: Node, _old_value: int, _new_value: int, _max_value: int
 ) -> void:
-	"""Animate a health bar change"""
+	## Animate a health bar change
 	# TODO: This would find the entity's health bar and animate it
 	# Could include:
 	# - Smooth drain

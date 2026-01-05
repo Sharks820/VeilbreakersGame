@@ -117,7 +117,7 @@ func _ready() -> void:
 
 
 func setup(target_sprite: Sprite2D, is_enemy: bool = false) -> void:
-	"""Initialize with a sprite to animate"""
+	## Initialize with a sprite to animate
 	sprite = target_sprite
 	_is_enemy = is_enemy
 
@@ -134,7 +134,7 @@ func setup(target_sprite: Sprite2D, is_enemy: bool = false) -> void:
 
 
 func setup_from_config(target_sprite: Sprite2D, monster_id: String, is_enemy: bool = false) -> void:
-	"""Initialize using MonsterSpriteConfig"""
+	## Initialize using MonsterSpriteConfig
 	sprite = target_sprite
 	_is_enemy = is_enemy
 	_monster_id = monster_id
@@ -172,7 +172,7 @@ func setup_from_config(target_sprite: Sprite2D, monster_id: String, is_enemy: bo
 
 
 func _load_all_sheets() -> void:
-	"""Preload all sprite sheets from config"""
+	## Preload all sprite sheets from config
 	for i in range(_sheet_configs.size()):
 		var sheet_config: MonsterSpriteConfig.SheetConfig = _sheet_configs[i]
 		if not _loaded_sheets.has(sheet_config.sheet_path):
@@ -186,7 +186,7 @@ func _load_all_sheets() -> void:
 
 
 func _register_all_animations() -> void:
-	"""Register all animations from all sheets"""
+	## Register all animations from all sheets
 	for i in range(_sheet_configs.size()):
 		var sheet_config: MonsterSpriteConfig.SheetConfig = _sheet_configs[i]
 		for anim_name in sheet_config.animations.keys():
@@ -209,7 +209,7 @@ func _register_all_animations() -> void:
 
 
 func configure_grid(columns: int, rows: int) -> void:
-	"""Set the sprite sheet grid configuration"""
+	## Set the sprite sheet grid configuration
 	h_frames = columns
 	v_frames = rows
 	if sprite:
@@ -230,7 +230,7 @@ func register_animation(
 	fps: float = 10.0,
 	loop: bool = false
 ) -> AnimationDef:
-	"""Register a new animation with its sprite sheet and frame range"""
+	## Register a new animation with its sprite sheet and frame range
 	var anim := AnimationDef.new(anim_name, sheet_path, start_frame, end_frame, fps, loop)
 	_animations[anim_name] = anim
 
@@ -246,13 +246,13 @@ func register_animation(
 
 
 func set_hit_frame(anim_name: String, frame: int) -> void:
-	"""Set which frame triggers the hit event"""
+	## Set which frame triggers the hit event
 	if _animations.has(anim_name):
 		_animations[anim_name].hit_frame = frame
 
 
 func add_animation_event(anim_name: String, frame: int, event_name: String) -> void:
-	"""Add an event to trigger at a specific frame"""
+	## Add an event to trigger at a specific frame
 	if _animations.has(anim_name):
 		_animations[anim_name].events[frame] = event_name
 
@@ -263,7 +263,7 @@ func add_animation_event(anim_name: String, frame: int, event_name: String) -> v
 
 
 func play(anim_name: String, reversed: bool = false) -> void:
-	"""Play an animation by name"""
+	## Play an animation by name
 	if not _animations.has(anim_name):
 		# Try to find a fallback
 		var fallback := _get_fallback_animation(anim_name)
@@ -293,7 +293,7 @@ func play(anim_name: String, reversed: bool = false) -> void:
 
 
 func _get_fallback_animation(anim_name: String) -> String:
-	"""Get a fallback animation if the requested one doesn't exist"""
+	## Get a fallback animation if the requested one doesn't exist
 	# Common fallbacks
 	var fallbacks := {
 		"attack_heavy": "attack",
@@ -316,7 +316,7 @@ func _get_fallback_animation(anim_name: String) -> String:
 
 
 func stop() -> void:
-	"""Stop current animation"""
+	## Stop current animation
 	_is_playing = false
 
 
@@ -329,7 +329,7 @@ func get_current_animation() -> String:
 
 
 func _switch_sheet(sheet_path: String, sheet_index: int = 0) -> void:
-	"""Switch to a different sprite sheet"""
+	## Switch to a different sprite sheet
 	if not sprite:
 		return
 
@@ -429,7 +429,7 @@ func _process_breathing(delta: float) -> void:
 
 
 func play_attack(on_hit: Callable = Callable()) -> void:
-	"""Play attack animation with hit callback"""
+	## Play attack animation with hit callback
 	if _animations.has("attack"):
 		play("attack")
 		if on_hit.is_valid():
@@ -444,7 +444,7 @@ func play_attack(on_hit: Callable = Callable()) -> void:
 
 
 func play_skill(skill_name: String, on_cast: Callable = Callable()) -> void:
-	"""Play skill animation - looks for skill-specific animation first"""
+	## Play skill animation - looks for skill-specific animation first
 	var skill_anim := "skill_" + skill_name.to_lower().replace(" ", "_")
 	var anim_to_play := ""
 	var has_hit_frame := false
@@ -482,7 +482,7 @@ func play_skill(skill_name: String, on_cast: Callable = Callable()) -> void:
 
 
 func play_hurt(is_critical: bool = false) -> void:
-	"""Play hurt reaction with screen shake"""
+	## Play hurt reaction with screen shake
 	_stop_all_tweens()
 
 	# Flash white
@@ -498,7 +498,7 @@ func play_hurt(is_critical: bool = false) -> void:
 
 
 func play_death() -> void:
-	"""Play death animation with dissolve effect"""
+	## Play death animation with dissolve effect
 	enable_breathing = false
 
 	if _animations.has("death"):
@@ -508,7 +508,7 @@ func play_death() -> void:
 
 
 func play_idle() -> void:
-	"""Return to idle animation"""
+	## Return to idle animation
 	_stop_all_tweens()
 	enable_breathing = true
 
@@ -521,7 +521,7 @@ func play_idle() -> void:
 
 
 func play_spawn() -> void:
-	"""Play spawn/summon animation"""
+	## Play spawn/summon animation
 	if not sprite:
 		return
 
@@ -546,7 +546,7 @@ func play_spawn() -> void:
 
 
 func play_victory() -> void:
-	"""Play victory celebration"""
+	## Play victory celebration
 	if _animations.has("victory"):
 		play("victory")
 	else:
@@ -559,7 +559,7 @@ func play_victory() -> void:
 
 
 func _procedural_attack() -> void:
-	"""Procedural attack animation using transforms"""
+	## Procedural attack animation using transforms
 	if not sprite:
 		return
 
@@ -583,7 +583,7 @@ func _procedural_attack() -> void:
 
 
 func _procedural_skill() -> void:
-	"""Procedural skill animation"""
+	## Procedural skill animation
 	if not sprite:
 		return
 
@@ -606,7 +606,7 @@ func _procedural_skill() -> void:
 
 
 func _procedural_hurt(is_critical: bool) -> void:
-	"""Procedural hurt animation"""
+	## Procedural hurt animation
 	if not sprite:
 		return
 
@@ -630,7 +630,7 @@ func _procedural_hurt(is_critical: bool) -> void:
 
 
 func _procedural_death() -> void:
-	"""Procedural death animation"""
+	## Procedural death animation
 	if not sprite:
 		return
 
@@ -652,7 +652,7 @@ func _procedural_death() -> void:
 
 
 func _procedural_victory() -> void:
-	"""Procedural victory animation"""
+	## Procedural victory animation
 	if not sprite:
 		return
 
@@ -680,7 +680,7 @@ func _procedural_victory() -> void:
 
 
 func _flash_color(color: Color, duration: float) -> void:
-	"""Flash the sprite a color"""
+	## Flash the sprite a color
 	if not sprite:
 		return
 
@@ -693,7 +693,7 @@ func _flash_color(color: Color, duration: float) -> void:
 
 
 func _squash_stretch(duration: float) -> void:
-	"""Squash and stretch effect on impact"""
+	## Squash and stretch effect on impact
 	if not sprite:
 		return
 
@@ -709,7 +709,7 @@ func _squash_stretch(duration: float) -> void:
 
 
 func _spawn_particles(effect_type: String, position: Vector2) -> void:
-	"""Spawn particle effect at position"""
+	## Spawn particle effect at position
 	if not _particle_container:
 		return
 
@@ -751,7 +751,7 @@ func _spawn_particles(effect_type: String, position: Vector2) -> void:
 
 
 func _stop_all_tweens() -> void:
-	"""Kill all active tweens"""
+	## Kill all active tweens
 	for tween in _active_tweens:
 		if tween and tween.is_valid():
 			tween.kill()
@@ -764,7 +764,7 @@ func _stop_all_tweens() -> void:
 
 
 func reset_transform() -> void:
-	"""Reset sprite to original transform"""
+	## Reset sprite to original transform
 	if sprite:
 		sprite.position = _original_position
 		sprite.scale = _original_scale

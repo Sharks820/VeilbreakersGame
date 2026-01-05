@@ -187,7 +187,7 @@ func _setup_test_battle() -> void:
 
 
 func _add_starter_items() -> void:
-	"""Add starter items to inventory for testing battle mechanics"""
+	## Add starter items to inventory for testing battle mechanics
 	# Healing items
 	InventorySystem.add_item("potion_minor", 5)  # Minor Potion - 30 HP
 	InventorySystem.add_item("potion_standard", 3)  # Standard Potion - 75 HP
@@ -752,7 +752,7 @@ func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 
 
 func _connect_tutorial_signals() -> void:
-	"""Connect to battle events to trigger tutorial steps at the right moments"""
+	## Connect to battle events to trigger tutorial steps at the right moments
 	if not is_tutorial:
 		return
 
@@ -773,7 +773,7 @@ func _connect_tutorial_signals() -> void:
 
 
 func _on_tutorial_waiting_for_input() -> void:
-	"""Called when battle is waiting for player input - show turn_start tutorial"""
+	## Called when battle is waiting for player input - show turn_start tutorial
 	if not is_tutorial or _tutorial_shown_turn_start:
 		return
 	_tutorial_shown_turn_start = true
@@ -783,7 +783,7 @@ func _on_tutorial_waiting_for_input() -> void:
 
 
 func _on_tutorial_action_selected(_character: Node, action: int, _target: Node) -> void:
-	"""Called when player selects an action - show targeting tutorial"""
+	## Called when player selects an action - show targeting tutorial
 	if not is_tutorial or _tutorial_shown_action_selected:
 		return
 	# Only trigger on first action selection (Attack)
@@ -794,7 +794,7 @@ func _on_tutorial_action_selected(_character: Node, action: int, _target: Node) 
 
 
 func _on_tutorial_turn_started(_character: Node) -> void:
-	"""Called when a turn starts - track for first attack tutorial"""
+	## Called when a turn starts - track for first attack tutorial
 	# Reserved for future use
 	return
 
@@ -802,7 +802,7 @@ func _on_tutorial_turn_started(_character: Node) -> void:
 func _on_tutorial_damage_dealt(
 	_source: Node, target: Node, amount: int, _is_critical: bool
 ) -> void:
-	"""Called when damage is dealt - show brand effectiveness or low HP tutorial"""
+	## Called when damage is dealt - show brand effectiveness or low HP tutorial
 	if not is_tutorial:
 		return
 
@@ -830,7 +830,7 @@ func _on_tutorial_damage_dealt(
 
 
 func _show_tutorial_step(trigger: String) -> void:
-	"""Show a tutorial dialogue for the given trigger"""
+	## Show a tutorial dialogue for the given trigger
 	if not is_tutorial:
 		return
 
@@ -842,7 +842,7 @@ func _show_tutorial_step(trigger: String) -> void:
 
 
 func _display_vera_tutorial(dialogue: Dictionary) -> void:
-	"""Display VERA tutorial panel with the given dialogue - PAUSES GAME"""
+	## Display VERA tutorial panel with the given dialogue - PAUSES GAME
 	# Create or get the tutorial panel
 	if not vera_tutorial_panel:
 		_create_vera_tutorial_panel()
@@ -927,12 +927,12 @@ var _tutorial_continue_pressed: bool = false
 
 
 func _on_tutorial_continue_pressed() -> void:
-	"""Called when continue button is clicked"""
+	## Called when continue button is clicked
 	_tutorial_continue_pressed = true
 
 
 func _create_vera_tutorial_panel() -> void:
-	"""Create the VERA tutorial panel UI - positioned in CENTER of screen"""
+	## Create the VERA tutorial panel UI - positioned in CENTER of screen
 	vera_tutorial_panel = PanelContainer.new()
 	vera_tutorial_panel.name = "VERATutorialPanel"
 
@@ -1073,7 +1073,7 @@ func _create_vera_tutorial_panel() -> void:
 
 
 func _start_vera_tutorial_breathing(portrait: TextureRect) -> void:
-	"""Start smooth breathing animation on VERA portrait using _process()"""
+	## Start smooth breathing animation on VERA portrait using _process()
 	if not portrait:
 		return
 
@@ -1087,7 +1087,7 @@ func _start_vera_tutorial_breathing(portrait: TextureRect) -> void:
 
 
 func _stop_vera_tutorial_breathing() -> void:
-	"""Stop the breathing animation"""
+	## Stop the breathing animation
 	_vera_breathing_enabled = false
 	if _vera_breathing_portrait and is_instance_valid(_vera_breathing_portrait):
 		_vera_breathing_portrait.modulate = Color(1.0, 1.0, 1.0, 1.0)
@@ -1095,7 +1095,7 @@ func _stop_vera_tutorial_breathing() -> void:
 
 
 func _wait_for_tutorial_continue() -> void:
-	"""Wait for player to press continue (button click OR keyboard)"""
+	## Wait for player to press continue (button click OR keyboard)
 	_tutorial_continue_pressed = false
 	while true:
 		await get_tree().process_frame
@@ -1115,7 +1115,7 @@ var _arrow_tween: Tween = null  # Store arrow tween to prevent memory leaks
 
 
 func _show_tutorial_overlay() -> void:
-	"""Show a dark overlay behind the tutorial panel to focus attention"""
+	## Show a dark overlay behind the tutorial panel to focus attention
 	if _tutorial_overlay_canvas:
 		return  # Already showing
 
@@ -1139,7 +1139,7 @@ func _show_tutorial_overlay() -> void:
 
 
 func _hide_tutorial_overlay() -> void:
-	"""Hide the tutorial overlay"""
+	## Hide the tutorial overlay
 	if _tutorial_overlay_canvas and is_instance_valid(_tutorial_overlay_canvas):
 		_tutorial_overlay_canvas.queue_free()
 		_tutorial_overlay_canvas = null
@@ -1147,7 +1147,7 @@ func _hide_tutorial_overlay() -> void:
 
 
 func _highlight_ui_element(element_name: String) -> void:
-	"""Highlight a UI element for the tutorial with a glowing border"""
+	## Highlight a UI element for the tutorial with a glowing border
 	EventBus.emit_debug("Tutorial highlight: %s" % element_name)
 
 	# Try to find actual UI elements from battle arena
@@ -1245,7 +1245,7 @@ func _highlight_ui_element(element_name: String) -> void:
 
 
 func _create_highlight_rect(pos: Vector2, size: Vector2) -> Control:
-	"""Create a pulsing highlight rectangle"""
+	## Create a pulsing highlight rectangle
 	var highlight := Panel.new()
 	highlight.position = pos
 	highlight.size = size
@@ -1273,7 +1273,7 @@ func _create_highlight_rect(pos: Vector2, size: Vector2) -> Control:
 
 
 func _clear_highlights() -> void:
-	"""Clear all tutorial highlights"""
+	## Clear all tutorial highlights
 	# Kill all highlight tweens first to prevent memory leaks
 	for tween in _highlight_tweens:
 		if tween and tween.is_valid():
@@ -1287,7 +1287,7 @@ func _clear_highlights() -> void:
 
 
 func _show_tutorial_arrow(target: String) -> void:
-	"""Show an animated arrow pointing to a UI element"""
+	## Show an animated arrow pointing to a UI element
 	_hide_tutorial_arrow()  # Clear any existing arrow
 
 	# Try to find actual UI elements from battle arena
@@ -1405,7 +1405,7 @@ func _show_tutorial_arrow(target: String) -> void:
 
 
 func _hide_tutorial_arrow() -> void:
-	"""Hide and cleanup tutorial arrow"""
+	## Hide and cleanup tutorial arrow
 	# Kill arrow tween first to prevent memory leak
 	if _arrow_tween and _arrow_tween.is_valid():
 		_arrow_tween.kill()

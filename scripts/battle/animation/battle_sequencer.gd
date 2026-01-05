@@ -151,7 +151,7 @@ func start_battle(players: Array, enemies: Array, is_boss_battle: bool = false) 
 
 
 func _play_boss_intro(boss: Node) -> void:
-	"""Dramatic boss introduction sequence"""
+	## Dramatic boss introduction sequence
 	ui_command.emit("hide_ui", {})
 	camera_command.emit("boss_intro", {"target": boss, "duration": boss_intro_time})
 	audio_command.emit("play_music", {"track": "boss_theme", "fade_in": 1.0})
@@ -188,7 +188,7 @@ func _begin_turn_cycle() -> void:
 
 
 func _calculate_turn_order() -> Array:
-	"""Sort combatants by speed, with status modifiers"""
+	## Sort combatants by speed, with status modifiers
 	var order = all_combatants.filter(
 		func(c): return c.is_alive() if c.has_method("is_alive") else true
 	)
@@ -242,7 +242,7 @@ func _process_next_turn() -> void:
 
 
 func _execute_ai_turn(entity: Node) -> void:
-	"""AI decides and executes action"""
+	## AI decides and executes action
 	var action = {}
 
 	if entity.has_method("decide_action"):
@@ -267,7 +267,7 @@ func _execute_ai_turn(entity: Node) -> void:
 # ACTION EXECUTION - The Core Performance System
 # -----------------------------------------------------------------------------
 func submit_player_action(action: Dictionary) -> void:
-	"""Called by UI when player selects action"""
+	## Called by UI when player selects action
 	if state != BattleState.AWAITING_INPUT:
 		return
 
@@ -280,7 +280,7 @@ func submit_player_action(action: Dictionary) -> void:
 
 
 func execute_action(action: Dictionary) -> void:
-	"""Execute a single action with full dramatic choreography"""
+	## Execute a single action with full dramatic choreography
 	state = BattleState.EXECUTING_ACTION
 	current_action = action
 	action_execution_started.emit(action)
@@ -327,7 +327,7 @@ func execute_action(action: Dictionary) -> void:
 # ATTACK EXECUTION
 # -----------------------------------------------------------------------------
 func _execute_attack(source: Node, targets: Array, action: Dictionary) -> void:
-	"""Standard attack with full choreography"""
+	## Standard attack with full choreography
 	# Guard against empty targets array
 	if targets.is_empty():
 		push_warning("_execute_attack called with empty targets array")
@@ -369,7 +369,7 @@ func _execute_attack(source: Node, targets: Array, action: Dictionary) -> void:
 func _perform_single_hit(
 	source: Node, target: Node, brand: String, is_critical: bool, action: Dictionary
 ) -> void:
-	"""Single hit with impact, damage, effects"""
+	## Single hit with impact, damage, effects
 
 	# Strike animation
 	if source.has_method("play_attack_strike"):
@@ -451,7 +451,7 @@ func _perform_single_hit(
 # SKILL EXECUTION
 # -----------------------------------------------------------------------------
 func _execute_skill(source: Node, targets: Array, action: Dictionary) -> void:
-	"""Skill/ability execution with custom choreography"""
+	## Skill/ability execution with custom choreography
 	var skill = action.get("skill", {})
 	var skill_name = skill.get("name", "Unknown Skill")
 	var brand = skill.get(
@@ -500,7 +500,7 @@ func _execute_skill(source: Node, targets: Array, action: Dictionary) -> void:
 
 
 func _execute_damage_skill(source: Node, targets: Array, skill: Dictionary, brand: String) -> void:
-	"""Multi-target damage skill"""
+	## Multi-target damage skill
 	var hit_count = skill.get("hits", 1)
 	var base_power = skill.get("power", 1.5)
 
@@ -557,7 +557,7 @@ func _execute_damage_skill(source: Node, targets: Array, skill: Dictionary, bran
 
 
 func _execute_heal_skill(source: Node, targets: Array, skill: Dictionary) -> void:
-	"""Healing skill"""
+	## Healing skill
 	var heal_power = skill.get("power", 1.0)
 
 	for target in targets:
@@ -580,7 +580,7 @@ func _execute_heal_skill(source: Node, targets: Array, skill: Dictionary) -> voi
 
 
 func _execute_buff_skill(source: Node, targets: Array, skill: Dictionary) -> void:
-	"""Apply buff to targets"""
+	## Apply buff to targets
 	var buff_type = skill.get("buff_type", "attack")
 	var buff_value = skill.get("buff_value", 1.2)
 	var duration = skill.get("duration", 3)
@@ -603,7 +603,7 @@ func _execute_buff_skill(source: Node, targets: Array, skill: Dictionary) -> voi
 
 
 func _execute_debuff_skill(source: Node, targets: Array, skill: Dictionary) -> void:
-	"""Apply debuff to targets"""
+	## Apply debuff to targets
 	var debuff_type = skill.get("debuff_type", "defense")
 	var debuff_value = skill.get("debuff_value", 0.8)
 	var duration = skill.get("duration", 3)
@@ -626,7 +626,7 @@ func _execute_debuff_skill(source: Node, targets: Array, skill: Dictionary) -> v
 
 
 func _execute_status_skill(source: Node, targets: Array, skill: Dictionary, brand: String) -> void:
-	"""Apply status effect (poison, burn, etc.)"""
+	## Apply status effect (poison, burn, etc.)
 	var status = skill.get("status", "poison")
 	var chance = skill.get("chance", 0.8)
 	var duration = skill.get("duration", 3)
@@ -659,7 +659,7 @@ func _execute_status_skill(source: Node, targets: Array, skill: Dictionary, bran
 # CAPTURE SYSTEM
 # -----------------------------------------------------------------------------
 func _execute_capture(source: Node, target: Node, action: Dictionary) -> void:
-	"""VEILBREAKERS capture sequence - dramatic tension"""
+	## VEILBREAKERS capture sequence - dramatic tension
 	battle_stats.captures_attempted += 1
 	capture_attempt_started.emit(target)
 
@@ -748,7 +748,7 @@ func _execute_capture(source: Node, target: Node, action: Dictionary) -> void:
 
 
 func _capture_success(source: Node, target: Node) -> void:
-	"""Successful capture celebration"""
+	## Successful capture celebration
 	battle_stats.captures_successful += 1
 
 	# Flash
@@ -785,7 +785,7 @@ func _capture_success(source: Node, target: Node) -> void:
 
 
 func _capture_failure(source: Node, target: Node) -> void:
-	"""Capture failed - monster breaks free"""
+	## Capture failed - monster breaks free
 	# Break free VFX
 	camera_command.emit("shake", {"intensity": 10.0, "duration": 0.3})
 
@@ -807,7 +807,7 @@ func _capture_failure(source: Node, target: Node) -> void:
 # OTHER ACTIONS
 # -----------------------------------------------------------------------------
 func _execute_item(source: Node, targets: Array, action: Dictionary) -> void:
-	"""Use item"""
+	## Use item
 	var item = action.get("item", {})
 
 	if source.has_method("play_item_use"):
@@ -843,7 +843,7 @@ func _execute_item(source: Node, targets: Array, action: Dictionary) -> void:
 
 
 func _execute_swap(source: Node, new_monster: Node) -> void:
-	"""Swap active monster"""
+	## Swap active monster
 	camera_command.emit("focus", {"target": source, "duration": 0.3})
 
 	# Return animation
@@ -875,7 +875,7 @@ func _execute_swap(source: Node, new_monster: Node) -> void:
 
 
 func _execute_defend(source: Node) -> void:
-	"""Defend/guard stance"""
+	## Defend/guard stance
 	if source.has_method("set_defending"):
 		source.set_defending(true)
 
@@ -890,7 +890,7 @@ func _execute_defend(source: Node) -> void:
 
 
 func _attempt_flee(source: Node) -> void:
-	"""Attempt to flee battle"""
+	## Attempt to flee battle
 	var flee_chance = 0.5  # Base 50%
 
 	# Can't flee from bosses
@@ -916,7 +916,7 @@ func _attempt_flee(source: Node) -> void:
 # STATUS EFFECT PROCESSING
 # -----------------------------------------------------------------------------
 func _process_pending_effects() -> void:
-	"""Process end-of-turn status effects"""
+	## Process end-of-turn status effects
 	state = BattleState.PROCESSING_EFFECTS
 
 	for entity in all_combatants:
@@ -1006,7 +1006,7 @@ func _apply_bleed_tick(entity: Node, status: Dictionary) -> void:
 # BOSS PHASE SYSTEM
 # -----------------------------------------------------------------------------
 func _check_boss_phase(boss: Node) -> void:
-	"""Check if boss should transition phases"""
+	## Check if boss should transition phases
 	if not boss.has_method("get_phase_thresholds"):
 		return
 
@@ -1024,7 +1024,7 @@ func _check_boss_phase(boss: Node) -> void:
 
 
 func _trigger_boss_phase_transition(boss: Node, new_phase: int) -> void:
-	"""Dramatic boss phase transition"""
+	## Dramatic boss phase transition
 	boss_phases[boss] = new_phase
 
 	# Pause everything
@@ -1076,7 +1076,7 @@ func _trigger_boss_phase_transition(boss: Node, new_phase: int) -> void:
 # BATTLE STATE CHECKING
 # -----------------------------------------------------------------------------
 func _check_battle_state() -> void:
-	"""Check for victory/defeat after actions"""
+	## Check for victory/defeat after actions
 	state = BattleState.CHECKING_STATE
 
 	# Check for all enemies dead
@@ -1104,7 +1104,7 @@ func _check_battle_state() -> void:
 
 
 func _handle_death(entity: Node) -> void:
-	"""Handle a single entity death with drama"""
+	## Handle a single entity death with drama
 	# Pause
 	await get_tree().create_timer(death_dramatic_pause * 0.3).timeout
 
@@ -1139,7 +1139,7 @@ func _handle_death(entity: Node) -> void:
 
 
 func _handle_victory() -> void:
-	"""Victory sequence"""
+	## Victory sequence
 	state = BattleState.VICTORY
 
 	ui_command.emit("hide_action_menu", {})
@@ -1167,7 +1167,7 @@ func _handle_victory() -> void:
 
 
 func _handle_defeat() -> void:
-	"""Defeat sequence"""
+	## Defeat sequence
 	state = BattleState.DEFEAT
 
 	ui_command.emit("hide_action_menu", {})
@@ -1190,12 +1190,10 @@ func _handle_defeat() -> void:
 # UTILITY
 # -----------------------------------------------------------------------------
 func _apply_brand_modifier(damage: int, attacker_brand: String, target: Node) -> int:
-	"""Apply brand effectiveness using the Brand Wheel (v5.0)
-	
-	Brand Effectiveness Wheel: SAVAGE → IRON → VENOM → SURGE → DREAD → LEECH → SAVAGE
-	Each brand is STRONG (1.5x) against the next, WEAK (0.67x) against the previous.
-	Hybrid brands use their PRIMARY brand for effectiveness calculations.
-	"""
+	## Apply brand effectiveness using the Brand Wheel (v5.0)
+	## Brand Effectiveness Wheel: SAVAGE → IRON → VENOM → SURGE → DREAD → LEECH → SAVAGE
+	## Each brand is STRONG (1.5x) against the next, WEAK (0.67x) against the previous.
+	## Hybrid brands use their PRIMARY brand for effectiveness calculations.
 	if not target.has_method("get_brand"):
 		return damage
 
@@ -1225,7 +1223,7 @@ func _apply_brand_modifier(damage: int, attacker_brand: String, target: Node) ->
 
 
 func _resolve_hybrid_brand(brand: String) -> String:
-	"""Resolve hybrid brands to their primary brand for effectiveness calculations"""
+	## Resolve hybrid brands to their primary brand for effectiveness calculations
 	# Hybrid brand -> Primary brand mapping (70% primary, 30% secondary)
 	var hybrid_to_primary = {
 		"BLOODIRON": "SAVAGE",  # SAVAGE(70%) + IRON(30%)

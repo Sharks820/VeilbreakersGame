@@ -165,7 +165,7 @@ func shake_preset(preset: String) -> void:
 
 
 func shake_directional(direction: Vector2, intensity: float, duration: float = 0.2) -> void:
-	"""Shake that follows a direction (e.g., toward attacker)"""
+	## Shake that follows a direction (e.g., toward attacker)
 	var dir_shake = direction.normalized() * intensity
 	_shake_intensity = dir_shake.clamp(-max_shake_offset, max_shake_offset)
 	_shake_trauma = 1.0
@@ -175,7 +175,7 @@ func shake_directional(direction: Vector2, intensity: float, duration: float = 0
 
 
 func add_trauma(amount: float) -> void:
-	"""Add to existing trauma (stacks)"""
+	## Add to existing trauma (stacks)
 	_shake_trauma = clamp(_shake_trauma + amount, 0.0, 1.0)
 
 
@@ -202,7 +202,7 @@ func _process_shake(delta: float) -> void:
 # FOCUS SYSTEM - Target tracking
 # -----------------------------------------------------------------------------
 func focus_on(target: Node2D, zoom_level: float = -1.0, duration: float = 0.3) -> void:
-	"""Focus camera on a single target"""
+	## Focus camera on a single target
 	_focus_target = target
 	_focus_targets.clear()
 	_is_focusing = true
@@ -220,7 +220,7 @@ func focus_on(target: Node2D, zoom_level: float = -1.0, duration: float = 0.3) -
 
 
 func focus_on_multiple(targets: Array[Node2D], padding: float = -1.0) -> void:
-	"""Focus camera to frame multiple targets"""
+	## Focus camera to frame multiple targets
 	_focus_targets = targets
 	_focus_target = null
 	_is_focusing = true
@@ -238,7 +238,7 @@ func focus_on_multiple(targets: Array[Node2D], padding: float = -1.0) -> void:
 
 
 func focus_between(attacker: Node2D, target: Node2D, bias: float = 0.5) -> void:
-	"""Focus between two combatants with bias toward one"""
+	## Focus between two combatants with bias toward one
 	var mid_point = attacker.global_position.lerp(target.global_position, bias)
 
 	_focus_target = null
@@ -253,7 +253,7 @@ func focus_between(attacker: Node2D, target: Node2D, bias: float = 0.5) -> void:
 
 
 func release_focus(duration: float = 0.5) -> void:
-	"""Return to default view"""
+	## Return to default view
 	_is_focusing = false
 	_focus_target = null
 	_focus_targets.clear()
@@ -327,7 +327,7 @@ func zoom_to(target: Vector2, duration: float = 0.3) -> void:
 
 
 func zoom_punch(amount: float = 0.1, duration: float = 0.15) -> void:
-	"""Quick zoom in-out for impact"""
+	## Quick zoom in-out for impact
 	var original = zoom
 	var punched = zoom + Vector2(amount, amount)
 
@@ -392,7 +392,7 @@ func _apply_ease(t: float, ease_type: Tween.EaseType) -> float:
 # IMPACT EFFECTS
 # -----------------------------------------------------------------------------
 func impact_freeze(duration: float = 0.05, time_scale: float = 0.1) -> void:
-	"""Brief time freeze for impact feel"""
+	## Brief time freeze for impact feel
 	if not impact_freeze_enabled:
 		return
 
@@ -407,7 +407,7 @@ func impact_freeze(duration: float = 0.05, time_scale: float = 0.1) -> void:
 
 
 func impact_flash(color: Color = Color.WHITE, duration: float = 0.05) -> void:
-	"""Screen flash on big hits"""
+	## Screen flash on big hits
 	if chromatic_aberration_node:
 		# Use the node's shader if available
 		pass
@@ -451,7 +451,7 @@ func focus_all_combatants() -> void:
 # CINEMATIC SEQUENCES
 # -----------------------------------------------------------------------------
 func play_attack_camera(attacker: Node2D, target: Node2D, is_critical: bool = false) -> void:
-	"""Full attack camera sequence"""
+	## Full attack camera sequence
 	# 1. Focus between combatants
 	focus_between(attacker, target, 0.3)
 
@@ -465,19 +465,19 @@ func play_attack_camera(attacker: Node2D, target: Node2D, is_critical: bool = fa
 
 
 func play_death_camera(dying: Node2D, killer: Node2D = null) -> void:
-	"""Dramatic death camera"""
+	## Dramatic death camera
 	focus_on(dying, 1.1, 0.3)
 	await get_tree().create_timer(0.5).timeout
 	shake_preset("death")
 
 
 func play_capture_camera(target: Node2D) -> void:
-	"""Capture drama camera"""
+	## Capture drama camera
 	focus_on(target, 1.2, 0.4)
 
 
 func play_boss_intro_camera(boss: Node2D, duration: float = 2.0) -> void:
-	"""Dramatic boss introduction"""
+	## Dramatic boss introduction
 	# Pan up from bottom
 	var start_pos = boss.global_position + Vector2(0, 200)
 	global_position = start_pos

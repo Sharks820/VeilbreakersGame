@@ -395,7 +395,7 @@ func start_battle(players: Array, enemies: Array, is_boss_battle: bool = false) 
 
 
 func _play_boss_intro(boss: Node) -> void:
-	"""Dramatic boss introduction sequence"""
+	## Dramatic boss introduction sequence
 	ui_command.emit("hide_ui", {})
 	camera_command.emit("boss_intro", {"target": boss, "duration": boss_intro_time})
 	audio_command.emit("play_music", {"track": "boss_theme", "fade_in": 1.0})
@@ -518,7 +518,7 @@ func _execute_ai_turn(character: CharacterBase) -> void:
 
 
 func _start_party_lock_in() -> void:
-	"""Begin the party lock-in phase where all allies select actions before executing"""
+	## Begin the party lock-in phase where all allies select actions before executing
 	battle_state = Enums.BattleState.PARTY_LOCK_IN
 	party_lock_in_index = 0
 	queued_party_actions.clear()
@@ -531,7 +531,7 @@ func _start_party_lock_in() -> void:
 
 
 func _prompt_next_party_member() -> void:
-	"""Prompt the next party member to select their action"""
+	## Prompt the next party member to select their action
 	if _check_battle_end():
 		return
 
@@ -640,7 +640,7 @@ func _prompt_next_party_member() -> void:
 
 
 func _queue_ally_ai_action(character: CharacterBase) -> void:
-	"""AI ally selects and queues their action"""
+	## AI ally selects and queues their action
 	var ai_decision: Dictionary = ai_controller.get_action(character, player_party, enemy_party)
 
 	queued_party_actions[character] = {
@@ -662,7 +662,7 @@ func _queue_ally_ai_action(character: CharacterBase) -> void:
 
 
 func _queue_player_action(action: Enums.BattleAction, target: CharacterBase, skill: String) -> void:
-	"""Queue the player's action during lock-in phase"""
+	## Queue the player's action during lock-in phase
 	var character := player_party[party_lock_in_index]
 
 	queued_party_actions[character] = {"action": action, "target": target, "skill": skill}
@@ -678,7 +678,7 @@ func _queue_player_action(action: Enums.BattleAction, target: CharacterBase, ski
 
 
 func _execute_party_actions() -> void:
-	"""Execute all queued party actions in order"""
+	## Execute all queued party actions in order
 	battle_state = Enums.BattleState.PARTY_EXECUTING
 	party_execution_index = 0
 
@@ -690,7 +690,7 @@ func _execute_party_actions() -> void:
 
 
 func _execute_next_party_action() -> void:
-	"""Execute the next queued party action"""
+	## Execute the next queued party action
 	if _check_battle_end():
 		return
 
@@ -762,7 +762,7 @@ func _execute_next_party_action() -> void:
 
 
 func _start_enemy_phase() -> void:
-	"""Begin the enemy attack phase - enemies get attacks = alive party count"""
+	## Begin the enemy attack phase - enemies get attacks = alive party count
 	if _check_battle_end():
 		return
 
@@ -786,7 +786,7 @@ func _start_enemy_phase() -> void:
 
 
 func _execute_next_enemy_attack() -> void:
-	"""Execute the next enemy attack"""
+	## Execute the next enemy attack
 	if _check_battle_end():
 		return
 
@@ -1669,7 +1669,7 @@ func _execute_flee(character: CharacterBase) -> Dictionary:
 
 
 func _check_boss_phase(boss: Node) -> void:
-	"""Check if boss should transition phases"""
+	## Check if boss should transition phases
 	if not boss.has_method("get_phase_thresholds"):
 		return
 
@@ -1687,7 +1687,7 @@ func _check_boss_phase(boss: Node) -> void:
 
 
 func _trigger_boss_phase_transition(boss: Node, new_phase: int) -> void:
-	"""Dramatic boss phase transition"""
+	## Dramatic boss phase transition
 	boss_phases[boss] = new_phase
 
 	# Pause everything
@@ -1764,7 +1764,7 @@ func _end_round() -> void:
 
 
 func _decrement_forced_target_turns() -> void:
-	"""Decrement forced target (taunt) duration at end of round"""
+	## Decrement forced target (taunt) duration at end of round
 	for character in turn_order:
 		if character.has_meta("forced_target_turns"):
 			var turns: int = character.get_meta("forced_target_turns") - 1
@@ -1777,7 +1777,7 @@ func _decrement_forced_target_turns() -> void:
 
 
 func _clear_all_defend_relationships() -> void:
-	"""Clear all defend/guard meta data and status effects at end of round"""
+	## Clear all defend/guard meta data and status effects at end of round
 	for character in turn_order:
 		# Clear old defend meta (legacy)
 		if character.has_meta("defended_by"):
@@ -1804,7 +1804,7 @@ func _clear_all_defend_relationships() -> void:
 
 
 func _apply_turn_mp_regen(character: CharacterBase) -> void:
-	"""Regenerate MP at start of turn - allows sustained combat"""
+	## Regenerate MP at start of turn - allows sustained combat
 	if character.is_dead():
 		return
 

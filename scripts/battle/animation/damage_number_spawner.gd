@@ -89,7 +89,7 @@ func spawn_damage(
 	brand: String = "",
 	is_player_damage: bool = false
 ) -> void:
-	"""Spawn a damage number"""
+	## Spawn a damage number
 	var color = _get_brand_color(brand)
 	if is_critical:
 		color = crit_color
@@ -107,7 +107,7 @@ func spawn_damage(
 
 
 func spawn_heal(position: Vector2, amount: int, is_hot: bool = false) -> void:
-	"""Spawn a healing number"""
+	## Spawn a healing number
 	var config = {
 		"value": amount,
 		"color": heal_color,
@@ -122,7 +122,7 @@ func spawn_heal(position: Vector2, amount: int, is_hot: bool = false) -> void:
 
 
 func spawn_miss(position: Vector2) -> void:
-	"""Spawn a miss indicator"""
+	## Spawn a miss indicator
 	var config = {
 		"text": "MISS",
 		"color": Color(0.7, 0.7, 0.7),
@@ -134,7 +134,7 @@ func spawn_miss(position: Vector2) -> void:
 
 
 func spawn_status(position: Vector2, status_name: String, is_applying: bool = true) -> void:
-	"""Spawn status effect text"""
+	## Spawn status effect text
 	var config = {
 		"text": ("+" if is_applying else "-") + status_name.to_upper(),
 		"color": _get_status_color(status_name),
@@ -146,7 +146,7 @@ func spawn_status(position: Vector2, status_name: String, is_applying: bool = tr
 
 
 func spawn_text(position: Vector2, text: String, color: Color = Color.WHITE) -> void:
-	"""Spawn arbitrary text"""
+	## Spawn arbitrary text
 	var config = {
 		"text": text,
 		"color": color,
@@ -157,7 +157,7 @@ func spawn_text(position: Vector2, text: String, color: Color = Color.WHITE) -> 
 
 
 func spawn_combo(position: Vector2, combo_count: int) -> void:
-	"""Spawn combo counter"""
+	## Spawn combo counter
 	var config = {
 		"text": str(combo_count) + " HIT",
 		"color": Color.YELLOW if combo_count < 10 else Color.ORANGE,
@@ -271,99 +271,3 @@ func _get_status_color(status: String) -> Color:
 
 func _position_hash(pos: Vector2) -> int:
 	return int(pos.x / 50) * 10000 + int(pos.y / 50)
-
-
-# =============================================================================
-# DAMAGE NUMBER (Individual number node)
-# =============================================================================
-# Save as separate scene: DamageNumber.tscn
-# Structure:
-#   - DamageNumber (Node2D) <- This script
-#     - Label (Label or RichTextLabel)
-#     - Shadow (Label) [optional]
-
-#class_name DamageNumber
-#extends Node2D
-
-# Paste this into a separate script file: DamageNumber.gd
-
-"""
-extends Node2D
-
-signal finished
-
-@export var label: Label
-@export var shadow_label: Label
-@export var lifetime: float = 1.0
-@export var fade_start: float = 0.6
-@export var bounce_on_crit: bool = true
-@export var scale_pop: float = 1.3
-
-var _velocity: Vector2 = Vector2.ZERO
-var _gravity: float = 0.0
-var _elapsed: float = 0.0
-var _is_critical: bool = false
-var _base_scale: Vector2 = Vector2.ONE
-
-func _ready() -> void:
-	_base_scale = scale
-
-func setup(config: Dictionary, velocity: Vector2, gravity: float) -> void:
-	_velocity = velocity
-	_gravity = gravity
-	_elapsed = 0.0
-	_is_critical = config.get("is_critical", false)
-	
-	# Set text
-	var text = ""
-	if config.has("text"):
-		text = config.text
-	else:
-		text = config.get("prefix", "") + str(config.get("value", 0)) + config.get("suffix", "")
-	
-	label.text = text
-	if shadow_label:
-		shadow_label.text = text
-	
-	# Set color
-	label.modulate = config.get("color", Color.WHITE)
-	
-	# Scale
-	var scale_mult = config.get("scale_mult", 1.0)
-	if _is_critical:
-		scale_mult *= 1.3
-	_base_scale = Vector2.ONE * scale_mult
-	
-	# Initial pop animation
-	scale = _base_scale * scale_pop
-	modulate.a = 1.0
-	
-	var tween = create_tween()
-	tween.tween_property(self, "scale", _base_scale, 0.15).set_ease(Tween.EASE_OUT)
-	
-	# Crit bounce
-	if _is_critical and bounce_on_crit:
-		_velocity.y *= 0.5  # Less initial upward, more bounce
-		label.add_theme_font_size_override("font_size", label.get_theme_font_size("font_size") + 8)
-
-func _process(delta: float) -> void:
-	_elapsed += delta
-	
-	# Physics
-	_velocity.y += _gravity * delta
-	position += _velocity * delta
-	
-	# Crit bounce
-	if _is_critical and _velocity.y > 0 and position.y > 0:
-		_velocity.y *= -0.5
-		position.y = 0
-	
-	# Fade out
-	if _elapsed > fade_start:
-		var fade_progress = (_elapsed - fade_start) / (lifetime - fade_start)
-		modulate.a = 1.0 - fade_progress
-	
-	# Finish
-	if _elapsed >= lifetime:
-		finished.emit()
-"""

@@ -107,16 +107,8 @@ func _hide_all_elements() -> void:
 
 
 func start_dialogue(dialogue_data: Array) -> void:
-	"""
-	dialogue_data format:
-	[
-		{"speaker": "VERA", "text": "Hello!", "portrait": "vera_happy"},
-		{"speaker": "Player", "text": "Hi there.", "choices": [
-			{"text": "Nice to meet you", "next": 2},
-			{"text": "Whatever", "next": 3}
-		]}
-	]
-	"""
+	## Start dialogue with given data array.
+	## Format: [{"speaker": "VERA", "text": "Hello!", "portrait": "vera_happy"}, ...]
 	if dialogue_data.is_empty():
 		push_warning("Empty dialogue data provided")
 		return
@@ -134,7 +126,7 @@ func start_dialogue(dialogue_data: Array) -> void:
 
 
 func start_simple_dialogue(speaker: String, text: String, portrait_id: String = "") -> void:
-	"""Quick helper for single-line dialogues"""
+	## Quick helper for single-line dialogues
 	start_dialogue([{"speaker": speaker, "text": text, "portrait": portrait_id}])
 
 
@@ -297,7 +289,7 @@ func _on_vera_dialogue_triggered(context: String) -> void:
 
 
 func show_vera_dialogue(context: String) -> void:
-	"""Quick helper to show VERA's context-appropriate dialogue"""
+	## Quick helper to show VERA's context-appropriate dialogue
 	var vera_text := "..."
 	var vera_portrait := "vera_normal"
 
@@ -319,7 +311,7 @@ func is_dialogue_active() -> bool:
 
 
 func skip_to_end() -> void:
-	"""Skip all remaining dialogue (for testing/accessibility)"""
+	## Skip all remaining dialogue (for testing/accessibility)
 	if is_active:
 		end_dialogue()
 
