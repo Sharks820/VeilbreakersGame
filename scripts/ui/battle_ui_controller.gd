@@ -3067,75 +3067,53 @@ func _show_sprite_enemy_tooltip(enemy: CharacterBase) -> void:
 	_hide_enemy_tooltip()
 
 	# Create tooltip (same as _on_enemy_panel_hover but positioned at mouse)
-	enemy_tooltip = PanelContainer.new()
+	enemy_tooltip = UIStyleFactory.create_styled_panel(UIStyleFactory.create_enemy_tooltip_style())
 	enemy_tooltip.name = "EnemyTooltip"
 	enemy_tooltip.custom_minimum_size = Vector2(280, 0)
-	enemy_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UIStyleFactory.set_mouse_ignore(enemy_tooltip)
 
-	enemy_tooltip.add_theme_stylebox_override("panel", UIStyleFactory.create_enemy_tooltip_style())
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
+	var vbox := UIStyleFactory.create_vbox(6)
 	enemy_tooltip.add_child(vbox)
 
 	# Name header
-	var name_label := Label.new()
-	name_label.text = enemy.character_name
-	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_CREAM)
+	var name_label := UIStyleFactory.create_label(enemy.character_name, UIStyleFactory.FONT_SUBHEADING, UIStyleFactory.COLOR_CREAM)
 	vbox.add_child(name_label)
 
 	# Level and tier
-	var level_label := Label.new()
+	var level_text: String
 	if enemy is Monster:
 		var monster := enemy as Monster
 		var tier_name: String = str(Enums.MonsterTier.keys()[monster.monster_tier])
-		level_label.text = "Lv.%d %s" % [enemy.level, tier_name]
+		level_text = "Lv.%d %s" % [enemy.level, tier_name]
 	else:
-		level_label.text = "Level %d" % enemy.level
-	level_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
+		level_text = "Level %d" % enemy.level
+	var level_label := UIStyleFactory.create_label(level_text, UIStyleFactory.FONT_CAPTION, UIStyleFactory.COLOR_LEVEL)
 	vbox.add_child(level_label)
 
 	# Separator
-	var sep := HSeparator.new()
-	sep.add_theme_color_override("separator", Color(0.4, 0.3, 0.35))
+	var sep := UIStyleFactory.create_separator(Color(0.4, 0.3, 0.35))
 	vbox.add_child(sep)
 
 	# HP info
-	var hp_info := HBoxContainer.new()
-	hp_info.add_theme_constant_override("separation", 8)
+	var hp_info := UIStyleFactory.create_hbox(8)
 	vbox.add_child(hp_info)
 
-	var hp_title := Label.new()
-	hp_title.text = "HP:"
-	hp_title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-	hp_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_HP_TITLE)
+	var hp_title := UIStyleFactory.create_label("HP:", UIStyleFactory.FONT_CAPTION, UIStyleFactory.COLOR_ENEMY_HP_TITLE)
 	hp_info.add_child(hp_title)
 
-	var hp_value := Label.new()
-	hp_value.text = "%d / %d" % [enemy.current_hp, enemy.get_max_hp()]
-	hp_value.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-	hp_value.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_HP)
+	var hp_value := UIStyleFactory.create_label("%d / %d" % [enemy.current_hp, enemy.get_max_hp()], UIStyleFactory.FONT_CAPTION, UIStyleFactory.COLOR_ENEMY_HP)
 	hp_info.add_child(hp_value)
 
 	# Brand info for monsters
 	if enemy is Monster:
 		var monster := enemy as Monster
-		var brand_info := HBoxContainer.new()
-		brand_info.add_theme_constant_override("separation", 8)
+		var brand_info := UIStyleFactory.create_hbox(8)
 		vbox.add_child(brand_info)
 
-		var brand_title := Label.new()
-		brand_title.text = "Brand:"
-		brand_title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-		brand_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
+		var brand_title := UIStyleFactory.create_label("Brand:", UIStyleFactory.FONT_CAPTION, UIStyleFactory.COLOR_LEVEL)
 		brand_info.add_child(brand_title)
 
-		var brand_value := Label.new()
-		brand_value.text = _get_brand_name(monster.brand)
-		brand_value.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-		brand_value.add_theme_color_override("font_color", _get_brand_color(monster.brand))
+		var brand_value := UIStyleFactory.create_label(_get_brand_name(monster.brand), UIStyleFactory.FONT_CAPTION, _get_brand_color(monster.brand))
 		brand_info.add_child(brand_value)
 
 	add_child(enemy_tooltip)
@@ -3159,88 +3137,57 @@ func _show_sprite_party_tooltip(character: CharacterBase) -> void:
 	## Show party tooltip near mouse position when hovering arena sprite
 	_hide_party_tooltip()
 
-	party_tooltip = PanelContainer.new()
+	party_tooltip = UIStyleFactory.create_styled_panel(UIStyleFactory.create_ally_tooltip_style())
 	party_tooltip.name = "PartyTooltip"
 	party_tooltip.custom_minimum_size = Vector2(280, 0)
-	party_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UIStyleFactory.set_mouse_ignore(party_tooltip)
 
-	party_tooltip.add_theme_stylebox_override("panel", UIStyleFactory.create_ally_tooltip_style())
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
+	var vbox := UIStyleFactory.create_vbox(6)
 	party_tooltip.add_child(vbox)
 
 	# Name header
-	var name_label := Label.new()
-	name_label.text = character.character_name
-	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ALLY_NAME)
+	var name_label := UIStyleFactory.create_label(character.character_name, UIStyleFactory.FONT_SUBHEADING, UIStyleFactory.COLOR_ALLY_NAME)
 	vbox.add_child(name_label)
 
 	# Level info
-	var level_label := Label.new()
-	level_label.text = "Level %d" % character.level
-	level_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
+	var level_label := UIStyleFactory.create_label("Level %d" % character.level, UIStyleFactory.FONT_CAPTION, UIStyleFactory.COLOR_LEVEL)
 	vbox.add_child(level_label)
 
 	# Separator
-	var sep := HSeparator.new()
-	sep.add_theme_color_override("separator", Color(0.3, 0.4, 0.35))
+	var sep := UIStyleFactory.create_separator(Color(0.3, 0.4, 0.35))
 	vbox.add_child(sep)
 
 	# HP info
-	var hp_info := HBoxContainer.new()
-	hp_info.add_theme_constant_override("separation", 8)
+	var hp_info := UIStyleFactory.create_hbox(8)
 	vbox.add_child(hp_info)
 
-	var hp_title := Label.new()
-	hp_title.text = "HP:"
-	hp_title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-	hp_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_HP_TITLE)
+	var hp_title := UIStyleFactory.create_label("HP:", UIStyleFactory.FONT_CAPTION, UIStyleFactory.COLOR_HP_TITLE)
 	hp_info.add_child(hp_title)
 
-	var hp_value := Label.new()
-	hp_value.text = "%d / %d" % [character.current_hp, character.get_max_hp()]
-	hp_value.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-	hp_value.add_theme_color_override("font_color", UIStyleFactory.COLOR_HP_VALUE)
+	var hp_value := UIStyleFactory.create_label("%d / %d" % [character.current_hp, character.get_max_hp()], UIStyleFactory.FONT_CAPTION, UIStyleFactory.COLOR_HP_VALUE)
 	hp_info.add_child(hp_value)
 
 	# MP info if character has MP
 	if character.get_max_mp() > 0:
-		var mp_info := HBoxContainer.new()
-		mp_info.add_theme_constant_override("separation", 8)
+		var mp_info := UIStyleFactory.create_hbox(8)
 		vbox.add_child(mp_info)
 
-		var mp_title := Label.new()
-		mp_title.text = "MP:"
-		mp_title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-		mp_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_MP_TITLE)
+		var mp_title := UIStyleFactory.create_label("MP:", UIStyleFactory.FONT_CAPTION, UIStyleFactory.COLOR_MP_TITLE)
 		mp_info.add_child(mp_title)
 
-		var mp_value := Label.new()
-		mp_value.text = "%d / %d" % [character.current_mp, character.get_max_mp()]
-		mp_value.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-		mp_value.add_theme_color_override("font_color", UIStyleFactory.COLOR_MP_VALUE_ALT)
+		var mp_value := UIStyleFactory.create_label("%d / %d" % [character.current_mp, character.get_max_mp()], UIStyleFactory.FONT_CAPTION, UIStyleFactory.COLOR_MP_VALUE_ALT)
 		mp_info.add_child(mp_value)
 
 	# Brand info for monsters
 	if character is Monster:
 		var monster := character as Monster
-		var brand_info := HBoxContainer.new()
-		brand_info.add_theme_constant_override("separation", 8)
+		var brand_info := UIStyleFactory.create_hbox(8)
 		vbox.add_child(brand_info)
 
-		var brand_title := Label.new()
-		brand_title.text = "Brand:"
-		brand_title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-		brand_title.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
+		var brand_title := UIStyleFactory.create_label("Brand:", UIStyleFactory.FONT_CAPTION, UIStyleFactory.COLOR_LEVEL)
 		brand_info.add_child(brand_title)
 
-		var brand_value := Label.new()
-		brand_value.text = _get_brand_name(monster.brand)
-		brand_value.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-		brand_value.add_theme_color_override("font_color", _get_brand_color(monster.brand))
+		var brand_value := UIStyleFactory.create_label(_get_brand_name(monster.brand), UIStyleFactory.FONT_CAPTION, _get_brand_color(monster.brand))
 		brand_info.add_child(brand_value)
 
 	add_child(party_tooltip)
@@ -3310,11 +3257,7 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	left_party_sidebar.add_child(vbox)
 
 	# Add "Your Party" title to match enemy sidebar
-	var title_label := Label.new()
-	title_label.text = "Your Party"
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_BODY)
-	title_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_TOOLTIP_TITLE)
+	var title_label := UIStyleFactory.create_centered_label("Your Party", UIStyleFactory.FONT_BODY, UIStyleFactory.COLOR_TOOLTIP_TITLE)
 	vbox.add_child(title_label)
 
 	# Populate with party members
@@ -3342,36 +3285,26 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 
 func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	## Create a compact party member slot for the left sidebar
-	var panel := PanelContainer.new()
+	var panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_party_sidebar_panel())
 	panel.custom_minimum_size = Vector2(144, 60)
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-
-	# Style with ally colors
-	panel.add_theme_stylebox_override("panel", UIStyleFactory.create_party_sidebar_panel())
+	UIStyleFactory.set_mouse_stop(panel)
 
 	# Connect hover signals for tooltip
 	panel.mouse_entered.connect(_on_party_panel_hover.bind(character, panel))
 	panel.mouse_exited.connect(_on_party_panel_unhover)
 
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 6)
-	hbox.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
+	var hbox := UIStyleFactory.create_hbox(6)
+	UIStyleFactory.set_mouse_pass(hbox)
 	panel.add_child(hbox)
 
 	# Portrait
-	var portrait_container := PanelContainer.new()
+	var portrait_container := UIStyleFactory.create_styled_panel(UIStyleFactory.create_sidebar_portrait_frame(false))
 	portrait_container.custom_minimum_size = Vector2(36, 36)
-	portrait_container.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
-	portrait_container.add_theme_stylebox_override(
-		"panel", UIStyleFactory.create_sidebar_portrait_frame(false)
-	)
+	UIStyleFactory.set_mouse_pass(portrait_container)
 	hbox.add_child(portrait_container)
 
-	var portrait := TextureRect.new()
-	portrait.custom_minimum_size = Vector2(32, 32)
-	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	portrait.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
+	var portrait := UIStyleFactory.create_icon(Vector2(32, 32))
+	UIStyleFactory.set_mouse_pass(portrait)
 	var portrait_path := _get_portrait_path(character)
 	if portrait_path != "":
 		var tex := load(portrait_path)
@@ -3380,71 +3313,51 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	portrait_container.add_child(portrait)
 
 	# Info container
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 2)
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
-	hbox.add_child(vbox)
+	var info_vbox := UIStyleFactory.create_vbox(2)
+	UIStyleFactory.expand_horizontal(info_vbox)
+	UIStyleFactory.set_mouse_pass(info_vbox)
+	hbox.add_child(info_vbox)
 
 	# Name
-	var name_label := Label.new()
-	name_label.text = character.character_name
-	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_TOOLTIP_NAME)
-	name_label.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
-	vbox.add_child(name_label)
+	var name_label := UIStyleFactory.create_label(character.character_name, UIStyleFactory.FONT_CAPTION, UIStyleFactory.COLOR_TOOLTIP_NAME)
+	UIStyleFactory.set_mouse_pass(name_label)
+	info_vbox.add_child(name_label)
 
 	# Path display for player characters (with aligned brand info)
 	if (
 		character.character_type == Enums.CharacterType.PLAYER
 		and character.current_path != Enums.Path.NONE
 	):
-		var path_label := Label.new()
-		path_label.name = "PathLabel"
 		var path_name: String = Enums.get_path_name(character.current_path)
 		var aligned_brand: String = _get_path_aligned_brand(character.current_path)
-		path_label.text = "%s [%s]" % [path_name, aligned_brand]
-		path_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TINY)
-		path_label.add_theme_color_override(
-			"font_color", _get_path_type_color(character.current_path)
-		)
-		path_label.mouse_filter = Control.MOUSE_FILTER_PASS
-		vbox.add_child(path_label)
+		var path_label := UIStyleFactory.create_label("%s [%s]" % [path_name, aligned_brand], UIStyleFactory.FONT_TINY, _get_path_type_color(character.current_path))
+		path_label.name = "PathLabel"
+		UIStyleFactory.set_mouse_pass(path_label)
+		info_vbox.add_child(path_label)
 
 	# Brand display for monsters (allied monsters in party)
 	if character is Monster:
 		var monster := character as Monster
-		var brand_label := Label.new()
-		brand_label.name = "BrandLabel"
 		var brand_name := _get_brand_name(monster.brand)
 		var brand_color := _get_brand_color(monster.brand)
-		brand_label.text = brand_name
-		brand_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TINY)
-		brand_label.add_theme_color_override("font_color", brand_color)
-		brand_label.mouse_filter = Control.MOUSE_FILTER_PASS
-		vbox.add_child(brand_label)
+		var brand_label := UIStyleFactory.create_label(brand_name, UIStyleFactory.FONT_TINY, brand_color)
+		brand_label.name = "BrandLabel"
+		UIStyleFactory.set_mouse_pass(brand_label)
+		info_vbox.add_child(brand_label)
 
 	# HP Bar
-	var hp_bar := ProgressBar.new()
+	var hp_bar := UIStyleFactory.create_hp_bar(Vector2(85, 12))
 	hp_bar.name = "HPBar"
 	hp_bar.max_value = maxi(1, character.get_max_hp())
 	hp_bar.value = character.current_hp
-	hp_bar.show_percentage = false
-	hp_bar.custom_minimum_size = Vector2(85, 12)
-	hp_bar.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
-
-	hp_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_hp_bar_fill())
-	hp_bar.add_theme_stylebox_override("background", UIStyleFactory.create_hp_bar_bg())
-	vbox.add_child(hp_bar)
+	UIStyleFactory.set_mouse_pass(hp_bar)
+	info_vbox.add_child(hp_bar)
 
 	# HP Label
-	var hp_label := Label.new()
+	var hp_label := UIStyleFactory.create_label("%d/%d" % [character.current_hp, character.get_max_hp()], UIStyleFactory.FONT_TINY, UIStyleFactory.COLOR_ALLY_HP_LABEL)
 	hp_label.name = "HPLabel"
-	hp_label.text = "%d/%d" % [character.current_hp, character.get_max_hp()]
-	hp_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TINY)
-	hp_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ALLY_HP_LABEL)
-	hp_label.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
-	vbox.add_child(hp_label)
+	UIStyleFactory.set_mouse_pass(hp_label)
+	info_vbox.add_child(hp_label)
 
 	# MP Bar (if character has MP)
 	if character.get_max_mp() > 0:
