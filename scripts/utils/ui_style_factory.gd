@@ -222,24 +222,30 @@ static func create_tooltip_style() -> StyleBoxFlat:
 	style.set_content_margin_all(8)
 	return style
 
-## Create enemy tooltip style (red tint)
+## Create enemy tooltip style (red tint) - margins 12/12/10/10
 static func create_enemy_tooltip_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.08, 0.06, 0.1, 0.95)
 	style.border_color = Color(0.6, 0.3, 0.4, 1.0)
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(6)
-	style.set_content_margin_all(8)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
 	return style
 
-## Create ally tooltip style (green tint)
+## Create ally tooltip style (green tint) - margins 12/12/10/10
 static func create_ally_tooltip_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.06, 0.1, 0.08, 0.95)
 	style.border_color = Color(0.3, 0.6, 0.4, 1.0)
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(6)
-	style.set_content_margin_all(8)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
 	return style
 
 ## Create combat log style
@@ -415,6 +421,37 @@ const COLOR_LEVEL := Color(0.7, 0.7, 0.7)             # Level text
 const COLOR_XP := Color(0.7, 0.9, 0.7)                # XP text
 const COLOR_SEPARATOR := Color(0.4, 0.3, 0.35)        # Separator lines
 const COLOR_GREEN_SEP := Color(0.3, 0.4, 0.35)        # Green separator
+
+# Enemy/Ally Variant Colors (v1.14)
+const COLOR_ENEMY_NAME := Color(0.95, 0.85, 0.8)      # Enemy name (warmer parchment)
+const COLOR_ENEMY_HP_LABEL := Color(0.7, 0.6, 0.6)    # Enemy HP label (muted red)
+const COLOR_ENEMY_HP_TITLE := Color(0.8, 0.6, 0.6)    # Enemy HP title
+const COLOR_ALLY_NAME := Color(0.85, 1.0, 0.9)        # Ally name (green tint)
+const COLOR_ALLY_NAME_ALT := Color(0.9, 0.95, 0.9)    # Ally name alternate
+const COLOR_ALLY_HP_LABEL := Color(0.65, 0.7, 0.65)   # Ally HP label
+
+# Victory/Defeat Colors (v1.14)
+const COLOR_VICTORY_TITLE := Color(1.0, 0.9, 0.3)     # Victory screen title
+const COLOR_LEVEL_UP := Color(1.0, 1.0, 0.3)          # Level up yellow
+const COLOR_STAT_GAIN := Color(0.5, 1.0, 0.5)         # Stat gain green
+const COLOR_DEFEAT_TITLE := Color(0.9, 0.3, 0.3)      # Defeat title red
+const COLOR_DEFEAT_MSG := Color(0.8, 0.7, 0.7)        # Defeat message muted
+const COLOR_BUTTON_LIGHT := Color(0.95, 0.9, 0.9)     # Light button text
+
+# Tooltip/Panel Colors (v1.14)
+const COLOR_TOOLTIP_TITLE := Color(0.7, 0.9, 0.75)    # Tooltip title green
+const COLOR_TOOLTIP_NAME := Color(0.9, 0.95, 0.85)    # Tooltip name
+const COLOR_PANEL_TITLE_RED := Color(0.9, 0.7, 0.7)   # Red panel title
+const COLOR_CAPTURE_TITLE := Color(1.0, 0.85, 0.3)    # Capture popup title
+const COLOR_CAPTURE_PURPLE := Color(0.8, 0.4, 1.0)    # Capture purple
+const COLOR_MP_VALUE_ALT := Color(0.5, 0.7, 1.0)      # Alt MP value
+const COLOR_STATS_HEADER := Color(0.7, 0.85, 1.0)     # Stats header blue
+const COLOR_ITEM_TEXT := Color(0.8, 0.75, 0.65)       # Item text warm
+const COLOR_PARCHMENT_WARM := Color(0.85, 0.8, 0.7)   # Warm parchment variant
+const COLOR_BUTTON_GOLD := Color(1.0, 0.9, 0.7)       # Gold button text
+const COLOR_DESC_MUTED := Color(0.7, 0.65, 0.6)       # Description muted
+const COLOR_DEAD := Color(0.8, 0.2, 0.2, 0.9)         # Dead character indicator
+const COLOR_LOG_HANDLE := Color(0.6, 0.6, 0.7)        # Combat log handle
 
 # =============================================================================
 # LABEL CREATION HELPERS (v1.02 - Consolidate 100+ Label.new() patterns)
@@ -706,34 +743,50 @@ static func create_enemy_hp_bar(min_size: Vector2 = Vector2(80, 8)) -> ProgressB
 	bar.add_theme_stylebox_override("fill", create_enemy_hp_bar_fill())
 	return bar
 
+## Create corruption bar fill style (purple)
+static func create_corruption_bar_fill() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.6, 0.2, 0.7, 1.0)
+	style.set_corner_radius_all(2)
+	return style
+
+## Create corruption bar background style
+static func create_corruption_bar_bg() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.05, 0.12, 0.9)
+	style.set_corner_radius_all(2)
+	return style
+
 ## Create a corruption bar (purple)
 static func create_corruption_bar(min_size: Vector2 = Vector2(60, 4)) -> ProgressBar:
 	var bar := ProgressBar.new()
 	bar.show_percentage = false
 	bar.custom_minimum_size = min_size
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.1, 0.05, 0.12, 0.9)
-	bg.set_corner_radius_all(2)
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.6, 0.2, 0.7, 1.0)
-	fill.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("background", bg)
-	bar.add_theme_stylebox_override("fill", fill)
+	bar.add_theme_stylebox_override("background", create_corruption_bar_bg())
+	bar.add_theme_stylebox_override("fill", create_corruption_bar_fill())
 	return bar
+
+## Create XP bar fill style (gold)
+static func create_xp_bar_fill() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.9, 0.75, 0.3, 1.0)
+	style.set_corner_radius_all(2)
+	return style
+
+## Create XP bar background style
+static func create_xp_bar_bg() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.08, 0.05, 0.9)
+	style.set_corner_radius_all(2)
+	return style
 
 ## Create an XP bar (gold)
 static func create_xp_bar(min_size: Vector2 = Vector2(100, 6)) -> ProgressBar:
 	var bar := ProgressBar.new()
 	bar.show_percentage = false
 	bar.custom_minimum_size = min_size
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.1, 0.08, 0.05, 0.9)
-	bg.set_corner_radius_all(2)
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.9, 0.75, 0.3, 1.0)
-	fill.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("background", bg)
-	bar.add_theme_stylebox_override("fill", fill)
+	bar.add_theme_stylebox_override("background", create_xp_bar_bg())
+	bar.add_theme_stylebox_override("fill", create_xp_bar_fill())
 	return bar
 
 # =============================================================================
@@ -887,3 +940,289 @@ static func create_vspacer() -> Control:
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	return spacer
+
+# =============================================================================
+# SCROLLBAR STYLES (v1.15 - Combat log scrollbar patterns)
+# =============================================================================
+
+## Create scrollbar grabber style
+static func create_scrollbar_grabber() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.5, 0.45, 0.4, 0.8)
+	style.set_corner_radius_all(4)
+	return style
+
+## Create scrollbar background style
+static func create_scrollbar_bg() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.12, 0.1, 0.6)
+	style.set_corner_radius_all(4)
+	return style
+
+## Apply scrollbar styles to a scroll container
+static func apply_scrollbar_style(scroll_container: ScrollContainer) -> void:
+	var scrollbar := scroll_container.get_v_scroll_bar()
+	if scrollbar:
+		scrollbar.custom_minimum_size.x = 8
+		var grabber := create_scrollbar_grabber()
+		scrollbar.add_theme_stylebox_override("grabber", grabber)
+		scrollbar.add_theme_stylebox_override("grabber_highlight", grabber)
+		scrollbar.add_theme_stylebox_override("grabber_pressed", grabber)
+		scrollbar.add_theme_stylebox_override("scroll", create_scrollbar_bg())
+
+# =============================================================================
+# VICTORY/DEFEAT PANEL STYLES (v1.15)
+# =============================================================================
+
+## Create victory screen outer panel style (golden amber border)
+static func create_victory_panel_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.04, 0.06, 0.98)
+	style.border_color = Color(0.75, 0.55, 0.25, 1.0)
+	style.set_border_width_all(4)
+	style.set_corner_radius_all(12)
+	style.set_content_margin_all(16)
+	return style
+
+## Create victory screen inner panel style
+static func create_victory_inner_panel_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.06, 0.06, 0.08, 0.95)
+	style.border_color = Color(0.4, 0.3, 0.15, 0.6)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(8)
+	return style
+
+## Create defeat screen panel style (red border)
+static func create_defeat_panel_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.06, 0.06, 0.98)
+	style.border_color = Color(0.7, 0.2, 0.2, 1.0)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(12)
+	style.set_content_margin_all(16)
+	return style
+
+# =============================================================================
+# VICTORY/DEFEAT BUTTON STYLES (v1.15)
+# =============================================================================
+
+## Create victory button normal state
+static func create_victory_button_normal() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.1, 0.08, 0.98)
+	style.border_color = Color(0.65, 0.5, 0.25, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	return style
+
+## Create victory button hover state
+static func create_victory_button_hover() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.15, 0.1, 0.98)
+	style.border_color = Color(0.9, 0.7, 0.35, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	return style
+
+## Create victory button pressed state
+static func create_victory_button_pressed() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.25, 0.2, 0.12, 0.98)
+	style.border_color = Color(1.0, 0.8, 0.4, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	return style
+
+## Apply victory button style to a button
+static func apply_victory_button_style(button: Button) -> void:
+	button.add_theme_stylebox_override("normal", create_victory_button_normal())
+	button.add_theme_stylebox_override("hover", create_victory_button_hover())
+	button.add_theme_stylebox_override("pressed", create_victory_button_pressed())
+
+## Create defeat button normal state (red theme)
+static func create_defeat_button_normal() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.4, 0.15, 0.15, 0.95)
+	style.border_color = Color(0.6, 0.3, 0.3, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	return style
+
+## Create defeat button hover state
+static func create_defeat_button_hover() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.5, 0.2, 0.2, 0.98)
+	style.border_color = Color(0.8, 0.4, 0.4, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	return style
+
+## Apply defeat button style to a button
+static func apply_defeat_button_style(button: Button) -> void:
+	button.add_theme_stylebox_override("normal", create_defeat_button_normal())
+	button.add_theme_stylebox_override("hover", create_defeat_button_hover())
+
+# =============================================================================
+# LEVEL UP POPUP STYLES (v1.15)
+# =============================================================================
+
+## Create level up popup style (golden border)
+static func create_level_up_popup_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.12, 0.05, 0.95)
+	style.border_color = Color(1.0, 0.85, 0.3, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(12)
+	return style
+
+## Create XP bar row style (dark green)
+static func create_xp_row_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.08, 0.05, 0.8)
+	style.border_color = Color(0.3, 0.5, 0.3, 0.6)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(8)
+	return style
+
+# =============================================================================
+# CAPTURE POPUP STYLES (v1.15)
+# =============================================================================
+
+## Create capture popup style (blue with gold border)
+static func create_capture_popup_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.15, 0.3, 0.95)
+	style.border_color = Color(1.0, 0.85, 0.3, 1.0)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(12)
+	style.set_content_margin_all(16)
+	return style
+
+# =============================================================================
+# TURN ORDER INDICATOR STYLES (v1.15)
+# =============================================================================
+
+## Create turn order indicator style (current turn - yellow border)
+static func create_turn_order_current() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.15, 0.15, 0.95)
+	style.border_color = Color(1.0, 0.85, 0.3, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	return style
+
+## Create turn order indicator style (upcoming ally - green border)
+static func create_turn_order_ally() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.12, 0.12, 0.9)
+	style.border_color = Color(0.4, 0.7, 0.5, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	return style
+
+## Create turn order indicator style (upcoming enemy - red border)
+static func create_turn_order_enemy() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.12, 0.12, 0.9)
+	style.border_color = Color(0.7, 0.4, 0.4, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	return style
+
+# =============================================================================
+# SIDEBAR PANEL STYLES (v1.15 - Party/Enemy sidebar specific)
+# =============================================================================
+
+## Create party sidebar card style
+static func create_party_sidebar_card() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.12, 0.15, 0.9)
+	style.border_color = Color(0.3, 0.5, 0.4, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(8)
+	return style
+
+## Create enemy sidebar card style
+static func create_enemy_sidebar_card() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.1, 0.1, 0.9)
+	style.border_color = Color(0.5, 0.3, 0.3, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(8)
+	return style
+
+## Create party sidebar header style (bright green border)
+static func create_party_sidebar_header() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.15, 0.2, 0.95)
+	style.border_color = Color(0.3, 0.8, 0.5, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(10)
+	return style
+
+## Create enemy sidebar header style (red border)
+static func create_enemy_sidebar_header() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.1, 0.1, 0.95)
+	style.border_color = Color(0.8, 0.3, 0.3, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(10)
+	return style
+
+## Create portrait frame style for sidebars
+static func create_sidebar_portrait_frame(is_enemy: bool = false) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	if is_enemy:
+		style.bg_color = Color(0.2, 0.12, 0.12, 1.0)
+		style.border_color = Color(0.6, 0.35, 0.35, 1.0)
+	else:
+		style.bg_color = Color(0.15, 0.18, 0.2, 1.0)
+		style.border_color = Color(0.4, 0.5, 0.45, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	return style
+
+# =============================================================================
+# BRAND INDICATOR STYLES (v1.15)
+# =============================================================================
+
+## Create brand indicator pill style
+static func create_brand_indicator(brand_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = brand_color
+	style.border_color = brand_color.lightened(0.3)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	return style
+
+# =============================================================================
+# SUCCESS/FAILURE POPUP STYLES (v1.15)
+# =============================================================================
+
+## Create success popup style (green)
+static func create_success_popup_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.2, 0.1, 0.95)
+	style.border_color = Color(0.4, 1.0, 0.4, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(12)
+	return style
+
+## Create failure popup style (red)
+static func create_failure_popup_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.1, 0.1, 0.95)
+	style.border_color = Color(1.0, 0.4, 0.4, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(12)
+	return style
