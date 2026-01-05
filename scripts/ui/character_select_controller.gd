@@ -212,54 +212,43 @@ func _create_background() -> void:
 
 func _create_title_bar(parent: Control) -> void:
 	## Create the title bar with game logo feel
-	var title_container := HBoxContainer.new()
-	title_container.add_theme_constant_override("separation", 20)
+	var title_container := UIStyleFactory.create_hbox(20)
 	parent.add_child(title_container)
 
 	# Decorative line left
 	var line_left := ColorRect.new()
 	line_left.custom_minimum_size = Vector2(100, 2)
 	line_left.color = Color(0.6, 0.5, 0.3, 0.5)
-	line_left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UIStyleFactory.expand_horizontal(line_left)
 	line_left.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	title_container.add_child(line_left)
 
 	# Title
-	var title := Label.new()
-	title.text = "CHOOSE YOUR CHAMPION"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 38)
-	title.add_theme_color_override("font_color", Color(0.9, 0.8, 0.6))
+	var title := UIStyleFactory.create_centered_label("CHOOSE YOUR CHAMPION", 38, Color(0.9, 0.8, 0.6))
 	title_container.add_child(title)
 
 	# Decorative line right
 	var line_right := ColorRect.new()
 	line_right.custom_minimum_size = Vector2(100, 2)
 	line_right.color = Color(0.6, 0.5, 0.3, 0.5)
-	line_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UIStyleFactory.expand_horizontal(line_right)
 	line_right.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	title_container.add_child(line_right)
 
 
 func _create_hero_cards_panel() -> PanelContainer:
 	## Create the left panel with hero selection cards
-	var panel := PanelContainer.new()
+	var panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_char_select_panel(15))
 	panel.name = "HeroCardsPanel"
-	panel.add_theme_stylebox_override("panel", UIStyleFactory.create_char_select_panel(15))
-	
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
+
+	var vbox := UIStyleFactory.create_vbox(10)
 	panel.add_child(vbox)
 
 	# Section header
-	var header := Label.new()
-	header.text = "CHAMPIONS"
-	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	header.add_theme_font_size_override("font_size", 14)
-	header.add_theme_color_override("font_color", Color(0.6, 0.55, 0.5))
+	var header := UIStyleFactory.create_centered_label("CHAMPIONS", 14, Color(0.6, 0.55, 0.5))
 	vbox.add_child(header)
 
-	var sep := HSeparator.new()
+	var sep := UIStyleFactory.create_separator()
 	sep.modulate = Color(0.4, 0.35, 0.45, 0.5)
 	vbox.add_child(sep)
 
@@ -274,64 +263,46 @@ func _create_hero_cards_panel() -> PanelContainer:
 
 func _create_hero_card(hero_id: String, index: int) -> PanelContainer:
 	## Create a single hero selection card
-	var card := PanelContainer.new()
+	var data: HeroData = hero_data_cache.get(hero_id)
+	var class_color: Color = CLASS_COLORS.get(data.hero_class, Color.WHITE) if data else Color.WHITE
+
+	var card := UIStyleFactory.create_styled_panel(UIStyleFactory.create_hero_card_style(class_color) if data else StyleBoxFlat.new())
 	card.name = "HeroCard_%s" % hero_id
 	card.custom_minimum_size = Vector2(230, 110)
 	card.focus_mode = Control.FOCUS_ALL
 
-	var data: HeroData = hero_data_cache.get(hero_id)
 	if not data:
 		return card
 
-	var class_color: Color = CLASS_COLORS.get(data.hero_class, Color.WHITE)
-
-	# Card style
-	card.add_theme_stylebox_override("panel", UIStyleFactory.create_hero_card_style(class_color))
-	
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 12)
+	var hbox := UIStyleFactory.create_hbox(12)
 	card.add_child(hbox)
 
 	# Portrait frame
-	var portrait_frame := PanelContainer.new()
+	var portrait_frame := UIStyleFactory.create_styled_panel(UIStyleFactory.create_hero_portrait_frame(class_color))
 	portrait_frame.custom_minimum_size = Vector2(75, 75)
-	portrait_frame.add_theme_stylebox_override("panel", UIStyleFactory.create_hero_portrait_frame(class_color))
 	hbox.add_child(portrait_frame)
 
 	# Portrait image
-	var portrait := TextureRect.new()
-	portrait.custom_minimum_size = Vector2(71, 71)
-	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	var portrait := UIStyleFactory.create_portrait(Vector2(71, 71))
 	if data.sprite_path != "" and ResourceLoader.exists(data.sprite_path):
 		portrait.texture = load(data.sprite_path)
 	portrait_frame.add_child(portrait)
 
 	# Info column
-	var info := VBoxContainer.new()
-	info.add_theme_constant_override("separation", 3)
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var info := UIStyleFactory.create_vbox(3)
+	UIStyleFactory.expand_horizontal(info)
 	hbox.add_child(info)
 
 	# Name
-	var name_label := Label.new()
-	name_label.text = data.display_name.to_upper()
-	name_label.add_theme_font_size_override("font_size", 18)
-	name_label.add_theme_color_override("font_color", Color(0.95, 0.9, 0.85))
+	var name_label := UIStyleFactory.create_label(data.display_name.to_upper(), 18, Color(0.95, 0.9, 0.85))
 	info.add_child(name_label)
 
 	# Class
-	var class_label := Label.new()
-	class_label.text = data.hero_class if data.hero_class != "" else data.role.to_upper()
-	class_label.add_theme_font_size_override("font_size", 13)
-	class_label.add_theme_color_override("font_color", class_color)
+	var class_label := UIStyleFactory.create_label(data.hero_class if data.hero_class != "" else data.role.to_upper(), 13, class_color)
 	info.add_child(class_label)
 
 	# Path indicator - use PathSystem for centralized colors
-	var path_label := Label.new()
-	path_label.text = Enums.get_path_name(data.primary_path)
-	path_label.add_theme_font_size_override("font_size", 11)
-	path_label.add_theme_color_override("font_color", PathSystem.get_path_color(data.primary_path))
+	var path_label := UIStyleFactory.create_label(Enums.get_path_name(data.primary_path), 11, PathSystem.get_path_color(data.primary_path))
 	info.add_child(path_label)
 
 	# Connect signals
