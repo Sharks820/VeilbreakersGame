@@ -568,13 +568,13 @@ func _create_portrait(character: CharacterBase, size: int) -> Control:
 
 
 func _style_hp_bar(bar: ProgressBar) -> void:
-	"""Style HP bar with green fill"""
+	## Style HP bar with green fill
 	bar.add_theme_stylebox_override("background", UIStyleFactory.create_arena_hp_bg())
 	bar.add_theme_stylebox_override("fill", UIStyleFactory.create_arena_hp_fill())
 
 
 func _style_mp_bar(bar: ProgressBar) -> void:
-	"""Style MP bar with blue fill"""
+	## Style MP bar with blue fill
 	bar.add_theme_stylebox_override("background", UIStyleFactory.create_arena_mp_bg())
 	bar.add_theme_stylebox_override("fill", UIStyleFactory.create_arena_mp_fill())
 
@@ -684,7 +684,7 @@ func _create_enemy_portrait(character: CharacterBase, size: int) -> Control:
 
 
 func _style_enemy_hp_bar(bar: ProgressBar) -> void:
-	"""Style enemy HP bar with red fill"""
+	## Style enemy HP bar with red fill
 	bar.add_theme_stylebox_override("background", UIStyleFactory.create_arena_enemy_hp_bg())
 	bar.add_theme_stylebox_override("fill", UIStyleFactory.create_arena_enemy_hp_fill())
 

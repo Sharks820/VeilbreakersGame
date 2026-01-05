@@ -641,7 +641,7 @@ func _create_vera_panel(parent: Control) -> void:
 	dialogue_vbox.add_child(vera_dialogue)
 
 func _start_vera_portrait_animation() -> void:
-	"""Start smooth _process-based breathing animation on VERA portrait"""
+	## Start smooth _process-based breathing animation on VERA portrait
 	if not vera_portrait:
 		return
 
@@ -899,7 +899,7 @@ func _setup_animations() -> void:
 
 
 func _start_breathing_animation() -> void:
-	"""Start smooth _process-based breathing animation on hero portrait"""
+	## Start smooth _process-based breathing animation on hero portrait
 	if not hero_portrait:
 		return
 
@@ -909,7 +909,7 @@ func _start_breathing_animation() -> void:
 	_breathing_enabled = true
 
 func _stop_breathing_animation() -> void:
-	"""Stop breathing animation and reset scale"""
+	## Stop breathing animation and reset scale
 	_breathing_enabled = false
 
 	# Reset scale to base
