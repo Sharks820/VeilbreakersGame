@@ -974,6 +974,10 @@ func _update_vera_dialogue(data: HeroData) -> void:
 
 func _show_vera_dialogue(text: String) -> void:
 	## Show VERA dialogue with dynamic typing effect and portrait reaction
+	if not vera_dialogue:
+		push_warning("_show_vera_dialogue called before vera_dialogue was created")
+		return
+	
 	if _vera_tween and _vera_tween.is_valid():
 		_vera_tween.kill()
 
