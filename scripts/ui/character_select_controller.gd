@@ -56,9 +56,11 @@ var back_button: Button = null
 # Animation tweens
 var _selection_tween: Tween = null
 var _vera_tween: Tween = null
+var _vera_flash_tween: Tween = null  # Separate tween for VERA portrait flash effect
 
-# Breathing animation tween (smoother than _process-based approach)
+# Breathing animation tweens (smoother than _process-based approach)
 var _breathing_tween: Tween = null
+var _reset_tween: Tween = null  # Separate tween for resetting scale before loop starts
 
 # =============================================================================
 # LIFECYCLE
@@ -604,10 +606,13 @@ func _start_vera_portrait_animation() -> void:
 	"""Animate VERA portrait with subtle pulse and glow"""
 	if _vera_portrait_tween and _vera_portrait_tween.is_valid():
 		_vera_portrait_tween.kill()
-	
+
 	if not vera_portrait:
 		return
-	
+
+	# Ensure scale starts at base to prevent jump on first loop
+	vera_portrait.scale = Vector2.ONE
+
 	# Subtle breathing/pulse effect - larger scale range for smoother visual
 	_vera_portrait_tween = create_tween().set_loops()
 	_vera_portrait_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)  # Smoother processing
@@ -801,12 +806,14 @@ func _show_vera_dialogue(text: String) -> void:
 	"""Show VERA dialogue with dynamic typing effect and portrait reaction"""
 	if _vera_tween and _vera_tween.is_valid():
 		_vera_tween.kill()
-	
-	# Flash the portrait when speaking
+
+	# Flash the portrait when speaking - kill previous flash to prevent conflicts
 	if vera_portrait:
-		var flash_tween := create_tween()
-		flash_tween.tween_property(vera_portrait, "modulate", Color(1.3, 1.1, 1.4), 0.15)
-		flash_tween.tween_property(vera_portrait, "modulate", Color(1.0, 1.0, 1.0), 0.3)
+		if _vera_flash_tween and _vera_flash_tween.is_valid():
+			_vera_flash_tween.kill()
+		_vera_flash_tween = create_tween()
+		_vera_flash_tween.tween_property(vera_portrait, "modulate", Color(1.3, 1.1, 1.4), 0.15)
+		_vera_flash_tween.tween_property(vera_portrait, "modulate", Color(1.0, 1.0, 1.0), 0.3)
 	
 	# Slide in effect for text
 	vera_dialogue.modulate.a = 0
@@ -833,28 +840,52 @@ func _start_breathing_animation() -> void:
 	"""Start smooth tween-based breathing animation on hero portrait"""
 	if not hero_portrait:
 		return
-	
+
 	# Kill any existing breathing tween
 	if _breathing_tween and _breathing_tween.is_valid():
 		_breathing_tween.kill()
 		_breathing_tween = null
-	
-	# Get current scale to avoid visual jump - only reset if significantly off
+
+	# Kill any lingering reset tween
+	if _reset_tween and _reset_tween.is_valid():
+		_reset_tween.kill()
+		_reset_tween = null
+
+	# Get current scale - use approximate comparison for floating point safety
 	var current_scale: Vector2 = hero_portrait.scale
+	var needs_reset: bool = not current_scale.is_equal_approx(Vector2.ONE)
+
+	# If scale is way off, snap it immediately
 	if current_scale.x < 0.95 or current_scale.x > 1.1:
 		hero_portrait.scale = Vector2.ONE
-		current_scale = Vector2.ONE
-	
+		needs_reset = false
+
 	# Smooth breathing: 3% amplitude, 3 second full cycle (inhale + exhale)
 	# Uses EASE_IN_OUT + TRANS_SINE for natural breathing motion
 	# TWEEN_PROCESS_IDLE ensures smooth frame timing independent of physics
+
+	if needs_reset:
+		# Reset to base scale FIRST with a one-shot tween, THEN start the loop
+		_reset_tween = create_tween()
+		_reset_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
+		_reset_tween.tween_property(hero_portrait, "scale", Vector2.ONE, 0.2).set_ease(Tween.EASE_OUT)
+		_reset_tween.tween_callback(_start_breathing_loop)
+	else:
+		# Start the loop immediately
+		_start_breathing_loop()
+
+func _start_breathing_loop() -> void:
+	"""Start the actual breathing loop (called after any reset completes)"""
+	if not hero_portrait:
+		return
+
+	# Kill any existing loop first
+	if _breathing_tween and _breathing_tween.is_valid():
+		_breathing_tween.kill()
+
+	# Create the pure breathing loop - no conditional steps
 	_breathing_tween = create_tween().set_loops()
 	_breathing_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
-	
-	# Start from current scale to avoid jump, then normalize
-	if current_scale != Vector2.ONE:
-		_breathing_tween.tween_property(hero_portrait, "scale", Vector2.ONE, 0.2).set_ease(Tween.EASE_OUT)
-	
 	_breathing_tween.tween_property(hero_portrait, "scale", Vector2(1.03, 1.03), 1.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 	_breathing_tween.tween_property(hero_portrait, "scale", Vector2.ONE, 1.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
@@ -863,12 +894,17 @@ func _stop_breathing_animation() -> void:
 	if _breathing_tween and _breathing_tween.is_valid():
 		_breathing_tween.kill()
 	_breathing_tween = null
-	
+
+	# Kill any pending reset tween too
+	if _reset_tween and _reset_tween.is_valid():
+		_reset_tween.kill()
+	_reset_tween = null
+
 	# Smoothly return to base scale instead of abrupt reset
-	if hero_portrait and hero_portrait.scale != Vector2.ONE:
-		var reset_tween := create_tween()
-		reset_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
-		reset_tween.tween_property(hero_portrait, "scale", Vector2.ONE, 0.15).set_ease(Tween.EASE_OUT)
+	if hero_portrait and not hero_portrait.scale.is_equal_approx(Vector2.ONE):
+		_reset_tween = create_tween()
+		_reset_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
+		_reset_tween.tween_property(hero_portrait, "scale", Vector2.ONE, 0.15).set_ease(Tween.EASE_OUT)
 
 # =============================================================================
 # INPUT HANDLING
@@ -1092,5 +1128,7 @@ func _exit_tree() -> void:
 		_selection_tween.kill()
 	if _vera_tween and _vera_tween.is_valid():
 		_vera_tween.kill()
+	if _vera_flash_tween and _vera_flash_tween.is_valid():
+		_vera_flash_tween.kill()
 	if _vera_portrait_tween and _vera_portrait_tween.is_valid():
 		_vera_portrait_tween.kill()
