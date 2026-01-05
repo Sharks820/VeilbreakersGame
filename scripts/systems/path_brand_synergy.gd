@@ -110,8 +110,8 @@ static func _add_alignment_bonus(bonuses: Dictionary, hero: Node, synergy_brands
 	var has_alignment_bonus := false
 	
 	for brand_key in synergy_brands:
-		if brand_key in ["BLOODIRON", "CORROSIVE", "VENOMSTRIKE", 
-						 "TERRORFLUX", "NIGHTLEECH", "RAVENOUS"]:
+		if brand_key in ["BLOODIRON", "CORROSIVE", "VENOMSTRIKE",
+				"TERRORFLUX", "NIGHTLEECH", "RAVENOUS"]:
 			continue  # Skip hybrid brands for alignment check
 		
 		var alignment: float = hero.get_brand_alignment(brand_key)

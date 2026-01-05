@@ -86,9 +86,9 @@ func _load_all_data() -> void:
 				hero_data_cache[hero_id] = data
 	
 	# Load monsters for showcase
-	var monster_ids := ["chainbound", "ironjaw", "the_bulwark", "ravener", "mawling", 
-					   "bloodshade", "the_weeping", "hollow", "gluttony_polyp", 
-					   "flicker", "voltgeist", "crackling"]
+	var monster_ids := ["chainbound", "ironjaw", "the_bulwark", "ravener", "mawling",
+			"bloodshade", "the_weeping", "hollow", "gluttony_polyp",
+			"flicker", "voltgeist", "crackling"]
 	for monster_id in monster_ids:
 		var path := "res://data/monsters/%s.tres" % monster_id
 		if ResourceLoader.exists(path):

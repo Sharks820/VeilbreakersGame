@@ -394,12 +394,12 @@ func show_boss_title_card(boss_name: String, title: String) -> void:
 # -----------------------------------------------------------------------------
 # HEALTH BAR ANIMATIONS (called externally when damage/heal happens)
 # -----------------------------------------------------------------------------
-func animate_health_change(entity: Node, old_value: int, new_value: int, max_value: int) -> void:
+func animate_health_change(_entity: Node, _old_value: int, _new_value: int, _max_value: int) -> void:
 	"""Animate a health bar change"""
-	# This would find the entity's health bar and animate it
+	# TODO: This would find the entity's health bar and animate it
 	# Could include:
 	# - Smooth drain
 	# - Flash on damage
 	# - Shake on heavy damage
 	# - Color change when low
-	pass
+	return

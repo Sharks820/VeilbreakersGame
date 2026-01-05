@@ -148,8 +148,8 @@ func can_use_method(monster: Node, captor: Node, method: Enums.CaptureMethod) ->
 func get_available_methods(monster: Node, captor: Node) -> Array[Enums.CaptureMethod]:
 	var methods: Array[Enums.CaptureMethod] = []
 
-	for method in [Enums.CaptureMethod.SOULBIND, Enums.CaptureMethod.PURIFY, 
-				   Enums.CaptureMethod.DOMINATE, Enums.CaptureMethod.BARGAIN]:
+	for method in [Enums.CaptureMethod.SOULBIND, Enums.CaptureMethod.PURIFY,
+			Enums.CaptureMethod.DOMINATE, Enums.CaptureMethod.BARGAIN]:
 		var check := can_use_method(monster, captor, method)
 		if check.available:
 			methods.append(method)
@@ -159,8 +159,8 @@ func get_available_methods(monster: Node, captor: Node) -> Array[Enums.CaptureMe
 # -----------------------------------------------------------------------------
 # PUBLIC API - Execute Capture
 # -----------------------------------------------------------------------------
-func attempt_capture(monster: Node, captor: Node, method: Enums.CaptureMethod, 
-					 vessel_tier: Enums.SoulVesselTier = Enums.SoulVesselTier.STANDARD) -> void:
+func attempt_capture(monster: Node, captor: Node, method: Enums.CaptureMethod,
+		vessel_tier: Enums.SoulVesselTier = Enums.SoulVesselTier.STANDARD) -> void:
 	if current_state != CaptureState.IDLE:
 		push_warning("Capture already in progress")
 		return
@@ -236,8 +236,8 @@ func calculate_soulbind_chance(monster: Node, captor: Node, vessel_tier: Enums.S
 	
 	# HP modifier: +0.5% per 1% HP missing (max +40%)
 	var hp_percent := _get_hp_percent(monster)
-	var hp_bonus := minf((1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100, 
-						  Constants.CAPTURE_HP_BONUS_MAX)
+	var hp_bonus := minf((1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100,
+			Constants.CAPTURE_HP_BONUS_MAX)
 	
 	# Soul Vessel bonus
 	var vessel_bonus := 0.0
@@ -310,9 +310,9 @@ func calculate_purify_chance(monster: Node, captor: Node) -> float:
 	
 	# HP modifier
 	var hp_percent := _get_hp_percent(monster)
-	var hp_bonus := minf((1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100, 
-						  Constants.CAPTURE_HP_BONUS_MAX)
-	
+	var hp_bonus := minf((1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100,
+			Constants.CAPTURE_HP_BONUS_MAX)
+
 	# Corruption modifier
 	var corruption_mod := 0.0
 	if corruption < 25:
@@ -394,9 +394,9 @@ func calculate_dominate_chance(monster: Node, captor: Node) -> float:
 	
 	# HP modifier
 	var hp_percent := _get_hp_percent(monster)
-	var hp_bonus := minf((1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100, 
-						  Constants.CAPTURE_HP_BONUS_MAX)
-	
+	var hp_bonus := minf((1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100,
+			Constants.CAPTURE_HP_BONUS_MAX)
+
 	# DOMINATE bonus at high corruption
 	var corruption_mod := 0.0
 	if corruption > Constants.CORRUPTION_CORRUPTED_MAX:
@@ -475,9 +475,9 @@ func calculate_bargain_chance(monster: Node, captor: Node) -> float:
 	
 	# HP modifier
 	var hp_percent := _get_hp_percent(monster)
-	var hp_bonus := minf((1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100, 
-						  Constants.CAPTURE_HP_BONUS_MAX)
-	
+	var hp_bonus := minf((1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100,
+			Constants.CAPTURE_HP_BONUS_MAX)
+
 	# BARGAIN always gets +25% bonus
 	var bargain_bonus := Constants.BARGAIN_CAPTURE_BONUS
 	
@@ -767,8 +767,8 @@ func _has_soul_vessel() -> bool:
 	if _inventory_system == null:
 		return true  # Assume yes if no inventory system
 	
-	var vessel_ids := ["soul_vessel_cracked", "soul_vessel_standard", 
-					   "soul_vessel_pristine", "soul_vessel_covenant"]
+	var vessel_ids := ["soul_vessel_cracked", "soul_vessel_standard",
+			"soul_vessel_pristine", "soul_vessel_covenant"]
 	
 	for vessel_id in vessel_ids:
 		if _inventory_system.has_method("has_item") and _inventory_system.has_item(vessel_id):

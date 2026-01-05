@@ -1805,18 +1805,20 @@ func _on_audio_command(command: String, data: Dictionary) -> void:
 	"""Handle audio commands from the battle sequencer"""
 	match command:
 		"play_sfx":
-			var sound = data.get("sound", "")
-			AudioManager.play_sfx(sound) if AudioManager.has_method("play_sfx") else null
+			var sound: String = data.get("sound", "")
+			if AudioManager.has_method("play_sfx"):
+				AudioManager.play_sfx(sound)
 		"play_music":
-			var track = data.get("track", "")
-			AudioManager.play_music(track) if AudioManager.has_method("play_music") else null
+			var track: String = data.get("track", "")
+			if AudioManager.has_method("play_music"):
+				AudioManager.play_music(track)
 		"play_jingle":
-			var jingle = data.get("jingle", "")
-			AudioManager.play_jingle(jingle) if AudioManager.has_method("play_jingle") else null
+			var jingle: String = data.get("jingle", "")
+			if AudioManager.has_method("play_jingle"):
+				AudioManager.play_jingle(jingle)
 		"intensify_music":
-			var phase = data.get("phase", 1)
-			# Could add music intensity logic here
-			pass
+			# TODO: Add music intensity logic here
+			# var phase: int = data.get("phase", 1)
 		_:
 			EventBus.emit_debug("Unknown audio command: %s" % command)
 

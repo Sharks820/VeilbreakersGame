@@ -691,9 +691,10 @@ func _on_tutorial_action_selected(_character: Node, action: int, _target: Node) 
 		await get_tree().create_timer(0.2).timeout
 		_show_tutorial_step("action_selected")
 
-func _on_tutorial_turn_started(character: Node) -> void:
+func _on_tutorial_turn_started(_character: Node) -> void:
 	"""Called when a turn starts - track for first attack tutorial"""
-	pass  # Reserved for future use
+	# Reserved for future use
+	return
 
 func _on_tutorial_damage_dealt(_source: Node, target: Node, amount: int, _is_critical: bool) -> void:
 	"""Called when damage is dealt - show brand effectiveness or low HP tutorial"""

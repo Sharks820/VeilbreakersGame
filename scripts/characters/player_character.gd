@@ -213,7 +213,7 @@ func meets_equipment_requirement(brand_key: String) -> bool:
 func meets_hybrid_equipment_requirement(brand_key_1: String, brand_key_2: String) -> bool:
 	## Check if player meets 40%+ in BOTH brands for hybrid equipment
 	return get_brand_alignment(brand_key_1) >= Constants.BRAND_HYBRID_EQUIPMENT_THRESHOLD and \
-		   get_brand_alignment(brand_key_2) >= Constants.BRAND_HYBRID_EQUIPMENT_THRESHOLD
+			get_brand_alignment(brand_key_2) >= Constants.BRAND_HYBRID_EQUIPMENT_THRESHOLD
 
 func _brand_key_to_enum(brand_key: String) -> Enums.Brand:
 	match brand_key:
@@ -231,8 +231,8 @@ func _brand_key_to_enum(brand_key: String) -> Enums.Brand:
 
 func check_equipment_alignment_decay() -> void:
 	## Called after each battle to check equipment alignment decay
-	var slots := [Enums.EquipmentSlot.WEAPON, Enums.EquipmentSlot.ARMOR, 
-				  Enums.EquipmentSlot.ACCESSORY_1, Enums.EquipmentSlot.ACCESSORY_2]
+	var slots := [Enums.EquipmentSlot.WEAPON, Enums.EquipmentSlot.ARMOR,
+			Enums.EquipmentSlot.ACCESSORY_1, Enums.EquipmentSlot.ACCESSORY_2]
 	
 	for slot in slots:
 		var item_id := get_equipped_item(slot)
