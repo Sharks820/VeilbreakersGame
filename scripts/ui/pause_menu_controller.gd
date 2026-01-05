@@ -95,13 +95,7 @@ func _build_ui() -> void:
 	_panel.custom_minimum_size = Vector2(PANEL_WIDTH, 0)
 	
 	# Create stylebox for panel
-	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.1, 0.1, 0.15, 0.95)
-	panel_style.border_color = Color(0.3, 0.3, 0.4, 1.0)
-	panel_style.set_border_width_all(2)
-	panel_style.set_corner_radius_all(8)
-	panel_style.set_content_margin_all(20)
-	_panel.add_theme_stylebox_override("panel", panel_style)
+	_panel.add_theme_stylebox_override("panel", UIStyleFactory.create_pause_menu_panel())
 	center.add_child(_panel)
 	
 	# VBox for content
@@ -158,28 +152,8 @@ func _create_button(text: String, callback: Callable) -> Button:
 	# Expand to fill width
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	
-	# Create hover/focus styles
-	var normal_style := StyleBoxFlat.new()
-	normal_style.bg_color = Color(0.2, 0.2, 0.25, 1.0)
-	normal_style.set_corner_radius_all(4)
-	button.add_theme_stylebox_override("normal", normal_style)
-	
-	var hover_style := StyleBoxFlat.new()
-	hover_style.bg_color = Color(0.3, 0.3, 0.35, 1.0)
-	hover_style.set_corner_radius_all(4)
-	button.add_theme_stylebox_override("hover", hover_style)
-	
-	var pressed_style := StyleBoxFlat.new()
-	pressed_style.bg_color = Color(0.15, 0.15, 0.2, 1.0)
-	pressed_style.set_corner_radius_all(4)
-	button.add_theme_stylebox_override("pressed", pressed_style)
-	
-	var focus_style := StyleBoxFlat.new()
-	focus_style.bg_color = Color(0.25, 0.25, 0.3, 1.0)
-	focus_style.border_color = Color(0.6, 0.5, 0.3, 1.0)
-	focus_style.set_border_width_all(2)
-	focus_style.set_corner_radius_all(4)
-	button.add_theme_stylebox_override("focus", focus_style)
+	# Apply button styles
+	UIStyleFactory.apply_pause_button_style(button)
 	
 	_vbox.add_child(button)
 	return button

@@ -209,17 +209,7 @@ func _create_hero_cards_panel() -> PanelContainer:
 	"""Create the left panel with hero selection cards"""
 	var panel := PanelContainer.new()
 	panel.name = "HeroCardsPanel"
-	
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.06, 0.06, 0.09, 0.95)
-	style.border_color = Color(0.25, 0.2, 0.3, 0.8)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(12)
-	style.content_margin_left = 15
-	style.content_margin_right = 15
-	style.content_margin_top = 15
-	style.content_margin_bottom = 15
-	panel.add_theme_stylebox_override("panel", style)
+	panel.add_theme_stylebox_override("panel", UIStyleFactory.create_char_select_panel(15))
 	
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 10)
@@ -259,16 +249,7 @@ func _create_hero_card(hero_id: String, index: int) -> PanelContainer:
 	var class_color: Color = CLASS_COLORS.get(data.hero_class, Color.WHITE)
 	
 	# Card style
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.08, 0.12, 0.95)
-	style.border_color = class_color.darkened(0.4)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(8)
-	style.content_margin_left = 12
-	style.content_margin_right = 12
-	style.content_margin_top = 10
-	style.content_margin_bottom = 10
-	card.add_theme_stylebox_override("panel", style)
+	card.add_theme_stylebox_override("panel", UIStyleFactory.create_hero_card_style(class_color))
 	
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 12)
@@ -277,12 +258,7 @@ func _create_hero_card(hero_id: String, index: int) -> PanelContainer:
 	# Portrait frame
 	var portrait_frame := PanelContainer.new()
 	portrait_frame.custom_minimum_size = Vector2(75, 75)
-	var frame_style := StyleBoxFlat.new()
-	frame_style.bg_color = Color(0.1, 0.08, 0.14)
-	frame_style.border_color = class_color
-	frame_style.set_border_width_all(2)
-	frame_style.set_corner_radius_all(6)
-	portrait_frame.add_theme_stylebox_override("panel", frame_style)
+	portrait_frame.add_theme_stylebox_override("panel", UIStyleFactory.create_hero_portrait_frame(class_color))
 	hbox.add_child(portrait_frame)
 	
 	# Portrait image
@@ -337,10 +313,7 @@ func _create_hero_display() -> Control:
 	# Dark backdrop
 	var backdrop := PanelContainer.new()
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var backdrop_style := StyleBoxFlat.new()
-	backdrop_style.bg_color = Color(0.05, 0.05, 0.08, 0.7)
-	backdrop_style.set_corner_radius_all(16)
-	backdrop.add_theme_stylebox_override("panel", backdrop_style)
+	backdrop.add_theme_stylebox_override("panel", UIStyleFactory.create_hero_display_backdrop())
 	container.add_child(backdrop)
 	
 	# Hero portrait (large)
@@ -362,13 +335,7 @@ func _create_hero_display() -> Control:
 	var name_panel := PanelContainer.new()
 	name_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	name_panel.offset_top = -140
-	var name_style := StyleBoxFlat.new()
-	name_style.bg_color = Color(0.02, 0.02, 0.04, 0.9)
-	name_style.content_margin_left = 20
-	name_style.content_margin_right = 20
-	name_style.content_margin_top = 15
-	name_style.content_margin_bottom = 15
-	name_panel.add_theme_stylebox_override("panel", name_style)
+	name_panel.add_theme_stylebox_override("panel", UIStyleFactory.create_hero_name_overlay())
 	container.add_child(name_panel)
 	
 	var name_vbox := VBoxContainer.new()
@@ -401,17 +368,7 @@ func _create_info_panel() -> PanelContainer:
 	"""Create the right panel with stats, path/brand info, and monster showcase"""
 	var panel := PanelContainer.new()
 	panel.name = "InfoPanel"
-	
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.06, 0.06, 0.09, 0.95)
-	style.border_color = Color(0.25, 0.2, 0.3, 0.8)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(12)
-	style.content_margin_left = 20
-	style.content_margin_right = 20
-	style.content_margin_top = 20
-	style.content_margin_bottom = 20
-	panel.add_theme_stylebox_override("panel", style)
+	panel.add_theme_stylebox_override("panel", UIStyleFactory.create_char_select_panel(20))
 	
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -536,17 +493,7 @@ func _create_monster_card(monster_id: String) -> PanelContainer:
 	card.custom_minimum_size = Vector2(110, 130)
 	
 	var monster_data = monster_data_cache.get(monster_id)
-	
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.08, 0.12, 0.9)
-	style.border_color = Color(0.3, 0.25, 0.35, 0.7)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(6)
-	style.content_margin_left = 8
-	style.content_margin_right = 8
-	style.content_margin_top = 8
-	style.content_margin_bottom = 8
-	card.add_theme_stylebox_override("panel", style)
+	card.add_theme_stylebox_override("panel", UIStyleFactory.create_monster_card_style())
 	
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 5)
@@ -600,18 +547,7 @@ func _create_vera_panel(parent: Control) -> void:
 	vera_panel.custom_minimum_size.y = 120
 	
 	# Dark panel with glowing purple border
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.03, 0.02, 0.06, 0.98)
-	style.border_color = Color(0.5, 0.3, 0.6, 0.9)
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(12)
-	style.shadow_color = Color(0.4, 0.2, 0.5, 0.4)
-	style.shadow_size = 10
-	style.content_margin_left = 25
-	style.content_margin_right = 25
-	style.content_margin_top = 15
-	style.content_margin_bottom = 15
-	vera_panel.add_theme_stylebox_override("panel", style)
+	vera_panel.add_theme_stylebox_override("panel", UIStyleFactory.create_vera_panel_style())
 	parent.add_child(vera_panel)
 	
 	var hbox := HBoxContainer.new()
@@ -622,14 +558,7 @@ func _create_vera_panel(parent: Control) -> void:
 	var portrait_frame := PanelContainer.new()
 	portrait_frame.name = "PortraitFrame"
 	portrait_frame.custom_minimum_size = Vector2(90, 90)
-	var frame_style := StyleBoxFlat.new()
-	frame_style.bg_color = Color(0.06, 0.04, 0.1)
-	frame_style.border_color = Color(0.6, 0.4, 0.7)
-	frame_style.set_border_width_all(3)
-	frame_style.set_corner_radius_all(45)  # Circular
-	frame_style.shadow_color = Color(0.5, 0.3, 0.6, 0.5)
-	frame_style.shadow_size = 8
-	portrait_frame.add_theme_stylebox_override("panel", frame_style)
+	portrait_frame.add_theme_stylebox_override("panel", UIStyleFactory.create_vera_portrait_frame())
 	hbox.add_child(portrait_frame)
 	
 	vera_portrait = TextureRect.new()
@@ -711,34 +640,7 @@ func _create_styled_button(text: String, color: Color, min_width: int = 150) -> 
 	var button := Button.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(min_width, 55)
-	
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = color.darkened(0.3)
-	normal.border_color = color
-	normal.set_border_width_all(2)
-	normal.set_corner_radius_all(8)
-	
-	var hover := StyleBoxFlat.new()
-	hover.bg_color = color.darkened(0.1)
-	hover.border_color = color.lightened(0.2)
-	hover.set_border_width_all(2)
-	hover.set_corner_radius_all(8)
-	hover.shadow_color = color
-	hover.shadow_color.a = 0.4
-	hover.shadow_size = 8
-	
-	var pressed := StyleBoxFlat.new()
-	pressed.bg_color = color
-	pressed.border_color = color.lightened(0.3)
-	pressed.set_border_width_all(2)
-	pressed.set_corner_radius_all(8)
-	
-	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("pressed", pressed)
-	button.add_theme_font_size_override("font_size", 16)
-	button.add_theme_color_override("font_color", Color.WHITE)
-	
+	UIStyleFactory.apply_color_button_style(button, color)
 	return button
 
 # =============================================================================
@@ -775,27 +677,12 @@ func _update_card_highlights() -> void:
 		var data: HeroData = hero_data_cache.get(hero_id)
 		var class_color: Color = CLASS_COLORS.get(data.hero_class if data else "", Color.WHITE)
 		
-		# Create a NEW StyleBoxFlat to avoid shared resource issues
-		var style := StyleBoxFlat.new()
-		style.set_corner_radius_all(8)
-		style.content_margin_left = 12
-		style.content_margin_right = 12
-		style.content_margin_top = 10
-		style.content_margin_bottom = 10
-		
+		# Apply selected or normal style based on selection state
+		var style: StyleBoxFlat
 		if i == selected_hero_index:
-			style.border_color = class_color
-			style.set_border_width_all(3)
-			style.shadow_color = class_color
-			style.shadow_color.a = 0.5
-			style.shadow_size = 10
-			style.bg_color = Color(0.12, 0.1, 0.16, 0.98)
+			style = UIStyleFactory.create_hero_card_selected(class_color)
 		else:
-			style.border_color = class_color.darkened(0.5)
-			style.set_border_width_all(2)
-			style.shadow_size = 0
-			style.bg_color = Color(0.08, 0.08, 0.12, 0.95)
-		
+			style = UIStyleFactory.create_hero_card_normal(class_color)
 		card.add_theme_stylebox_override("panel", style)
 
 func _animate_hero_change(data: HeroData) -> void:
@@ -1031,23 +918,12 @@ func _update_card_hover_visual(hovered_index: int) -> void:
 		var data: HeroData = hero_data_cache.get(hero_id)
 		var class_color: Color = CLASS_COLORS.get(data.hero_class if data else "", Color.WHITE)
 		
-		# Create a NEW StyleBoxFlat to avoid shared resource issues
-		var style := StyleBoxFlat.new()
-		style.set_corner_radius_all(8)
-		style.content_margin_left = 12
-		style.content_margin_right = 12
-		style.content_margin_top = 10
-		style.content_margin_bottom = 10
-		style.border_color = class_color.darkened(0.5)
-		style.set_border_width_all(2)
-		style.shadow_size = 0
-		
-		# If this is the hovered card (but not selected), show subtle hover effect
+		# Apply hovered or normal style based on hover state
+		var style: StyleBoxFlat
 		if i == hovered_index:
-			style.bg_color = Color(0.1, 0.09, 0.14, 0.98)  # Slightly brighter
+			style = UIStyleFactory.create_hero_card_hovered(class_color)
 		else:
-			style.bg_color = Color(0.08, 0.08, 0.12, 0.95)  # Normal
-		
+			style = UIStyleFactory.create_hero_card_normal(class_color)
 		card.add_theme_stylebox_override("panel", style)
 
 func _input(event: InputEvent) -> void:
@@ -1113,19 +989,7 @@ func _show_confirmation_popup(hero_name: String, hero_id: String) -> void:
 	_confirmation_popup = PanelContainer.new()
 	_confirmation_popup.name = "ConfirmationPopup"
 	_confirmation_popup.custom_minimum_size = Vector2(500, 240)
-	
-	var popup_style := StyleBoxFlat.new()
-	popup_style.bg_color = Color(0.06, 0.06, 0.09, 0.98)
-	popup_style.border_color = Color(0.5, 0.4, 0.6, 0.9)
-	popup_style.set_border_width_all(3)
-	popup_style.set_corner_radius_all(12)
-	popup_style.shadow_color = Color(0.3, 0.2, 0.4, 0.6)
-	popup_style.shadow_size = 20
-	popup_style.content_margin_left = 30
-	popup_style.content_margin_right = 30
-	popup_style.content_margin_top = 25
-	popup_style.content_margin_bottom = 25
-	_confirmation_popup.add_theme_stylebox_override("panel", popup_style)
+	_confirmation_popup.add_theme_stylebox_override("panel", UIStyleFactory.create_confirmation_popup_style())
 	center.add_child(_confirmation_popup)
 	
 	var vbox := VBoxContainer.new()

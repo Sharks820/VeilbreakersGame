@@ -834,13 +834,7 @@ func _create_vera_tutorial_panel() -> void:
 	vera_tutorial_panel.offset_bottom = 120
 	
 	# Style - dark fantasy horror theme
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.04, 0.06, 0.98)
-	style.border_color = Color(0.5, 0.35, 0.6, 0.9)
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(12)
-	style.shadow_color = Color(0.3, 0.2, 0.4, 0.5)
-	style.shadow_size = 15
+	var style := UIStyleFactory.create_vera_tutorial_panel()
 	style.content_margin_left = 25
 	style.content_margin_right = 25
 	style.content_margin_top = 18
@@ -863,12 +857,7 @@ func _create_vera_tutorial_panel() -> void:
 	var portrait_frame := PanelContainer.new()
 	portrait_frame.name = "PortraitFrame"
 	portrait_frame.custom_minimum_size = Vector2(90, 90)
-	var frame_style := StyleBoxFlat.new()
-	frame_style.bg_color = Color(0.08, 0.06, 0.1, 1.0)
-	frame_style.border_color = Color(0.5, 0.4, 0.6, 1.0)
-	frame_style.set_border_width_all(3)
-	frame_style.set_corner_radius_all(45)  # Circular frame
-	portrait_frame.add_theme_stylebox_override("panel", frame_style)
+	portrait_frame.add_theme_stylebox_override("panel", UIStyleFactory.create_vera_portrait_circle())
 	hbox.add_child(portrait_frame)
 	
 	var portrait := TextureRect.new()
@@ -908,29 +897,7 @@ func _create_vera_tutorial_panel() -> void:
 	continue_button.visible = false
 	
 	# Style the continue button
-	var btn_normal := StyleBoxFlat.new()
-	btn_normal.bg_color = Color(0.15, 0.12, 0.2, 0.95)
-	btn_normal.border_color = Color(0.5, 0.4, 0.6, 0.8)
-	btn_normal.set_border_width_all(2)
-	btn_normal.set_corner_radius_all(6)
-	
-	var btn_hover := StyleBoxFlat.new()
-	btn_hover.bg_color = Color(0.25, 0.2, 0.35, 0.98)
-	btn_hover.border_color = Color(0.7, 0.55, 0.8, 1.0)
-	btn_hover.set_border_width_all(2)
-	btn_hover.set_corner_radius_all(6)
-	btn_hover.shadow_color = Color(0.5, 0.3, 0.6, 0.4)
-	btn_hover.shadow_size = 6
-	
-	var btn_pressed := StyleBoxFlat.new()
-	btn_pressed.bg_color = Color(0.35, 0.28, 0.45, 1.0)
-	btn_pressed.border_color = Color(0.8, 0.65, 0.9, 1.0)
-	btn_pressed.set_border_width_all(2)
-	btn_pressed.set_corner_radius_all(6)
-	
-	continue_button.add_theme_stylebox_override("normal", btn_normal)
-	continue_button.add_theme_stylebox_override("hover", btn_hover)
-	continue_button.add_theme_stylebox_override("pressed", btn_pressed)
+	UIStyleFactory.apply_vera_button_style(continue_button)
 	continue_button.add_theme_font_size_override("font_size", 14)
 	continue_button.add_theme_color_override("font_color", Color(0.9, 0.85, 0.95))
 	continue_button.add_theme_color_override("font_hover_color", Color(1.0, 0.95, 1.0))
@@ -1100,12 +1067,7 @@ func _create_highlight_rect(pos: Vector2, size: Vector2) -> Control:
 	highlight.size = size
 	highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0)  # Transparent background
-	style.border_color = Color(1.0, 0.9, 0.3, 1.0)  # Golden border
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(8)
-	highlight.add_theme_stylebox_override("panel", style)
+	highlight.add_theme_stylebox_override("panel", UIStyleFactory.create_tutorial_highlight())
 	
 	# Add to overlay canvas so it's visible during pause
 	if _tutorial_overlay_canvas:

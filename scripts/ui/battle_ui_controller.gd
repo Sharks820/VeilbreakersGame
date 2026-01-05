@@ -698,62 +698,9 @@ func _style_action_buttons() -> void:
 		
 		var data: Dictionary = button_data[button]
 		var accent_color: Color = data.color
-		
-		# Create custom stylebox for normal state
-		var normal_style := StyleBoxFlat.new()
-		normal_style.bg_color = Color(0.12, 0.12, 0.15, 0.95)
-		normal_style.border_color = accent_color.darkened(0.3)
-		normal_style.set_border_width_all(2)
-		normal_style.set_corner_radius_all(6)
-		normal_style.shadow_color = Color(0, 0, 0, 0.5)
-		normal_style.shadow_size = 4
-		normal_style.shadow_offset = Vector2(2, 2)
-		
-		# Hover style - brighter
-		var hover_style := StyleBoxFlat.new()
-		hover_style.bg_color = Color(0.18, 0.18, 0.22, 0.98)
-		hover_style.border_color = accent_color
-		hover_style.set_border_width_all(2)
-		hover_style.set_corner_radius_all(6)
-		hover_style.shadow_color = accent_color.darkened(0.5)
-		hover_style.shadow_color.a = 0.6
-		hover_style.shadow_size = 8
-		hover_style.shadow_offset = Vector2(0, 0)
-		
-		# Pressed style
-		var pressed_style := StyleBoxFlat.new()
-		pressed_style.bg_color = accent_color.darkened(0.4)
-		pressed_style.border_color = accent_color.lightened(0.2)
-		pressed_style.set_border_width_all(2)
-		pressed_style.set_corner_radius_all(6)
-		
-		# Disabled style
-		var disabled_style := StyleBoxFlat.new()
-		disabled_style.bg_color = Color(0.08, 0.08, 0.1, 0.7)
-		disabled_style.border_color = Color(0.3, 0.3, 0.3, 0.5)
-		disabled_style.set_border_width_all(1)
-		disabled_style.set_corner_radius_all(6)
-		
-		# Focus style - same as hover so focus indicator matches hover
-		var focus_style := StyleBoxFlat.new()
-		focus_style.bg_color = Color(0.18, 0.14, 0.22, 0.95)
-		focus_style.border_color = Color(0.7, 0.55, 0.4, 1.0)
-		focus_style.set_border_width_all(2)
-		focus_style.set_corner_radius_all(6)
-		
-		# Apply styles
-		button.add_theme_stylebox_override("normal", normal_style)
-		button.add_theme_stylebox_override("hover", hover_style)
-		button.add_theme_stylebox_override("pressed", pressed_style)
-		button.add_theme_stylebox_override("disabled", disabled_style)
-		button.add_theme_stylebox_override("focus", focus_style)  # Match hover style
-		
-		# Text styling
-		button.add_theme_color_override("font_color", UIStyleFactory.COLOR_PARCHMENT)
-		button.add_theme_color_override("font_hover_color", Color(1.0, 0.95, 0.85))
-		button.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0))
-		button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
-		button.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
+
+		# Apply action button styling with accent color (handles all states + font)
+		UIStyleFactory.apply_action_button_style(button, accent_color)
 		
 		# Add icon if texture exists
 		var icon_path: String = data.icon
@@ -1058,18 +1005,7 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 	panel.custom_minimum_size = Vector2(180, 60)
 
 	# Style the panel
-	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.1, 0.1, 0.15, 0.85)
-	panel_style.border_color = Color(0.3, 0.25, 0.4, 1.0)
-	panel_style.border_width_top = 1
-	panel_style.border_width_bottom = 1
-	panel_style.border_width_left = 1
-	panel_style.border_width_right = 1
-	panel_style.corner_radius_top_left = 4
-	panel_style.corner_radius_top_right = 4
-	panel_style.corner_radius_bottom_left = 4
-	panel_style.corner_radius_bottom_right = 4
-	panel.add_theme_stylebox_override("panel", panel_style)
+	panel.add_theme_stylebox_override("panel", UIStyleFactory.create_party_member_panel())
 
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 8)
@@ -1078,18 +1014,7 @@ func _create_party_member_panel(character: CharacterBase) -> PanelContainer:
 	# Portrait container
 	var portrait_container := PanelContainer.new()
 	portrait_container.custom_minimum_size = Vector2(50, 50)
-	var portrait_style := StyleBoxFlat.new()
-	portrait_style.bg_color = Color(0.15, 0.15, 0.2, 1.0)
-	portrait_style.border_color = Color(0.4, 0.35, 0.5, 1.0)
-	portrait_style.border_width_top = 2
-	portrait_style.border_width_bottom = 2
-	portrait_style.border_width_left = 2
-	portrait_style.border_width_right = 2
-	portrait_style.corner_radius_top_left = 3
-	portrait_style.corner_radius_top_right = 3
-	portrait_style.corner_radius_bottom_left = 3
-	portrait_style.corner_radius_bottom_right = 3
-	portrait_container.add_theme_stylebox_override("panel", portrait_style)
+	portrait_container.add_theme_stylebox_override("panel", UIStyleFactory.create_party_member_portrait())
 	hbox.add_child(portrait_container)
 
 	# Load portrait texture
@@ -1210,12 +1135,7 @@ func _create_enemy_slot_panel(enemy: CharacterBase) -> PanelContainer:
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 
 	# Style the panel with red-tinted border for enemies
-	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.15, 0.1, 0.1, 0.85)
-	panel_style.border_color = Color(0.5, 0.25, 0.25, 1.0)
-	panel_style.set_border_width_all(1)
-	panel_style.set_corner_radius_all(4)
-	panel.add_theme_stylebox_override("panel", panel_style)
+	panel.add_theme_stylebox_override("panel", UIStyleFactory.create_enemy_panel())
 
 	# Connect hover signals for tooltip
 	panel.mouse_entered.connect(_on_enemy_panel_hover.bind(enemy, panel))
@@ -1566,11 +1486,6 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 		var icon_container := PanelContainer.new()
 		icon_container.custom_minimum_size = Vector2(20, 20)
 		
-		# Style the container based on buff/debuff
-		var style := StyleBoxFlat.new()
-		style.set_corner_radius_all(3)
-		style.set_border_width_all(1)
-		
 		# Determine if buff or debuff for coloring
 		var is_buff := effect in [
 			Enums.StatusEffect.REGEN, Enums.StatusEffect.SHIELD,
@@ -1578,14 +1493,9 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 			Enums.StatusEffect.SPEED_UP, Enums.StatusEffect.PURIFYING,
 			Enums.StatusEffect.UNTARGETABLE, Enums.StatusEffect.GUARDED
 		]
-		
-		if is_buff:
-			style.bg_color = Color(0.1, 0.3, 0.1, 0.8)  # Green tint for buffs
-			style.border_color = Color(0.3, 0.7, 0.3, 0.9)
-		else:
-			style.bg_color = Color(0.3, 0.1, 0.1, 0.8)  # Red tint for debuffs
-			style.border_color = Color(0.7, 0.3, 0.3, 0.9)
-		
+
+		# Style the container based on buff/debuff
+		var style := UIStyleFactory.create_status_buff_style() if is_buff else UIStyleFactory.create_status_debuff_style()
 		icon_container.add_theme_stylebox_override("panel", style)
 		
 		var icon := TextureRect.new()
@@ -1646,25 +1556,14 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 		var portrait_panel := PanelContainer.new()
 		portrait_panel.custom_minimum_size = Vector2(36, 36)
 
-		# Create stylebox for colored border
-		var style := StyleBoxFlat.new()
+		# Style based on turn position and ally/enemy status
+		var style: StyleBoxFlat
 		if i == 0:
-			# Current turn - bright yellow border
-			style.bg_color = Color(0.15, 0.15, 0.15, 0.95)
-			style.border_color = Color.YELLOW
-			style.set_border_width_all(2)
+			style = UIStyleFactory.create_turn_order_current_dynamic()
 		elif is_ally:
-			# Ally - green border
-			style.bg_color = Color(0.1, 0.15, 0.1, 0.9)
-			style.border_color = Color(0.3, 0.9, 0.3)  # Green
-			style.set_border_width_all(1)
+			style = UIStyleFactory.create_turn_order_ally_dynamic()
 		else:
-			# Enemy - red border
-			style.bg_color = Color(0.15, 0.1, 0.1, 0.9)
-			style.border_color = Color(0.9, 0.3, 0.3)  # Red
-			style.set_border_width_all(1)
-
-		style.set_corner_radius_all(3)
+			style = UIStyleFactory.create_turn_order_enemy_dynamic()
 		portrait_panel.add_theme_stylebox_override("panel", style)
 
 		# Portrait TextureRect with actual character sprite
@@ -2112,16 +2011,7 @@ func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: f
 	row.custom_minimum_size = Vector2(380, 50)
 	
 	# Style the row panel
-	var row_style := StyleBoxFlat.new()
-	row_style.bg_color = Color(0.05, 0.08, 0.05, 0.8)
-	row_style.border_color = Color(0.3, 0.5, 0.3, 0.6)
-	row_style.set_border_width_all(1)
-	row_style.set_corner_radius_all(6)
-	row_style.content_margin_left = 10
-	row_style.content_margin_right = 10
-	row_style.content_margin_top = 5
-	row_style.content_margin_bottom = 5
-	row.add_theme_stylebox_override("panel", row_style)
+	row.add_theme_stylebox_override("panel", UIStyleFactory.create_xp_row_style())
 	
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 10)
@@ -2173,17 +2063,8 @@ func _create_character_xp_row(character: CharacterBase, xp_gained: int, delay: f
 	xp_section.add_child(xp_bar)
 	
 	# Style the progress bar - golden/amber to match victory panel theme
-	var bar_bg := StyleBoxFlat.new()
-	bar_bg.bg_color = Color(0.08, 0.06, 0.04, 0.9)  # Dark brown/black
-	bar_bg.border_color = Color(0.4, 0.3, 0.15, 0.6)  # Subtle golden border
-	bar_bg.set_border_width_all(1)
-	bar_bg.set_corner_radius_all(4)
-	xp_bar.add_theme_stylebox_override("background", bar_bg)
-	
-	var bar_fill := StyleBoxFlat.new()
-	bar_fill.bg_color = Color(0.85, 0.65, 0.25, 1.0)  # Golden amber fill
-	bar_fill.set_corner_radius_all(4)
-	xp_bar.add_theme_stylebox_override("fill", bar_fill)
+	xp_bar.add_theme_stylebox_override("background", UIStyleFactory.create_victory_xp_bar_bg())
+	xp_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_victory_xp_bar_fill())
 	
 	# Calculate XP values
 	var current_xp: int = 0
@@ -2250,16 +2131,7 @@ func _show_level_up_flash(row: PanelContainer, level_label: Label, new_level: in
 	popup.name = "LevelUpPopup"
 	popup.z_index = 10
 	
-	var popup_style := StyleBoxFlat.new()
-	popup_style.bg_color = Color(0.15, 0.12, 0.05, 0.95)
-	popup_style.border_color = Color(1.0, 0.85, 0.3)
-	popup_style.set_border_width_all(2)
-	popup_style.set_corner_radius_all(6)
-	popup_style.content_margin_left = 10
-	popup_style.content_margin_right = 10
-	popup_style.content_margin_top = 6
-	popup_style.content_margin_bottom = 6
-	popup.add_theme_stylebox_override("panel", popup_style)
+	popup.add_theme_stylebox_override("panel", UIStyleFactory.create_level_up_popup_compact())
 	
 	var popup_vbox := VBoxContainer.new()
 	popup_vbox.add_theme_constant_override("separation", 2)
@@ -2333,26 +2205,7 @@ func _style_victory_panel() -> void:
 		return
 	
 	# Dark fantasy panel style - deep blacks with golden/amber accents
-	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.04, 0.04, 0.06, 0.98)  # Near black
-	panel_style.border_color = Color(0.75, 0.55, 0.25, 1.0)  # Golden amber
-	panel_style.set_border_width_all(4)
-	panel_style.set_corner_radius_all(8)
-	panel_style.shadow_color = Color(0.6, 0.4, 0.1, 0.6)  # Warm glow
-	panel_style.shadow_size = 25
-	panel_style.content_margin_left = 40
-	panel_style.content_margin_right = 40
-	panel_style.content_margin_top = 30
-	panel_style.content_margin_bottom = 30
-	
-	# Add inner border effect with second stylebox
-	var inner_style := StyleBoxFlat.new()
-	inner_style.bg_color = Color(0.06, 0.06, 0.08, 0.95)
-	inner_style.border_color = Color(0.4, 0.3, 0.15, 0.6)
-	inner_style.set_border_width_all(1)
-	inner_style.set_corner_radius_all(6)
-	
-	victory_panel.add_theme_stylebox_override("panel", panel_style)
+	victory_panel.add_theme_stylebox_override("panel", UIStyleFactory.create_victory_panel_with_shadow())
 	
 	# Style the title - golden with dark fantasy feel
 	var title: Label = victory_panel.get_node_or_null("VBoxContainer/VictoryTitle")
@@ -2370,31 +2223,7 @@ func _style_victory_panel() -> void:
 	
 	# Style the continue button - dark with golden accents
 	if continue_button:
-		var btn_normal := StyleBoxFlat.new()
-		btn_normal.bg_color = Color(0.12, 0.1, 0.08, 0.98)
-		btn_normal.border_color = Color(0.65, 0.5, 0.25)
-		btn_normal.set_border_width_all(2)
-		btn_normal.set_corner_radius_all(6)
-		
-		var btn_hover := StyleBoxFlat.new()
-		btn_hover.bg_color = Color(0.2, 0.15, 0.1, 0.98)
-		btn_hover.border_color = Color(0.9, 0.7, 0.35)
-		btn_hover.set_border_width_all(2)
-		btn_hover.set_corner_radius_all(6)
-		btn_hover.shadow_color = Color(0.7, 0.5, 0.2, 0.5)
-		btn_hover.shadow_size = 10
-		
-		var btn_pressed := StyleBoxFlat.new()
-		btn_pressed.bg_color = Color(0.25, 0.2, 0.12, 0.98)
-		btn_pressed.border_color = Color(1.0, 0.8, 0.4)
-		btn_pressed.set_border_width_all(2)
-		btn_pressed.set_corner_radius_all(6)
-		
-		continue_button.add_theme_stylebox_override("normal", btn_normal)
-		continue_button.add_theme_stylebox_override("hover", btn_hover)
-		continue_button.add_theme_stylebox_override("pressed", btn_pressed)
-		continue_button.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TITLE)
-		continue_button.add_theme_color_override("font_color", UIStyleFactory.COLOR_BUTTON_GOLD)
+		UIStyleFactory.apply_victory_button_style_with_shadow(continue_button)
 		continue_button.text = "CONTINUE"
 
 func _play_victory_screen_flash() -> void:
@@ -2533,18 +2362,7 @@ func _style_defeat_panel() -> void:
 		return
 	
 	# Style the panel - dark red theme
-	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.12, 0.06, 0.06, 0.98)
-	panel_style.border_color = Color(0.7, 0.2, 0.2)
-	panel_style.set_border_width_all(3)
-	panel_style.set_corner_radius_all(12)
-	panel_style.shadow_color = Color(0.5, 0.1, 0.1, 0.4)
-	panel_style.shadow_size = 20
-	panel_style.content_margin_left = 30
-	panel_style.content_margin_right = 30
-	panel_style.content_margin_top = 25
-	panel_style.content_margin_bottom = 25
-	defeat_panel.add_theme_stylebox_override("panel", panel_style)
+	defeat_panel.add_theme_stylebox_override("panel", UIStyleFactory.create_defeat_panel_with_shadow())
 	
 	# Style the title
 	var title: Label = defeat_panel.get_node_or_null("VBoxContainer/DefeatTitle")
@@ -2562,25 +2380,7 @@ func _style_defeat_panel() -> void:
 	for button in [retry_button, title_button]:
 		if not button:
 			continue
-		var btn_normal := StyleBoxFlat.new()
-		btn_normal.bg_color = Color(0.4, 0.15, 0.15, 0.95)
-		btn_normal.border_color = Color(0.6, 0.3, 0.3)
-		btn_normal.set_border_width_all(2)
-		btn_normal.set_corner_radius_all(6)
-		
-		var btn_hover := StyleBoxFlat.new()
-		btn_hover.bg_color = Color(0.5, 0.2, 0.2, 0.98)
-		btn_hover.border_color = Color(0.8, 0.4, 0.4)
-		btn_hover.set_border_width_all(2)
-		btn_hover.set_corner_radius_all(6)
-		btn_hover.shadow_color = Color(0.6, 0.2, 0.2, 0.5)
-		btn_hover.shadow_size = 8
-		
-		button.add_theme_stylebox_override("normal", btn_normal)
-		button.add_theme_stylebox_override("hover", btn_hover)
-		button.add_theme_stylebox_override("pressed", btn_hover)
-		button.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-		button.add_theme_color_override("font_color", UIStyleFactory.COLOR_BUTTON_LIGHT)
+		UIStyleFactory.apply_defeat_button_style_with_shadow(button)
 
 func _on_continue_pressed() -> void:
 	victory_screen.hide()
@@ -3445,16 +3245,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 
 	# Style with ally colors
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.1, 0.12, 0.15, 0.9)
-	style.border_color = Color(0.3, 0.5, 0.4, 1.0)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 6
-	style.content_margin_right = 6
-	style.content_margin_top = 4
-	style.content_margin_bottom = 4
-	panel.add_theme_stylebox_override("panel", style)
+	panel.add_theme_stylebox_override("panel", UIStyleFactory.create_party_sidebar_panel())
 
 	# Connect hover signals for tooltip
 	panel.mouse_entered.connect(_on_party_panel_hover.bind(character, panel))
@@ -3656,16 +3447,7 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 
 	# Style with enemy colors
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.15, 0.1, 0.1, 0.9)
-	style.border_color = Color(0.5, 0.3, 0.3, 1.0)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 6
-	style.content_margin_right = 6
-	style.content_margin_top = 4
-	style.content_margin_bottom = 4
-	panel.add_theme_stylebox_override("panel", style)
+	panel.add_theme_stylebox_override("panel", UIStyleFactory.create_enemy_sidebar_panel())
 
 	# Connect hover signals
 	panel.mouse_entered.connect(_on_enemy_panel_hover.bind(enemy, panel))
@@ -4264,19 +4046,7 @@ func _show_capture_result_popup(success: bool, monster_name: String, method_name
 	popup.z_index = 100
 	
 	# Style based on success/failure
-	var style := StyleBoxFlat.new()
-	if success:
-		style.bg_color = Color(0.1, 0.2, 0.1, 0.95)
-		style.border_color = Color(0.4, 1.0, 0.4)
-	else:
-		style.bg_color = Color(0.2, 0.1, 0.1, 0.95)
-		style.border_color = Color(1.0, 0.4, 0.4)
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(12)
-	style.content_margin_left = 40
-	style.content_margin_right = 40
-	style.content_margin_top = 30
-	style.content_margin_bottom = 30
+	var style := UIStyleFactory.create_capture_success_popup() if success else UIStyleFactory.create_capture_failure_popup()
 	popup.add_theme_stylebox_override("panel", style)
 	
 	var vbox := VBoxContainer.new()

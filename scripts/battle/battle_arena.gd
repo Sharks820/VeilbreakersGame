@@ -358,16 +358,7 @@ func _create_party_sidebar(players: Array[CharacterBase]) -> void:
 	sidebar.position = Vector2(10, 70)
 	sidebar.custom_minimum_size = Vector2(170, 0)
 
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.1, 0.14, 0.92)
-	style.border_color = Color(0.25, 0.4, 0.35, 1.0)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 8
-	style.content_margin_right = 8
-	style.content_margin_top = 8
-	style.content_margin_bottom = 8
-	sidebar.add_theme_stylebox_override("panel", style)
+	sidebar.add_theme_stylebox_override("panel", UIStyleFactory.create_arena_party_sidebar())
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
@@ -392,16 +383,7 @@ func _create_party_slot(character: CharacterBase) -> PanelContainer:
 	var slot := PanelContainer.new()
 	slot.custom_minimum_size = Vector2(154, 50)
 
-	var slot_style := StyleBoxFlat.new()
-	slot_style.bg_color = Color(0.12, 0.15, 0.18, 0.9)
-	slot_style.border_color = Color(0.3, 0.45, 0.4, 1.0)
-	slot_style.set_border_width_all(1)
-	slot_style.set_corner_radius_all(3)
-	slot_style.content_margin_left = 4
-	slot_style.content_margin_right = 4
-	slot_style.content_margin_top = 4
-	slot_style.content_margin_bottom = 4
-	slot.add_theme_stylebox_override("panel", slot_style)
+	slot.add_theme_stylebox_override("panel", UIStyleFactory.create_arena_party_slot())
 
 	# Horizontal layout: portrait | name+bars
 	var hbox := HBoxContainer.new()
@@ -458,12 +440,7 @@ func _create_portrait(character: CharacterBase, size: int) -> Control:
 	container.custom_minimum_size = Vector2(size, size)
 
 	# Portrait frame style
-	var frame_style := StyleBoxFlat.new()
-	frame_style.bg_color = Color(0.08, 0.08, 0.1, 1.0)
-	frame_style.border_color = Color(0.4, 0.5, 0.45, 1.0)
-	frame_style.set_border_width_all(1)
-	frame_style.set_corner_radius_all(2)
-	container.add_theme_stylebox_override("panel", frame_style)
+	container.add_theme_stylebox_override("panel", UIStyleFactory.create_arena_ally_portrait())
 
 	# Load sprite texture
 	var sprite_path := _get_character_sprite_path(character)
@@ -481,27 +458,13 @@ func _create_portrait(character: CharacterBase, size: int) -> Control:
 
 func _style_hp_bar(bar: ProgressBar) -> void:
 	"""Style HP bar with green fill"""
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.15, 0.1, 0.1, 1.0)
-	bg.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("background", bg)
-
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.2, 0.75, 0.3, 1.0)
-	fill.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("fill", fill)
+	bar.add_theme_stylebox_override("background", UIStyleFactory.create_arena_hp_bg())
+	bar.add_theme_stylebox_override("fill", UIStyleFactory.create_arena_hp_fill())
 
 func _style_mp_bar(bar: ProgressBar) -> void:
 	"""Style MP bar with blue fill"""
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.1, 0.1, 0.15, 1.0)
-	bg.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("background", bg)
-
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.3, 0.5, 0.9, 1.0)
-	fill.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("fill", fill)
+	bar.add_theme_stylebox_override("background", UIStyleFactory.create_arena_mp_bg())
+	bar.add_theme_stylebox_override("fill", UIStyleFactory.create_arena_mp_fill())
 
 func _create_enemy_sidebar(enemies: Array[CharacterBase]) -> void:
 	"""Create enemy sidebar with HP bars - matches party sidebar but RED"""
@@ -519,16 +482,7 @@ func _create_enemy_sidebar(enemies: Array[CharacterBase]) -> void:
 	sidebar.offset_top = 70.0
 	sidebar.custom_minimum_size = Vector2(170, 0)
 
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.14, 0.08, 0.08, 0.92)
-	style.border_color = Color(0.5, 0.25, 0.25, 1.0)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 8
-	style.content_margin_right = 8
-	style.content_margin_top = 8
-	style.content_margin_bottom = 8
-	sidebar.add_theme_stylebox_override("panel", style)
+	sidebar.add_theme_stylebox_override("panel", UIStyleFactory.create_arena_enemy_sidebar())
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
@@ -553,16 +507,7 @@ func _create_enemy_slot(character: CharacterBase) -> PanelContainer:
 	var slot := PanelContainer.new()
 	slot.custom_minimum_size = Vector2(154, 50)
 
-	var slot_style := StyleBoxFlat.new()
-	slot_style.bg_color = Color(0.18, 0.12, 0.12, 0.9)
-	slot_style.border_color = Color(0.5, 0.3, 0.3, 1.0)
-	slot_style.set_border_width_all(1)
-	slot_style.set_corner_radius_all(3)
-	slot_style.content_margin_left = 4
-	slot_style.content_margin_right = 4
-	slot_style.content_margin_top = 4
-	slot_style.content_margin_bottom = 4
-	slot.add_theme_stylebox_override("panel", slot_style)
+	slot.add_theme_stylebox_override("panel", UIStyleFactory.create_arena_enemy_slot())
 
 	# Horizontal layout: portrait | name+bars
 	var hbox := HBoxContainer.new()
@@ -606,12 +551,7 @@ func _create_enemy_portrait(character: CharacterBase, size: int) -> Control:
 	container.custom_minimum_size = Vector2(size, size)
 
 	# Red portrait frame style
-	var frame_style := StyleBoxFlat.new()
-	frame_style.bg_color = Color(0.1, 0.06, 0.06, 1.0)
-	frame_style.border_color = Color(0.6, 0.3, 0.3, 1.0)
-	frame_style.set_border_width_all(1)
-	frame_style.set_corner_radius_all(2)
-	container.add_theme_stylebox_override("panel", frame_style)
+	container.add_theme_stylebox_override("panel", UIStyleFactory.create_arena_enemy_portrait())
 
 	# Load sprite texture
 	var sprite_path := _get_character_sprite_path(character)
@@ -629,15 +569,8 @@ func _create_enemy_portrait(character: CharacterBase, size: int) -> Control:
 
 func _style_enemy_hp_bar(bar: ProgressBar) -> void:
 	"""Style enemy HP bar with red fill"""
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.1, 0.08, 0.08, 1.0)
-	bg.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("background", bg)
-
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.85, 0.25, 0.2, 1.0)
-	fill.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("fill", fill)
+	bar.add_theme_stylebox_override("background", UIStyleFactory.create_arena_enemy_hp_bg())
+	bar.add_theme_stylebox_override("fill", UIStyleFactory.create_arena_enemy_hp_fill())
 
 func _place_characters(characters: Array[CharacterBase], positions_node: Node2D, container: Node2D, sprite_array: Array[Node2D]) -> void:
 	sprite_array.clear()
@@ -885,26 +818,7 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 	hp_bar.name = "HPBar"
 
 	# Style the HP bar to be visible
-	var fill_style := StyleBoxFlat.new()
-	fill_style.bg_color = Color(0.2, 0.8, 0.3, 1.0)  # Green fill
-	fill_style.corner_radius_top_left = 2
-	fill_style.corner_radius_top_right = 2
-	fill_style.corner_radius_bottom_left = 2
-	fill_style.corner_radius_bottom_right = 2
-	hp_bar.add_theme_stylebox_override("fill", fill_style)
-
-	var bg_style := StyleBoxFlat.new()
-	bg_style.bg_color = Color(0.15, 0.1, 0.1, 0.9)  # Dark background
-	bg_style.border_color = Color(0.3, 0.25, 0.2, 1.0)  # Border
-	bg_style.border_width_top = 1
-	bg_style.border_width_bottom = 1
-	bg_style.border_width_left = 1
-	bg_style.border_width_right = 1
-	bg_style.corner_radius_top_left = 2
-	bg_style.corner_radius_top_right = 2
-	bg_style.corner_radius_bottom_left = 2
-	bg_style.corner_radius_bottom_right = 2
-	hp_bar.add_theme_stylebox_override("background", bg_style)
+	UIStyleFactory.apply_floating_hp_bar_style(hp_bar)
 
 	container.add_child(hp_bar)
 
