@@ -56,3 +56,6 @@ Thumbs.db
 # Build outputs
 build/
 export/
+
+# Local development tools (Python scripts, ffmpeg, realesrgan)
+tools/

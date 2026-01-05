@@ -157,13 +157,13 @@ This is NON-NEGOTIABLE. Before writing ANY:
 ```
 [Source: bruzethegreat/gsap-master-mcp-server](https://github.com/bruzethegreat/gsap-master-mcp-server)
 
-### 4. spine2d-animation (THE RIGGER)
-**2D skeletal animation from PSD files**
+### 4. spine2d-animation (DISABLED - NOT RECOMMENDED)
+**2D skeletal animation - REMOVED FROM WORKFLOW**
 ```
-- Bone rigging from PSD layers
-- IK constraints
-- Natural language: "Make character run scared"
-- Animation export for game engines
+- Attempted bone rigging approach
+- Too complex for Godot 2D integration
+- Cutout animation didn't work reliably
+- STICK TO SPRITE SHEETS INSTEAD
 ```
 [Source: ampersante/spine2d-animation-mcp](https://github.com/ampersante/spine2d-animation-mcp)
 

@@ -387,6 +387,7 @@ battle, ui, art, audio, vera, monsters, critical
 - Custom eye drawing - artwork has them
 - Complex logo animation - caused glitching
 - Fake transparency (checker pattern) - use REAL alpha
+- **Spine/Cutout rigging for Godot** - Too complex, animations glitchy, STICK TO SPRITE SHEETS
 
 ### WORKS
 - TextureButton with texture_disabled
