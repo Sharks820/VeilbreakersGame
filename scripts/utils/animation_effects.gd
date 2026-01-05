@@ -17,6 +17,7 @@ const DURATION_SCENE := 0.5
 # FLASH EFFECTS
 # =============================================================================
 
+
 ## Apply a quick flash effect to a sprite/node
 ## Returns the tween for chaining or awaiting
 static func apply_flash(sprite: Node2D, color: Color, duration: float = 0.1) -> Tween:
@@ -28,29 +29,36 @@ static func apply_flash(sprite: Node2D, color: Color, duration: float = 0.1) -> 
 	tween.tween_property(sprite, "modulate", original, duration)
 	return tween
 
+
 ## Apply a hit flash (red tint)
 static func apply_hit_flash(sprite: Node2D, duration: float = 0.1) -> Tween:
 	return apply_flash(sprite, Color(1.0, 0.3, 0.3, 1.0), duration)
+
 
 ## Apply a critical hit flash (brighter red)
 static func apply_critical_flash(sprite: Node2D, duration: float = 0.15) -> Tween:
 	return apply_flash(sprite, Color(1.0, 0.2, 0.2, 1.5), duration)
 
+
 ## Apply a heal flash (green tint)
 static func apply_heal_flash(sprite: Node2D, duration: float = 0.15) -> Tween:
 	return apply_flash(sprite, Color(0.5, 1.5, 0.5, 1.0), duration)
+
 
 ## Apply a buff flash (gold tint)
 static func apply_buff_flash(sprite: Node2D, duration: float = 0.15) -> Tween:
 	return apply_flash(sprite, Color(1.5, 1.3, 0.8, 1.0), duration)
 
+
 ## Apply a debuff flash (purple tint)
 static func apply_debuff_flash(sprite: Node2D, duration: float = 0.15) -> Tween:
 	return apply_flash(sprite, Color(0.8, 0.5, 1.0, 1.0), duration)
 
+
 # =============================================================================
 # GLOW EFFECTS
 # =============================================================================
+
 
 ## Apply a glow effect (modulate brightness pulse)
 static func apply_glow(sprite: Node2D, color: Color, intensity: float, duration: float) -> Tween:
@@ -67,14 +75,19 @@ static func apply_glow(sprite: Node2D, color: Color, intensity: float, duration:
 	tween.tween_property(sprite, "modulate", Color.WHITE, duration * 0.5)
 	return tween
 
+
 ## Apply a brand-colored glow
-static func apply_brand_glow(sprite: Node2D, brand: Enums.Brand, intensity: float = 1.5, duration: float = 0.3) -> Tween:
-	var color := Helpers.get_brand_glow_color(brand)
+static func apply_brand_glow(
+	sprite: Node2D, brand: Enums.Brand, intensity: float = 1.5, duration: float = 0.3
+) -> Tween:
+	var color := BrandSystem.get_brand_glow_color(brand)
 	return apply_glow(sprite, color, intensity, duration)
+
 
 # =============================================================================
 # SHAKE EFFECTS
 # =============================================================================
+
 
 ## Apply a shake effect to a node
 static func apply_shake(node: Node2D, amount: Vector2, duration: float) -> Tween:
@@ -85,10 +98,7 @@ static func apply_shake(node: Node2D, amount: Vector2, duration: float) -> Tween
 	var tween := node.create_tween()
 
 	for i in range(shake_count):
-		var offset := Vector2(
-			randf_range(-amount.x, amount.x),
-			randf_range(-amount.y, amount.y)
-		)
+		var offset := Vector2(randf_range(-amount.x, amount.x), randf_range(-amount.y, amount.y))
 		tween.tween_property(node, "position", original_pos + offset, 0.015)
 		tween.tween_property(node, "position", original_pos, 0.015)
 
@@ -96,9 +106,11 @@ static func apply_shake(node: Node2D, amount: Vector2, duration: float) -> Tween
 	tween.tween_property(node, "position", original_pos, 0.01)
 	return tween
 
+
 ## Apply a simple shake (equal X and Y intensity)
 static func apply_simple_shake(node: Node2D, intensity: float, duration: float) -> Tween:
 	return apply_shake(node, Vector2(intensity, intensity * 0.5), duration)
+
 
 ## Apply a hit shake (standard damage reaction)
 static func apply_hit_shake(node: Node2D, is_critical: bool = false) -> Tween:
@@ -107,9 +119,11 @@ static func apply_hit_shake(node: Node2D, is_critical: bool = false) -> Tween:
 	else:
 		return apply_shake(node, Vector2(8.0, 4.0), 0.15)
 
+
 # =============================================================================
 # SCALE EFFECTS
 # =============================================================================
+
 
 ## Scale pop effect (grow then shrink back)
 static func scale_pop(node: Node2D, target_scale: Vector2, duration: float = 0.2) -> Tween:
@@ -123,8 +137,11 @@ static func scale_pop(node: Node2D, target_scale: Vector2, duration: float = 0.2
 	tween.tween_property(node, "scale", original, duration * 0.6)
 	return tween
 
+
 ## Scale from a starting scale to end scale
-static func scale_to(node: Node2D, from_scale: Vector2, to_scale: Vector2, duration: float) -> Tween:
+static func scale_to(
+	node: Node2D, from_scale: Vector2, to_scale: Vector2, duration: float
+) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	node.scale = from_scale
@@ -134,13 +151,16 @@ static func scale_to(node: Node2D, from_scale: Vector2, to_scale: Vector2, durat
 	tween.tween_property(node, "scale", to_scale, duration)
 	return tween
 
+
 ## Bounce effect (scale down then up)
 static func bounce(node: Node2D, squash_amount: float = 0.1, duration: float = 0.2) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	var original := node.scale
 	var squash := Vector2(original.x * (1.0 + squash_amount), original.y * (1.0 - squash_amount))
-	var stretch := Vector2(original.x * (1.0 - squash_amount * 0.5), original.y * (1.0 + squash_amount * 0.5))
+	var stretch := Vector2(
+		original.x * (1.0 - squash_amount * 0.5), original.y * (1.0 + squash_amount * 0.5)
+	)
 
 	var tween := node.create_tween()
 	tween.tween_property(node, "scale", squash, duration * 0.3)
@@ -148,9 +168,11 @@ static func bounce(node: Node2D, squash_amount: float = 0.1, duration: float = 0
 	tween.tween_property(node, "scale", original, duration * 0.4).set_ease(Tween.EASE_OUT)
 	return tween
 
+
 # =============================================================================
 # FADE EFFECTS
 # =============================================================================
+
 
 ## Fade in a Control or Node2D
 static func fade_in(node: CanvasItem, duration: float = 0.25, start_alpha: float = 0.0) -> Tween:
@@ -162,6 +184,7 @@ static func fade_in(node: CanvasItem, duration: float = 0.25, start_alpha: float
 	tween.tween_property(node, "modulate:a", 1.0, duration)
 	return tween
 
+
 ## Fade out a Control or Node2D
 static func fade_out(node: CanvasItem, duration: float = 0.25) -> Tween:
 	if not is_instance_valid(node):
@@ -170,6 +193,7 @@ static func fade_out(node: CanvasItem, duration: float = 0.25) -> Tween:
 	tween.set_ease(Tween.EASE_IN)
 	tween.tween_property(node, "modulate:a", 0.0, duration)
 	return tween
+
 
 ## Crossfade (fade out one, fade in another)
 static func crossfade(out_node: CanvasItem, in_node: CanvasItem, duration: float = 0.3) -> Tween:
@@ -182,12 +206,16 @@ static func crossfade(out_node: CanvasItem, in_node: CanvasItem, duration: float
 	tween.tween_property(in_node, "modulate:a", 1.0, duration)
 	return tween
 
+
 # =============================================================================
 # SLIDE EFFECTS
 # =============================================================================
 
+
 ## Slide in from a direction
-static func slide_in(node: Control, direction: Vector2, distance: float, duration: float = 0.3) -> Tween:
+static func slide_in(
+	node: Control, direction: Vector2, distance: float, duration: float = 0.3
+) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	var target_pos := node.position
@@ -198,8 +226,11 @@ static func slide_in(node: Control, direction: Vector2, distance: float, duratio
 	tween.tween_property(node, "position", target_pos, duration)
 	return tween
 
+
 ## Slide out in a direction
-static func slide_out(node: Control, direction: Vector2, distance: float, duration: float = 0.25) -> Tween:
+static func slide_out(
+	node: Control, direction: Vector2, distance: float, duration: float = 0.25
+) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	var target_pos := node.position + direction * distance
@@ -209,12 +240,16 @@ static func slide_out(node: Control, direction: Vector2, distance: float, durati
 	tween.tween_property(node, "position", target_pos, duration)
 	return tween
 
+
 # =============================================================================
 # BUTTON HOVER EFFECTS
 # =============================================================================
 
+
 ## Standard button hover animation
-static func button_hover(button: Control, scale_target: float = 1.05, duration: float = 0.15) -> Tween:
+static func button_hover(
+	button: Control, scale_target: float = 1.05, duration: float = 0.15
+) -> Tween:
 	if not is_instance_valid(button):
 		return null
 	var tween := button.create_tween()
@@ -222,6 +257,7 @@ static func button_hover(button: Control, scale_target: float = 1.05, duration: 
 	tween.tween_property(button, "scale", Vector2(scale_target, scale_target), duration)
 	tween.tween_property(button, "modulate", Color(1.2, 1.1, 1.1, 1.0), duration)
 	return tween
+
 
 ## Standard button unhover animation
 static func button_unhover(button: Control, duration: float = 0.15) -> Tween:
@@ -233,6 +269,7 @@ static func button_unhover(button: Control, duration: float = 0.15) -> Tween:
 	tween.tween_property(button, "modulate", Color.WHITE, duration)
 	return tween
 
+
 ## Button press animation (quick scale down)
 static func button_press(button: Control, duration: float = 0.08) -> Tween:
 	if not is_instance_valid(button):
@@ -242,13 +279,17 @@ static func button_press(button: Control, duration: float = 0.08) -> Tween:
 	tween.tween_property(button, "scale", Vector2.ONE, duration)
 	return tween
 
+
 # =============================================================================
 # BREATHING / IDLE ANIMATIONS
 # =============================================================================
 
+
 ## Create a breathing loop (for idle animations)
 ## Returns a looping tween that must be stored and killed manually
-static func breathing_loop(node: Node2D, min_scale: float = 1.0, max_scale: float = 1.02, cycle_time: float = 2.0) -> Tween:
+static func breathing_loop(
+	node: Node2D, min_scale: float = 1.0, max_scale: float = 1.02, cycle_time: float = 2.0
+) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	var tween := node.create_tween().set_loops()
@@ -258,8 +299,11 @@ static func breathing_loop(node: Node2D, min_scale: float = 1.0, max_scale: floa
 	tween.tween_property(node, "scale", Vector2(min_scale, min_scale), cycle_time * 0.5)
 	return tween
 
+
 ## Create a pulse loop (modulate brightness)
-static func pulse_loop(node: CanvasItem, min_alpha: float = 0.8, max_alpha: float = 1.0, cycle_time: float = 1.5) -> Tween:
+static func pulse_loop(
+	node: CanvasItem, min_alpha: float = 0.8, max_alpha: float = 1.0, cycle_time: float = 1.5
+) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	var tween := node.create_tween().set_loops()
@@ -269,14 +313,17 @@ static func pulse_loop(node: CanvasItem, min_alpha: float = 0.8, max_alpha: floa
 	tween.tween_property(node, "modulate:a", min_alpha, cycle_time * 0.5)
 	return tween
 
+
 # =============================================================================
 # UTILITY
 # =============================================================================
+
 
 ## Kill a tween safely
 static func kill_tween(tween: Tween) -> void:
 	if tween and tween.is_valid():
 		tween.kill()
+
 
 ## Kill multiple tweens safely
 static func kill_tweens(tweens: Array) -> void:
@@ -284,9 +331,11 @@ static func kill_tweens(tweens: Array) -> void:
 		kill_tween(tween)
 	tweens.clear()
 
+
 # =============================================================================
 # POPUP ANIMATIONS (v0.98 - Consolidate 17+ duplicate patterns)
 # =============================================================================
+
 
 ## Animate popup entrance (fade in + scale pop)
 ## Standard pattern used across battle_ui_controller, pause_menu, settings_menu, etc.
@@ -300,11 +349,16 @@ static func popup_entrance(popup: Control, duration: float = Constants.UI_POPUP_
 	var tween := popup.create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(popup, "modulate:a", 1.0, duration)
-	tween.tween_property(popup, "scale", Vector2.ONE, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(popup, "scale", Vector2.ONE, duration).set_ease(Tween.EASE_OUT).set_trans(
+		Tween.TRANS_BACK
+	)
 	return tween
 
+
 ## Animate popup exit (fade out + scale shrink)
-static func popup_exit(popup: Control, duration: float = Constants.UI_POPUP_EXIT, destroy: bool = false) -> Tween:
+static func popup_exit(
+	popup: Control, duration: float = Constants.UI_POPUP_EXIT, destroy: bool = false
+) -> Tween:
 	if not is_instance_valid(popup):
 		return null
 
@@ -319,6 +373,7 @@ static func popup_exit(popup: Control, duration: float = Constants.UI_POPUP_EXIT
 		tween.chain().tween_callback(func(): popup.visible = false)
 	return tween
 
+
 ## Fade out and destroy node (common pattern for damage numbers, status popups)
 static func fade_out_destroy(node: CanvasItem, duration: float = 0.2) -> Tween:
 	if not is_instance_valid(node):
@@ -328,9 +383,12 @@ static func fade_out_destroy(node: CanvasItem, duration: float = 0.2) -> Tween:
 	tween.tween_callback(node.queue_free)
 	return tween
 
+
 ## Floating text animation (rise + fade out + destroy)
 ## Used for damage numbers, status text, etc.
-static func floating_text(node: CanvasItem, rise_distance: float = 40.0, duration: float = 1.0) -> Tween:
+static func floating_text(
+	node: CanvasItem, rise_distance: float = 40.0, duration: float = 1.0
+) -> Tween:
 	if not is_instance_valid(node):
 		return null
 
@@ -344,7 +402,9 @@ static func floating_text(node: CanvasItem, rise_distance: float = 40.0, duratio
 	if node is Node2D:
 		tween.tween_property(node, "position:y", end_pos.y, duration).set_ease(Tween.EASE_OUT)
 	else:
-		tween.tween_property(node, "global_position:y", end_pos.y, duration).set_ease(Tween.EASE_OUT)
+		tween.tween_property(node, "global_position:y", end_pos.y, duration).set_ease(
+			Tween.EASE_OUT
+		)
 
 	# Hold then fade
 	tween.chain().tween_interval(duration * 0.6)
@@ -352,23 +412,31 @@ static func floating_text(node: CanvasItem, rise_distance: float = 40.0, duratio
 	tween.chain().tween_callback(node.queue_free)
 	return tween
 
+
 # =============================================================================
 # BUTTON CLICK BOUNCE (v0.98 - Consolidate 3+ duplicate patterns)
 # =============================================================================
+
 
 ## Full button click animation (press down, bounce up, settle)
 static func button_click_bounce(button: Control, duration: float = 0.26) -> Tween:
 	if not is_instance_valid(button):
 		return null
 	var tween := button.create_tween()
-	tween.tween_property(button, "scale", Vector2(0.9, 0.9), duration * 0.3).set_trans(Tween.TRANS_CUBIC)
-	tween.tween_property(button, "scale", Vector2(1.05, 1.05), duration * 0.4).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(button, "scale", Vector2(0.9, 0.9), duration * 0.3).set_trans(
+		Tween.TRANS_CUBIC
+	)
+	tween.tween_property(button, "scale", Vector2(1.05, 1.05), duration * 0.4).set_trans(
+		Tween.TRANS_BACK
+	)
 	tween.tween_property(button, "scale", Vector2.ONE, duration * 0.3).set_trans(Tween.TRANS_CUBIC)
 	return tween
+
 
 # =============================================================================
 # TURN ORDER ANIMATIONS
 # =============================================================================
+
 
 ## Turn icon entrance animation (slide down + fade in)
 static func turn_icon_entrance(icon: Control, index: int, slide_time: float = 0.3) -> Tween:
@@ -381,8 +449,11 @@ static func turn_icon_entrance(icon: Control, index: int, slide_time: float = 0.
 	var tween := icon.create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(icon, "modulate:a", 1.0, slide_time).set_delay(index * 0.1)
-	tween.tween_property(icon, "position:y", 0, slide_time).set_delay(index * 0.1).set_ease(Tween.EASE_OUT)
+	tween.tween_property(icon, "position:y", 0, slide_time).set_delay(index * 0.1).set_ease(
+		Tween.EASE_OUT
+	)
 	return tween
+
 
 ## Turn icon exit animation (slide up + fade out)
 static func turn_icon_exit(icon: Control, duration: float = 0.2) -> Tween:
@@ -396,9 +467,11 @@ static func turn_icon_exit(icon: Control, duration: float = 0.2) -> Tween:
 	tween.chain().tween_callback(icon.queue_free)
 	return tween
 
+
 # =============================================================================
 # MENU ANIMATIONS
 # =============================================================================
+
 
 ## Standard action menu show animation
 static func action_menu_show(menu: Control, duration: float = 0.25) -> Tween:
@@ -412,8 +485,11 @@ static func action_menu_show(menu: Control, duration: float = 0.25) -> Tween:
 	var tween := menu.create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(menu, "modulate:a", 1.0, duration)
-	tween.tween_property(menu, "scale", Vector2.ONE, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(menu, "scale", Vector2.ONE, duration).set_ease(Tween.EASE_OUT).set_trans(
+		Tween.TRANS_BACK
+	)
 	return tween
+
 
 ## Standard action menu hide animation
 static func action_menu_hide(menu: Control, duration: float = 0.15) -> Tween:
@@ -427,12 +503,16 @@ static func action_menu_hide(menu: Control, duration: float = 0.15) -> Tween:
 	tween.chain().tween_callback(func(): menu.visible = false)
 	return tween
 
+
 # =============================================================================
 # SKILL ANNOUNCEMENT
 # =============================================================================
 
+
 ## Skill name dramatic entrance (pop in, hold, fade out)
-static func skill_announcement(display: Control, hold_time: float = Constants.BATTLE_SKILL_ANNOUNCE) -> Tween:
+static func skill_announcement(
+	display: Control, hold_time: float = Constants.BATTLE_SKILL_ANNOUNCE
+) -> Tween:
 	if not is_instance_valid(display):
 		return null
 
@@ -444,7 +524,9 @@ static func skill_announcement(display: Control, hold_time: float = Constants.BA
 
 	# Pop in
 	tween.tween_property(display, "modulate:a", 1.0, 0.1)
-	tween.parallel().tween_property(display, "scale", Vector2(1.2, 1.2), 0.15).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(display, "scale", Vector2(1.2, 1.2), 0.15).set_ease(
+		Tween.EASE_OUT
+	)
 
 	# Settle
 	tween.tween_property(display, "scale", Vector2.ONE, 0.1)
@@ -458,18 +540,23 @@ static func skill_announcement(display: Control, hold_time: float = Constants.BA
 
 	return tween
 
+
 # =============================================================================
 # MODULATE PULSE PATTERNS (v1.02 - Consolidate 60+ duplicate patterns)
 # =============================================================================
 
+
 ## Quick white flash and back (hit confirmation, button press)
-static func flash_white(node: CanvasItem, flash_duration: float = 0.03, return_duration: float = 0.05) -> Tween:
+static func flash_white(
+	node: CanvasItem, flash_duration: float = 0.03, return_duration: float = 0.05
+) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	var tween := node.create_tween()
 	tween.tween_property(node, "modulate", Color(1.8, 1.8, 1.8, 1.0), flash_duration)
 	tween.tween_property(node, "modulate", Color.WHITE, return_duration)
 	return tween
+
 
 ## Flash to color and back (general purpose)
 static func flash_color(node: CanvasItem, color: Color, return_duration: float = 0.15) -> Tween:
@@ -480,6 +567,7 @@ static func flash_color(node: CanvasItem, color: Color, return_duration: float =
 	tween.tween_property(node, "modulate", Color.WHITE, return_duration)
 	return tween
 
+
 ## Pulse glow (brighten then return) - common for level up, unlock
 static func pulse_glow(node: CanvasItem, glow_color: Color, duration: float = 0.4) -> Tween:
 	if not is_instance_valid(node):
@@ -488,6 +576,7 @@ static func pulse_glow(node: CanvasItem, glow_color: Color, duration: float = 0.
 	tween.tween_property(node, "modulate", glow_color, duration * 0.5)
 	tween.tween_property(node, "modulate", Color.WHITE, duration * 0.5)
 	return tween
+
 
 ## Double pulse (flash, return, flash again) - victory, special events
 static func double_pulse(node: CanvasItem, color: Color, duration: float = 0.8) -> Tween:
@@ -500,14 +589,18 @@ static func double_pulse(node: CanvasItem, color: Color, duration: float = 0.8) 
 	tween.tween_property(node, "modulate", Color.WHITE, duration * 0.3)
 	return tween
 
+
 ## Looping color pulse (for active turn, selection highlighting)
-static func color_pulse_loop(node: CanvasItem, glow_color: Color, base_color: Color = Color.WHITE, cycle_time: float = 1.6) -> Tween:
+static func color_pulse_loop(
+	node: CanvasItem, glow_color: Color, base_color: Color = Color.WHITE, cycle_time: float = 1.6
+) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	var tween := node.create_tween().set_loops()
 	tween.tween_property(node, "modulate", glow_color, cycle_time * 0.5).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_property(node, "modulate", base_color, cycle_time * 0.5).set_ease(Tween.EASE_IN_OUT)
 	return tween
+
 
 ## Low HP pulse (red warning)
 static func low_hp_pulse_loop(node: CanvasItem, pulse_speed: float = 1.0) -> Tween:
@@ -518,6 +611,7 @@ static func low_hp_pulse_loop(node: CanvasItem, pulse_speed: float = 1.0) -> Twe
 	tween.tween_property(node, "modulate", Color.WHITE, 0.5 / pulse_speed)
 	return tween
 
+
 ## Corruption pulse (purple)
 static func corruption_pulse_loop(node: CanvasItem) -> Tween:
 	if not is_instance_valid(node):
@@ -527,9 +621,11 @@ static func corruption_pulse_loop(node: CanvasItem) -> Tween:
 	tween.tween_property(node, "modulate", Color.WHITE, 0.3)
 	return tween
 
+
 # =============================================================================
 # DEATH ANIMATIONS (v1.02 - Consolidate 4+ duplicate patterns)
 # =============================================================================
+
 
 ## Standard death animation (flash red, fade gray, fade out)
 static func death_animation(sprite: CanvasItem, duration: float = 0.8) -> Tween:
@@ -546,6 +642,7 @@ static func death_animation(sprite: CanvasItem, duration: float = 0.8) -> Tween:
 	tween.tween_property(sprite, "modulate", Color(0.2, 0.2, 0.2, 0.0), duration * 0.4)
 	return tween
 
+
 ## Critical death animation (more dramatic)
 static func critical_death_animation(sprite: CanvasItem, duration: float = 1.0) -> Tween:
 	if not is_instance_valid(sprite):
@@ -557,9 +654,11 @@ static func critical_death_animation(sprite: CanvasItem, duration: float = 1.0) 
 	tween.tween_property(sprite, "modulate", Color(0.3, 0.3, 0.3, 0.0), duration * 0.65)
 	return tween
 
+
 # =============================================================================
 # BUTTON HOVER COLORS (v1.02 - Consolidate 25+ duplicate patterns)
 # =============================================================================
+
 
 ## Standard warm hover glow
 static func button_warm_hover(button: Control, duration: float = 0.12) -> Tween:
@@ -569,6 +668,7 @@ static func button_warm_hover(button: Control, duration: float = 0.12) -> Tween:
 	tween.tween_property(button, "modulate", Color(1.3, 1.1, 0.9, 1.0), duration)
 	return tween
 
+
 ## Standard hover exit
 static func button_unhover_modulate(button: Control, duration: float = 0.1) -> Tween:
 	if not is_instance_valid(button):
@@ -577,14 +677,18 @@ static func button_unhover_modulate(button: Control, duration: float = 0.1) -> T
 	tween.tween_property(button, "modulate", Color.WHITE, duration)
 	return tween
 
+
 ## Flash highlight (for selection changes)
-static func flash_highlight(node: CanvasItem, color: Color = Color(1.5, 1.5, 1.0, 1.0), duration: float = 0.45) -> Tween:
+static func flash_highlight(
+	node: CanvasItem, color: Color = Color(1.5, 1.5, 1.0, 1.0), duration: float = 0.45
+) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	var tween := node.create_tween()
 	tween.tween_property(node, "modulate", color, duration * 0.33)
 	tween.tween_property(node, "modulate", Color.WHITE, duration * 0.67)
 	return tween
+
 
 # =============================================================================
 # COMMON COLOR CONSTANTS FOR MODULATE
@@ -608,33 +712,41 @@ const MOD_CORRUPTION := Color(1.4, 1.0, 1.4, 1.0)
 # Common easing combinations as static helper functions
 # These wrap the verbose Tween.set_ease().set_trans() pattern
 
+
 ## Apply smooth bounce entrance easing (most common UI pattern)
 static func ease_out_back(tween: Tween) -> Tween:
 	return tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
 
 ## Apply smooth entrance easing (fade in, slide in)
 static func ease_out(tween: Tween) -> Tween:
 	return tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
+
 ## Apply smooth exit easing (fade out, slide out)
 static func ease_in(tween: Tween) -> Tween:
 	return tween.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+
 
 ## Apply smooth in-out easing (breathing, pulses)
 static func ease_in_out(tween: Tween) -> Tween:
 	return tween.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
+
 ## Apply elastic bounce (impact effects)
 static func ease_elastic(tween: Tween) -> Tween:
 	return tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
+
 
 ## Apply linear (no easing, constant speed)
 static func ease_linear(tween: Tween) -> Tween:
 	return tween.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_LINEAR)
 
+
 # =============================================================================
 # TWEEN FACTORY HELPERS (v1.04 - Common tween setup patterns)
 # =============================================================================
+
 
 ## Create a parallel tween (multiple properties at once)
 static func create_parallel_tween(node: Node) -> Tween:
@@ -642,11 +754,13 @@ static func create_parallel_tween(node: Node) -> Tween:
 		return null
 	return node.create_tween().set_parallel(true)
 
+
 ## Create a looping tween
 static func create_loop_tween(node: Node) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	return node.create_tween().set_loops()
+
 
 ## Create a tween with standard bounce ease
 static func create_bounce_tween(node: Node) -> Tween:
@@ -654,9 +768,11 @@ static func create_bounce_tween(node: Node) -> Tween:
 		return null
 	return node.create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 
+
 # =============================================================================
 # POSITION ANIMATION HELPERS (v1.04 - Consolidate 47+ position tweens)
 # =============================================================================
+
 
 ## Move to position with easing
 static func move_to(node: CanvasItem, target_pos: Vector2, duration: float = 0.3) -> Tween:
@@ -664,8 +780,11 @@ static func move_to(node: CanvasItem, target_pos: Vector2, duration: float = 0.3
 		return null
 	var tween := node.create_tween()
 	var prop := "global_position" if node is Control else "position"
-	tween.tween_property(node, prop, target_pos, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(node, prop, target_pos, duration).set_ease(Tween.EASE_OUT).set_trans(
+		Tween.TRANS_CUBIC
+	)
 	return tween
+
 
 ## Move by offset
 static func move_by(node: CanvasItem, offset: Vector2, duration: float = 0.3) -> Tween:
@@ -673,6 +792,7 @@ static func move_by(node: CanvasItem, offset: Vector2, duration: float = 0.3) ->
 		return null
 	var current_pos: Vector2 = node.global_position if node is Control else node.position
 	return move_to(node, current_pos + offset, duration)
+
 
 ## Jump animation (up then down)
 static func jump(node: CanvasItem, height: float = 20.0, duration: float = 0.4) -> Tween:
@@ -682,11 +802,16 @@ static func jump(node: CanvasItem, height: float = 20.0, duration: float = 0.4) 
 	var start_y: float = node.position.y if node is Node2D else node.global_position.y
 	var tween := node.create_tween()
 	tween.tween_property(node, prop, start_y - height, duration * 0.4).set_ease(Tween.EASE_OUT)
-	tween.tween_property(node, prop, start_y, duration * 0.6).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_BOUNCE)
+	tween.tween_property(node, prop, start_y, duration * 0.6).set_ease(Tween.EASE_IN).set_trans(
+		Tween.TRANS_BOUNCE
+	)
 	return tween
 
+
 ## Knockback animation (move away then return)
-static func knockback(node: CanvasItem, direction: Vector2, distance: float = 30.0, duration: float = 0.3) -> Tween:
+static func knockback(
+	node: CanvasItem, direction: Vector2, distance: float = 30.0, duration: float = 0.3
+) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	var prop := "position" if node is Node2D else "global_position"
@@ -694,15 +819,21 @@ static func knockback(node: CanvasItem, direction: Vector2, distance: float = 30
 	var knockback_pos := start_pos + direction.normalized() * distance
 	var tween := node.create_tween()
 	tween.tween_property(node, prop, knockback_pos, duration * 0.3).set_ease(Tween.EASE_OUT)
-	tween.tween_property(node, prop, start_pos, duration * 0.7).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
+	tween.tween_property(node, prop, start_pos, duration * 0.7).set_ease(Tween.EASE_OUT).set_trans(
+		Tween.TRANS_ELASTIC
+	)
 	return tween
+
 
 # =============================================================================
 # COMBINED ANIMATIONS (v1.04 - Multi-property helpers)
 # =============================================================================
 
+
 ## Fade in with scale (common popup pattern)
-static func fade_scale_in(node: CanvasItem, duration: float = 0.25, start_scale: float = 0.8) -> Tween:
+static func fade_scale_in(
+	node: CanvasItem, duration: float = 0.25, start_scale: float = 0.8
+) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	node.modulate.a = 0.0
@@ -711,11 +842,16 @@ static func fade_scale_in(node: CanvasItem, duration: float = 0.25, start_scale:
 	var tween := node.create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(node, "modulate:a", 1.0, duration)
-	tween.tween_property(node, "scale", Vector2.ONE, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(node, "scale", Vector2.ONE, duration).set_ease(Tween.EASE_OUT).set_trans(
+		Tween.TRANS_BACK
+	)
 	return tween
 
+
 ## Fade out with scale (common popup exit pattern)
-static func fade_scale_out(node: CanvasItem, duration: float = 0.2, end_scale: float = 0.9) -> Tween:
+static func fade_scale_out(
+	node: CanvasItem, duration: float = 0.2, end_scale: float = 0.9
+) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	var tween := node.create_tween()
@@ -724,13 +860,18 @@ static func fade_scale_out(node: CanvasItem, duration: float = 0.2, end_scale: f
 	tween.tween_property(node, "scale", Vector2(end_scale, end_scale), duration)
 	return tween
 
+
 ## Attention pulse (scale + color pop)
-static func attention_pulse(node: CanvasItem, color: Color = MOD_GOLD, duration: float = 0.4) -> Tween:
+static func attention_pulse(
+	node: CanvasItem, color: Color = MOD_GOLD, duration: float = 0.4
+) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	var tween := node.create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(node, "scale", Vector2(1.15, 1.15), duration * 0.3).set_ease(Tween.EASE_OUT)
+	tween.tween_property(node, "scale", Vector2(1.15, 1.15), duration * 0.3).set_ease(
+		Tween.EASE_OUT
+	)
 	tween.tween_property(node, "modulate", color, duration * 0.3)
 	tween.chain()
 	tween.set_parallel(true)
@@ -738,16 +879,21 @@ static func attention_pulse(node: CanvasItem, color: Color = MOD_GOLD, duration:
 	tween.tween_property(node, "modulate", Color.WHITE, duration * 0.7)
 	return tween
 
+
 ## Victory celebration (scale pop + gold flash)
 static func victory_pop(node: CanvasItem, duration: float = 0.6) -> Tween:
 	return attention_pulse(node, Color(1.6, 1.4, 0.9, 1.0), duration)
+
 
 # =============================================================================
 # STAGGERED ANIMATIONS (v1.04 - Animate lists of nodes)
 # =============================================================================
 
+
 ## Fade in multiple nodes with stagger delay
-static func stagger_fade_in(nodes: Array, stagger_delay: float = 0.05, fade_duration: float = 0.2) -> Tween:
+static func stagger_fade_in(
+	nodes: Array, stagger_delay: float = 0.05, fade_duration: float = 0.2
+) -> Tween:
 	if nodes.is_empty():
 		return null
 	var first_node = nodes[0]
@@ -761,11 +907,16 @@ static func stagger_fade_in(nodes: Array, stagger_delay: float = 0.05, fade_dura
 		var node = nodes[i]
 		if is_instance_valid(node) and node is CanvasItem:
 			node.modulate.a = 0.0
-			tween.tween_property(node, "modulate:a", 1.0, fade_duration).set_delay(i * stagger_delay)
+			tween.tween_property(node, "modulate:a", 1.0, fade_duration).set_delay(
+				i * stagger_delay
+			)
 	return tween
 
+
 ## Scale in multiple nodes with stagger
-static func stagger_scale_in(nodes: Array, stagger_delay: float = 0.05, scale_duration: float = 0.2) -> Tween:
+static func stagger_scale_in(
+	nodes: Array, stagger_delay: float = 0.05, scale_duration: float = 0.2
+) -> Tween:
 	if nodes.is_empty():
 		return null
 	var first_node = nodes[0]
@@ -779,5 +930,11 @@ static func stagger_scale_in(nodes: Array, stagger_delay: float = 0.05, scale_du
 		var node = nodes[i]
 		if is_instance_valid(node) and node is CanvasItem:
 			node.scale = Vector2.ZERO
-			tween.tween_property(node, "scale", Vector2.ONE, scale_duration).set_delay(i * stagger_delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+			(
+				tween
+				. tween_property(node, "scale", Vector2.ONE, scale_duration)
+				. set_delay(i * stagger_delay)
+				. set_ease(Tween.EASE_OUT)
+				. set_trans(Tween.TRANS_BACK)
+			)
 	return tween

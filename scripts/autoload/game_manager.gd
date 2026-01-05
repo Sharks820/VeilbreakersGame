@@ -48,25 +48,21 @@ var vera_story_flags := {
 	"asked_about_glitches": false,
 	"found_ancient_texts": false,
 	"texts_match_vera_glitches": false,
-
 	# Relationship
 	"vera_admitted_fear": false,
 	"player_comforted_vera": false,
 	"player_suspicious_of_vera": false,
 	"vera_confessed_dreams": false,
-
 	# Awakening
 	"first_memory_surfaced": false,
 	"vera_remembered_name": false,
 	"vera_spoke_ancient_language": false,
 	"vera_recognized_veil_bringer": false,
-
 	# Truth
 	"truth_about_compact": false,
 	"gods_watching_discovered": false,
 	"vera_blinding_gods": false,
 	"veil_bringer_is_her_power": false,
-
 	# Endgame
 	"approaching_veil": false,
 	"verath_fully_awakened": false,
@@ -110,6 +106,7 @@ var currency: int = 0
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_connect_signals()
@@ -117,9 +114,14 @@ func _ready() -> void:
 	is_initialized = true
 	EventBus.emit_debug("GameManager initialized")
 
+
 func _process(delta: float) -> void:
-	if current_state in [Enums.GameState.OVERWORLD, Enums.GameState.BATTLE, Enums.GameState.DIALOGUE]:
+	if (
+		current_state
+		in [Enums.GameState.OVERWORLD, Enums.GameState.BATTLE, Enums.GameState.DIALOGUE]
+	):
 		play_time_seconds += delta
+
 
 func _connect_signals() -> void:
 	EventBus.battle_started.connect(_on_battle_started)
@@ -127,6 +129,7 @@ func _connect_signals() -> void:
 	EventBus.purification_succeeded.connect(_on_purification_succeeded)
 	EventBus.purification_failed.connect(_on_purification_failed)
 	EventBus.path_alignment_changed.connect(_on_path_alignment_changed)
+
 
 func _exit_tree() -> void:
 	# Disconnect EventBus signals to prevent memory leaks
@@ -141,9 +144,11 @@ func _exit_tree() -> void:
 	if EventBus.path_alignment_changed.is_connected(_on_path_alignment_changed):
 		EventBus.path_alignment_changed.disconnect(_on_path_alignment_changed)
 
+
 # =============================================================================
 # STATE MANAGEMENT
 # =============================================================================
+
 
 func change_state(new_state: Enums.GameState) -> void:
 	if new_state == current_state:
@@ -153,29 +158,38 @@ func change_state(new_state: Enums.GameState) -> void:
 	current_state = new_state
 
 	EventBus.game_state_changed.emit(previous_state, new_state)
-	EventBus.emit_debug("State changed: %s -> %s" % [
-		Enums.GameState.keys()[previous_state],
-		Enums.GameState.keys()[new_state]
-	])
+	EventBus.emit_debug(
+		(
+			"State changed: %s -> %s"
+			% [Enums.GameState.keys()[previous_state], Enums.GameState.keys()[new_state]]
+		)
+	)
+
 
 func is_state(state: Enums.GameState) -> bool:
 	return current_state == state
 
+
 func is_paused() -> bool:
 	return current_state == Enums.GameState.PAUSED
+
 
 func is_in_battle() -> bool:
 	return current_state == Enums.GameState.BATTLE
 
+
 func is_in_dialogue() -> bool:
 	return current_state == Enums.GameState.DIALOGUE
+
 
 func return_to_previous_state() -> void:
 	change_state(previous_state)
 
+
 # =============================================================================
 # PARTY MANAGEMENT
 # =============================================================================
+
 
 func add_to_party(character: Node) -> bool:
 	if player_party.size() >= Constants.MAX_PARTY_SIZE:
@@ -186,6 +200,7 @@ func add_to_party(character: Node) -> bool:
 		player_party.append(character)
 	return true
 
+
 func remove_from_party(character: Node) -> bool:
 	if character in player_party:
 		player_party.erase(character)
@@ -195,6 +210,7 @@ func remove_from_party(character: Node) -> bool:
 		return true
 	return false
 
+
 func swap_party_member(party_index: int, reserve_index: int) -> void:
 	if party_index >= player_party.size() or reserve_index >= reserve_party.size():
 		return
@@ -202,22 +218,29 @@ func swap_party_member(party_index: int, reserve_index: int) -> void:
 	player_party[party_index] = reserve_party[reserve_index]
 	reserve_party[reserve_index] = temp
 
+
 func get_active_party() -> Array:
 	return player_party.filter(func(c): return c != null)
+
 
 func get_party_size() -> int:
 	return player_party.size()
 
+
 # =============================================================================
 # PROGRESSION
 # =============================================================================
+
 
 func modify_path_alignment(amount: float, source: String = "") -> void:
 	var old_value := path_alignment
 	path_alignment = clampf(path_alignment + amount, Constants.PATH_MIN, Constants.PATH_MAX)
 	if path_alignment != old_value:
 		EventBus.path_alignment_changed.emit(old_value, path_alignment)
-		EventBus.emit_debug("Path alignment: %.1f -> %.1f (source: %s)" % [old_value, path_alignment, source])
+		EventBus.emit_debug(
+			"Path alignment: %.1f -> %.1f (source: %s)" % [old_value, path_alignment, source]
+		)
+
 
 func get_dominant_path() -> Enums.Path:
 	## Returns the path with highest affinity, or NONE if no path is above threshold
@@ -227,6 +250,7 @@ func get_dominant_path() -> Enums.Path:
 		if path_system.has_method("get_dominant_path"):
 			return path_system.get_dominant_path()
 	return Enums.Path.NONE
+
 
 func get_path_name() -> String:
 	var path := get_dominant_path()
@@ -241,23 +265,29 @@ func get_path_name() -> String:
 			return "Unchained"
 	return "Unaligned"
 
+
 func set_story_flag(flag: String, value: Variant = true) -> void:
 	story_flags[flag] = value
 	EventBus.story_flag_set.emit(flag, value)
 
+
 func get_story_flag(flag: String, default: Variant = false) -> Variant:
 	return story_flags.get(flag, default)
 
+
 func has_story_flag(flag: String) -> bool:
 	return story_flags.has(flag) and story_flags[flag]
+
 
 func set_vera_flag(flag: String, value: bool = true) -> void:
 	if vera_story_flags.has(flag):
 		vera_story_flags[flag] = value
 		EventBus.story_flag_set.emit(flag, value)
 
+
 func get_vera_flag(flag: String) -> bool:
 	return vera_story_flags.get(flag, false)
+
 
 func unlock_brand(brand: Enums.Brand) -> void:
 	if brand not in unlocked_brands:
@@ -265,27 +295,34 @@ func unlock_brand(brand: Enums.Brand) -> void:
 		EventBus.brand_unlocked.emit(brand)
 		EventBus.emit_debug("Brand unlocked: %s" % Enums.Brand.keys()[brand])
 
+
 func has_brand(brand: Enums.Brand) -> bool:
 	return brand in unlocked_brands
+
 
 # =============================================================================
 # ALIGNMENT HELPERS
 # =============================================================================
 
+
 func get_alignment() -> float:
 	return path_alignment
 
+
 func add_alignment(amount: float) -> void:
 	modify_path_alignment(amount, "direct")
+
 
 # =============================================================================
 # VERA MANAGEMENT
 # =============================================================================
 
+
 func use_vera_power(amount: float) -> void:
 	vera_power_used += amount
 	vera_corruption = clampf(vera_corruption + amount * 0.1, 0.0, 100.0)
 	_update_vera_state()
+
 
 func reduce_vera_corruption(amount: float) -> void:
 	var old := vera_corruption
@@ -293,16 +330,20 @@ func reduce_vera_corruption(amount: float) -> void:
 	if vera_corruption != old:
 		_update_vera_state()
 
+
 func update_vera_state(new_state: Enums.VERAState) -> void:
 	## Directly set VERA state (for debug/testing)
 	var old_state := vera_state
 	if new_state != old_state:
 		vera_state = new_state
 		EventBus.vera_state_changed.emit(old_state, new_state)
-		EventBus.emit_debug("VERA state manually set: %s -> %s" % [
-			Enums.VERAState.keys()[old_state],
-			Enums.VERAState.keys()[new_state]
-		])
+		EventBus.emit_debug(
+			(
+				"VERA state manually set: %s -> %s"
+				% [Enums.VERAState.keys()[old_state], Enums.VERAState.keys()[new_state]]
+			)
+		)
+
 
 func _update_vera_state() -> void:
 	var old_state := vera_state
@@ -318,31 +359,36 @@ func _update_vera_state() -> void:
 	if new_state != old_state:
 		vera_state = new_state
 		EventBus.vera_state_changed.emit(old_state, new_state)
-		EventBus.emit_debug("VERA state changed: %s -> %s" % [
-			Enums.VERAState.keys()[old_state],
-			Enums.VERAState.keys()[new_state]
-		])
+		EventBus.emit_debug(
+			(
+				"VERA state changed: %s -> %s"
+				% [Enums.VERAState.keys()[old_state], Enums.VERAState.keys()[new_state]]
+			)
+		)
+
 
 # =============================================================================
 # MONSTER COLLECTION
 # =============================================================================
 
+
 func add_monster_to_collection(monster_id: String, monster_level: int) -> void:
-	owned_monsters.append({
-		"id": monster_id,
-		"level": monster_level,
-		"captured_at": Time.get_unix_time_from_system()
-	})
+	owned_monsters.append(
+		{"id": monster_id, "level": monster_level, "captured_at": Time.get_unix_time_from_system()}
+	)
 	EventBus.emit_debug("Monster added to collection: %s (Lv.%d)" % [monster_id, monster_level])
+
 
 # =============================================================================
 # CURRENCY
 # =============================================================================
 
+
 func add_currency(amount: int) -> void:
 	var old := currency
 	currency += amount
 	EventBus.currency_changed.emit(old, currency)
+
 
 func spend_currency(amount: int) -> bool:
 	if currency < amount:
@@ -352,12 +398,15 @@ func spend_currency(amount: int) -> bool:
 	EventBus.currency_changed.emit(old, currency)
 	return true
 
+
 func can_afford(amount: int) -> bool:
 	return currency >= amount
+
 
 # =============================================================================
 # PRE-BATTLE STATE MANAGEMENT
 # =============================================================================
+
 
 func save_pre_battle_state() -> void:
 	## Call this BEFORE entering a battle to save the state for quit-during-battle
@@ -370,63 +419,78 @@ func save_pre_battle_state() -> void:
 		# Party HP/MP states could be added here if needed
 	}
 	_has_pre_battle_state = true
-	EventBus.emit_debug("Pre-battle state saved: area=%s, pos=(%d,%d)" % [
-		current_area, int(player_position.x), int(player_position.y)
-	])
+	EventBus.emit_debug(
+		(
+			"Pre-battle state saved: area=%s, pos=(%d,%d)"
+			% [current_area, int(player_position.x), int(player_position.y)]
+		)
+	)
+
 
 func restore_pre_battle_state() -> void:
 	## Restore state to before the current battle (for quit-during-battle)
 	if not _has_pre_battle_state:
 		EventBus.emit_debug("No pre-battle state to restore")
 		return
-	
+
 	current_area = _pre_battle_state.get("current_area", current_area)
 	current_map = _pre_battle_state.get("current_map", current_map)
 	var pos: Dictionary = _pre_battle_state.get("player_position", {"x": 0, "y": 0})
 	player_position = Vector2(pos.x, pos.y)
 	play_time_seconds = _pre_battle_state.get("play_time", play_time_seconds)
 	currency = _pre_battle_state.get("currency", currency)
-	
-	EventBus.emit_debug("Pre-battle state restored: area=%s, pos=(%d,%d)" % [
-		current_area, int(player_position.x), int(player_position.y)
-	])
+
+	EventBus.emit_debug(
+		(
+			"Pre-battle state restored: area=%s, pos=(%d,%d)"
+			% [current_area, int(player_position.x), int(player_position.y)]
+		)
+	)
+
 
 func clear_pre_battle_state() -> void:
 	## Clear pre-battle state after battle completes normally
 	_pre_battle_state.clear()
 	_has_pre_battle_state = false
 
+
 func has_pre_battle_state() -> bool:
 	return _has_pre_battle_state
+
 
 # =============================================================================
 # SIGNAL HANDLERS
 # =============================================================================
 
+
 func _on_battle_started(_enemy_data: Array) -> void:
 	# Save pre-battle state for quit-during-battle functionality
 	save_pre_battle_state()
 
+
 func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 	battle_count += 1
 	var fled: bool = rewards.get("fled", false)
-	
+
 	if victory:
 		victory_count += 1
 	elif not fled:
 		# Only count as defeat if not fled
 		defeat_count += 1
 	# Note: flee_count is incremented in battle_manager._execute_flee()
-	
+
 	# Clear pre-battle state since battle completed normally
 	clear_pre_battle_state()
+
 
 func _on_purification_succeeded(_monster: Node) -> void:
 	purification_successes += 1
 	purification_attempts += 1
 
+
 func _on_purification_failed(_monster: Node) -> void:
 	purification_attempts += 1
+
 
 func _on_path_alignment_changed(_old: float, _new: float) -> void:
 	# Brand unlocks based on alignment
@@ -436,9 +500,11 @@ func _on_path_alignment_changed(_old: float, _new: float) -> void:
 	# Path-based brand unlocks should be handled through the PathSystem instead
 	pass
 
+
 # =============================================================================
 # SERIALIZATION
 # =============================================================================
+
 
 func get_save_data() -> Dictionary:
 	return {
@@ -468,6 +534,7 @@ func get_save_data() -> Dictionary:
 		"owned_monsters": owned_monsters
 	}
 
+
 func load_save_data(data: Dictionary) -> void:
 	play_time_seconds = data.get("play_time", 0.0)
 	player_level = data.get("player_level", 1)
@@ -491,21 +558,23 @@ func load_save_data(data: Dictionary) -> void:
 	vera_corruption = data.get("vera_corruption", 0.0)
 	vera_power_used = data.get("vera_power_used", 0.0)
 	owned_monsters = data.get("owned_monsters", [])
-	
+
 	# Safely load typed arrays from save data
 	unlocked_brands.clear()
 	var loaded_brands: Array = data.get("unlocked_brands", [Enums.Brand.NONE])
 	for b in loaded_brands:
 		unlocked_brands.append(int(b))
-	
+
 	visited_areas.clear()
 	var loaded_areas: Array = data.get("visited_areas", [])
 	for area in loaded_areas:
 		visited_areas.append(str(area))
 
+
 # =============================================================================
 # UTILITY
 # =============================================================================
+
 
 func get_formatted_play_time() -> String:
 	var total_seconds: int = int(play_time_seconds)
@@ -514,10 +583,12 @@ func get_formatted_play_time() -> String:
 	var seconds: int = total_seconds % 60
 	return "%02d:%02d:%02d" % [hours, minutes, seconds]
 
+
 func get_purification_rate() -> float:
 	if purification_attempts == 0:
 		return 0.0
 	return float(purification_successes) / float(purification_attempts) * 100.0
+
 
 func reset_for_new_game() -> void:
 	selected_hero_id = ""
@@ -549,50 +620,58 @@ func reset_for_new_game() -> void:
 	vera_power_used = 0.0
 	EventBus.emit_debug("Game reset for new game")
 
+
 # =============================================================================
 # HERO SELECTION & INITIALIZATION
 # =============================================================================
+
 
 func set_selected_hero(hero_id: String) -> void:
 	## Called from character select screen to set the chosen hero
 	selected_hero_id = hero_id
 	EventBus.emit_debug("Hero selected: %s" % hero_id)
 
+
 func initialize_player_character() -> PlayerCharacter:
 	## Create the player character from the selected hero data
 	if selected_hero_id.is_empty():
 		push_error("Cannot initialize player character: no hero selected")
 		return null
-	
+
 	var hero_data: HeroData = DataManager.get_hero(selected_hero_id)
 	if not hero_data:
-		push_error("Cannot initialize player character: hero data not found for '%s'" % selected_hero_id)
+		push_error(
+			"Cannot initialize player character: hero data not found for '%s'" % selected_hero_id
+		)
 		return null
-	
+
 	# Create PlayerCharacter instance
 	player_character = PlayerCharacter.new()
 	player_character.name = hero_data.display_name
-	
+
 	# Initialize from hero data
 	player_character.initialize_from_hero_data(hero_data)
-	
+
 	# Add to party
 	player_party.clear()
 	player_party.append(player_character)
-	
+
 	# Set initial path alignment based on hero's path
 	var hero_path: Enums.Path = hero_data.primary_path
 	if has_node("/root/PathSystem"):
 		var path_system = get_node("/root/PathSystem")
 		if path_system.has_method("set_primary_path"):
 			path_system.set_primary_path(hero_path)
-	
-	EventBus.emit_debug("Player character initialized: %s (Path: %s)" % [
-		hero_data.display_name,
-		Enums.Path.keys()[hero_path]
-	])
-	
+
+	EventBus.emit_debug(
+		(
+			"Player character initialized: %s (Path: %s)"
+			% [hero_data.display_name, Enums.Path.keys()[hero_path]]
+		)
+	)
+
 	return player_character
+
 
 func get_player_character() -> PlayerCharacter:
 	## Get the current player character (protagonist)

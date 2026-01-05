@@ -25,9 +25,9 @@ const WEAKNESS_BONUS := 0.5  # Bonus when hitting elemental weakness
 # These align with the CorruptionState enum thresholds
 const CORRUPTION_BREAK_THRESHOLDS := [
 	Constants.CORRUPTION_CORRUPTED_MAX,  # 75% - Corrupted to Unstable
-	Constants.CORRUPTION_UNSTABLE_MAX,   # 50% - Unstable threshold
-	Constants.CORRUPTION_PURIFIED_MAX,   # 25% - Unstable to Purified
-	Constants.CORRUPTION_ASCENDED_MAX    # 10% - Purified to Ascended
+	Constants.CORRUPTION_UNSTABLE_MAX,  # 50% - Unstable threshold
+	Constants.CORRUPTION_PURIFIED_MAX,  # 25% - Unstable to Purified
+	Constants.CORRUPTION_ASCENDED_MAX  # 10% - Purified to Ascended
 ]
 
 # =============================================================================
@@ -40,7 +40,10 @@ var active_purifications: Dictionary = {}  # monster_id -> purification_data
 # PURIFICATION ATTEMPT
 # =============================================================================
 
-func attempt_purification(purifier: CharacterBase, monster: Monster, skill_id: String = "") -> Dictionary:
+
+func attempt_purification(
+	purifier: CharacterBase, monster: Monster, skill_id: String = ""
+) -> Dictionary:
 	## Attempt to purify a monster. Returns result dictionary.
 	var result := {
 		"success": false,
@@ -87,7 +90,10 @@ func attempt_purification(purifier: CharacterBase, monster: Monster, skill_id: S
 
 	return result
 
-func calculate_purification_power(purifier: CharacterBase, monster: Monster, skill_id: String = "") -> float:
+
+func calculate_purification_power(
+	purifier: CharacterBase, monster: Monster, skill_id: String = ""
+) -> float:
 	## Calculate how much corruption is reduced
 	## Higher power = faster path to ASCENSION
 	var power := BASE_PURIFICATION_POWER
@@ -132,6 +138,7 @@ func calculate_purification_power(purifier: CharacterBase, monster: Monster, ski
 
 	return maxf(1.0, power)
 
+
 func _get_skill_purification_power(skill_id: String) -> float:
 	## Get base purification power from skill
 	# TODO: Load from skill resource
@@ -147,6 +154,7 @@ func _get_skill_purification_power(skill_id: String) -> float:
 		_:
 			return BASE_PURIFICATION_POWER
 
+
 func _check_corruption_breaks(monster: Monster, old_corruption: float) -> Dictionary:
 	## Check if purification crossed a corruption break threshold
 	var max_corruption := maxf(monster.max_corruption, 1.0)
@@ -160,9 +168,11 @@ func _check_corruption_breaks(monster: Monster, old_corruption: float) -> Dictio
 
 	return {"broke": false, "stage": 0}
 
+
 # =============================================================================
 # CAPTURE MECHANICS
 # =============================================================================
+
 
 func can_capture(monster: Monster) -> bool:
 	## Check if monster can be captured
@@ -174,18 +184,20 @@ func can_capture(monster: Monster) -> bool:
 		return false
 	return true
 
+
 func _can_capture_boss(_monster: Monster) -> bool:
 	## Bosses cannot be captured - they drop Covenant Vessels instead
 	return false
 
+
 func calculate_capture_chance(purifier: CharacterBase, monster: Monster) -> float:
 	## Calculate capture chance based on corruption state
 	## NOTE: New system - lower corruption = easier capture (inverted from old)
-	
+
 	# Base chance from corruption state
 	var base_chance := 0.5
 	var corruption := monster.corruption_level
-	
+
 	# Lower corruption = higher chance (ASCENDED monsters are easiest)
 	if corruption <= Constants.CORRUPTION_ASCENDED_MAX:
 		base_chance = 0.90  # 90% at Ascended
@@ -221,14 +233,12 @@ func calculate_capture_chance(purifier: CharacterBase, monster: Monster) -> floa
 
 	return clampf(base_chance + level_mod + rarity_mod + hp_bonus, 0.05, 0.95)
 
+
 func attempt_capture(purifier: CharacterBase, monster: Monster) -> Dictionary:
 	## Legacy capture attempt - redirects to new system recommendation
 	## For full capture, use CaptureSystem.attempt_capture()
 	var result := {
-		"success": false,
-		"chance": 0.0,
-		"message": "",
-		"redirect_to_capture_system": true
+		"success": false, "chance": 0.0, "message": "", "redirect_to_capture_system": true
 	}
 
 	if not can_capture(monster):
@@ -240,12 +250,15 @@ func attempt_capture(purifier: CharacterBase, monster: Monster) -> Dictionary:
 
 	return result
 
-func _on_capture_success(monster: Monster, method: Enums.CaptureMethod = Enums.CaptureMethod.SOULBIND) -> void:
+
+func _on_capture_success(
+	monster: Monster, method: Enums.CaptureMethod = Enums.CaptureMethod.SOULBIND
+) -> void:
 	## Handle successful monster capture
 	# Notify monster of capture
 	if monster.has_method("on_captured"):
 		monster.on_captured(method)
-	
+
 	# Add monster to party/storage
 	var game_manager := get_node_or_null("/root/GameManager")
 	if game_manager and game_manager.has_method("add_monster_to_collection"):
@@ -254,9 +267,11 @@ func _on_capture_success(monster: Monster, method: Enums.CaptureMethod = Enums.C
 	EventBus.monster_captured.emit(monster.monster_id, monster.character_name)
 	EventBus.monster_captured_method.emit(monster, method)
 
+
 # =============================================================================
 # CORRUPTION DAMAGE
 # =============================================================================
+
 
 func apply_corruption_damage(monster: Monster) -> float:
 	## Apply end-of-turn corruption damage to monster (hurts itself when corrupted)
@@ -277,6 +292,7 @@ func apply_corruption_damage(monster: Monster) -> float:
 
 	return damage
 
+
 func apply_corruption_heal(monster: Monster) -> float:
 	## Apply healing when corruption is very low (purified monsters heal)
 	if monster.corruption_level > monster.max_corruption * 0.25:
@@ -289,9 +305,11 @@ func apply_corruption_heal(monster: Monster) -> float:
 
 	return heal
 
+
 # =============================================================================
 # VERA INTERACTION
 # =============================================================================
+
 
 func get_vera_purification_bonus() -> float:
 	## Get purification bonus from VERA's current state
@@ -299,7 +317,7 @@ func get_vera_purification_bonus() -> float:
 	var vera_system := get_node_or_null("/root/VERASystem")
 	if vera_system == null:
 		return 1.0
-	
+
 	var vera_state: int = vera_system.current_state if "current_state" in vera_system else 0
 
 	match vera_state:
@@ -314,23 +332,22 @@ func get_vera_purification_bonus() -> float:
 
 	return 1.0
 
+
 func can_use_vera_purification() -> bool:
 	## Check if VERA can assist with purification
 	var vera_system := get_node_or_null("/root/VERASystem")
 	if vera_system == null:
 		return false
-	
+
 	var vera_state: int = vera_system.current_state if "current_state" in vera_system else 0
 	return vera_state == Enums.VERAState.INTERFACE or vera_state == Enums.VERAState.FRACTURE
+
 
 func vera_assist_purification(monster: Monster) -> Dictionary:
 	## VERA assists with purification (special action)
 	## Irony: She helps you purify, which weakens her hold on these fragments
 	var result := {
-		"success": false,
-		"corruption_reduced": 0.0,
-		"message": "",
-		"vera_glitched": false
+		"success": false, "corruption_reduced": 0.0, "message": "", "vera_glitched": false
 	}
 
 	if not can_use_vera_purification():
@@ -352,7 +369,7 @@ func vera_assist_purification(monster: Monster) -> Dictionary:
 	if vera_system:
 		if vera_system.has_method("add_veil_integrity"):
 			vera_system.add_veil_integrity(2)  # Purification strengthens Veil
-		
+
 		# Chance for glitch when she helps purify (she hates it)
 		if randf() < 0.2:
 			result.vera_glitched = true
@@ -361,9 +378,11 @@ func vera_assist_purification(monster: Monster) -> Dictionary:
 
 	return result
 
+
 # =============================================================================
 # QUERIES
 # =============================================================================
+
 
 func get_purification_effectiveness(purifier: CharacterBase, monster: Monster) -> String:
 	## Get a text description of purification effectiveness
@@ -381,6 +400,7 @@ func get_purification_effectiveness(purifier: CharacterBase, monster: Monster) -
 	else:
 		return "Difficult"
 
+
 func get_capture_chance_text(chance: float) -> String:
 	## Get text description of capture chance
 	if chance >= 0.9:
@@ -395,6 +415,7 @@ func get_capture_chance_text(chance: float) -> String:
 		return "Unlikely"
 	else:
 		return "Nearly impossible"
+
 
 func estimate_purification_turns(purifier: CharacterBase, monster: Monster) -> int:
 	## Estimate how many turns needed to fully purify

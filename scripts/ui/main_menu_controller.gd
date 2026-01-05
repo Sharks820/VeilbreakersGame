@@ -61,7 +61,7 @@ const FRAME_CYCLE_SPEED: float = 0.3  # Frames per second within direction (slow
 
 # Timing constants
 const EYE_TRACK_SPEED: float = 12.0  # Higher = snappier tracking
-const EYE_SMOOTHING: float = 0.08    # Lower = smoother frame transitions
+const EYE_SMOOTHING: float = 0.08  # Lower = smoother frame transitions
 const BLINK_INTERVAL_MIN: float = 2.5
 const BLINK_INTERVAL_MAX: float = 6.0
 const BLINK_FRAME_DURATION: float = 0.035  # Time per blink frame (faster blink)
@@ -112,6 +112,7 @@ const VIGNETTE_MAX: float = 0.35
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	GameManager.change_state(Enums.GameState.MAIN_MENU)
 
@@ -143,6 +144,30 @@ func _ready() -> void:
 
 	EventBus.emit_debug("Main menu ready - Demon eyes tracking active")
 
+
+func _exit_tree() -> void:
+	# Kill infinite logo pulse tween
+	if logo_tween and logo_tween.is_valid():
+		logo_tween.kill()
+		logo_tween = null
+
+	# Disconnect button signals
+	for button in [new_game_button, continue_button, settings_button, quit_button]:
+		if button:
+			if button.mouse_entered.is_connected(_on_button_hover):
+				button.mouse_entered.disconnect(_on_button_hover)
+			if button.mouse_exited.is_connected(_on_button_unhover):
+				button.mouse_exited.disconnect(_on_button_unhover)
+			if button.focus_entered.is_connected(_on_button_hover):
+				button.focus_entered.disconnect(_on_button_hover)
+			if button.focus_exited.is_connected(_on_button_unhover):
+				button.focus_exited.disconnect(_on_button_unhover)
+
+	# Disconnect settings menu signal
+	if settings_menu and settings_menu.settings_closed.is_connected(_on_settings_closed):
+		settings_menu.settings_closed.disconnect(_on_settings_closed)
+
+
 func _hide_all_elements() -> void:
 	# Logo - starts invisible
 	logo.modulate.a = 0.0
@@ -167,9 +192,11 @@ func _hide_all_elements() -> void:
 	vignette.modulate.a = VIGNETTE_MIN
 	ember_particles.modulate.a = 0.5
 
+
 # =============================================================================
 # ENTRANCE ANIMATION
 # =============================================================================
+
 
 func _play_aaa_entrance() -> void:
 	# Effects already visible from _hide_all_elements - just intensify them smoothly
@@ -185,7 +212,9 @@ func _play_aaa_entrance() -> void:
 	# Phase 3: Logo entrance after short delay
 	await get_tree().create_timer(0.3).timeout
 	var logo_entrance = create_tween()
-	logo_entrance.tween_property(logo, "modulate:a", 1.0, 1.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	logo_entrance.tween_property(logo, "modulate:a", 1.0, 1.5).set_ease(Tween.EASE_OUT).set_trans(
+		Tween.TRANS_CUBIC
+	)
 
 	# Phase 4: Buttons slide up (shortened delays for snappier feel)
 	await get_tree().create_timer(0.8).timeout
@@ -197,9 +226,27 @@ func _play_aaa_entrance() -> void:
 		var target_y = button_base_positions[btn]
 
 		var btn_tween = create_tween().set_parallel(true)
-		btn_tween.tween_property(btn, "modulate:a", target_alpha, 0.7).set_delay(delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-		btn_tween.tween_property(btn, "position:y", target_y, 0.9).set_delay(delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-		btn_tween.tween_property(btn, "scale", Vector2.ONE, 0.8).set_delay(delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+		(
+			btn_tween
+			. tween_property(btn, "modulate:a", target_alpha, 0.7)
+			. set_delay(delay)
+			. set_ease(Tween.EASE_OUT)
+			. set_trans(Tween.TRANS_CUBIC)
+		)
+		(
+			btn_tween
+			. tween_property(btn, "position:y", target_y, 0.9)
+			. set_delay(delay)
+			. set_ease(Tween.EASE_OUT)
+			. set_trans(Tween.TRANS_BACK)
+		)
+		(
+			btn_tween
+			. tween_property(btn, "scale", Vector2.ONE, 0.8)
+			. set_delay(delay)
+			. set_ease(Tween.EASE_OUT)
+			. set_trans(Tween.TRANS_BACK)
+		)
 
 	# Phase 6: Version label
 	await get_tree().create_timer(0.8).timeout
@@ -212,9 +259,11 @@ func _play_aaa_entrance() -> void:
 	_start_logo_pulse()
 	new_game_button.grab_focus()
 
+
 # =============================================================================
 # PROCESS LOOP
 # =============================================================================
+
 
 func _process(delta: float) -> void:
 	# Eye tracking and breathing start IMMEDIATELY - no waiting!
@@ -223,9 +272,11 @@ func _process(delta: float) -> void:
 	_update_eye_tracking(delta)
 	_update_vignette(delta)
 
+
 # =============================================================================
 # EYE TRACKING SYSTEM
 # =============================================================================
+
 
 func _update_eye_tracking(delta: float) -> void:
 	# Handle blink timer (only if blinking is enabled)
@@ -255,6 +306,7 @@ func _update_eye_tracking(delta: float) -> void:
 	var blue = 0.55 + breath * 0.03
 	var alpha = 0.95  # Nearly opaque
 	monster_eye.modulate = Color(red_tint, green, blue, alpha)
+
 
 func _update_cursor_tracking(_delta: float) -> void:
 	# SMOOTH 9-ZONE TRACKING with frame cycling within each direction
@@ -307,12 +359,14 @@ func _update_cursor_tracking(_delta: float) -> void:
 	monster_eye.frame = target_frame
 	eye_backdrop.frame = target_frame
 
+
 func _start_blink() -> void:
 	eye_is_blinking = true
 	eye_blink_frame_index = 0
 	eye_blink_frame_timer = 0.0
 	eye_blink_timer = 0.0
 	eye_next_blink = randf_range(BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX)
+
 
 func _update_blink(delta: float) -> void:
 	eye_blink_frame_timer += delta
@@ -333,16 +387,33 @@ func _update_blink(delta: float) -> void:
 	monster_eye.frame = blink_frame
 	eye_backdrop.frame = blink_frame
 
+
 # =============================================================================
 # AMBIENT ANIMATIONS
 # =============================================================================
+
 
 func _start_logo_pulse() -> void:
 	if logo_tween:
 		logo_tween.kill()
 	logo_tween = create_tween().set_loops()
-	logo_tween.tween_property(logo, "scale", Vector2(LOGO_SCALE_MAX, LOGO_SCALE_MAX), LOGO_PULSE_DURATION).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	logo_tween.tween_property(logo, "scale", Vector2(LOGO_SCALE_MIN, LOGO_SCALE_MIN), LOGO_PULSE_DURATION).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	(
+		logo_tween
+		. tween_property(
+			logo, "scale", Vector2(LOGO_SCALE_MAX, LOGO_SCALE_MAX), LOGO_PULSE_DURATION
+		)
+		. set_ease(Tween.EASE_IN_OUT)
+		. set_trans(Tween.TRANS_SINE)
+	)
+	(
+		logo_tween
+		. tween_property(
+			logo, "scale", Vector2(LOGO_SCALE_MIN, LOGO_SCALE_MIN), LOGO_PULSE_DURATION
+		)
+		. set_ease(Tween.EASE_IN_OUT)
+		. set_trans(Tween.TRANS_SINE)
+	)
+
 
 func _update_breathing(_delta: float) -> void:
 	var breath = (sin(ambient_time * BREATH_SPEED) + 1.0) * 0.5
@@ -350,13 +421,16 @@ func _update_breathing(_delta: float) -> void:
 	background.self_modulate = Color(brightness * 1.15, brightness * 0.85, brightness * 0.75, 1.0)
 	dark_overlay.color.a = 0.15 - breath * 0.1
 
+
 func _update_vignette(_delta: float) -> void:
 	var vignette_pulse = (sin(ambient_time * VIGNETTE_SPEED) + 1.0) * 0.5
 	vignette.color.a = VIGNETTE_MIN + vignette_pulse * (VIGNETTE_MAX - VIGNETTE_MIN)
 
+
 # =============================================================================
 # BUTTON EFFECTS
 # =============================================================================
+
 
 func _setup_button_effects() -> void:
 	for button in [new_game_button, continue_button, settings_button, quit_button]:
@@ -365,33 +439,51 @@ func _setup_button_effects() -> void:
 		button.focus_entered.connect(_on_button_hover.bind(button))
 		button.focus_exited.connect(_on_button_unhover.bind(button))
 
+
 func _on_button_hover(button: TextureButton) -> void:
 	if button == continue_button and not continue_has_saves:
 		var disabled_tween := create_tween().set_parallel(true)
-		disabled_tween.tween_property(button, "scale", Vector2(1.03, 1.03), 0.2).set_ease(Tween.EASE_OUT)
+		disabled_tween.tween_property(button, "scale", Vector2(1.03, 1.03), 0.2).set_ease(
+			Tween.EASE_OUT
+		)
 		disabled_tween.tween_property(button, "modulate:a", 0.55, 0.2)
 		return
 
 	var base_y: float = button_base_positions.get(button, button.position.y)
 	var hover_tween := create_tween().set_parallel(true)
-	hover_tween.tween_property(button, "scale", Vector2(1.12, 1.12), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	hover_tween.tween_property(button, "position:y", base_y - 12, 0.18).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	(
+		hover_tween
+		. tween_property(button, "scale", Vector2(1.12, 1.12), 0.2)
+		. set_ease(Tween.EASE_OUT)
+		. set_trans(Tween.TRANS_BACK)
+	)
+	(
+		hover_tween
+		. tween_property(button, "position:y", base_y - 12, 0.18)
+		. set_ease(Tween.EASE_OUT)
+		. set_trans(Tween.TRANS_CUBIC)
+	)
 	hover_tween.tween_property(button, "modulate", Color(1.2, 1.1, 1.05, 1.0), 0.15)
 	hover_tween.tween_property(button, "rotation_degrees", randf_range(-1.0, 1.0), 0.12)
+
 
 func _on_button_unhover(button: TextureButton) -> void:
 	var base_y = button_base_positions.get(button, button.position.y + 20)
 	var target_alpha = 0.4 if (button == continue_button and not continue_has_saves) else 1.0
 
 	var tween = create_tween().set_parallel(true)
-	tween.tween_property(button, "scale", Vector2.ONE, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(button, "scale", Vector2.ONE, 0.25).set_ease(Tween.EASE_OUT).set_trans(
+		Tween.TRANS_CUBIC
+	)
 	tween.tween_property(button, "position:y", base_y, 0.2).set_ease(Tween.EASE_OUT)
 	tween.tween_property(button, "modulate", Color(1.0, 1.0, 1.0, target_alpha), 0.2)
 	tween.tween_property(button, "rotation_degrees", 0.0, 0.15)
 
+
 # =============================================================================
 # BUTTON ACTIONS
 # =============================================================================
+
 
 func _on_new_game_pressed() -> void:
 	EventBus.emit_debug("New Game selected")
@@ -400,6 +492,7 @@ func _on_new_game_pressed() -> void:
 	await get_tree().create_timer(0.3).timeout
 	# Go to character select screen instead of directly to battle
 	SceneManager.change_scene("res://scenes/ui/character_select.tscn")
+
 
 func _on_continue_pressed() -> void:
 	if not continue_has_saves:
@@ -414,10 +507,12 @@ func _on_continue_pressed() -> void:
 	else:
 		EventBus.emit_notification("No save data found", "warning")
 
+
 func _on_settings_pressed() -> void:
 	EventBus.emit_debug("Settings selected")
 	_play_button_press(settings_button)
 	_open_settings_menu()
+
 
 func _on_quit_pressed() -> void:
 	EventBus.emit_debug("Quit selected")
@@ -425,11 +520,13 @@ func _on_quit_pressed() -> void:
 	await get_tree().create_timer(0.25).timeout
 	get_tree().quit()
 
+
 func _play_button_press(button: TextureButton) -> void:
 	var tween = create_tween()
 	tween.tween_property(button, "scale", Vector2(0.9, 0.9), 0.08).set_trans(Tween.TRANS_CUBIC)
 	tween.tween_property(button, "scale", Vector2(1.05, 1.05), 0.1).set_trans(Tween.TRANS_BACK)
 	tween.tween_property(button, "scale", Vector2.ONE, 0.08).set_trans(Tween.TRANS_CUBIC)
+
 
 # =============================================================================
 # SETTINGS MENU
@@ -438,28 +535,26 @@ func _play_button_press(button: TextureButton) -> void:
 var settings_menu: Control = null
 const SETTINGS_MENU_SCENE := preload("res://scenes/ui/settings_menu.tscn")
 
+
 func _open_settings_menu() -> void:
 	if settings_menu == null:
 		settings_menu = SETTINGS_MENU_SCENE.instantiate()
 		add_child(settings_menu)
 		settings_menu.settings_closed.connect(_on_settings_closed)
-	
+
 	settings_menu.open()
+
 
 func _on_settings_closed() -> void:
 	# Return focus to settings button
 	await get_tree().create_timer(0.1).timeout
 	settings_button.grab_focus()
 
+
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_debug"):
 		pass
 
-func _exit_tree() -> void:
-	# Kill any looping tweens to prevent memory leaks
-	if logo_tween and logo_tween.is_valid():
-		logo_tween.kill()
-
-	# Disconnect settings_menu signal if connected
-	if settings_menu and settings_menu.settings_closed.is_connected(_on_settings_closed):
-		settings_menu.settings_closed.disconnect(_on_settings_closed)
+# NOTE: _exit_tree() is defined earlier in this file (line ~146)
+# This duplicate was removed in v0.99 to fix GDScript override bug
+# The earlier version properly disconnects all button signals

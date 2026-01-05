@@ -5,9 +5,9 @@ extends Control
 # SIGNALS
 # =============================================================================
 
-signal dialogue_finished()
+signal dialogue_finished
 signal choice_selected(index: int)
-signal line_completed()
+signal line_completed
 
 # =============================================================================
 # NODES
@@ -41,6 +41,7 @@ var _portrait_cache: Dictionary = {}
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	visible = false
 	_hide_all_elements()
@@ -51,6 +52,7 @@ func _ready() -> void:
 
 	# Connect to VERA dialogue triggers
 	EventBus.vera_dialogue_triggered.connect(_on_vera_dialogue_triggered)
+
 
 func _process(delta: float) -> void:
 	if not is_typing:
@@ -65,6 +67,7 @@ func _process(delta: float) -> void:
 			_finish_typing()
 		else:
 			text_label.text = full_text.substr(0, _char_index)
+
 
 func _input(event: InputEvent) -> void:
 	if not is_active:
@@ -86,6 +89,7 @@ func _input(event: InputEvent) -> void:
 			if is_typing:
 				_skip_typing()
 
+
 func _hide_all_elements() -> void:
 	if dialogue_box:
 		dialogue_box.visible = false
@@ -96,21 +100,15 @@ func _hide_all_elements() -> void:
 	if portrait:
 		portrait.visible = false
 
+
 # =============================================================================
 # PUBLIC INTERFACE
 # =============================================================================
 
+
 func start_dialogue(dialogue_data: Array) -> void:
-	"""
-	dialogue_data format:
-	[
-		{"speaker": "VERA", "text": "Hello!", "portrait": "vera_happy"},
-		{"speaker": "Player", "text": "Hi there.", "choices": [
-			{"text": "Nice to meet you", "next": 2},
-			{"text": "Whatever", "next": 3}
-		]}
-	]
-	"""
+	## Start dialogue with given data array.
+	## Format: [{"speaker": "VERA", "text": "Hello!", "portrait": "vera_happy"}, ...]
 	if dialogue_data.is_empty():
 		push_warning("Empty dialogue data provided")
 		return
@@ -126,13 +124,11 @@ func start_dialogue(dialogue_data: Array) -> void:
 
 	_show_current_line()
 
+
 func start_simple_dialogue(speaker: String, text: String, portrait_id: String = "") -> void:
-	"""Quick helper for single-line dialogues"""
-	start_dialogue([{
-		"speaker": speaker,
-		"text": text,
-		"portrait": portrait_id
-	}])
+	## Quick helper for single-line dialogues
+	start_dialogue([{"speaker": speaker, "text": text, "portrait": portrait_id}])
+
 
 func end_dialogue() -> void:
 	is_active = false
@@ -147,9 +143,11 @@ func end_dialogue() -> void:
 	EventBus.dialogue_ended.emit()
 	dialogue_finished.emit()
 
+
 # =============================================================================
 # DIALOGUE FLOW
 # =============================================================================
+
 
 func _show_current_line() -> void:
 	if current_index >= current_dialogue.size():
@@ -183,6 +181,7 @@ func _show_current_line() -> void:
 
 	EventBus.dialogue_line_shown.emit(line.get("speaker", ""), full_text)
 
+
 func _advance_dialogue() -> void:
 	var line: Dictionary = current_dialogue[current_index]
 
@@ -197,6 +196,7 @@ func _advance_dialogue() -> void:
 
 	_show_current_line()
 
+
 func _finish_typing() -> void:
 	is_typing = false
 	text_label.text = full_text
@@ -210,14 +210,17 @@ func _finish_typing() -> void:
 
 	line_completed.emit()
 
+
 func _skip_typing() -> void:
 	is_typing = false
 	text_label.text = full_text
 	_finish_typing()
 
+
 # =============================================================================
 # PORTRAIT
 # =============================================================================
+
 
 func _set_portrait(portrait_id: String) -> void:
 	if portrait_id.is_empty():
@@ -239,9 +242,11 @@ func _set_portrait(portrait_id: String) -> void:
 		portrait.visible = false
 		EventBus.emit_debug("Portrait not found: %s" % portrait_id)
 
+
 # =============================================================================
 # CHOICES
 # =============================================================================
+
 
 func _show_choices(choices: Array) -> void:
 	# Clear existing
@@ -263,6 +268,7 @@ func _show_choices(choices: Array) -> void:
 	if choices_container.get_child_count() > 0:
 		choices_container.get_child(0).grab_focus()
 
+
 func _on_choice_selected(index: int, next_index: int) -> void:
 	choices_container.visible = false
 
@@ -272,15 +278,18 @@ func _on_choice_selected(index: int, next_index: int) -> void:
 	current_index = next_index
 	_show_current_line()
 
+
 # =============================================================================
 # VERA INTEGRATION
 # =============================================================================
 
+
 func _on_vera_dialogue_triggered(context: String) -> void:
 	show_vera_dialogue(context)
 
+
 func show_vera_dialogue(context: String) -> void:
-	"""Quick helper to show VERA's context-appropriate dialogue"""
+	## Quick helper to show VERA's context-appropriate dialogue
 	var vera_text := "..."
 	var vera_portrait := "vera_normal"
 
@@ -289,27 +298,28 @@ func show_vera_dialogue(context: String) -> void:
 		vera_text = vera_system.get_dialogue(context)
 		vera_portrait = vera_system.get_portrait_id()
 
-	start_dialogue([{
-		"speaker": "VERA",
-		"text": vera_text,
-		"portrait": vera_portrait
-	}])
+	start_dialogue([{"speaker": "VERA", "text": vera_text, "portrait": vera_portrait}])
+
 
 # =============================================================================
 # UTILITY
 # =============================================================================
 
+
 func is_dialogue_active() -> bool:
 	return is_active
 
+
 func skip_to_end() -> void:
-	"""Skip all remaining dialogue (for testing/accessibility)"""
+	## Skip all remaining dialogue (for testing/accessibility)
 	if is_active:
 		end_dialogue()
+
 
 # =============================================================================
 # CLEANUP
 # =============================================================================
+
 
 func _exit_tree() -> void:
 	# Disconnect EventBus signals to prevent errors after scene is freed

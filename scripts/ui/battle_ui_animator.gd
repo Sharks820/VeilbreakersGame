@@ -36,6 +36,7 @@ signal target_selection_ready
 @export var status_popup_time: float = 1.0
 @export var message_display_time: float = 1.5
 
+
 # -----------------------------------------------------------------------------
 # BRAND COLORS (delegate to Helpers for single source of truth)
 # -----------------------------------------------------------------------------
@@ -43,7 +44,8 @@ signal target_selection_ready
 static func _get_brand_color(brand_name: String) -> Color:
 	if brand_name == "NEUTRAL" or brand_name.is_empty():
 		return Color.WHITE
-	return Helpers.get_brand_color_by_name(brand_name)
+	return BrandSystem.get_brand_color_by_name(brand_name)
+
 
 # -----------------------------------------------------------------------------
 # STATE
@@ -51,6 +53,7 @@ static func _get_brand_color(brand_name: String) -> Color:
 var turn_icons: Array = []  # Current turn order icons
 var active_popups: Array = []
 var _current_turn_tween: Tween = null  # Track infinite pulse tween to prevent leaks
+
 
 # -----------------------------------------------------------------------------
 # CLEANUP
@@ -72,11 +75,12 @@ func _exit_tree() -> void:
 			popup.queue_free()
 	active_popups.clear()
 
+
 # -----------------------------------------------------------------------------
 # TURN ORDER BAR
 # -----------------------------------------------------------------------------
 func show_turn_order(order: Array) -> void:
-	"""Display/update turn order with animation"""
+	## Display/update turn order with animation
 	if not turn_order_bar or not turn_icon_template:
 		return
 
@@ -103,13 +107,19 @@ func show_turn_order(order: Array) -> void:
 		var tween = create_tween()
 		tween.set_parallel(true)
 		tween.tween_property(icon, "modulate:a", 1.0, turn_icon_slide_time).set_delay(i * 0.1)
-		tween.tween_property(icon, "position:y", 0, turn_icon_slide_time).set_delay(i * 0.1).set_ease(Tween.EASE_OUT)
+		(
+			tween
+			. tween_property(icon, "position:y", 0, turn_icon_slide_time)
+			. set_delay(i * 0.1)
+			. set_ease(Tween.EASE_OUT)
+		)
 
 	await get_tree().create_timer(turn_icon_slide_time + order.size() * 0.1).timeout
 	turn_order_animation_complete.emit()
 
+
 func _setup_turn_icon(icon: Control, entity: Node, index: int) -> void:
-	"""Configure a turn order icon for an entity"""
+	## Configure a turn order icon for an entity
 	# Assuming icon has: portrait texture, name label, highlight, brand indicator
 	if icon.has_node("Portrait") and entity.has_method("get_portrait"):
 		icon.get_node("Portrait").texture = entity.get_portrait()
@@ -125,14 +135,15 @@ func _setup_turn_icon(icon: Control, entity: Node, index: int) -> void:
 	if index == 0 and icon.has_node("ActiveHighlight"):
 		icon.get_node("ActiveHighlight").visible = true
 
+
 func highlight_current_turn(entity: Node) -> void:
-	"""Highlight the current actor's turn icon"""
+	## Highlight the current actor's turn icon
 	for i in range(turn_icons.size()):
 		var icon = turn_icons[i]
 		if not is_instance_valid(icon):
 			continue
 
-		var is_current = (i == 0)  # First icon is current
+		var is_current = i == 0  # First icon is current
 
 		if icon.has_node("ActiveHighlight"):
 			icon.get_node("ActiveHighlight").visible = is_current
@@ -146,8 +157,9 @@ func highlight_current_turn(entity: Node) -> void:
 			_current_turn_tween.tween_property(icon, "scale", Vector2(1.1, 1.1), 0.5)
 			_current_turn_tween.tween_property(icon, "scale", Vector2.ONE, 0.5)
 
+
 func advance_turn_order() -> void:
-	"""Animate the turn order advancing (first icon out, rest slide left)"""
+	## Animate the turn order advancing (first icon out, rest slide left)
 	if turn_icons.is_empty():
 		return
 
@@ -172,11 +184,12 @@ func advance_turn_order() -> void:
 		var slide_tween = create_tween()
 		slide_tween.tween_property(icon, "position:x", target_x, 0.2).set_ease(Tween.EASE_OUT)
 
+
 # -----------------------------------------------------------------------------
 # ACTION MENU
 # -----------------------------------------------------------------------------
 func show_action_menu(entity: Node) -> void:
-	"""Animate action menu appearing"""
+	## Animate action menu appearing
 	if not action_menu:
 		return
 
@@ -187,13 +200,19 @@ func show_action_menu(entity: Node) -> void:
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(action_menu, "modulate:a", 1.0, 0.2)
-	tween.tween_property(action_menu, "scale", Vector2.ONE, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	(
+		tween
+		. tween_property(action_menu, "scale", Vector2.ONE, 0.25)
+		. set_ease(Tween.EASE_OUT)
+		. set_trans(Tween.TRANS_BACK)
+	)
 
 	await tween.finished
 	action_menu_ready.emit()
 
+
 func hide_action_menu() -> void:
-	"""Animate action menu disappearing"""
+	## Animate action menu disappearing
 	if not action_menu or not action_menu.visible:
 		return
 
@@ -203,11 +222,12 @@ func hide_action_menu() -> void:
 	tween.tween_property(action_menu, "scale", Vector2(0.9, 0.9), 0.15)
 	tween.tween_callback(func(): action_menu.visible = false)
 
+
 # -----------------------------------------------------------------------------
 # SKILL NAME DISPLAY
 # -----------------------------------------------------------------------------
 func show_skill_name(skill_name: String, brand: String = "NEUTRAL") -> void:
-	"""Display skill name with dramatic animation"""
+	## Display skill name with dramatic animation
 	if not skill_name_display:
 		return
 
@@ -231,7 +251,9 @@ func show_skill_name(skill_name: String, brand: String = "NEUTRAL") -> void:
 
 	# Pop in
 	tween.tween_property(skill_name_display, "modulate:a", 1.0, 0.1)
-	tween.parallel().tween_property(skill_name_display, "scale", Vector2(1.2, 1.2), 0.15).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(skill_name_display, "scale", Vector2(1.2, 1.2), 0.15).set_ease(
+		Tween.EASE_OUT
+	)
 
 	# Settle
 	tween.tween_property(skill_name_display, "scale", Vector2.ONE, 0.1)
@@ -241,16 +263,18 @@ func show_skill_name(skill_name: String, brand: String = "NEUTRAL") -> void:
 
 	# Fade out
 	tween.tween_property(skill_name_display, "modulate:a", 0.0, 0.2)
-	tween.tween_callback(func():
-		skill_name_display.visible = false
-		skill_announcement_complete.emit()
+	tween.tween_callback(
+		func():
+			skill_name_display.visible = false
+			skill_announcement_complete.emit()
 	)
+
 
 # -----------------------------------------------------------------------------
 # STATUS POPUPS
 # -----------------------------------------------------------------------------
 func show_status_popup(target: Node, status_text: String, is_positive: bool) -> void:
-	"""Show floating status text near a target"""
+	## Show floating status text near a target
 	if not status_popup_template or not status_popup_container:
 		return
 
@@ -279,16 +303,18 @@ func show_status_popup(target: Node, status_text: String, is_positive: bool) -> 
 
 	tween.chain().tween_interval(status_popup_time)
 	tween.chain().tween_property(popup, "modulate:a", 0.0, 0.2)
-	tween.chain().tween_callback(func():
-		active_popups.erase(popup)
-		popup.queue_free()
+	tween.chain().tween_callback(
+		func():
+			active_popups.erase(popup)
+			popup.queue_free()
 	)
+
 
 # -----------------------------------------------------------------------------
 # MESSAGE DISPLAY
 # -----------------------------------------------------------------------------
 func show_message(text: String, position: Vector2 = Vector2.ZERO) -> void:
-	"""Show a message (like 'MISS!' or 'RESISTED!')"""
+	## Show a message (like 'MISS!' or 'RESISTED!')
 	if not message_display:
 		return
 
@@ -306,45 +332,52 @@ func show_message(text: String, position: Vector2 = Vector2.ZERO) -> void:
 
 	var tween = create_tween()
 	tween.tween_property(message_display, "modulate:a", 1.0, 0.1)
-	tween.parallel().tween_property(message_display, "scale", Vector2(1.1, 1.1), 0.15).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(message_display, "scale", Vector2(1.1, 1.1), 0.15).set_ease(
+		Tween.EASE_OUT
+	)
 	tween.tween_property(message_display, "scale", Vector2.ONE, 0.1)
 	tween.tween_interval(message_display_time)
 	tween.tween_property(message_display, "modulate:a", 0.0, 0.2)
 	tween.tween_callback(func(): message_display.visible = false)
 
+
 # -----------------------------------------------------------------------------
 # CAPTURE ANNOUNCEMENT
 # -----------------------------------------------------------------------------
 func show_capture_announcement(monster_name: String, brand: String) -> void:
-	"""Celebratory capture success announcement"""
+	## Celebratory capture success announcement
 	# This would be a more elaborate UI element
 	# For now, use message display
 	show_message("CAPTURED: " + monster_name + "!")
+
 
 # -----------------------------------------------------------------------------
 # PHASE ANNOUNCEMENT
 # -----------------------------------------------------------------------------
 func show_phase_announcement(boss_name: String, phase: int, phase_name: String) -> void:
-	"""Boss phase transition announcement"""
+	## Boss phase transition announcement
 	show_message(boss_name + " - " + phase_name)
+
 
 # -----------------------------------------------------------------------------
 # VICTORY/DEFEAT SCREENS
 # -----------------------------------------------------------------------------
 func show_victory_screen(data: Dictionary) -> void:
-	"""Victory screen with exp, drops, stats"""
+	## Victory screen with exp, drops, stats
 	# Would animate in a full victory panel
 	show_message("VICTORY!")
 
+
 func show_defeat_screen(data: Dictionary) -> void:
-	"""Defeat screen"""
+	## Defeat screen
 	show_message("DEFEATED...")
+
 
 # -----------------------------------------------------------------------------
 # TARGET SELECTION
 # -----------------------------------------------------------------------------
 func start_target_selection(valid_targets: Array, selection_type: String = "single") -> void:
-	"""Enable target selection mode"""
+	## Enable target selection mode
 	if not target_selector:
 		return
 
@@ -352,16 +385,18 @@ func start_target_selection(valid_targets: Array, selection_type: String = "sing
 	# Configure targeting UI based on selection_type (single, all, aoe, etc.)
 	target_selection_ready.emit()
 
+
 func end_target_selection() -> void:
-	"""Disable target selection mode"""
+	## Disable target selection mode
 	if target_selector:
 		target_selector.visible = false
+
 
 # -----------------------------------------------------------------------------
 # HIDE/SHOW ALL UI
 # -----------------------------------------------------------------------------
 func hide_all_ui() -> void:
-	"""Hide all battle UI for cinematics"""
+	## Hide all battle UI for cinematics
 	var tween = create_tween()
 	tween.set_parallel(true)
 
@@ -370,8 +405,9 @@ func hide_all_ui() -> void:
 	if action_menu:
 		tween.tween_property(action_menu, "modulate:a", 0.0, 0.3)
 
+
 func show_all_ui() -> void:
-	"""Restore battle UI after cinematics"""
+	## Restore battle UI after cinematics
 	var tween = create_tween()
 	tween.set_parallel(true)
 
@@ -379,11 +415,12 @@ func show_all_ui() -> void:
 		tween.tween_property(turn_order_bar, "modulate:a", 1.0, 0.3)
 	# Action menu only shown when needed
 
+
 # -----------------------------------------------------------------------------
 # BOSS TITLE CARD
 # -----------------------------------------------------------------------------
 func show_boss_title_card(boss_name: String, title: String) -> void:
-	"""Dramatic boss introduction title"""
+	## Dramatic boss introduction title
 	# Would be a custom title card UI element
 	# With the boss name in large text, title below
 	# Animated with dramatic flair
@@ -391,15 +428,18 @@ func show_boss_title_card(boss_name: String, title: String) -> void:
 	# Placeholder using message
 	show_message(title + "\n" + boss_name)
 
+
 # -----------------------------------------------------------------------------
 # HEALTH BAR ANIMATIONS (called externally when damage/heal happens)
 # -----------------------------------------------------------------------------
-func animate_health_change(entity: Node, old_value: int, new_value: int, max_value: int) -> void:
-	"""Animate a health bar change"""
-	# This would find the entity's health bar and animate it
+func animate_health_change(
+	_entity: Node, _old_value: int, _new_value: int, _max_value: int
+) -> void:
+	## Animate a health bar change
+	# TODO: This would find the entity's health bar and animate it
 	# Could include:
 	# - Smooth drain
 	# - Flash on damage
 	# - Shake on heavy damage
 	# - Color change when low
-	pass
+	return

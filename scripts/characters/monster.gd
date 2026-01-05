@@ -1,7 +1,7 @@
 class_name Monster
 extends CharacterBase
 ## Monster: Capturable enemy with corruption and purification mechanics.
-## 
+##
 ## CORE PHILOSOPHY: Lower corruption = STRONGER monster.
 ## Goal is ASCENSION (0-10% corruption) for +25% all stats and perfect loyalty.
 ## Corruption is the ENEMY - player is a Veilbreaker, meant to FREE creatures.
@@ -15,12 +15,12 @@ signal corruption_state_changed(old_state: Enums.CorruptionState, new_state: Enu
 signal capture_state_changed(old_state: Enums.CaptureState, new_state: Enums.CaptureState)
 signal instability_triggered(action_taken: String)
 signal morale_changed(old_level: Enums.MoraleLevel, new_level: Enums.MoraleLevel)
-signal ascended()
-signal purification_started()
+signal ascended
+signal purification_started
 signal purification_progress_updated(progress: float)
-signal purification_completed()
-signal purification_failed()
-signal recruited()
+signal purification_completed
+signal purification_failed
+signal recruited
 signal experience_changed(old_exp: int, new_exp: int)
 
 # =============================================================================
@@ -103,12 +103,14 @@ var _corruption_brand_mult: float = 1.0
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	super._ready()
 	character_type = Enums.CharacterType.BOSS if is_boss() else Enums.CharacterType.MONSTER
 	_apply_tier_scaling()
 	_update_corruption_state()
 	_calculate_instability()
+
 
 func _apply_tier_scaling() -> void:
 	# Scale stats based on tier
@@ -132,8 +134,10 @@ func _apply_tier_scaling() -> void:
 
 	current_hp = get_max_hp()
 
+
 func is_boss() -> bool:
 	return rarity == Enums.Rarity.LEGENDARY or monster_tier == Enums.MonsterTier.BOSS
+
 
 func can_be_purified() -> bool:
 	## Returns true if monster can currently be purified
@@ -144,6 +148,7 @@ func can_be_purified() -> bool:
 		return false
 	return true
 
+
 func can_be_captured() -> bool:
 	## Returns true if monster can be captured (bosses cannot)
 	if is_boss():
@@ -152,15 +157,17 @@ func can_be_captured() -> bool:
 		return false
 	return true
 
+
 # =============================================================================
 # CORRUPTION STATE SYSTEM
 # =============================================================================
+
 
 func _update_corruption_state() -> void:
 	## Update corruption state based on current corruption level
 	## CORE: Lower corruption = STRONGER monster
 	var old_state := corruption_state
-	
+
 	if corruption_level <= Constants.CORRUPTION_ASCENDED_MAX:
 		corruption_state = Enums.CorruptionState.ASCENDED
 		_corruption_stat_mult = Constants.STAT_MULT_ASCENDED
@@ -181,21 +188,25 @@ func _update_corruption_state() -> void:
 		corruption_state = Enums.CorruptionState.ABYSSAL
 		_corruption_stat_mult = Constants.STAT_MULT_ABYSSAL
 		_corruption_brand_mult = Constants.BRAND_MULT_ABYSSAL
-	
+
 	if old_state != corruption_state:
 		corruption_state_changed.emit(old_state, corruption_state)
 		_on_corruption_state_changed(old_state, corruption_state)
 		_calculate_instability()
 		stats_changed.emit()
 
-func _on_corruption_state_changed(old_state: Enums.CorruptionState, new_state: Enums.CorruptionState) -> void:
+
+func _on_corruption_state_changed(
+	old_state: Enums.CorruptionState, new_state: Enums.CorruptionState
+) -> void:
 	## Handle corruption state transitions
 	# Check for Ascension
 	if new_state == Enums.CorruptionState.ASCENDED and old_state != Enums.CorruptionState.ASCENDED:
 		_on_monster_ascended()
-	
+
 	# Notify event bus
 	EventBus.monster_corruption_state_changed.emit(self, old_state, new_state)
+
 
 func _on_monster_ascended() -> void:
 	## Called when monster reaches ASCENDED state (0-10% corruption)
@@ -205,31 +216,41 @@ func _on_monster_ascended() -> void:
 	EventBus.monster_ascended.emit(self)
 	EventBus.emit_notification("%s has ASCENDED to its true form!" % character_name, "success")
 
+
 func get_corruption_state() -> Enums.CorruptionState:
 	return corruption_state
+
 
 func get_corruption_state_name() -> String:
 	return Enums.CorruptionState.keys()[corruption_state]
 
+
 func is_ascended() -> bool:
 	return corruption_state == Enums.CorruptionState.ASCENDED
+
 
 func is_purified_state() -> bool:
 	## Returns true if in Purified state (11-25% corruption)
 	return corruption_state == Enums.CorruptionState.PURIFIED
 
+
 func is_corrupted_state() -> bool:
 	## Returns true if in Corrupted or Abyssal state
-	return corruption_state == Enums.CorruptionState.CORRUPTED or corruption_state == Enums.CorruptionState.ABYSSAL
+	return (
+		corruption_state == Enums.CorruptionState.CORRUPTED
+		or corruption_state == Enums.CorruptionState.ABYSSAL
+	)
+
 
 # =============================================================================
 # INSTABILITY SYSTEM
 # =============================================================================
 
+
 func _calculate_instability() -> void:
 	## Calculate instability based on corruption state and capture method
 	var base_instability := 0.0
-	
+
 	# Base instability from corruption state
 	match corruption_state:
 		Enums.CorruptionState.ASCENDED:
@@ -242,7 +263,7 @@ func _calculate_instability() -> void:
 			base_instability = Constants.INSTABILITY_CORRUPTED
 		Enums.CorruptionState.ABYSSAL:
 			base_instability = Constants.INSTABILITY_ABYSSAL
-	
+
 	# Additional instability from DOMINATE capture
 	if capture_method == Enums.CaptureMethod.DOMINATE:
 		match capture_state:
@@ -250,24 +271,26 @@ func _calculate_instability() -> void:
 				base_instability += 0.10  # +10% from DOMINATE at Corrupted
 			Enums.CaptureState.DOMINATED:
 				base_instability += 0.20  # +20% from DOMINATE at Abyssal
-	
+
 	# Morale affects instability
 	if morale_level == Enums.MoraleLevel.REBELLIOUS:
 		base_instability += Constants.MORALE_REBELLIOUS_INSTABILITY_BONUS
-	
+
 	instability = clampf(base_instability, 0.0, 0.5)  # Cap at 50%
+
 
 func check_instability() -> bool:
 	## Check if monster ignores command this turn due to instability
 	## Returns true if monster goes rogue
 	if instability <= 0:
 		return false
-	
+
 	if randf() < instability:
 		instability_triggered.emit("rogue_action")
 		return true
-	
+
 	return false
+
 
 func get_instability_action(allies: Array, enemies: Array) -> Dictionary:
 	## Get a random action when instability triggers
@@ -275,49 +298,52 @@ func get_instability_action(allies: Array, enemies: Array) -> Dictionary:
 	var all_targets: Array = []
 	all_targets.append_array(allies)
 	all_targets.append_array(enemies)
-	
+
 	var valid := all_targets.filter(func(t): return t.is_alive() and t != self)
 	if valid.is_empty():
 		return {"action": Enums.BattleAction.DEFEND, "target": self, "skill": ""}
-	
+
 	var target = valid[randi() % valid.size()]
 	return {
-		"action": Enums.BattleAction.ATTACK,
-		"target": target,
-		"skill": "",
-		"is_instability": true
+		"action": Enums.BattleAction.ATTACK, "target": target, "skill": "", "is_instability": true
 	}
+
 
 # =============================================================================
 # STAT OVERRIDES (Corruption affects all stats)
 # =============================================================================
 
+
 func get_max_hp() -> int:
 	return int(super.get_max_hp() * _corruption_stat_mult)
 
+
 func get_stat(stat: Enums.Stat) -> float:
 	var base_stat := super.get_stat(stat)
-	
+
 	# Apply corruption multiplier to all stats except HP (handled above)
 	if stat != Enums.Stat.MAX_HP:
 		base_stat *= _corruption_stat_mult
-	
+
 	# Apply morale modifiers
 	match morale_level:
 		Enums.MoraleLevel.INSPIRED:
 			base_stat *= (1.0 + Constants.MORALE_INSPIRED_STAT_BONUS)
 		Enums.MoraleLevel.CONFLICTED:
 			base_stat *= (1.0 - Constants.MORALE_CONFLICTED_STAT_PENALTY)
-	
+
 	return base_stat
+
 
 func get_brand_multiplier() -> float:
 	## Get Brand bonus multiplier (affected by corruption state)
 	return _corruption_brand_mult
 
+
 # =============================================================================
 # CORRUPTION MODIFICATION
 # =============================================================================
+
 
 func reduce_corruption(amount: float) -> void:
 	var old := corruption_level
@@ -326,12 +352,14 @@ func reduce_corruption(amount: float) -> void:
 		corruption_changed.emit(old, corruption_level)
 		_update_corruption_state()
 
+
 func add_corruption(amount: float) -> void:
 	var old := corruption_level
 	corruption_level = minf(max_corruption, corruption_level + amount)
 	if corruption_level != old:
 		corruption_changed.emit(old, corruption_level)
 		_update_corruption_state()
+
 
 func set_corruption(value: float) -> void:
 	var old := corruption_level
@@ -340,22 +368,29 @@ func set_corruption(value: float) -> void:
 		corruption_changed.emit(old, corruption_level)
 		_update_corruption_state()
 
+
 func get_purification_progress() -> float:
 	## Returns purification progress as 0.0 to 1.0 (1.0 = fully ascended)
-	return 1.0 - (corruption_level / max_corruption)
+	return 1.0 - (corruption_level / maxf(max_corruption, 1.0))
+
 
 func is_purified() -> bool:
 	## Returns true if monster is in Purified or Ascended state
-	return corruption_state == Enums.CorruptionState.PURIFIED or corruption_state == Enums.CorruptionState.ASCENDED
+	return (
+		corruption_state == Enums.CorruptionState.PURIFIED
+		or corruption_state == Enums.CorruptionState.ASCENDED
+	)
+
 
 # =============================================================================
 # CAPTURE SYSTEM INTEGRATION
 # =============================================================================
 
+
 func on_captured(method: Enums.CaptureMethod) -> void:
 	## Called when monster is successfully captured
 	capture_method = method
-	
+
 	# Determine capture state from current corruption
 	var old_state := capture_state
 	if corruption_level <= Constants.CORRUPTION_ASCENDED_MAX:
@@ -368,29 +403,34 @@ func on_captured(method: Enums.CaptureMethod) -> void:
 		capture_state = Enums.CaptureState.CORRUPTED
 	else:
 		capture_state = Enums.CaptureState.DOMINATED
-	
+
 	capture_state_changed.emit(old_state, capture_state)
 	_calculate_instability()
-	
+
 	# DOMINATE adds extra corruption
 	if method == Enums.CaptureMethod.DOMINATE:
 		add_corruption(Constants.DOMINATE_FAIL_CORRUPTION_GAIN)
-	
+
 	recruited.emit()
 	EventBus.monster_recruited.emit(self)
+
 
 func get_capture_state_name() -> String:
 	return Enums.CaptureState.keys()[capture_state]
 
+
 func was_dominated() -> bool:
 	return capture_method == Enums.CaptureMethod.DOMINATE
+
 
 func was_bargained() -> bool:
 	return capture_method == Enums.CaptureMethod.BARGAIN
 
+
 # =============================================================================
 # MORALE SYSTEM
 # =============================================================================
+
 
 func add_morale_approval() -> void:
 	## Player did something this monster's Brand approves of
@@ -398,16 +438,18 @@ func add_morale_approval() -> void:
 	battles_since_morale_event = 0
 	_update_morale_level()
 
+
 func add_morale_disapproval() -> void:
 	## Player did something this monster's Brand disapproves of
 	morale_disapproval_count += 1
 	battles_since_morale_event = 0
 	_update_morale_level()
 
+
 func on_battle_end() -> void:
 	## Called at end of each battle for morale decay
 	battles_since_morale_event += 1
-	
+
 	# Decay morale events over time
 	if battles_since_morale_event >= Constants.MORALE_DECAY_BATTLES:
 		if morale_approval_count > 0:
@@ -417,9 +459,10 @@ func on_battle_end() -> void:
 		battles_since_morale_event = 0
 		_update_morale_level()
 
+
 func _update_morale_level() -> void:
 	var old_level := morale_level
-	
+
 	if morale_disapproval_count >= Constants.MORALE_REBELLIOUS_THRESHOLD:
 		morale_level = Enums.MoraleLevel.REBELLIOUS
 	elif morale_disapproval_count >= Constants.MORALE_CONFLICTED_THRESHOLD:
@@ -428,23 +471,25 @@ func _update_morale_level() -> void:
 		morale_level = Enums.MoraleLevel.INSPIRED
 	else:
 		morale_level = Enums.MoraleLevel.CONTENT
-	
+
 	if old_level != morale_level:
 		morale_changed.emit(old_level, morale_level)
 		_calculate_instability()
 		stats_changed.emit()
+
 
 func get_brand_approval_action(action: String) -> int:
 	## Returns 1 for approval, -1 for disapproval, 0 for neutral
 	## Based on monster's Brand beliefs from AGENT_SYSTEMS.md
 	var approvals := _get_brand_approvals()
 	var disapprovals := _get_brand_disapprovals()
-	
+
 	if action in approvals:
 		return 1
 	elif action in disapprovals:
 		return -1
 	return 0
+
 
 func _get_brand_approvals() -> Array[String]:
 	match brand:
@@ -462,6 +507,7 @@ func _get_brand_approvals() -> Array[String]:
 			return ["take_resources", "self_preservation", "lifesteal"]
 	return []
 
+
 func _get_brand_disapprovals() -> Array[String]:
 	match brand:
 		Enums.Brand.SAVAGE:
@@ -478,9 +524,11 @@ func _get_brand_disapprovals() -> Array[String]:
 			return ["sacrifice", "give_away", "generous"]
 	return []
 
+
 # =============================================================================
 # PURIFICATION (Legacy support + new system)
 # =============================================================================
+
 
 func get_purification_chance() -> float:
 	if not can_be_purified():
@@ -507,16 +555,15 @@ func get_purification_chance() -> float:
 		Enums.Rarity.LEGENDARY:
 			rarity_penalty = 0.3
 
-	var final_chance := base_chance - corruption_penalty - resistance_penalty - rarity_penalty + hp_bonus
+	var final_chance := (
+		base_chance - corruption_penalty - resistance_penalty - rarity_penalty + hp_bonus
+	)
 	return clampf(final_chance, 0.05, 0.95)
+
 
 func attempt_purification(purifier_power: float = 1.0) -> Dictionary:
 	if not can_be_purified():
-		return {
-			"success": false,
-			"reason": "Cannot be purified",
-			"monster": self
-		}
+		return {"success": false, "reason": "Cannot be purified", "monster": self}
 
 	is_being_purified = true
 	purification_started.emit()
@@ -528,30 +575,22 @@ func attempt_purification(purifier_power: float = 1.0) -> Dictionary:
 
 	if success:
 		_complete_purification()
-		return {
-			"success": true,
-			"chance": chance,
-			"roll": roll,
-			"monster": self
-		}
+		return {"success": true, "chance": chance, "roll": roll, "monster": self}
 	else:
 		# Reduce corruption on failed attempt (PURIFY always reduces corruption)
 		reduce_corruption(Constants.PURIFY_CORRUPTION_REDUCTION_ON_FAIL)
 		is_being_purified = false
 		purification_failed.emit()
 		EventBus.purification_failed.emit(self)
-		return {
-			"success": false,
-			"chance": chance,
-			"roll": roll,
-			"monster": self
-		}
+		return {"success": false, "chance": chance, "roll": roll, "monster": self}
+
 
 func start_purification_minigame() -> void:
 	is_being_purified = true
 	purification_progress = 0.0
 	purification_started.emit()
 	EventBus.purification_started.emit(self)
+
 
 func update_purification_progress(delta_progress: float) -> void:
 	purification_progress = clampf(purification_progress + delta_progress, 0.0, 100.0)
@@ -561,10 +600,12 @@ func update_purification_progress(delta_progress: float) -> void:
 	if purification_progress >= 100.0:
 		_complete_purification()
 
+
 func cancel_purification() -> void:
 	is_being_purified = false
 	purification_progress = 0.0
 	purification_failed.emit()
+
 
 func _complete_purification() -> void:
 	is_being_purified = false
@@ -575,9 +616,11 @@ func _complete_purification() -> void:
 	purification_completed.emit()
 	EventBus.purification_succeeded.emit(self)
 
+
 # =============================================================================
 # RECRUITMENT
 # =============================================================================
+
 
 func recruit_to_party() -> bool:
 	# Can recruit if captured (any method)
@@ -588,6 +631,7 @@ func recruit_to_party() -> bool:
 	recruited.emit()
 	EventBus.monster_recruited.emit(self)
 	return true
+
 
 func get_recruitment_stats() -> Dictionary:
 	return {
@@ -605,23 +649,27 @@ func get_recruitment_stats() -> Dictionary:
 		"speed": get_stat(Enums.Stat.SPEED)
 	}
 
+
 # =============================================================================
 # EXPERIENCE & LEVELING (for allied/recruited monsters)
 # Inherits add_experience() and get_level_progress() from CharacterBase
 # =============================================================================
+
 
 func get_xp_for_next_level() -> int:
 	## Override: Monsters need slightly less XP than players (level up 20% faster)
 	var base_xp := Constants.get_xp_for_level(level + 1)
 	return int(base_xp * 0.8)
 
+
 # =============================================================================
 # AI DECISION MAKING
 # =============================================================================
 
+
 func get_ai_action(allies: Array, enemies: Array) -> Dictionary:
 	turns_since_last_skill += 1
-	
+
 	# Check instability first
 	if check_instability():
 		return get_instability_action(allies, enemies)
@@ -637,6 +685,7 @@ func get_ai_action(allies: Array, enemies: Array) -> Dictionary:
 			return _ai_boss(allies, enemies)
 		_:
 			return _ai_random(allies, enemies)
+
 
 func _get_preferred_target(enemies: Array) -> CharacterBase:
 	var valid_enemies := enemies.filter(func(e): return e.is_alive())
@@ -662,6 +711,7 @@ func _get_preferred_target(enemies: Array) -> CharacterBase:
 		_:
 			return valid_enemies[randi() % valid_enemies.size()]
 
+
 func _ai_aggressive(_allies: Array, enemies: Array) -> Dictionary:
 	var target := _get_preferred_target(enemies)
 
@@ -674,17 +724,10 @@ func _ai_aggressive(_allies: Array, enemies: Array) -> Dictionary:
 		var skill_id := known_skills[randi() % known_skills.size()]
 		if can_use_skill(skill_id):
 			turns_since_last_skill = 0
-			return {
-				"action": Enums.BattleAction.SKILL,
-				"target": target,
-				"skill": skill_id
-			}
+			return {"action": Enums.BattleAction.SKILL, "target": target, "skill": skill_id}
 
-	return {
-		"action": Enums.BattleAction.ATTACK,
-		"target": target,
-		"skill": ""
-	}
+	return {"action": Enums.BattleAction.ATTACK, "target": target, "skill": ""}
+
 
 func _ai_defensive(allies: Array, enemies: Array) -> Dictionary:
 	# Defend if HP < 30%
@@ -698,6 +741,7 @@ func _ai_defensive(allies: Array, enemies: Array) -> Dictionary:
 			pass
 
 	return _ai_aggressive(allies, enemies)
+
 
 func _ai_support(allies: Array, enemies: Array) -> Dictionary:
 	# Find lowest HP ally
@@ -721,6 +765,7 @@ func _ai_support(allies: Array, enemies: Array) -> Dictionary:
 
 	return _ai_aggressive(allies, enemies)
 
+
 func _ai_boss(allies: Array, enemies: Array) -> Dictionary:
 	# Bosses use skills more frequently
 	if not known_skills.is_empty() and randf() > 0.4:
@@ -731,11 +776,7 @@ func _ai_boss(allies: Array, enemies: Array) -> Dictionary:
 			if target == null:
 				return {"action": Enums.BattleAction.DEFEND, "target": self, "skill": ""}
 			turns_since_last_skill = 0
-			return {
-				"action": Enums.BattleAction.SKILL,
-				"target": target,
-				"skill": skill_id
-			}
+			return {"action": Enums.BattleAction.SKILL, "target": target, "skill": skill_id}
 
 	# Phase changes based on HP (for future implementation)
 	var hp_percent := get_hp_percent()
@@ -747,6 +788,7 @@ func _ai_boss(allies: Array, enemies: Array) -> Dictionary:
 		pass
 
 	return _ai_aggressive(allies, enemies)
+
 
 func _ai_random(_allies: Array, enemies: Array) -> Dictionary:
 	var actions := [Enums.BattleAction.ATTACK, Enums.BattleAction.DEFEND]
@@ -760,9 +802,11 @@ func _ai_random(_allies: Array, enemies: Array) -> Dictionary:
 
 	return {"action": action, "target": target, "skill": ""}
 
+
 # =============================================================================
 # REWARDS
 # =============================================================================
+
 
 func get_rewards() -> Dictionary:
 	var drops: Array[Dictionary] = []
@@ -770,10 +814,7 @@ func get_rewards() -> Dictionary:
 	for drop in drop_table:
 		var chance: float = drop.get("chance", 0.1)
 		if randf() <= chance:
-			drops.append({
-				"item_id": drop.get("item_id", ""),
-				"quantity": drop.get("quantity", 1)
-			})
+			drops.append({"item_id": drop.get("item_id", ""), "quantity": drop.get("quantity", 1)})
 
 	# Rarity bonus
 	var rarity_mult := 1.0
@@ -793,31 +834,36 @@ func get_rewards() -> Dictionary:
 		"items": drops
 	}
 
+
 # =============================================================================
 # SERIALIZATION
 # =============================================================================
 
+
 func get_save_data() -> Dictionary:
 	var data := super.get_save_data()
-	data.merge({
-		"monster_id": monster_id,
-		"monster_tier": monster_tier,
-		"rarity": rarity,
-		"description": description,
-		"corruption_level": corruption_level,
-		"max_corruption": max_corruption,
-		"corruption_resistance": corruption_resistance,
-		"capture_method": capture_method,
-		"capture_state": capture_state,
-		"morale_level": morale_level,
-		"morale_approval_count": morale_approval_count,
-		"morale_disapproval_count": morale_disapproval_count,
-		"has_ascended_ability": has_ascended_ability,
-		"current_experience": current_experience,
-		"total_experience": total_experience,
-		"ai_pattern": ai_pattern
-	})
+	data.merge(
+		{
+			"monster_id": monster_id,
+			"monster_tier": monster_tier,
+			"rarity": rarity,
+			"description": description,
+			"corruption_level": corruption_level,
+			"max_corruption": max_corruption,
+			"corruption_resistance": corruption_resistance,
+			"capture_method": capture_method,
+			"capture_state": capture_state,
+			"morale_level": morale_level,
+			"morale_approval_count": morale_approval_count,
+			"morale_disapproval_count": morale_disapproval_count,
+			"has_ascended_ability": has_ascended_ability,
+			"current_experience": current_experience,
+			"total_experience": total_experience,
+			"ai_pattern": ai_pattern
+		}
+	)
 	return data
+
 
 func load_save_data(data: Dictionary) -> void:
 	super.load_save_data(data)
@@ -837,13 +883,15 @@ func load_save_data(data: Dictionary) -> void:
 	current_experience = data.get("current_experience", 0)
 	total_experience = data.get("total_experience", 0)
 	ai_pattern = data.get("ai_pattern", "aggressive")
-	
+
 	_update_corruption_state()
 	_calculate_instability()
+
 
 # =============================================================================
 # FACTORY METHOD
 # =============================================================================
+
 
 static func create_from_data(data: Dictionary) -> Monster:
 	var monster := Monster.new()

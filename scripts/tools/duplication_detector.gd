@@ -16,7 +16,7 @@ const ANTI_PATTERNS := {
 	# ==========================================================================
 	"StyleBoxFlat.new()": "UIStyleFactory.create_panel_style() or create_dark_panel()",
 	"add_theme_font_size_override": "UIStyleFactory.FONT_* constants + create_label()",
-	"add_theme_color_override(\"font_color\"": "UIStyleFactory.COLOR_* constants",
+	'add_theme_color_override("font_color"': "UIStyleFactory.COLOR_* constants",
 	"add_theme_stylebox_override": "UIStyleFactory.apply_*_style() methods",
 	"Label.new()": "UIStyleFactory.create_label() or create_centered_label()",
 	"Button.new()": "UIStyleFactory.create_button() or create_menu_button()",
@@ -26,7 +26,6 @@ const ANTI_PATTERNS := {
 	"PanelContainer.new()": "UIStyleFactory.create_styled_panel(style)",
 	"mouse_filter = Control.MOUSE_FILTER": "UIStyleFactory.set_mouse_pass/ignore()",
 	"size_flags_horizontal = Control.SIZE_EXPAND": "UIStyleFactory.expand_horizontal()",
-
 	# ==========================================================================
 	# NodeHelpers patterns (385 lines of helpers available)
 	# ==========================================================================
@@ -38,18 +37,16 @@ const ANTI_PATTERNS := {
 	".add_child(": "NodeHelpers.instantiate_to() for scene instantiation",
 	".visible = true": "NodeHelpers.show(node)",
 	".visible = false": "NodeHelpers.hide(node)",
-
 	# ==========================================================================
 	# StringHelpers patterns (304 lines of helpers available)
 	# ==========================================================================
-	"\"%d/%d\" %": "StringHelpers.format_hp() or format_mp()",
-	"\"%.0f%%\"": "StringHelpers.format_percent()",
-	"\"%.0f\" %": "StringHelpers.format_percent() or format_damage()",
-	"\"Lv. %d\"": "StringHelpers.format_level()",
-	".replace(\"_\", \" \")": "StringHelpers.enum_to_display()",
-	"\"-%d\" %": "StringHelpers.format_damage()",
-	"\"+%d\" %": "StringHelpers.format_heal() or format_stat_change()",
-
+	'"%d/%d" %': "StringHelpers.format_hp() or format_mp()",
+	'"%.0f%%"': "StringHelpers.format_percent()",
+	'"%.0f" %': "StringHelpers.format_percent() or format_damage()",
+	'"Lv. %d"': "StringHelpers.format_level()",
+	'.replace("_", " ")': "StringHelpers.enum_to_display()",
+	'"-%d" %': "StringHelpers.format_damage()",
+	'"+%d" %': "StringHelpers.format_heal() or format_stat_change()",
 	# ==========================================================================
 	# AnimationEffects patterns (783 lines of helpers available)
 	# ==========================================================================
@@ -58,11 +55,10 @@ const ANTI_PATTERNS := {
 	"create_tween().set_parallel": "AnimationEffects.create_parallel_tween()",
 	"modulate.a = 0": "AnimationEffects.fade_in() / popup_entrance()",
 	"modulate.a =": "NodeHelpers.set_alpha() or AnimationEffects.fade_*()",
-	"tween_property.*\"scale\".*1.05": "AnimationEffects.button_hover()",
-	"tween_property.*\"modulate\"": "AnimationEffects.flash_*() / fade_*()",
+	'tween_property.*"scale".*1.05': "AnimationEffects.button_hover()",
+	'tween_property.*"modulate"': "AnimationEffects.flash_*() / fade_*()",
 	"Vector2(1.0, 1.0)": "Vector2.ONE (built-in constant)",
 	"Vector2(0.0, 0.0)": "Vector2.ZERO (built-in constant)",
-
 	# ==========================================================================
 	# Constants patterns (635 lines of constants available)
 	# ==========================================================================
@@ -74,14 +70,12 @@ const ANTI_PATTERNS := {
 	"create_timer(1.0)": "Constants.WAIT_EXTENDED",
 	", 0.15)": "Constants.UI_BUTTON_HOVER for button animations",
 	", 0.1)": "Constants.UI_BUTTON_PRESS or ANIM_FLASH",
-
 	# ==========================================================================
 	# MathHelpers patterns (228 lines of helpers available)
 	# ==========================================================================
 	"float(.*) / float(": "MathHelpers.get_hp_percent() or safe_divide()",
 	"clampf(.*0.05.*0.95": "MathHelpers.clamp_probability()",
 	"randi() %": "Use randi_range() or MathHelpers if complex",
-
 	# ==========================================================================
 	# General code quality patterns
 	# ==========================================================================
@@ -106,8 +100,8 @@ const UTILITY_ONLY_PATTERNS := [
 
 # High-priority files that need refactoring (sorted by issue count)
 const PRIORITY_FILES := [
-	"ui/battle_ui_controller.gd",    # 4583 lines - needs splitting
-	"battle/battle_arena.gd",         # 2012 lines - needs splitting
+	"ui/battle_ui_controller.gd",  # 4583 lines - needs splitting
+	"battle/battle_arena.gd",  # 2012 lines - needs splitting
 	"ui/character_select_controller.gd",
 	"battle/animation/battle_sequencer.gd",
 ]
@@ -179,12 +173,14 @@ func scan_file(path: String) -> void:
 
 		for pattern in ANTI_PATTERNS:
 			if pattern in line:
-				file_issues.append({
-					"line": line_num,
-					"pattern": pattern,
-					"suggestion": ANTI_PATTERNS[pattern],
-					"code": line.strip_edges().substr(0, 80)
-				})
+				file_issues.append(
+					{
+						"line": line_num,
+						"pattern": pattern,
+						"suggestion": ANTI_PATTERNS[pattern],
+						"code": line.strip_edges().substr(0, 80)
+					}
+				)
 				total_issues += 1
 
 	if not file_issues.is_empty():

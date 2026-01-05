@@ -22,6 +22,7 @@ var _is_critical: bool = false
 var _base_scale: Vector2 = Vector2.ONE
 var _original_font_size: int = 0
 
+
 func _ready() -> void:
 	_base_scale = scale
 
@@ -34,6 +35,7 @@ func _ready() -> void:
 	# Store original font size for reset on reuse
 	if label:
 		_original_font_size = label.get_theme_font_size("font_size")
+
 
 func setup(config: Dictionary, velocity: Vector2, gravity: float) -> void:
 	_velocity = velocity
@@ -85,6 +87,7 @@ func setup(config: Dictionary, velocity: Vector2, gravity: float) -> void:
 		if label:
 			var current_size = label.get_theme_font_size("font_size")
 			label.add_theme_font_size_override("font_size", current_size + 8)
+
 
 func _process(delta: float) -> void:
 	_elapsed += delta

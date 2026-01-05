@@ -58,6 +58,7 @@ extends Resource
 # METHODS
 # =============================================================================
 
+
 func create_instance(level: int = 1) -> PlayerCharacter:
 	var hero := PlayerCharacter.new()
 
@@ -103,6 +104,7 @@ func create_instance(level: int = 1) -> PlayerCharacter:
 
 	return hero
 
+
 func _apply_level_growth(hero: PlayerCharacter) -> void:
 	if randf() < hp_growth:
 		hero.base_max_hp += randi_range(3, 8)
@@ -120,6 +122,7 @@ func _apply_level_growth(hero: PlayerCharacter) -> void:
 		hero.base_speed += randi_range(1, 2)
 	if randf() < luck_growth:
 		hero.base_luck += 1
+
 
 func get_skills_at_level(level: int) -> Array[String]:
 	var skills: Array[String] = innate_skills.duplicate()

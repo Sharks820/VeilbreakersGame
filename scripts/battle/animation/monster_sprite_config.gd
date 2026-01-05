@@ -7,6 +7,7 @@
 class_name MonsterSpriteConfig
 extends RefCounted
 
+
 ## Animation frame definition
 class FrameRange:
 	var start: int = 0
@@ -14,13 +15,16 @@ class FrameRange:
 	var fps: float = 10.0
 	var loop: bool = false
 	var hit_frame: int = -1  # Frame where damage applies
-	
-	func _init(p_start: int = 0, p_end: int = 0, p_fps: float = 10.0, p_loop: bool = false, p_hit: int = -1) -> void:
+
+	func _init(
+		p_start: int = 0, p_end: int = 0, p_fps: float = 10.0, p_loop: bool = false, p_hit: int = -1
+	) -> void:
 		start = p_start
 		end = p_end
 		fps = p_fps
 		loop = p_loop
 		hit_frame = p_hit
+
 
 ## Sheet configuration for a monster
 class SheetConfig:
@@ -28,14 +32,23 @@ class SheetConfig:
 	var h_frames: int = 4
 	var v_frames: int = 4
 	var animations: Dictionary = {}  # anim_name -> FrameRange
-	
-	func add_animation(name: String, start: int, end: int, fps: float = 10.0, loop: bool = false, hit_frame: int = -1) -> SheetConfig:
+
+	func add_animation(
+		name: String,
+		start: int,
+		end: int,
+		fps: float = 10.0,
+		loop: bool = false,
+		hit_frame: int = -1
+	) -> SheetConfig:
 		animations[name] = FrameRange.new(start, end, fps, loop, hit_frame)
 		return self
+
 
 # =============================================================================
 # MONSTER CONFIGURATIONS
 # =============================================================================
+
 
 ## Get configuration for a specific monster
 static func get_config(monster_id: String) -> Dictionary:
@@ -49,9 +62,11 @@ static func get_config(monster_id: String) -> Dictionary:
 		_:
 			return _get_default_config()
 
+
 # =============================================================================
 # HOLLOW - Shadow Entity with Red Core
 # =============================================================================
+
 
 static func _get_hollow_config() -> Dictionary:
 	var config := {
@@ -66,7 +81,7 @@ static func _get_hollow_config() -> Dictionary:
 		"glow_color": Color(1.0, 0.4, 0.4),
 		"particle_color": Color(0.5, 0.1, 0.1),
 	}
-	
+
 	# Sheet 1 - Primary animations (idle_sheet - was hallow_sheet2)
 	var sheet1 := SheetConfig.new()
 	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/hollow_idle_sheet.png"
@@ -84,7 +99,7 @@ static func _get_hollow_config() -> Dictionary:
 	# Hurt can use frame 8-9 (recoil poses)
 	sheet1.add_animation("hurt", 8, 9, 12.0, false)
 	config.sheets.append(sheet1)
-	
+
 	# Sheet 2 - Alternate animations (attack_sheet - was hollow sheet 3)
 	var sheet2 := SheetConfig.new()
 	sheet2.sheet_path = "res://assets/sprites/monsters/sheets/hollow_attack_sheet.png"
@@ -102,7 +117,7 @@ static func _get_hollow_config() -> Dictionary:
 	sheet2.add_animation("death_alt", 12, 15, 5.0, false)
 	sheet2.add_animation("hurt_heavy", 10, 11, 14.0, false)
 	config.sheets.append(sheet2)
-	
+
 	# Sheet 3 - Special/Skill animations (special_sheet - was hallow_sheet4)
 	var sheet3 := SheetConfig.new()
 	sheet3.sheet_path = "res://assets/sprites/monsters/sheets/hollow_special_sheet.png"
@@ -113,12 +128,14 @@ static func _get_hollow_config() -> Dictionary:
 	sheet3.add_animation("skill_void_touch", 8, 11, 12.0, false, 10)
 	sheet3.add_animation("spawn", 12, 15, 8.0, false)  # Reverse for spawn-in
 	config.sheets.append(sheet3)
-	
+
 	return config
+
 
 # =============================================================================
 # CHAINBOUND - Rusted Chain Golem with Orange Core
 # =============================================================================
+
 
 static func _get_chainbound_config() -> Dictionary:
 	var config := {
@@ -133,7 +150,7 @@ static func _get_chainbound_config() -> Dictionary:
 		"glow_color": Color(1.0, 0.6, 0.2),  # Orange core
 		"particle_color": Color(0.3, 0.25, 0.2),
 	}
-	
+
 	# Sheet 1 - Primary (idle_sheet - was chainbound_sheet2)
 	var sheet1 := SheetConfig.new()
 	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/chainbound_idle_sheet.png"
@@ -149,7 +166,7 @@ static func _get_chainbound_config() -> Dictionary:
 	sheet1.add_animation("death", 12, 15, 5.0, false)
 	sheet1.add_animation("hurt", 10, 11, 12.0, false)
 	config.sheets.append(sheet1)
-	
+
 	# Sheet 2 - Alternate (attack_sheet - was chainbound_sheet3)
 	var sheet2 := SheetConfig.new()
 	sheet2.sheet_path = "res://assets/sprites/monsters/sheets/chainbound_attack_sheet.png"
@@ -167,12 +184,14 @@ static func _get_chainbound_config() -> Dictionary:
 	sheet2.add_animation("death_alt", 12, 15, 4.0, false)
 	sheet2.add_animation("spawn", 15, 12, 6.0, false)  # Reverse for spawn
 	config.sheets.append(sheet2)
-	
+
 	return config
+
 
 # =============================================================================
 # MAWLING - Floating Mouth Creature
 # =============================================================================
+
 
 static func _get_mawling_config() -> Dictionary:
 	var config := {
@@ -187,7 +206,7 @@ static func _get_mawling_config() -> Dictionary:
 		"glow_color": Color(1.0, 0.3, 0.5),
 		"particle_color": Color(0.2, 0.1, 0.15),
 	}
-	
+
 	# Sheet 1 - Primary (idle_sheet - was mawling_sheet2)
 	var sheet1 := SheetConfig.new()
 	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/mawling_idle_sheet.png"
@@ -205,7 +224,7 @@ static func _get_mawling_config() -> Dictionary:
 	# Row 4: Death - melting into puddle
 	sheet1.add_animation("death", 12, 15, 5.0, false)
 	config.sheets.append(sheet1)
-	
+
 	# Sheet 2 - Alternate (attack_sheet - was mawling_sheet3) - This one is 4x5!
 	var sheet2 := SheetConfig.new()
 	sheet2.sheet_path = "res://assets/sprites/monsters/sheets/mawling_attack_sheet.png"
@@ -223,12 +242,14 @@ static func _get_mawling_config() -> Dictionary:
 	sheet2.add_animation("death_alt", 16, 19, 4.0, false)
 	sheet2.add_animation("spawn", 19, 16, 6.0, false)  # Reverse for spawn
 	config.sheets.append(sheet2)
-	
+
 	return config
+
 
 # =============================================================================
 # DEFAULT CONFIG - For monsters without custom sheets
 # =============================================================================
+
 
 static func _get_default_config() -> Dictionary:
 	return {
@@ -244,22 +265,22 @@ static func _get_default_config() -> Dictionary:
 		"particle_color": Color.GRAY,
 	}
 
+
 # =============================================================================
 # UTILITY FUNCTIONS
 # =============================================================================
 
+
 ## Get the best animation for a given action from available sheets
-static func get_animation_for_action(config: Dictionary, action: String, skill_name: String = "") -> Dictionary:
-	var result := {
-		"sheet_index": 0,
-		"animation_name": action,
-		"found": false
-	}
-	
+static func get_animation_for_action(
+	config: Dictionary, action: String, skill_name: String = ""
+) -> Dictionary:
+	var result := {"sheet_index": 0, "animation_name": action, "found": false}
+
 	var sheets: Array = config.get("sheets", [])
 	if sheets.is_empty():
 		return result
-	
+
 	# If skill specified, look for skill-specific animation first
 	if skill_name != "":
 		var skill_anim := "skill_" + skill_name.to_lower().replace(" ", "_")
@@ -270,7 +291,7 @@ static func get_animation_for_action(config: Dictionary, action: String, skill_n
 				result.animation_name = skill_anim
 				result.found = true
 				return result
-	
+
 	# Look for the action in sheets (prefer primary sheet)
 	for i in range(sheets.size()):
 		var sheet: SheetConfig = sheets[i]
@@ -279,7 +300,7 @@ static func get_animation_for_action(config: Dictionary, action: String, skill_n
 			result.animation_name = action
 			result.found = true
 			return result
-	
+
 	# Fallback to alternate versions
 	var alt_action := action + "_alt"
 	for i in range(sheets.size()):
@@ -289,8 +310,9 @@ static func get_animation_for_action(config: Dictionary, action: String, skill_n
 			result.animation_name = alt_action
 			result.found = true
 			return result
-	
+
 	return result
+
 
 ## Check if monster has sprite sheet animations
 static func has_sprite_sheets(monster_id: String) -> bool:

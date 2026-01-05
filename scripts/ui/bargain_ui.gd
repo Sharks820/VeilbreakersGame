@@ -49,37 +49,43 @@ signal skip_dialogue_requested
 # BRAND VISUALS
 # -----------------------------------------------------------------------------
 const BRAND_MINDSCAPE_COLORS = {
-	"SAVAGE": {
+	"SAVAGE":
+	{
 		"primary": Color("c73e3e"),
 		"void": Color("1a0505"),
 		"particle": Color("ff6b6b"),
 		"eye_glow": Color("ff0000"),
 	},
-	"IRON": {
+	"IRON":
+	{
 		"primary": Color("7b8794"),
 		"void": Color("0a0c0f"),
 		"particle": Color("a8b5c4"),
 		"eye_glow": Color("ffffff"),
 	},
-	"VENOM": {
+	"VENOM":
+	{
 		"primary": Color("6b9b37"),
 		"void": Color("0a1205"),
 		"particle": Color("9acd32"),
 		"eye_glow": Color("00ff00"),
 	},
-	"SURGE": {
+	"SURGE":
+	{
 		"primary": Color("4a90d9"),
 		"void": Color("050a12"),
 		"particle": Color("87ceeb"),
 		"eye_glow": Color("00ffff"),
 	},
-	"DREAD": {
+	"DREAD":
+	{
 		"primary": Color("5d3e8c"),
 		"void": Color("0a0510"),
 		"particle": Color("9370db"),
 		"eye_glow": Color("ff00ff"),
 	},
-	"LEECH": {
+	"LEECH":
+	{
 		"primary": Color("c75b8a"),
 		"void": Color("12050a"),
 		"particle": Color("ff91af"),
@@ -103,6 +109,7 @@ var displayed_chars: int = 0
 var chars_per_second: float = 40.0
 var typewriter_timer: float = 0.0
 
+
 # -----------------------------------------------------------------------------
 # LIFECYCLE
 # -----------------------------------------------------------------------------
@@ -110,9 +117,11 @@ func _ready() -> void:
 	visible = false
 	_connect_buttons()
 
+
 func _process(delta: float) -> void:
 	if is_showing_dialogue:
 		_process_typewriter(delta)
+
 
 func _input(event: InputEvent) -> void:
 	if not visible:
@@ -127,6 +136,7 @@ func _input(event: InputEvent) -> void:
 			# Advance to next dialogue or show choices
 			skip_dialogue_requested.emit()
 
+
 func _connect_buttons() -> void:
 	if dominate_button:
 		dominate_button.pressed.connect(_on_dominate_pressed)
@@ -137,6 +147,7 @@ func _connect_buttons() -> void:
 	if break_button:
 		break_button.pressed.connect(_on_break_pressed)
 		break_button.mouse_entered.connect(_on_choice_hovered.bind(2))
+
 
 func _exit_tree() -> void:
 	# Disconnect button signals to prevent memory leaks
@@ -156,11 +167,12 @@ func _exit_tree() -> void:
 		if break_button.mouse_entered.is_connected(_on_choice_hovered):
 			break_button.mouse_entered.disconnect(_on_choice_hovered)
 
+
 # -----------------------------------------------------------------------------
 # PUBLIC API - Called by BargainSystem
 # -----------------------------------------------------------------------------
 func enter_mindscape(creature: Node, brand: String) -> void:
-	"""Begin the mindscape visual transition"""
+	## Begin the mindscape visual transition
 	current_brand = brand
 	var colors: Dictionary = BRAND_MINDSCAPE_COLORS.get(brand, BRAND_MINDSCAPE_COLORS["SAVAGE"])
 
@@ -193,8 +205,9 @@ func enter_mindscape(creature: Node, brand: String) -> void:
 	if mindscape_ambience:
 		mindscape_ambience.play()
 
+
 func exit_mindscape() -> void:
-	"""Exit the mindscape"""
+	## Exit the mindscape
 	choice_container.visible = false
 	dialogue_container.visible = false
 
@@ -205,8 +218,9 @@ func exit_mindscape() -> void:
 
 	visible = false
 
+
 func show_dialogue(speaker: String, text: String, response_type: String = "") -> void:
-	"""Display dialogue with typewriter effect"""
+	## Display dialogue with typewriter effect
 	dialogue_container.visible = true
 	choice_container.visible = false
 	is_showing_dialogue = true
@@ -237,8 +251,9 @@ func show_dialogue(speaker: String, text: String, response_type: String = "") ->
 	if dialogue_indicator:
 		dialogue_indicator.visible = false
 
+
 func show_choices(approaches: Dictionary) -> void:
-	"""Show the three approach choices"""
+	## Show the three approach choices
 	current_approaches = approaches
 	dialogue_container.visible = false
 	choice_container.visible = true
@@ -269,10 +284,12 @@ func show_choices(approaches: Dictionary) -> void:
 	if choice_description:
 		choice_description.text = "[center]Choose your approach to bind this creature.[/center]"
 
+
 func hide_choices() -> void:
-	"""Hide the choice panel"""
+	## Hide the choice panel
 	choice_container.visible = false
 	is_showing_choices = false
+
 
 # -----------------------------------------------------------------------------
 # TYPEWRITER EFFECT
@@ -296,8 +313,9 @@ func _process_typewriter(delta: float) -> void:
 			dialogue_blip.pitch_scale = randf_range(0.9, 1.1)
 			dialogue_blip.play()
 
+
 func _style_dialogue(text: String, response_type: String) -> String:
-	"""Add BBCode styling based on response type"""
+	## Add BBCode styling based on response type
 	match response_type:
 		"PLAYER_DOMINATE":
 			return "[color=#ff4444][b]" + text + "[/b][/color]"
@@ -314,11 +332,12 @@ func _style_dialogue(text: String, response_type: String) -> String:
 		_:
 			return text
 
+
 # -----------------------------------------------------------------------------
 # CHOICE HANDLING
 # -----------------------------------------------------------------------------
 func _style_choice_button(button: Button, approach: String, chance: float) -> void:
-	"""Style a choice button based on success chance"""
+	## Style a choice button based on success chance
 	var chance_text = ""
 	var chance_color = Color.WHITE
 
@@ -335,8 +354,9 @@ func _style_choice_button(button: Button, approach: String, chance: float) -> vo
 	button.text = approach + "\n[" + chance_text + "]"
 	# Would apply color through theme or stylebox
 
+
 func _on_choice_hovered(choice_index: int) -> void:
-	"""Show description for hovered choice"""
+	## Show description for hovered choice
 	if choice_hover_sound:
 		choice_hover_sound.play()
 
@@ -357,7 +377,7 @@ func _on_choice_hovered(choice_index: int) -> void:
 			var data = current_approaches.get("PROMISE", {})
 			var desc = "[color=#44ff44][b]PROMISE[/b][/color]\n"
 			desc += "Offer a vow that resonates with the creature's nature.\n\n"
-			desc += "[i]\"" + data.get("vow", "") + "\"[/i]\n"
+			desc += '[i]"' + data.get("vow", "") + '"[/i]\n'
 			desc += "\n" + data.get("description", "")
 			if data.get("warning", "") != "":
 				desc += "\n[color=#ffff00]Warning: " + data.warning + "[/color]"
@@ -378,26 +398,30 @@ func _on_choice_hovered(choice_index: int) -> void:
 				desc += "[color=#888888]This creature has no exploitable weakness.[/color]"
 			choice_description.text = desc
 
+
 func _on_dominate_pressed() -> void:
 	if choice_select_sound:
 		choice_select_sound.play()
 	choice_selected.emit(0)  # BargainSystem.Approach.DOMINATE
+
 
 func _on_promise_pressed() -> void:
 	if choice_select_sound:
 		choice_select_sound.play()
 	choice_selected.emit(1)  # BargainSystem.Approach.PROMISE
 
+
 func _on_break_pressed() -> void:
 	if choice_select_sound:
 		choice_select_sound.play()
 	choice_selected.emit(2)  # BargainSystem.Approach.BREAK
 
+
 # -----------------------------------------------------------------------------
 # ANIMATIONS
 # -----------------------------------------------------------------------------
 func _animate_enter(colors: Dictionary) -> void:
-	"""Animate entering the mindscape"""
+	## Animate entering the mindscape
 	var tween = create_tween()
 	tween.set_parallel(true)
 
@@ -415,7 +439,12 @@ func _animate_enter(colors: Dictionary) -> void:
 	if creature_portrait:
 		creature_portrait.scale = Vector2(0.5, 0.5)
 		creature_portrait.modulate.a = 0.0
-		tween.tween_property(creature_portrait, "scale", Vector2.ONE, 0.6).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+		(
+			tween
+			. tween_property(creature_portrait, "scale", Vector2.ONE, 0.6)
+			. set_ease(Tween.EASE_OUT)
+			. set_trans(Tween.TRANS_BACK)
+		)
 		tween.tween_property(creature_portrait, "modulate:a", 1.0, 0.4)
 
 	# Eyes glow in after portrait
@@ -429,8 +458,9 @@ func _animate_enter(colors: Dictionary) -> void:
 
 	await tween.finished
 
+
 func _animate_exit() -> void:
-	"""Animate exiting the mindscape"""
+	## Animate exiting the mindscape
 	var tween = create_tween()
 	tween.set_parallel(true)
 
@@ -451,19 +481,23 @@ func _animate_exit() -> void:
 
 	await tween.finished
 
+
 # -----------------------------------------------------------------------------
 # SUCCESS/FAILURE ANIMATIONS
 # -----------------------------------------------------------------------------
 func animate_success(approach: int) -> void:
-	"""Play success visual feedback"""
+	## Play success visual feedback
 	var tween = create_tween()
 
 	# Flash based on approach
 	var flash_color = Color.WHITE
 	match approach:
-		0: flash_color = Color.RED     # Dominate
-		1: flash_color = Color.GREEN   # Promise
-		2: flash_color = Color.YELLOW  # Break
+		0:
+			flash_color = Color.RED  # Dominate
+		1:
+			flash_color = Color.GREEN  # Promise
+		2:
+			flash_color = Color.YELLOW  # Break
 
 	if mindscape_overlay:
 		var original_color = mindscape_overlay.color
@@ -475,8 +509,9 @@ func animate_success(approach: int) -> void:
 		tween.parallel().tween_property(creature_portrait, "modulate", flash_color, 0.1)
 		tween.tween_property(creature_portrait, "modulate", Color.WHITE, 0.3)
 
+
 func animate_failure(is_rage: bool) -> void:
-	"""Play failure visual feedback"""
+	## Play failure visual feedback
 	var tween = create_tween()
 
 	# Screen shake via viewport
@@ -488,7 +523,12 @@ func animate_failure(is_rage: bool) -> void:
 			# Aggressive shake
 			var original_pos = creature_portrait.position
 			for i in range(10):
-				tween.tween_property(creature_portrait, "position", original_pos + Vector2(randf_range(-20, 20), randf_range(-10, 10)), 0.03)
+				tween.tween_property(
+					creature_portrait,
+					"position",
+					original_pos + Vector2(randf_range(-20, 20), randf_range(-10, 10)),
+					0.03
+				)
 			tween.tween_property(creature_portrait, "position", original_pos, 0.1)
 
 			# Scale up menacingly

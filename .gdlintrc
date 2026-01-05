@@ -1,0 +1,51 @@
+# GDLint Configuration for VEILBREAKERS
+# gdtoolkit 4.5.0 - Matches Godot 4.5
+#
+# Run: python -m gdtoolkit.linter scripts/
+# Format: python -m gdtoolkit.formatter scripts/
+
+# =============================================================================
+# DISABLED RULES (with justification)
+# =============================================================================
+disable:
+  # STYLE PREFERENCES (not bugs)
+  - max-line-length        # We use 120 chars for modern monitors
+  - class-definitions-order # Constants class groups by category, not type
+  - trailing-comma         # We use trailing commas for cleaner diffs
+
+  # COMPLEXITY LIMITS (our codebase is complex by design)
+  - max-file-lines         # battle_manager, battle_ui_controller are large
+  - max-returns            # AI decision trees need many return paths
+  - max-public-methods     # UI controllers have many public methods
+
+  # SIGNAL CALLBACKS (unused args are normal)
+  - unused-argument        # Signal callbacks often ignore some params
+
+  # CONTROL FLOW STYLE (we prefer explicit)
+  - no-elif-return         # Explicit elif is clearer in state machines
+  - no-else-return         # Explicit else documents the fallback case
+
+# =============================================================================
+# ENABLED RULES (these catch real bugs)
+# =============================================================================
+# - trailing-whitespace    : Inconsistent formatting
+# - mixed-tabs-and-spaces  : Can cause indentation bugs
+# - unnecessary-pass       : Dead code
+# - expression-not-assigned: Code that does nothing (likely bug)
+# - function-variable-name : Naming convention violations
+
+# =============================================================================
+# LIMITS
+# =============================================================================
+max-line-length: 120
+max-function-arguments: 8
+max-public-methods: 50
+
+# =============================================================================
+# EXCLUDED PATHS
+# =============================================================================
+excluded_directories:
+  - addons
+  - archive
+  - .godot
+  - tools

@@ -35,13 +35,7 @@ signal bargain_declined(monster: Node)
 # -----------------------------------------------------------------------------
 # STATE
 # -----------------------------------------------------------------------------
-enum CaptureState {
-	IDLE,
-	SELECTING_METHOD,
-	CORRUPTION_BATTLE,
-	RESOLVING,
-	BARGAIN_PROMPT
-}
+enum CaptureState { IDLE, SELECTING_METHOD, CORRUPTION_BATTLE, RESOLVING, BARGAIN_PROMPT }
 
 var current_state: CaptureState = CaptureState.IDLE
 var active_monster: Node = null
@@ -59,6 +53,7 @@ var pending_bargain_price: Dictionary = {}
 var _inventory_system: Node = null
 var _vera_system: Node = null
 
+
 # -----------------------------------------------------------------------------
 # LIFECYCLE
 # -----------------------------------------------------------------------------
@@ -67,8 +62,10 @@ func _ready() -> void:
 	_vera_system = get_node_or_null("/root/VERASystem")
 	tree_exiting.connect(_on_tree_exiting)
 
+
 func _on_tree_exiting() -> void:
 	_reset_state()
+
 
 func _safe_wait(duration: float) -> void:
 	var tree := get_tree()
@@ -76,16 +73,12 @@ func _safe_wait(duration: float) -> void:
 		return
 	await tree.create_timer(duration).timeout
 
+
 # -----------------------------------------------------------------------------
 # PUBLIC API - Check Capture Availability
 # -----------------------------------------------------------------------------
 func can_use_method(monster: Node, captor: Node, method: Enums.CaptureMethod) -> Dictionary:
-	var result := {
-		"available": false,
-		"reason": "",
-		"capture_chance": 0.0,
-		"cost": {}
-	}
+	var result := {"available": false, "reason": "", "capture_chance": 0.0, "cost": {}}
 
 	if monster == null or captor == null:
 		result.reason = "Invalid target"
@@ -145,22 +138,32 @@ func can_use_method(monster: Node, captor: Node, method: Enums.CaptureMethod) ->
 
 	return result
 
+
 func get_available_methods(monster: Node, captor: Node) -> Array[Enums.CaptureMethod]:
 	var methods: Array[Enums.CaptureMethod] = []
 
-	for method in [Enums.CaptureMethod.SOULBIND, Enums.CaptureMethod.PURIFY, 
-				   Enums.CaptureMethod.DOMINATE, Enums.CaptureMethod.BARGAIN]:
+	for method in [
+		Enums.CaptureMethod.SOULBIND,
+		Enums.CaptureMethod.PURIFY,
+		Enums.CaptureMethod.DOMINATE,
+		Enums.CaptureMethod.BARGAIN
+	]:
 		var check := can_use_method(monster, captor, method)
 		if check.available:
 			methods.append(method)
 
 	return methods
 
+
 # -----------------------------------------------------------------------------
 # PUBLIC API - Execute Capture
 # -----------------------------------------------------------------------------
-func attempt_capture(monster: Node, captor: Node, method: Enums.CaptureMethod, 
-					 vessel_tier: Enums.SoulVesselTier = Enums.SoulVesselTier.STANDARD) -> void:
+func attempt_capture(
+	monster: Node,
+	captor: Node,
+	method: Enums.CaptureMethod,
+	vessel_tier: Enums.SoulVesselTier = Enums.SoulVesselTier.STANDARD
+) -> void:
 	if current_state != CaptureState.IDLE:
 		push_warning("Capture already in progress")
 		return
@@ -181,7 +184,7 @@ func attempt_capture(monster: Node, captor: Node, method: Enums.CaptureMethod,
 	active_vessel_tier = vessel_tier
 
 	capture_initiated.emit(monster, method)
-	
+
 	# Notify VERA system about capture method (affects Veil Integrity)
 	_notify_vera_capture_attempt(method)
 
@@ -195,6 +198,7 @@ func attempt_capture(monster: Node, captor: Node, method: Enums.CaptureMethod,
 		Enums.CaptureMethod.BARGAIN:
 			await _execute_bargain()
 
+
 # -----------------------------------------------------------------------------
 # CAPTURE METHOD: SOULBIND (Item-Based)
 # -----------------------------------------------------------------------------
@@ -207,7 +211,9 @@ func _execute_soulbind() -> void:
 		return
 
 	# Calculate capture chance
-	current_capture_chance = calculate_soulbind_chance(active_monster, active_captor, active_vessel_tier)
+	current_capture_chance = calculate_soulbind_chance(
+		active_monster, active_captor, active_vessel_tier
+	)
 	capture_attempt_started.emit(active_monster, active_vessel_tier, current_capture_chance)
 
 	# Consume Soul Vessel
@@ -221,24 +227,26 @@ func _execute_soulbind() -> void:
 		return
 
 	if success:
-		_handle_capture_success({
-			"method": "soulbind",
-			"vessel_tier": active_vessel_tier
-		})
+		_handle_capture_success({"method": "soulbind", "vessel_tier": active_vessel_tier})
 	else:
 		_handle_capture_failure("The corruption held strong!")
 
 	_reset_state()
 
-func calculate_soulbind_chance(monster: Node, captor: Node, vessel_tier: Enums.SoulVesselTier) -> float:
+
+func calculate_soulbind_chance(
+	monster: Node, captor: Node, vessel_tier: Enums.SoulVesselTier
+) -> float:
 	# Base chance from rarity
 	var base := _get_base_capture_chance(monster)
-	
+
 	# HP modifier: +0.5% per 1% HP missing (max +40%)
 	var hp_percent := _get_hp_percent(monster)
-	var hp_bonus := minf((1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100, 
-						  Constants.CAPTURE_HP_BONUS_MAX)
-	
+	var hp_bonus := minf(
+		(1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100,
+		Constants.CAPTURE_HP_BONUS_MAX
+	)
+
 	# Soul Vessel bonus
 	var vessel_bonus := 0.0
 	match vessel_tier:
@@ -250,11 +258,12 @@ func calculate_soulbind_chance(monster: Node, captor: Node, vessel_tier: Enums.S
 			vessel_bonus = Constants.SOUL_VESSEL_PRISTINE_BONUS
 		Enums.SoulVesselTier.COVENANT:
 			vessel_bonus = Constants.SOUL_VESSEL_COVENANT_BONUS
-	
+
 	# Level difference modifier
 	var level_mod := _calculate_level_modifier(monster, captor)
-	
+
 	return clampf(base + hp_bonus + vessel_bonus + level_mod, 0.05, 0.95)
+
 
 # -----------------------------------------------------------------------------
 # CAPTURE METHOD: PURIFY (Sanctum Energy Cost)
@@ -269,13 +278,15 @@ func _execute_purify() -> void:
 
 	var corruption := _get_corruption(active_monster)
 	var energy_cost := _calculate_purify_energy_cost(corruption)
-	
+
 	# Consume Sanctum Energy
 	_consume_sanctum_energy(energy_cost)
 
 	# Calculate capture chance
 	current_capture_chance = calculate_purify_chance(active_monster, active_captor)
-	capture_attempt_started.emit(active_monster, Enums.SoulVesselTier.STANDARD, current_capture_chance)
+	capture_attempt_started.emit(
+		active_monster, Enums.SoulVesselTier.STANDARD, current_capture_chance
+	)
 
 	# PURIFY always reduces corruption, even on fail
 	var old_corruption := corruption
@@ -294,43 +305,52 @@ func _execute_purify() -> void:
 	purify_attempted.emit(active_monster, success, old_corruption - new_corruption)
 
 	if success:
-		_handle_capture_success({
-			"method": "purify",
-			"corruption_reduced": old_corruption - new_corruption,
-			"joins_purified": true
-		})
+		_handle_capture_success(
+			{
+				"method": "purify",
+				"corruption_reduced": old_corruption - new_corruption,
+				"joins_purified": true
+			}
+		)
 	else:
 		_handle_capture_failure("Purification incomplete, but corruption weakened!")
 
 	_reset_state()
 
+
 func calculate_purify_chance(monster: Node, captor: Node) -> float:
 	var base := _get_base_capture_chance(monster)
 	var corruption := _get_corruption(monster)
-	
+
 	# HP modifier
 	var hp_percent := _get_hp_percent(monster)
-	var hp_bonus := minf((1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100, 
-						  Constants.CAPTURE_HP_BONUS_MAX)
-	
+	var hp_bonus := minf(
+		(1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100,
+		Constants.CAPTURE_HP_BONUS_MAX
+	)
+
 	# Corruption modifier
 	var corruption_mod := 0.0
 	if corruption < 25:
 		corruption_mod = Constants.PURIFY_LOW_CORRUPTION_BONUS
 	elif corruption > Constants.CORRUPTION_CORRUPTED_MAX:
 		corruption_mod = -Constants.PURIFY_HIGH_CORRUPTION_PENALTY
-	
+
 	# Level difference
 	var level_mod := _calculate_level_modifier(monster, captor)
-	
+
 	return clampf(base + hp_bonus + corruption_mod + level_mod, 0.05, 0.95)
 
+
 func _calculate_purify_energy_cost(corruption: float) -> float:
-	var cost := Constants.PURIFY_ENERGY_BASE + (corruption * Constants.PURIFY_ENERGY_CORRUPTION_MULT)
+	var cost := (
+		Constants.PURIFY_ENERGY_BASE + (corruption * Constants.PURIFY_ENERGY_CORRUPTION_MULT)
+	)
 	# Double cost at high corruption
 	if corruption > Constants.CORRUPTION_CORRUPTED_MAX:
 		cost *= 2.0
 	return cost
+
 
 # -----------------------------------------------------------------------------
 # CAPTURE METHOD: DOMINATE (HP Cost)
@@ -344,7 +364,7 @@ func _execute_dominate() -> void:
 		return
 
 	var corruption := _get_corruption(active_monster)
-	
+
 	# Check corruption threshold
 	if corruption < Constants.DOMINATE_MIN_CORRUPTION:
 		_handle_capture_failure("Target's corruption is too low for DOMINATE")
@@ -354,10 +374,12 @@ func _execute_dominate() -> void:
 	# Pay HP cost
 	var hp_cost := _calculate_dominate_hp_cost(active_captor)
 	active_captor.take_damage(hp_cost)
-	
+
 	# Calculate capture chance
 	current_capture_chance = calculate_dominate_chance(active_monster, active_captor)
-	capture_attempt_started.emit(active_monster, Enums.SoulVesselTier.STANDARD, current_capture_chance)
+	capture_attempt_started.emit(
+		active_monster, Enums.SoulVesselTier.STANDARD, current_capture_chance
+	)
 
 	# Corruption Battle
 	var success: bool = await _corruption_battle_sequence()
@@ -372,13 +394,20 @@ func _execute_dominate() -> void:
 		# Monster gains corruption from DOMINATE
 		if active_monster.has_method("add_corruption"):
 			active_monster.add_corruption(Constants.DOMINATE_FAIL_CORRUPTION_GAIN)
-		
-		_handle_capture_success({
-			"method": "dominate",
-			"hp_cost": hp_cost,
-			"has_instability": true,
-			"instability_amount": Constants.INSTABILITY_ABYSSAL if corruption > Constants.CORRUPTION_CORRUPTED_MAX else Constants.INSTABILITY_CORRUPTED
-		})
+
+		_handle_capture_success(
+			{
+				"method": "dominate",
+				"hp_cost": hp_cost,
+				"has_instability": true,
+				"instability_amount":
+				(
+					Constants.INSTABILITY_ABYSSAL
+					if corruption > Constants.CORRUPTION_CORRUPTED_MAX
+					else Constants.INSTABILITY_CORRUPTED
+				)
+			}
+		)
 	else:
 		# On fail, monster gets enraged
 		if active_monster.has_method("add_corruption"):
@@ -388,27 +417,32 @@ func _execute_dominate() -> void:
 
 	_reset_state()
 
+
 func calculate_dominate_chance(monster: Node, captor: Node) -> float:
 	var base := _get_base_capture_chance(monster)
 	var corruption := _get_corruption(monster)
-	
+
 	# HP modifier
 	var hp_percent := _get_hp_percent(monster)
-	var hp_bonus := minf((1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100, 
-						  Constants.CAPTURE_HP_BONUS_MAX)
-	
+	var hp_bonus := minf(
+		(1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100,
+		Constants.CAPTURE_HP_BONUS_MAX
+	)
+
 	# DOMINATE bonus at high corruption
 	var corruption_mod := 0.0
 	if corruption > Constants.CORRUPTION_CORRUPTED_MAX:
 		corruption_mod = Constants.DOMINATE_HIGH_CORRUPTION_BONUS
-	
+
 	# Level difference
 	var level_mod := _calculate_level_modifier(monster, captor)
-	
+
 	return clampf(base + hp_bonus + corruption_mod + level_mod, 0.05, 0.95)
+
 
 func _calculate_dominate_hp_cost(captor: Node) -> int:
 	return int(captor.current_hp * Constants.DOMINATE_HP_COST_PERCENT)
+
 
 # -----------------------------------------------------------------------------
 # CAPTURE METHOD: BARGAIN (Immediate Price)
@@ -424,13 +458,14 @@ func _execute_bargain() -> void:
 	# Roll the price
 	pending_bargain_price = _roll_bargain_price()
 	bargain_price_revealed.emit(active_monster, pending_bargain_price)
-	
+
 	# Wait for player decision (in real implementation, this would be async UI)
 	# For now, auto-accept after a delay
 	await _safe_wait(0.5)
-	
+
 	# Assume accepted - in real game, this comes from UI
 	await _bargain_accepted()
+
 
 func _bargain_accepted() -> void:
 	if not is_instance_valid(active_monster):
@@ -438,14 +473,16 @@ func _bargain_accepted() -> void:
 		return
 
 	current_state = CaptureState.CORRUPTION_BATTLE
-	
+
 	# Pay price immediately
 	_apply_bargain_price(pending_bargain_price)
 	bargain_accepted.emit(active_monster, pending_bargain_price)
 
 	# Calculate capture chance (BARGAIN gets +25% bonus)
 	current_capture_chance = calculate_bargain_chance(active_monster, active_captor)
-	capture_attempt_started.emit(active_monster, Enums.SoulVesselTier.STANDARD, current_capture_chance)
+	capture_attempt_started.emit(
+		active_monster, Enums.SoulVesselTier.STANDARD, current_capture_chance
+	)
 
 	# Corruption Battle
 	var success: bool = await _corruption_battle_sequence()
@@ -455,41 +492,44 @@ func _bargain_accepted() -> void:
 		return
 
 	if success:
-		_handle_capture_success({
-			"method": "bargain",
-			"price_paid": pending_bargain_price,
-			"willing": true
-		})
+		_handle_capture_success(
+			{"method": "bargain", "price_paid": pending_bargain_price, "willing": true}
+		)
 	else:
 		_handle_capture_failure("The bargain was struck, but the creature broke free!")
 
 	_reset_state()
+
 
 func decline_bargain() -> void:
 	## Called when player declines bargain
 	bargain_declined.emit(active_monster)
 	_reset_state()
 
+
 func calculate_bargain_chance(monster: Node, captor: Node) -> float:
 	var base := _get_base_capture_chance(monster)
-	
+
 	# HP modifier
 	var hp_percent := _get_hp_percent(monster)
-	var hp_bonus := minf((1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100, 
-						  Constants.CAPTURE_HP_BONUS_MAX)
-	
+	var hp_bonus := minf(
+		(1.0 - hp_percent) * Constants.CAPTURE_HP_BONUS_PER_MISSING * 100,
+		Constants.CAPTURE_HP_BONUS_MAX
+	)
+
 	# BARGAIN always gets +25% bonus
 	var bargain_bonus := Constants.BARGAIN_CAPTURE_BONUS
-	
+
 	# Level difference
 	var level_mod := _calculate_level_modifier(monster, captor)
-	
+
 	return clampf(base + hp_bonus + bargain_bonus + level_mod, 0.10, 0.95)
+
 
 func _roll_bargain_price() -> Dictionary:
 	## Roll d20 for bargain price
 	var roll := randi_range(1, 20)
-	
+
 	match roll:
 		1, 2, 3, 4, 5:
 			return {
@@ -533,33 +573,37 @@ func _roll_bargain_price() -> Dictionary:
 				"description": "True Name Given: Perfect loyalty, but Vera becomes unstable...",
 				"effect": {"perfect_loyalty": true, "vera_unstable": true}
 			}
-	
+
 	return {"type": "unknown", "description": "Unknown price", "effect": {}}
+
 
 func _apply_bargain_price(price: Dictionary) -> void:
 	## Apply the bargain price effect
 	var effect: Dictionary = price.get("effect", {})
-	
+
 	match price.get("type", ""):
 		"blood_tithe":
 			# Reduce max HP by 15% until shrine rest
 			if active_captor.has_method("add_stat_modifier"):
 				var hp_reduction := int(active_captor.get_max_hp() * 0.15)
-				active_captor.add_stat_modifier(Enums.Stat.MAX_HP, -hp_reduction, 999, "blood_tithe")
-		
+				active_captor.add_stat_modifier(
+					Enums.Stat.MAX_HP, -hp_reduction, 999, "blood_tithe"
+				)
+
 		"whispered_secret":
 			# Vera learns something (affects Veil Integrity)
 			if _vera_system and _vera_system.has_method("add_veil_integrity"):
 				_vera_system.add_veil_integrity(-5)
-		
+
 		"true_name_given":
 			# Perfect loyalty but Vera destabilizes
 			if _vera_system and _vera_system.has_method("add_corruption"):
 				_vera_system.add_corruption("bargain_true_name")
-	
+
 	# Store price on monster for tracking
 	if active_monster.has_method("set_meta"):
 		active_monster.set_meta("bargain_price", price)
+
 
 # -----------------------------------------------------------------------------
 # CORRUPTION BATTLE SEQUENCE
@@ -572,42 +616,43 @@ func _corruption_battle_sequence() -> bool:
 	# Calculate passes needed
 	total_passes = _calculate_passes_needed()
 	current_pass = 0
-	
+
 	corruption_battle_started.emit(active_monster, total_passes)
-	
+
 	# Each pass is a chance to succeed
 	for i in range(total_passes):
 		current_pass = i + 1
-		
+
 		if not is_instance_valid(active_monster):
 			return false
-		
+
 		corruption_battle_pass.emit(active_monster, current_pass, total_passes)
-		
+
 		# Animation delay per pass
 		var pass_time := _get_pass_time()
 		await _safe_wait(pass_time)
-		
+
 		# Early escape check (weighted toward later passes)
 		var escape_chance := (1.0 - current_capture_chance) * (float(i) / float(total_passes)) * 0.3
 		if randf() < escape_chance and i < total_passes - 1:
 			corruption_battle_ended.emit(active_monster, false)
 			return false
-	
+
 	# Final roll
 	var success := randf() < current_capture_chance
 	corruption_battle_ended.emit(active_monster, success)
-	
+
 	await _safe_wait(0.3)
 	return success
+
 
 func _calculate_passes_needed() -> int:
 	if not is_instance_valid(active_monster):
 		return 1
-	
+
 	var rarity: int = active_monster.rarity if "rarity" in active_monster else 0
 	var base_passes := 1
-	
+
 	match rarity:
 		Enums.Rarity.COMMON:
 			base_passes = Constants.CAPTURE_PASSES_COMMON
@@ -619,37 +664,38 @@ func _calculate_passes_needed() -> int:
 			base_passes = Constants.CAPTURE_PASSES_EPIC
 		Enums.Rarity.LEGENDARY:
 			base_passes = Constants.CAPTURE_PASSES_LEGENDARY
-	
+
 	# Reductions
 	var reductions := 0
-	
+
 	# Low HP reduction
 	if _get_hp_percent(active_monster) < 0.25:
 		reductions += Constants.CAPTURE_PASS_REDUCTION_LOW_HP
-	
+
 	# Low corruption reduction
 	if _get_corruption(active_monster) < 25:
 		reductions += Constants.CAPTURE_PASS_REDUCTION_LOW_CORRUPTION
-	
+
 	# PURIFY method reduction
 	if active_method == Enums.CaptureMethod.PURIFY:
 		reductions += Constants.CAPTURE_PASS_REDUCTION_PURIFY
-	
+
 	# Soul Vessel reductions
 	match active_vessel_tier:
 		Enums.SoulVesselTier.PRISTINE:
 			reductions += Constants.CAPTURE_PASS_REDUCTION_PRISTINE
 		Enums.SoulVesselTier.COVENANT:
 			reductions += Constants.CAPTURE_PASS_REDUCTION_COVENANT
-	
+
 	return maxi(1, base_passes - reductions)
+
 
 func _get_pass_time() -> float:
 	if not is_instance_valid(active_monster):
 		return Constants.CAPTURE_PASS_TIME_SHORT
-	
+
 	var rarity: int = active_monster.rarity if "rarity" in active_monster else 0
-	
+
 	match rarity:
 		Enums.Rarity.COMMON, Enums.Rarity.UNCOMMON:
 			return Constants.CAPTURE_PASS_TIME_SHORT
@@ -657,8 +703,9 @@ func _get_pass_time() -> float:
 			return Constants.CAPTURE_PASS_TIME_MEDIUM
 		Enums.Rarity.LEGENDARY:
 			return Constants.CAPTURE_PASS_TIME_LONG
-	
+
 	return Constants.CAPTURE_PASS_TIME_SHORT
+
 
 # -----------------------------------------------------------------------------
 # CAPTURE RESULT HANDLERS
@@ -666,15 +713,16 @@ func _get_pass_time() -> float:
 func _handle_capture_success(bonus_data: Dictionary) -> void:
 	if not is_instance_valid(active_monster):
 		return
-	
+
 	# Notify monster of capture
 	if active_monster.has_method("on_captured"):
 		active_monster.on_captured(active_method)
-	
+
 	capture_succeeded.emit(active_monster, active_method, bonus_data)
-	
+
 	# Notify VERA of capture success
 	_notify_vera_capture_success(active_method)
+
 
 func _handle_capture_failure(reason: String) -> void:
 	if is_instance_valid(active_monster):
@@ -685,13 +733,14 @@ func _handle_capture_failure(reason: String) -> void:
 	else:
 		capture_failed.emit(null, active_method, reason)
 
+
 # -----------------------------------------------------------------------------
 # VERA INTEGRATION
 # -----------------------------------------------------------------------------
 func _notify_vera_capture_attempt(method: Enums.CaptureMethod) -> void:
 	if _vera_system == null:
 		return
-	
+
 	# Different methods affect Veil Integrity differently
 	match method:
 		Enums.CaptureMethod.DOMINATE:
@@ -704,10 +753,11 @@ func _notify_vera_capture_attempt(method: Enums.CaptureMethod) -> void:
 			if _vera_system.has_method("add_veil_integrity"):
 				_vera_system.add_veil_integrity(1)
 
+
 func _notify_vera_capture_success(method: Enums.CaptureMethod) -> void:
 	if _vera_system == null:
 		return
-	
+
 	# Trigger Vera dialogue based on method
 	if _vera_system.has_method("trigger_dialogue"):
 		match method:
@@ -720,12 +770,13 @@ func _notify_vera_capture_success(method: Enums.CaptureMethod) -> void:
 			Enums.CaptureMethod.BARGAIN:
 				_vera_system.trigger_dialogue("capture_bargain")
 
+
 # -----------------------------------------------------------------------------
 # HELPER METHODS
 # -----------------------------------------------------------------------------
 func _get_base_capture_chance(monster: Node) -> float:
 	var rarity: int = monster.rarity if "rarity" in monster else 0
-	
+
 	match rarity:
 		Enums.Rarity.COMMON:
 			return Constants.CAPTURE_BASE_COMMON
@@ -737,16 +788,18 @@ func _get_base_capture_chance(monster: Node) -> float:
 			return Constants.CAPTURE_BASE_EPIC
 		Enums.Rarity.LEGENDARY:
 			return Constants.CAPTURE_BASE_LEGENDARY
-	
+
 	return Constants.CAPTURE_BASE_COMMON
+
 
 func _calculate_level_modifier(monster: Node, captor: Node) -> float:
 	var monster_level: int = monster.level if "level" in monster else 1
 	var captor_level: int = captor.level if "level" in captor else 1
 	var level_diff: int = captor_level - monster_level
-	
+
 	# +/- 2% per level difference, capped at +/-20%
 	return clampf(level_diff * 0.02, -0.20, 0.20)
+
 
 func _get_hp_percent(monster: Node) -> float:
 	if monster.has_method("get_hp_percent"):
@@ -756,6 +809,7 @@ func _get_hp_percent(monster: Node) -> float:
 			return float(monster.current_hp) / float(monster.max_hp)
 	return 1.0
 
+
 func _get_corruption(monster: Node) -> float:
 	if "corruption_level" in monster:
 		return monster.corruption_level
@@ -763,37 +817,44 @@ func _get_corruption(monster: Node) -> float:
 		return monster.get_corruption()
 	return 50.0
 
+
 func _has_soul_vessel() -> bool:
 	if _inventory_system == null:
 		return true  # Assume yes if no inventory system
-	
-	var vessel_ids := ["soul_vessel_cracked", "soul_vessel_standard", 
-					   "soul_vessel_pristine", "soul_vessel_covenant"]
-	
+
+	var vessel_ids := [
+		"soul_vessel_cracked",
+		"soul_vessel_standard",
+		"soul_vessel_pristine",
+		"soul_vessel_covenant"
+	]
+
 	for vessel_id in vessel_ids:
 		if _inventory_system.has_method("has_item") and _inventory_system.has_item(vessel_id):
 			return true
-	
+
 	return true  # Default to true for testing
+
 
 func _get_best_vessel_id() -> String:
 	# Return the best available vessel
 	if _inventory_system == null:
 		return "soul_vessel_standard"
-	
+
 	var vessels := [
 		["soul_vessel_covenant", Enums.SoulVesselTier.COVENANT],
 		["soul_vessel_pristine", Enums.SoulVesselTier.PRISTINE],
 		["soul_vessel_standard", Enums.SoulVesselTier.STANDARD],
 		["soul_vessel_cracked", Enums.SoulVesselTier.CRACKED]
 	]
-	
+
 	for vessel in vessels:
 		if _inventory_system.has_method("has_item") and _inventory_system.has_item(vessel[0]):
 			active_vessel_tier = vessel[1]
 			return vessel[0]
-	
+
 	return "soul_vessel_standard"
+
 
 func _consume_soul_vessel(tier: Enums.SoulVesselTier) -> void:
 	var vessel_id := "soul_vessel_standard"
@@ -806,9 +867,10 @@ func _consume_soul_vessel(tier: Enums.SoulVesselTier) -> void:
 			vessel_id = "soul_vessel_pristine"
 		Enums.SoulVesselTier.COVENANT:
 			vessel_id = "soul_vessel_covenant"
-	
+
 	if _inventory_system and _inventory_system.has_method("remove_item"):
 		_inventory_system.remove_item(vessel_id, 1)
+
 
 func _has_sanctum_energy(amount: float) -> bool:
 	# Check GameManager for Sanctum Energy
@@ -817,10 +879,12 @@ func _has_sanctum_energy(amount: float) -> bool:
 		return game_manager.sanctum_energy >= amount
 	return true  # Default to true for testing
 
+
 func _consume_sanctum_energy(amount: float) -> void:
 	var game_manager := get_node_or_null("/root/GameManager")
 	if game_manager and "sanctum_energy" in game_manager:
 		game_manager.sanctum_energy -= amount
+
 
 func _reset_state() -> void:
 	current_state = CaptureState.IDLE
@@ -830,6 +894,7 @@ func _reset_state() -> void:
 	current_pass = 0
 	total_passes = 1
 	pending_bargain_price = {}
+
 
 # -----------------------------------------------------------------------------
 # UI HELPER METHODS
@@ -846,6 +911,7 @@ func get_capture_chance_text(chance: float) -> String:
 	else:
 		return "Very Low"
 
+
 func get_method_description(method: Enums.CaptureMethod) -> String:
 	match method:
 		Enums.CaptureMethod.SOULBIND:
@@ -858,6 +924,7 @@ func get_method_description(method: Enums.CaptureMethod) -> String:
 			return "Pay a random price (revealed first). +25% capture chance."
 	return "Unknown capture method."
 
+
 func get_vessel_tier_name(tier: Enums.SoulVesselTier) -> String:
 	match tier:
 		Enums.SoulVesselTier.CRACKED:
@@ -869,6 +936,7 @@ func get_vessel_tier_name(tier: Enums.SoulVesselTier) -> String:
 		Enums.SoulVesselTier.COVENANT:
 			return "Covenant Vessel"
 	return "Unknown Vessel"
+
 
 func get_method_name(method: Enums.CaptureMethod) -> String:
 	match method:

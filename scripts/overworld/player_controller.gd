@@ -32,6 +32,7 @@ var nearby_interactables: Array = []
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	if interaction_area:
 		interaction_area.body_entered.connect(_on_interactable_entered)
@@ -39,12 +40,14 @@ func _ready() -> void:
 
 	_connect_signals()
 
+
 func _connect_signals() -> void:
 	EventBus.game_state_changed.connect(_on_game_state_changed)
 	EventBus.dialogue_started.connect(_on_dialogue_started)
 	EventBus.dialogue_ended.connect(_on_dialogue_ended)
 	EventBus.battle_started.connect(_on_battle_started)
 	EventBus.battle_ended.connect(_on_battle_ended)
+
 
 func _physics_process(delta: float) -> void:
 	if not can_move:
@@ -54,6 +57,7 @@ func _physics_process(delta: float) -> void:
 	_handle_movement(delta)
 	_update_animation()
 	move_and_slide()
+
 
 func _input(event: InputEvent) -> void:
 	if not can_move:
@@ -65,9 +69,11 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_menu"):
 		_open_pause_menu()
 
+
 # =============================================================================
 # MOVEMENT
 # =============================================================================
+
 
 func _handle_movement(_delta: float) -> void:
 	var input_direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -81,6 +87,7 @@ func _handle_movement(_delta: float) -> void:
 		velocity = input_direction * speed
 	else:
 		velocity = velocity.move_toward(Vector2.ZERO, move_speed * 0.5)
+
 
 func _update_animation() -> void:
 	if not animation_player:
@@ -105,17 +112,21 @@ func _update_animation() -> void:
 		if animation_player.current_animation != anim_name:
 			animation_player.play(anim_name)
 
+
 func stop_movement() -> void:
 	can_move = false
 	velocity = Vector2.ZERO
 	is_moving = false
 
+
 func resume_movement() -> void:
 	can_move = true
+
 
 # =============================================================================
 # INTERACTION
 # =============================================================================
+
 
 func _try_interact() -> void:
 	if nearby_interactables.is_empty():
@@ -136,25 +147,31 @@ func _try_interact() -> void:
 	if closest and closest.has_method("interact"):
 		closest.interact(self)
 
+
 func _on_interactable_entered(body: Node2D) -> void:
 	if body.has_method("interact"):
 		nearby_interactables.append(body)
 
+
 func _on_interactable_exited(body: Node2D) -> void:
 	nearby_interactables.erase(body)
+
 
 # =============================================================================
 # MENU
 # =============================================================================
+
 
 func _open_pause_menu() -> void:
 	if GameManager.is_state(Enums.GameState.OVERWORLD):
 		GameManager.change_state(Enums.GameState.PAUSED)
 		EventBus.menu_opened.emit(Enums.MenuType.PAUSE)
 
+
 # =============================================================================
 # SIGNAL HANDLERS
 # =============================================================================
+
 
 func _on_game_state_changed(_old: int, new: int) -> void:
 	match new:
@@ -163,31 +180,38 @@ func _on_game_state_changed(_old: int, new: int) -> void:
 		Enums.GameState.BATTLE, Enums.GameState.DIALOGUE, Enums.GameState.PAUSED, Enums.GameState.CUTSCENE:
 			stop_movement()
 
+
 func _on_dialogue_started(_dialogue_id: String) -> void:
 	stop_movement()
+
 
 func _on_dialogue_ended() -> void:
 	if GameManager.is_state(Enums.GameState.OVERWORLD):
 		resume_movement()
 
+
 func _on_battle_started(_enemies: Array) -> void:
 	stop_movement()
 	visible = false
+
 
 func _on_battle_ended(_victory: bool, _rewards: Dictionary) -> void:
 	visible = true
 	if GameManager.is_state(Enums.GameState.OVERWORLD):
 		resume_movement()
 
+
 # =============================================================================
 # SAVE/LOAD
 # =============================================================================
+
 
 func get_save_data() -> Dictionary:
 	return {
 		"position": {"x": global_position.x, "y": global_position.y},
 		"facing": {"x": facing_direction.x, "y": facing_direction.y}
 	}
+
 
 func load_save_data(data: Dictionary) -> void:
 	var pos: Dictionary = data.get("position", {"x": 0, "y": 0})

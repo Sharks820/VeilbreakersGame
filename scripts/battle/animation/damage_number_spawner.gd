@@ -37,7 +37,7 @@ signal number_spawned(number_node: Node)
 @export var stack_delay: float = 0.05
 
 @export_group("Brand Colors")
-## NOTE: Default values match Helpers.get_brand_color() - keep in sync!
+## NOTE: Default values match BrandSystem.get_brand_color() - keep in sync!
 @export var savage_color: Color = Color("c73e3e")
 @export var iron_color: Color = Color("7b8794")
 @export var venom_color: Color = Color("6b9b37")
@@ -56,25 +56,28 @@ var _active: Array[Node] = []
 var _stack_counts: Dictionary = {}  # position_hash -> count
 var _last_spawn_time: Dictionary = {}  # position_hash -> time
 
+
 # -----------------------------------------------------------------------------
 # LIFECYCLE
 # -----------------------------------------------------------------------------
 func _ready() -> void:
 	_initialize_pool()
 
+
 func _initialize_pool() -> void:
 	if not damage_number_scene:
 		push_warning("DamageNumberSpawner: No scene assigned!")
 		return
-	
+
 	for i in range(pool_size):
 		var instance = damage_number_scene.instantiate()
 		instance.visible = false
 		add_child(instance)
 		_pool.append(instance)
-		
+
 		if instance.has_signal("finished"):
 			instance.finished.connect(_on_number_finished.bind(instance))
+
 
 # -----------------------------------------------------------------------------
 # PUBLIC API
@@ -86,7 +89,7 @@ func spawn_damage(
 	brand: String = "",
 	is_player_damage: bool = false
 ) -> void:
-	"""Spawn a damage number"""
+	## Spawn a damage number
 	var color = _get_brand_color(brand)
 	if is_critical:
 		color = crit_color
@@ -102,8 +105,9 @@ func spawn_damage(
 
 	_spawn_at(position, config)
 
+
 func spawn_heal(position: Vector2, amount: int, is_hot: bool = false) -> void:
-	"""Spawn a healing number"""
+	## Spawn a healing number
 	var config = {
 		"value": amount,
 		"color": heal_color,
@@ -116,48 +120,53 @@ func spawn_heal(position: Vector2, amount: int, is_hot: bool = false) -> void:
 
 	_spawn_at(position, config)
 
+
 func spawn_miss(position: Vector2) -> void:
-	"""Spawn a miss indicator"""
+	## Spawn a miss indicator
 	var config = {
 		"text": "MISS",
 		"color": Color(0.7, 0.7, 0.7),
 		"is_critical": false,
 		"scale_mult": 0.8,
 	}
-	
+
 	_spawn_at(position, config)
 
+
 func spawn_status(position: Vector2, status_name: String, is_applying: bool = true) -> void:
-	"""Spawn status effect text"""
+	## Spawn status effect text
 	var config = {
 		"text": ("+" if is_applying else "-") + status_name.to_upper(),
 		"color": _get_status_color(status_name),
 		"is_critical": false,
 		"scale_mult": 0.75,
 	}
-	
+
 	_spawn_at(position, config)
 
+
 func spawn_text(position: Vector2, text: String, color: Color = Color.WHITE) -> void:
-	"""Spawn arbitrary text"""
+	## Spawn arbitrary text
 	var config = {
 		"text": text,
 		"color": color,
 		"is_critical": false,
 	}
-	
+
 	_spawn_at(position, config)
 
+
 func spawn_combo(position: Vector2, combo_count: int) -> void:
-	"""Spawn combo counter"""
+	## Spawn combo counter
 	var config = {
 		"text": str(combo_count) + " HIT",
 		"color": Color.YELLOW if combo_count < 10 else Color.ORANGE,
 		"is_critical": combo_count >= 10,
 		"scale_mult": 0.6 + min(combo_count * 0.05, 0.4),
 	}
-	
+
 	_spawn_at(position, config)
+
 
 # -----------------------------------------------------------------------------
 # INTERNAL
@@ -166,174 +175,99 @@ func _spawn_at(position: Vector2, config: Dictionary) -> void:
 	var number = _get_from_pool()
 	if not number:
 		return
-	
+
 	# Calculate stack offset
 	var pos_hash = _position_hash(position)
 	var stack_count = _stack_counts.get(pos_hash, 0)
 	var offset = Vector2(0, -stack_count * stack_offset)
-	
+
 	# Track stacking
 	_stack_counts[pos_hash] = stack_count + 1
 	_last_spawn_time[pos_hash] = Time.get_ticks_msec()
-	
+
 	# Reset stack after delay
-	get_tree().create_timer(0.5).timeout.connect(func():
-		if _stack_counts.has(pos_hash):
-			_stack_counts[pos_hash] = max(0, _stack_counts[pos_hash] - 1)
+	get_tree().create_timer(0.5).timeout.connect(
+		func():
+			if _stack_counts.has(pos_hash):
+				_stack_counts[pos_hash] = max(0, _stack_counts[pos_hash] - 1)
 	)
-	
+
 	# Calculate velocity
 	var velocity = base_velocity
 	velocity.x += randf_range(-velocity_randomness.x, velocity_randomness.x)
 	velocity.y += randf_range(-velocity_randomness.y, 0)
-	
+
 	if config.get("is_critical", false):
 		velocity *= crit_velocity_multiplier
-	
+
 	# Setup number
 	number.global_position = position + offset
 	number.setup(config, velocity, gravity)
 	number.visible = true
-	
+
 	_active.append(number)
 	number_spawned.emit(number)
+
 
 func _get_from_pool() -> Node:
 	if _pool.size() > 0:
 		return _pool.pop_back()
-	
+
 	if auto_expand and damage_number_scene:
 		var instance = damage_number_scene.instantiate()
 		add_child(instance)
 		if instance.has_signal("finished"):
 			instance.finished.connect(_on_number_finished.bind(instance))
 		return instance
-	
+
 	return null
+
 
 func _return_to_pool(number: Node) -> void:
 	number.visible = false
 	_active.erase(number)
 	_pool.append(number)
 
+
 func _on_number_finished(number: Node) -> void:
 	_return_to_pool(number)
 
+
 func _get_brand_color(brand: String) -> Color:
 	match brand.to_upper():
-		"SAVAGE": return savage_color
-		"IRON": return iron_color
-		"VENOM": return venom_color
-		"SURGE": return surge_color
-		"DREAD": return dread_color
-		"LEECH": return leech_color
-		_: return neutral_color
+		"SAVAGE":
+			return savage_color
+		"IRON":
+			return iron_color
+		"VENOM":
+			return venom_color
+		"SURGE":
+			return surge_color
+		"DREAD":
+			return dread_color
+		"LEECH":
+			return leech_color
+		_:
+			return neutral_color
+
 
 func _get_status_color(status: String) -> Color:
 	match status.to_lower():
-		"poison", "poisoned": return venom_color
-		"burn", "burning": return Color.ORANGE
-		"freeze", "frozen": return surge_color
-		"stun", "stunned": return Color.YELLOW
-		"bleed", "bleeding": return savage_color
-		"curse", "cursed": return dread_color
-		_: return Color.WHITE
+		"poison", "poisoned":
+			return venom_color
+		"burn", "burning":
+			return Color.ORANGE
+		"freeze", "frozen":
+			return surge_color
+		"stun", "stunned":
+			return Color.YELLOW
+		"bleed", "bleeding":
+			return savage_color
+		"curse", "cursed":
+			return dread_color
+		_:
+			return Color.WHITE
+
 
 func _position_hash(pos: Vector2) -> int:
 	return int(pos.x / 50) * 10000 + int(pos.y / 50)
-
-
-# =============================================================================
-# DAMAGE NUMBER (Individual number node)
-# =============================================================================
-# Save as separate scene: DamageNumber.tscn
-# Structure:
-#   - DamageNumber (Node2D) <- This script
-#     - Label (Label or RichTextLabel)
-#     - Shadow (Label) [optional]
-
-#class_name DamageNumber
-#extends Node2D
-
-# Paste this into a separate script file: DamageNumber.gd
-
-"""
-extends Node2D
-
-signal finished
-
-@export var label: Label
-@export var shadow_label: Label
-@export var lifetime: float = 1.0
-@export var fade_start: float = 0.6
-@export var bounce_on_crit: bool = true
-@export var scale_pop: float = 1.3
-
-var _velocity: Vector2 = Vector2.ZERO
-var _gravity: float = 0.0
-var _elapsed: float = 0.0
-var _is_critical: bool = false
-var _base_scale: Vector2 = Vector2.ONE
-
-func _ready() -> void:
-	_base_scale = scale
-
-func setup(config: Dictionary, velocity: Vector2, gravity: float) -> void:
-	_velocity = velocity
-	_gravity = gravity
-	_elapsed = 0.0
-	_is_critical = config.get("is_critical", false)
-	
-	# Set text
-	var text = ""
-	if config.has("text"):
-		text = config.text
-	else:
-		text = config.get("prefix", "") + str(config.get("value", 0)) + config.get("suffix", "")
-	
-	label.text = text
-	if shadow_label:
-		shadow_label.text = text
-	
-	# Set color
-	label.modulate = config.get("color", Color.WHITE)
-	
-	# Scale
-	var scale_mult = config.get("scale_mult", 1.0)
-	if _is_critical:
-		scale_mult *= 1.3
-	_base_scale = Vector2.ONE * scale_mult
-	
-	# Initial pop animation
-	scale = _base_scale * scale_pop
-	modulate.a = 1.0
-	
-	var tween = create_tween()
-	tween.tween_property(self, "scale", _base_scale, 0.15).set_ease(Tween.EASE_OUT)
-	
-	# Crit bounce
-	if _is_critical and bounce_on_crit:
-		_velocity.y *= 0.5  # Less initial upward, more bounce
-		label.add_theme_font_size_override("font_size", label.get_theme_font_size("font_size") + 8)
-
-func _process(delta: float) -> void:
-	_elapsed += delta
-	
-	# Physics
-	_velocity.y += _gravity * delta
-	position += _velocity * delta
-	
-	# Crit bounce
-	if _is_critical and _velocity.y > 0 and position.y > 0:
-		_velocity.y *= -0.5
-		position.y = 0
-	
-	# Fade out
-	if _elapsed > fade_start:
-		var fade_progress = (_elapsed - fade_start) / (lifetime - fade_start)
-		modulate.a = 1.0 - fade_progress
-	
-	# Finish
-	if _elapsed >= lifetime:
-		finished.emit()
-"""

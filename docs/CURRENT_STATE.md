@@ -1,6 +1,6 @@
 # VEILBREAKERS - Current State
 
-> **Version:** v0.85 | **Last Updated:** 2026-01-02
+> **Version:** v1.00 | **Last Updated:** 2026-01-04
 
 ---
 
@@ -55,20 +55,21 @@
 | Missing font: main_font.tres | Low | Uses fallback |
 | Some .uid files untracked | Low | Godot-generated, ignore |
 
-### Recent Fixes (v0.80-v0.85)
+### Recent Fixes (v0.92-v0.97)
 
 | Fix | Version | Status |
 |-----|---------|--------|
-| Sprite sheet animations not playing | v0.80 | ✅ Fixed |
-| Heroes showing Brand instead of Path | v0.81 | ✅ Fixed |
-| Heroes only had 3 starting skills | v0.82 | ✅ Fixed |
-| Defend appearing in skills menu | v0.82 | ✅ Fixed |
-| Combat log not auto-scrolling | v0.82 | ✅ Fixed |
-| Taunt not working | v0.83 | ✅ Fixed |
-| DPS characters too OP (no MP) | v0.83 | ✅ Fixed |
-| Attack animations not making contact | v0.84 | ✅ Fixed |
-| Character select breathing glitch | v0.85 | ✅ Fixed |
-| Attack animation too fast (effects invisible) | v0.85 | ✅ Fixed |
+| Defend system overhaul (target self or allies) | v0.92 | ✅ Fixed |
+| Test battle starter items added | v0.93 | ✅ Fixed |
+| Signal leaks in BattleUIController | v0.94 | ✅ Fixed |
+| Duplicate DamageCalculator in AIController | v0.94 | ✅ Fixed |
+| Tween memory leaks in CharacterBattleAnimator | v0.94 | ✅ Fixed |
+| Signal leaks in BattleArena (17+ connections) | v0.95 | ✅ Fixed |
+| Signal leaks in MainMenuController | v0.95 | ✅ Fixed |
+| Archived dead code (helpers.gd, debug.gd, ui_colors.gd) | v0.95 | ✅ Fixed |
+| StyleManager autoload added then reverted | v0.96 | ⚠️ Reverted |
+| Style validation tool added | v0.96 | ✅ Added |
+| COLOR_TRANSPARENT/COLOR_NORMAL constants | v0.97 | ✅ Added |
 
 ---
 

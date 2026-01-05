@@ -19,6 +19,7 @@ var _loading_label: Label
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_transition_ui()
@@ -30,6 +31,7 @@ func _ready() -> void:
 		current_scene_path = current_scene.scene_file_path
 
 	EventBus.emit_debug("SceneManager initialized")
+
 
 func _setup_transition_ui() -> void:
 	# Create canvas layer for transitions
@@ -78,11 +80,15 @@ func _setup_transition_ui() -> void:
 	_progress_bar.show_percentage = false
 	vbox.add_child(_progress_bar)
 
+
 # =============================================================================
 # SCENE TRANSITIONS
 # =============================================================================
 
-func change_scene(scene_path: String, fade_duration: float = Constants.SCENE_TRANSITION_DURATION) -> void:
+
+func change_scene(
+	scene_path: String, fade_duration: float = Constants.SCENE_TRANSITION_DURATION
+) -> void:
 	if is_transitioning:
 		push_warning("Scene transition already in progress")
 		return
@@ -115,6 +121,7 @@ func change_scene(scene_path: String, fade_duration: float = Constants.SCENE_TRA
 
 	is_transitioning = false
 	EventBus.scene_transition_completed.emit(scene_path)
+
 
 func change_scene_with_loading(scene_path: String, loading_text: String = "Loading...") -> void:
 	if is_transitioning:
@@ -182,25 +189,31 @@ func change_scene_with_loading(scene_path: String, loading_text: String = "Loadi
 	is_transitioning = false
 	EventBus.scene_transition_completed.emit(scene_path)
 
+
 # =============================================================================
 # FADE EFFECTS
 # =============================================================================
+
 
 func _fade_out(duration: float) -> void:
 	var tween := create_tween()
 	tween.tween_property(_fade_rect, "modulate:a", 1.0, duration)
 	await tween.finished
 
+
 func _fade_in(duration: float) -> void:
 	var tween := create_tween()
 	tween.tween_property(_fade_rect, "modulate:a", 0.0, duration)
 	await tween.finished
 
+
 func fade_to_black(duration: float = 0.5) -> void:
 	await _fade_out(duration)
 
+
 func fade_from_black(duration: float = 0.5) -> void:
 	await _fade_in(duration)
+
 
 func flash(color: Color = Color.WHITE, duration: float = 0.1) -> void:
 	_fade_rect.color = color
@@ -210,57 +223,72 @@ func flash(color: Color = Color.WHITE, duration: float = 0.1) -> void:
 	await tween.finished
 	_fade_rect.color = Color.BLACK
 
+
 func flash_damage(duration: float = 0.1) -> void:
 	await flash(Color(1.0, 0.2, 0.2, 0.5), duration)
+
 
 func flash_heal(duration: float = 0.2) -> void:
 	await flash(Color(0.2, 1.0, 0.2, 0.3), duration)
 
+
 # =============================================================================
 # SCENE QUERIES
 # =============================================================================
+
 
 func get_current_scene_name() -> String:
 	if current_scene_path.is_empty():
 		return ""
 	return current_scene_path.get_file().get_basename()
 
+
 func is_scene(scene_name: String) -> bool:
 	return get_current_scene_name() == scene_name
+
 
 func is_main_menu() -> bool:
 	return is_scene("main_menu")
 
+
 func is_overworld() -> bool:
 	return is_scene("overworld")
 
+
 func is_battle() -> bool:
 	return is_scene("battle_arena")
+
 
 # =============================================================================
 # NAVIGATION HELPERS
 # =============================================================================
 
+
 func go_to_main_menu() -> void:
 	await change_scene("res://scenes/main/main_menu.tscn")
 	GameManager.change_state(Enums.GameState.MAIN_MENU)
+
 
 ## Alias for go_to_main_menu (backwards compatibility)
 func goto_main_menu() -> void:
 	await go_to_main_menu()
 
+
 func go_to_overworld() -> void:
 	await change_scene_with_loading("res://scenes/overworld/overworld.tscn")
 	GameManager.change_state(Enums.GameState.OVERWORLD)
+
 
 func go_to_battle(enemy_data: Array = []) -> void:
 	await change_scene("res://scenes/battle/battle_arena.tscn")
 	GameManager.change_state(Enums.GameState.BATTLE)
 	EventBus.battle_started.emit(enemy_data)
 
+
 # =============================================================================
 # RELOAD
 # =============================================================================
+
 
 func reload_current_scene() -> void:
 	if current_scene_path.is_empty():
@@ -269,9 +297,11 @@ func reload_current_scene() -> void:
 
 	await change_scene(current_scene_path)
 
+
 # =============================================================================
 # UTILITY
 # =============================================================================
+
 
 func get_scene_tree_as_text() -> String:
 	if not current_scene:
@@ -280,6 +310,7 @@ func get_scene_tree_as_text() -> String:
 	var result := ""
 	result = _build_tree_text(current_scene, result, 0)
 	return result
+
 
 func _build_tree_text(node: Node, result: String, depth: int) -> String:
 	result += "  ".repeat(depth) + node.name + " (" + node.get_class() + ")\n"

@@ -14,7 +14,9 @@ extends Node
 signal path_affinity_changed(path: Enums.Path, old_value: float, new_value: float)
 signal path_unlocked(path: Enums.Path)
 signal path_locked(path: Enums.Path)
-signal skill_tree_state_changed(path: Enums.Path, old_state: Enums.SkillTreeState, new_state: Enums.SkillTreeState)
+signal skill_tree_state_changed(
+	path: Enums.Path, old_state: Enums.SkillTreeState, new_state: Enums.SkillTreeState
+)
 
 # =============================================================================
 # CONSTANTS (use Constants class to avoid duplication)
@@ -22,16 +24,16 @@ signal skill_tree_state_changed(path: Enums.Path, old_state: Enums.SkillTreeStat
 
 # Reference centralized constants for path thresholds
 const UNLOCK_THRESHOLD: float = 30.0  # Mirrors Constants.PATH_SKILL_TREE_UNLOCK
-const MAX_AFFINITY: float = 100.0     # Mirrors Constants.PATH_MAX_AFFINITY
-const MIN_AFFINITY: float = 0.0       # Mirrors Constants.PATH_MIN_AFFINITY
+const MAX_AFFINITY: float = 100.0  # Mirrors Constants.PATH_MAX_AFFINITY
+const MIN_AFFINITY: float = 0.0  # Mirrors Constants.PATH_MIN_AFFINITY
 # Note: These are kept local for fast access, but should match Constants values
 
 # Path colors for UI
 const PATH_COLORS: Dictionary = {
-	Enums.Path.IRONBOUND: Color(0.48, 0.53, 0.58),    # Steel gray
-	Enums.Path.FANGBORN: Color(0.55, 0.16, 0.26),     # Blood red
+	Enums.Path.IRONBOUND: Color(0.48, 0.53, 0.58),  # Steel gray
+	Enums.Path.FANGBORN: Color(0.55, 0.16, 0.26),  # Blood red
 	Enums.Path.VOIDTOUCHED: Color(0.36, 0.24, 0.55),  # Deep purple
-	Enums.Path.UNCHAINED: Color(0.18, 0.55, 0.45)     # Teal green
+	Enums.Path.UNCHAINED: Color(0.18, 0.55, 0.45)  # Teal green
 }
 
 # Which brands align with which paths (for monster catching)
@@ -77,17 +79,21 @@ var available_skill_points: int = 0
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	EventBus.level_up.connect(_on_player_leveled_up)
+
 
 func _exit_tree() -> void:
 	# Disconnect EventBus signals to prevent memory leaks
 	if EventBus.level_up.is_connected(_on_player_leveled_up):
 		EventBus.level_up.disconnect(_on_player_leveled_up)
 
+
 # =============================================================================
 # AFFINITY MANAGEMENT
 # =============================================================================
+
 
 func modify_affinity(path: Enums.Path, amount: float, source: String = "") -> void:
 	## Modify a path's affinity. Positive = increase, negative = decrease.
@@ -108,25 +114,30 @@ func modify_affinity(path: Enums.Path, amount: float, source: String = "") -> vo
 
 	# Log the change
 	if OS.is_debug_build() and source != "":
-		ErrorLogger.log_debug("[PATH] %s: %.1f -> %.1f (%s)" % [
-			Enums.Path.keys()[path], old_value, new_value, source
-		])
+		ErrorLogger.log_debug(
+			"[PATH] %s: %.1f -> %.1f (%s)" % [Enums.Path.keys()[path], old_value, new_value, source]
+		)
+
 
 func get_affinity(path: Enums.Path) -> float:
 	return path_affinities.get(path, 0.0)
+
 
 func set_affinity(path: Enums.Path, value: float) -> void:
 	## Set a path's affinity directly (use modify_affinity for normal changes)
 	var old_value: float = path_affinities.get(path, 0.0)
 	modify_affinity(path, value - old_value, "set_affinity")
 
+
 # =============================================================================
 # UNLOCK STATUS
 # =============================================================================
 
+
 func is_path_unlocked(path: Enums.Path) -> bool:
 	## Returns true if path affinity >= 30%
 	return path_affinities.get(path, 0.0) >= UNLOCK_THRESHOLD
+
 
 func get_unlocked_paths() -> Array[Enums.Path]:
 	## Returns array of all paths at 30%+ affinity
@@ -136,8 +147,10 @@ func get_unlocked_paths() -> Array[Enums.Path]:
 			unlocked.append(path)
 	return unlocked
 
+
 func get_skill_tree_state(path: Enums.Path) -> Enums.SkillTreeState:
 	return skill_tree_states.get(path, Enums.SkillTreeState.LOCKED)
+
 
 func _check_unlock_threshold(path: Enums.Path, old_value: float, new_value: float) -> void:
 	var old_unlocked := old_value >= UNLOCK_THRESHOLD
@@ -159,15 +172,20 @@ func _check_unlock_threshold(path: Enums.Path, old_value: float, new_value: floa
 			skill_tree_states[path] = Enums.SkillTreeState.DARK
 			path_locked.emit(path)
 			skill_tree_state_changed.emit(path, old_state, Enums.SkillTreeState.DARK)
-			EventBus.emit_debug("Path %s went DARK at %.1f%%" % [Enums.Path.keys()[path], new_value])
+			EventBus.emit_debug(
+				"Path %s went DARK at %.1f%%" % [Enums.Path.keys()[path], new_value]
+			)
+
 
 # =============================================================================
 # SKILL POINTS
 # =============================================================================
 
+
 func add_skill_points(amount: int) -> void:
 	available_skill_points += amount
 	EventBus.emit_debug("Gained %d skill points (total: %d)" % [amount, available_skill_points])
+
 
 func allocate_skill_point(path: Enums.Path) -> bool:
 	## Allocate a skill point to a path. Returns false if not allowed.
@@ -180,11 +198,12 @@ func allocate_skill_point(path: Enums.Path) -> bool:
 	available_skill_points -= 1
 	skill_points_allocated[path] += 1
 
-	EventBus.emit_debug("Allocated point to %s (now %d)" % [
-		Enums.Path.keys()[path], skill_points_allocated[path]
-	])
+	EventBus.emit_debug(
+		"Allocated point to %s (now %d)" % [Enums.Path.keys()[path], skill_points_allocated[path]]
+	)
 
 	return true
+
 
 func reset_skill_points(path: Enums.Path) -> int:
 	## Reset all points from a path (via Skill Reset Token). Returns points refunded.
@@ -199,8 +218,10 @@ func reset_skill_points(path: Enums.Path) -> int:
 
 	return points
 
+
 func get_allocated_points(path: Enums.Path) -> int:
 	return skill_points_allocated.get(path, 0)
+
 
 func get_total_allocated_points() -> int:
 	var total := 0
@@ -208,9 +229,11 @@ func get_total_allocated_points() -> int:
 		total += skill_points_allocated[path]
 	return total
 
+
 # =============================================================================
 # MONSTER CATCHING
 # =============================================================================
+
 
 func can_catch_monster_brand(brand: Enums.Brand) -> bool:
 	## Check if player can catch a monster with this brand based on path affinity
@@ -220,6 +243,7 @@ func can_catch_monster_brand(brand: Enums.Brand) -> bool:
 				return true
 	return false
 
+
 func get_paths_for_brand(brand: Enums.Brand) -> Array[Enums.Path]:
 	## Get which paths allow catching this brand
 	var paths: Array[Enums.Path] = []
@@ -227,6 +251,7 @@ func get_paths_for_brand(brand: Enums.Brand) -> Array[Enums.Path]:
 		if brand in PATH_BRAND_ALIGNMENT[path]:
 			paths.append(path)
 	return paths
+
 
 func get_brands_for_path(path: Enums.Path) -> Array[Enums.Brand]:
 	## Get which brands this path allows catching
@@ -236,9 +261,11 @@ func get_brands_for_path(path: Enums.Path) -> Array[Enums.Brand]:
 			brands.append(brand)
 	return brands
 
+
 # =============================================================================
 # QUERIES
 # =============================================================================
+
 
 func get_dominant_path() -> Enums.Path:
 	## Returns the path with highest affinity
@@ -252,13 +279,16 @@ func get_dominant_path() -> Enums.Path:
 
 	return highest_path
 
+
 func get_path_color(path: Enums.Path) -> Color:
 	return PATH_COLORS.get(path, Color.WHITE)
+
 
 func get_path_name(path: Enums.Path) -> String:
 	if path == Enums.Path.NONE:
 		return "None"
 	return Enums.Path.keys()[path].capitalize()
+
 
 func get_affinity_description(path: Enums.Path) -> String:
 	var affinity := get_affinity(path)
@@ -275,17 +305,21 @@ func get_affinity_description(path: Enums.Path) -> String:
 	else:
 		return "Neutral"
 
+
 # =============================================================================
 # CALLBACKS
 # =============================================================================
+
 
 func _on_player_leveled_up(_character: Node, _new_level: int, _stat_gains: Dictionary) -> void:
 	# Grant skill point on level up
 	add_skill_points(1)
 
+
 # =============================================================================
 # SERIALIZATION
 # =============================================================================
+
 
 func get_save_data() -> Dictionary:
 	return {
@@ -294,6 +328,7 @@ func get_save_data() -> Dictionary:
 		"skill_points_allocated": skill_points_allocated.duplicate(),
 		"available_skill_points": available_skill_points
 	}
+
 
 func load_save_data(data: Dictionary) -> void:
 	if data.has("path_affinities"):
@@ -304,6 +339,7 @@ func load_save_data(data: Dictionary) -> void:
 		skill_points_allocated = data.skill_points_allocated.duplicate()
 	if data.has("available_skill_points"):
 		available_skill_points = data.available_skill_points
+
 
 func reset_to_default() -> void:
 	path_affinities = {

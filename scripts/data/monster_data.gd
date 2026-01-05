@@ -70,7 +70,10 @@ extends Resource
 # METHODS
 # =============================================================================
 
-func get_stat_at_level(stat: String, level: int, evo_stage: Enums.EvolutionStage = Enums.EvolutionStage.BIRTH) -> int:
+
+func get_stat_at_level(
+	stat: String, level: int, evo_stage: Enums.EvolutionStage = Enums.EvolutionStage.BIRTH
+) -> int:
 	var base_value: int
 	var growth: float
 
@@ -106,8 +109,9 @@ func get_stat_at_level(stat: String, level: int, evo_stage: Enums.EvolutionStage
 
 	return int(raw_stat * evo_multiplier)
 
+
 func _get_evolution_stat_multiplier(evo_stage: Enums.EvolutionStage, level: int) -> float:
-	"""Get stat multiplier based on evolution stage and level (v5.0)"""
+	## Get stat multiplier based on evolution stage and level (v5.0)
 	match evo_stage:
 		Enums.EvolutionStage.BIRTH:
 			return Constants.STAT_GROWTH_NORMAL
@@ -119,21 +123,26 @@ func _get_evolution_stat_multiplier(evo_stage: Enums.EvolutionStage, level: int)
 			# PRIMAL overflow stats at level 110+
 			if level >= Constants.PRIMAL_OVERFLOW_LEVEL:
 				var overflow_levels := level - Constants.PRIMAL_OVERFLOW_LEVEL
-				return Constants.STAT_GROWTH_PRIMAL_EVOLVED * pow(Constants.STAT_GROWTH_PRIMAL_OVERFLOW, overflow_levels)
+				return (
+					Constants.STAT_GROWTH_PRIMAL_EVOLVED
+					* pow(Constants.STAT_GROWTH_PRIMAL_OVERFLOW, overflow_levels)
+				)
 			return Constants.STAT_GROWTH_PRIMAL_EVOLVED
 		_:
 			return Constants.STAT_GROWTH_NORMAL
 
+
 func get_max_level() -> int:
-	"""Get max level based on brand tier (v5.0)"""
+	## Get max level based on brand tier (v5.0)
 	match brand_tier:
 		Enums.MonsterBrandTier.PRIMAL:
 			return Constants.MAX_LEVEL_PRIMAL  # 120
 		_:
 			return Constants.MAX_LEVEL_PURE_HYBRID  # 100
 
+
 func get_xp_multiplier(evo_stage: Enums.EvolutionStage) -> float:
-	"""Get XP requirement multiplier based on tier and stage (v5.0)"""
+	## Get XP requirement multiplier based on tier and stage (v5.0)
 	match brand_tier:
 		Enums.MonsterBrandTier.PRIMAL:
 			match evo_stage:
@@ -154,12 +163,16 @@ func get_xp_multiplier(evo_stage: Enums.EvolutionStage) -> float:
 				_:
 					return Constants.XP_MULT_PURE_BIRTH
 
+
 func can_evolve(current_level: int, current_stage: Enums.EvolutionStage) -> bool:
-	"""Check if monster can evolve at current level (v5.0)"""
+	## Check if monster can evolve at current level (v5.0)
 	match brand_tier:
 		Enums.MonsterBrandTier.PRIMAL:
 			# PRIMAL: Birth → Evolved (only 1 evolution)
-			return current_stage == Enums.EvolutionStage.BIRTH and current_level >= Constants.PRIMAL_EVO_LEVEL
+			return (
+				current_stage == Enums.EvolutionStage.BIRTH
+				and current_level >= Constants.PRIMAL_EVO_LEVEL
+			)
 		_:  # PURE or HYBRID
 			# 3 stages: Birth → Evo2 → Evo3
 			match current_stage:
@@ -170,8 +183,9 @@ func can_evolve(current_level: int, current_stage: Enums.EvolutionStage) -> bool
 				_:
 					return false
 
+
 func get_next_evolution_stage(current_stage: Enums.EvolutionStage) -> Enums.EvolutionStage:
-	"""Get the next evolution stage (v5.0)"""
+	## Get the next evolution stage (v5.0)
 	match brand_tier:
 		Enums.MonsterBrandTier.PRIMAL:
 			if current_stage == Enums.EvolutionStage.BIRTH:
@@ -186,6 +200,7 @@ func get_next_evolution_stage(current_stage: Enums.EvolutionStage) -> Enums.Evol
 				_:
 					return current_stage  # Already at max
 
+
 func get_skills_at_level(level: int) -> Array[String]:
 	var skills: Array[String] = innate_skills.duplicate()
 
@@ -195,7 +210,10 @@ func get_skills_at_level(level: int) -> Array[String]:
 
 	return skills
 
-func create_instance(level: int = 1, evo_stage: Enums.EvolutionStage = Enums.EvolutionStage.BIRTH) -> Monster:
+
+func create_instance(
+	level: int = 1, evo_stage: Enums.EvolutionStage = Enums.EvolutionStage.BIRTH
+) -> Monster:
 	var monster := Monster.new()
 
 	monster.monster_id = monster_id

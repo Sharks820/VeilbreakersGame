@@ -4,6 +4,109 @@
 
 ---
 
+## [v1.00] - 2026-01-04
+
+### Fixed
+- **CRITICAL: Broken Helpers references** - `helpers.gd` was archived in v0.95 but 5 files still referenced it
+  - Migrated brand color functions to `BrandSystem` class:
+    - `get_brand_color(brand: Enums.Brand) -> Color`
+    - `get_brand_color_by_name(brand_name: String) -> Color`
+    - `get_brand_glow_color(brand: Enums.Brand) -> Color`
+  - Updated all references from `Helpers.get_brand_color*()` to `BrandSystem.get_brand_color*()`
+  - Files fixed: `animation_effects.gd`, `battle_sequencer.gd`, `battle_ui_animator.gd`, `battle_ui_controller.gd`, `character_select_controller.gd`, `damage_number_spawner.gd`
+
+### Fixed (v0.99)
+- **Duplicate `_exit_tree()` functions** causing signal leaks
+  - `battle_arena.gd` - Removed duplicate at line 2022 (first one at line 64 was correct)
+  - `main_menu_controller.gd` - Removed duplicate at line 480 (first one at line 146 was correct)
+
+---
+
+## [v0.97] - 2026-01-04
+
+### Added
+- **COLOR_TRANSPARENT constant** - `Color(0, 0, 0, 0)` for consistent transparency
+- **COLOR_NORMAL constant** - `Color(1, 1, 1, 1)` for resetting modulation
+- Both constants added to `scripts/utils/constants.gd` for use across codebase
+
+---
+
+## [v0.96] - 2026-01-04
+
+### Added
+- **Style validation tool** (`tools/validate_style_constants.py`) - Analyzes codebase for hardcoded colors and styles
+
+### Changed
+- **StyleManager autoload** - Added then reverted (caused issues)
+  - Attempted to centralize color/style management
+  - Reverted due to integration complexity
+  - Constants approach (v0.97) used instead
+
+---
+
+## [v0.95] - 2026-01-04
+
+### Removed (Dead Code Cleanup)
+- **Archived helpers.gd** - 291 lines, 35+ functions, ZERO usage across codebase
+- **Archived debug.gd** - 235 lines, debug commands + logging, ZERO usage
+- **Archived ui_colors.gd** - Created but never integrated, ZERO usage
+
+### Fixed
+- **Signal Leaks in BattleArena** (CRITICAL - 17+ connections)
+  - Added comprehensive `_exit_tree()` with all signal disconnections
+  - Disconnects: EventBus (4), battle_sequencer (6), vfx_manager (2)
+  - Disconnects: damage_number_spawner (1), battle_camera (2), battle_manager (4)
+  - Disconnects: battle_ui target_highlight_changed signal
+  - Kills `_highlight_breathing_tween` infinite loop on exit
+  - Clears `_sprite_hitboxes` dictionary to prevent memory leaks
+- **Signal Leaks in MainMenuController** (CRITICAL)
+  - Added `_exit_tree()` to kill `logo_tween` infinite pulse loop
+  - Disconnects all button hover/unhover signals (4 buttons × 4 signals)
+  - Disconnects settings_menu.settings_closed signal
+
+---
+
+## [v0.94] - 2026-01-04
+
+### Added
+- **UIStyleCache Autoload** - Caches and reuses StyleBox instances
+  - Reduces 97+ StyleBoxFlat.new() calls to ~20 cached styles
+  - Predefined styles for HP/MP bars, buttons, panels, tooltips
+  - Eliminates GC pressure from repeated style allocations
+- **UIColors Constants** - Centralized color definitions
+  - 80+ color constants for consistent theming
+  - Helper functions: get_brand_color(), get_action_color()
+  - Utility functions: with_alpha(), brighten(), darken()
+
+### Fixed
+- **Signal Connection Leaks in BattleManager** (CRITICAL)
+  - Added `_cleanup_battle_signals()` function
+  - Properly disconnects character `died` signals on battle end
+  - Disconnects capture system signals to prevent memory leaks
+  - Called in both `_on_battle_victory()` and `_on_battle_defeat()`
+- **Signal Connection Leaks in BattleUIController** (CRITICAL)
+  - Added BattleManager signal disconnections in `_exit_tree()`
+  - Added EventBus signal disconnections (action_executed, level_up)
+  - Added viewport size_changed disconnection
+  - Fixes 212 connects vs 23 disconnects imbalance
+- **Duplicate DamageCalculator in AIController** (CRITICAL)
+  - AIController now gets reference from parent BattleManager
+  - Fallback creation only if parent reference unavailable
+  - Eliminates redundant node allocation
+- **Tween Memory Leaks in CharacterBattleAnimator** (CRITICAL)
+  - Added tween tracking via sprite metadata
+  - `_kill_existing_tweens()` cleans up before new animations
+  - `_create_tracked_tween()` tracks all created tweens
+  - Prevents orphaned tweens from interrupted animations
+
+### Technical Debt Identified (Future Work)
+- battle_ui_controller.gd: 4611 lines, 162 functions (God Class)
+- 54 StyleBoxFlat.new() calls in battle_ui_controller (use UIStyleCache)
+- 273 hardcoded Color() calls (use UIColors)
+- Duplicate panel creation functions need consolidation
+
+---
+
 ## [v0.93] - 2026-01-03
 
 ### Added

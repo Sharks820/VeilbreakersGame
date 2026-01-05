@@ -14,6 +14,7 @@ signal quest_failed(quest_id: String)
 # QUEST DATA STRUCTURE
 # =============================================================================
 
+
 class Quest:
 	var quest_id: String
 	var title: String
@@ -43,6 +44,7 @@ class Quest:
 		for obj_data in data.get("objectives", []):
 			objectives.append(Objective.new(obj_data))
 
+
 class Objective:
 	var description: String
 	var objective_type: ObjectiveType
@@ -70,32 +72,12 @@ class Objective:
 			return true
 		return false
 
-enum QuestType {
-	MAIN,
-	SIDE,
-	HUNT,
-	COLLECTION,
-	EXPLORATION
-}
 
-enum QuestStatus {
-	LOCKED,
-	AVAILABLE,
-	ACTIVE,
-	COMPLETED,
-	FAILED
-}
+enum QuestType { MAIN, SIDE, HUNT, COLLECTION, EXPLORATION }
 
-enum ObjectiveType {
-	KILL,
-	PURIFY,
-	COLLECT,
-	TALK,
-	EXPLORE,
-	REACH,
-	PROTECT,
-	SURVIVE
-}
+enum QuestStatus { LOCKED, AVAILABLE, ACTIVE, COMPLETED, FAILED }
+
+enum ObjectiveType { KILL, PURIFY, COLLECT, TALK, EXPLORE, REACH, PROTECT, SURVIVE }
 
 # =============================================================================
 # STATE
@@ -112,15 +94,18 @@ var quest_database: Dictionary = {}  # Loaded quest definitions
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	_load_quest_database()
 	_connect_signals()
 	EventBus.emit_debug("QuestSystem initialized")
 
+
 func _load_quest_database() -> void:
 	# Load quest definitions from JSON or resources
 	# For now, create some test quests
 	_create_test_quests()
+
 
 func _connect_signals() -> void:
 	EventBus.battle_ended.connect(_on_battle_ended)
@@ -128,6 +113,7 @@ func _connect_signals() -> void:
 	EventBus.item_obtained.connect(_on_item_obtained)
 	EventBus.dialogue_ended.connect(_on_dialogue_ended)
 	EventBus.story_flag_set.connect(_on_story_flag_set)
+
 
 func _create_test_quests() -> void:
 	# Main Quest: Chapter 1
@@ -138,10 +124,25 @@ func _create_test_quests() -> void:
 		"quest_type": QuestType.MAIN,
 		"is_main_quest": true,
 		"chapter": 1,
-		"objectives": [
-			{"description": "Speak with VERA", "objective_type": ObjectiveType.TALK, "target_id": "vera_intro"},
-			{"description": "Complete the tutorial battle", "objective_type": ObjectiveType.KILL, "target_id": "tutorial_enemy", "target_count": 1},
-			{"description": "Purify your first monster", "objective_type": ObjectiveType.PURIFY, "target_id": "any", "target_count": 1}
+		"objectives":
+		[
+			{
+				"description": "Speak with VERA",
+				"objective_type": ObjectiveType.TALK,
+				"target_id": "vera_intro"
+			},
+			{
+				"description": "Complete the tutorial battle",
+				"objective_type": ObjectiveType.KILL,
+				"target_id": "tutorial_enemy",
+				"target_count": 1
+			},
+			{
+				"description": "Purify your first monster",
+				"objective_type": ObjectiveType.PURIFY,
+				"target_id": "any",
+				"target_count": 1
+			}
 		],
 		"rewards": {"experience": 100, "currency": 50, "items": ["potion"]}
 	}
@@ -154,15 +155,23 @@ func _create_test_quests() -> void:
 		"quest_type": QuestType.HUNT,
 		"is_main_quest": false,
 		"chapter": 1,
-		"objectives": [
-			{"description": "Defeat Shadow Imps", "objective_type": ObjectiveType.KILL, "target_id": "shadow_imp", "target_count": 5}
+		"objectives":
+		[
+			{
+				"description": "Defeat Shadow Imps",
+				"objective_type": ObjectiveType.KILL,
+				"target_id": "shadow_imp",
+				"target_count": 5
+			}
 		],
 		"rewards": {"experience": 50, "currency": 100}
 	}
 
+
 # =============================================================================
 # QUEST MANAGEMENT
 # =============================================================================
+
 
 func start_quest(quest_id: String) -> bool:
 	if not quest_database.has(quest_id):
@@ -190,7 +199,10 @@ func start_quest(quest_id: String) -> bool:
 
 	return true
 
-func update_objective(quest_id: String, objective_type: ObjectiveType, target_id: String, amount: int = 1) -> void:
+
+func update_objective(
+	quest_id: String, objective_type: ObjectiveType, target_id: String, amount: int = 1
+) -> void:
 	if quest_id not in active_quests:
 		return
 
@@ -206,6 +218,7 @@ func update_objective(quest_id: String, objective_type: ObjectiveType, target_id
 					_check_quest_completion(quest_id)
 				return
 
+
 func _check_quest_completion(quest_id: String) -> void:
 	var quest: Quest = quests[quest_id]
 
@@ -217,6 +230,7 @@ func _check_quest_completion(quest_id: String) -> void:
 
 	if all_complete:
 		complete_quest(quest_id)
+
 
 func complete_quest(quest_id: String) -> void:
 	if quest_id not in active_quests:
@@ -235,6 +249,7 @@ func complete_quest(quest_id: String) -> void:
 	EventBus.quest_completed.emit(quest_id)
 	EventBus.emit_notification("Quest Complete: %s" % quest.title, "success")
 
+
 func fail_quest(quest_id: String) -> void:
 	if quest_id not in active_quests:
 		return
@@ -248,6 +263,7 @@ func fail_quest(quest_id: String) -> void:
 	quest_failed.emit(quest_id)
 	EventBus.emit_notification("Quest Failed: %s" % quest.title, "error")
 
+
 func _grant_rewards(rewards: Dictionary) -> void:
 	if rewards.has("experience"):
 		EventBus.experience_gained.emit(null, rewards.experience)
@@ -259,9 +275,11 @@ func _grant_rewards(rewards: Dictionary) -> void:
 		for item_id in rewards.items:
 			EventBus.item_obtained.emit(item_id, 1)
 
+
 # =============================================================================
 # SIGNAL HANDLERS
 # =============================================================================
+
 
 func _on_battle_ended(victory: bool, _rewards: Dictionary) -> void:
 	if not victory:
@@ -270,6 +288,7 @@ func _on_battle_ended(victory: bool, _rewards: Dictionary) -> void:
 	# Update kill objectives for all active quests
 	for quest_id in active_quests:
 		update_objective(quest_id, ObjectiveType.KILL, "any", 1)
+
 
 func _on_purification_succeeded(monster: Node) -> void:
 	var monster_id := ""
@@ -280,24 +299,30 @@ func _on_purification_succeeded(monster: Node) -> void:
 		update_objective(quest_id, ObjectiveType.PURIFY, monster_id, 1)
 		update_objective(quest_id, ObjectiveType.PURIFY, "any", 1)
 
+
 func _on_item_obtained(item_id: String, quantity: int) -> void:
 	for quest_id in active_quests:
 		update_objective(quest_id, ObjectiveType.COLLECT, item_id, quantity)
+
 
 func _on_dialogue_ended() -> void:
 	# Check for talk objectives
 	pass
 
+
 func _on_story_flag_set(flag: String, _value: Variant) -> void:
 	# Check if this flag triggers any quest updates
 	pass
+
 
 # =============================================================================
 # QUERIES
 # =============================================================================
 
+
 func get_quest(quest_id: String) -> Quest:
 	return quests.get(quest_id, null)
+
 
 func get_active_quests() -> Array[Quest]:
 	var result: Array[Quest] = []
@@ -306,6 +331,7 @@ func get_active_quests() -> Array[Quest]:
 			result.append(quests[quest_id])
 	return result
 
+
 func get_main_quest() -> Quest:
 	for quest_id in active_quests:
 		var quest: Quest = quests.get(quest_id)
@@ -313,15 +339,19 @@ func get_main_quest() -> Quest:
 			return quest
 	return null
 
+
 func is_quest_active(quest_id: String) -> bool:
 	return quest_id in active_quests
+
 
 func is_quest_completed(quest_id: String) -> bool:
 	return quest_id in completed_quests
 
+
 # =============================================================================
 # SERIALIZATION
 # =============================================================================
+
 
 func get_save_data() -> Dictionary:
 	var quest_states := {}
@@ -329,10 +359,9 @@ func get_save_data() -> Dictionary:
 		var quest: Quest = quests[quest_id]
 		var objectives_data := []
 		for obj in quest.objectives:
-			objectives_data.append({
-				"current_count": obj.current_count,
-				"is_complete": obj.is_complete
-			})
+			objectives_data.append(
+				{"current_count": obj.current_count, "is_complete": obj.is_complete}
+			)
 
 		quest_states[quest_id] = {
 			"status": quest.status,
@@ -346,6 +375,7 @@ func get_save_data() -> Dictionary:
 		"completed_quests": completed_quests.duplicate(),
 		"failed_quests": failed_quests.duplicate()
 	}
+
 
 func load_save_data(data: Dictionary) -> void:
 	active_quests.assign(data.get("active_quests", []))

@@ -59,6 +59,7 @@ extends Resource
 # METHODS
 # =============================================================================
 
+
 ## Apply this item's effects to a target character.
 ## @param target The CharacterBase to receive the item's effects
 ## @returns Dictionary with "success" (bool), "effects" (Array), and optionally "is_capture_item" and "capture_tier"
@@ -158,6 +159,7 @@ func use_on_target(target: CharacterBase) -> Dictionary:
 
 	return result
 
+
 ## Process special effects based on special_effect string
 ## Note: target is available for future effects that need target info (buff items, etc.)
 func _process_special_effect(_target: CharacterBase) -> Dictionary:
@@ -181,22 +183,30 @@ func _process_special_effect(_target: CharacterBase) -> Dictionary:
 				push_warning("Unknown special effect: %s" % special_effect)
 			return {}
 
+
 ## Get capture tier from special_effect string
 func _get_capture_tier_from_effect() -> int:
 	match special_effect:
-		"attempt_capture": return 0
-		"attempt_capture_enhanced": return 1
-		"attempt_capture_master": return 2
-		"attempt_capture_legendary": return 3
+		"attempt_capture":
+			return 0
+		"attempt_capture_enhanced":
+			return 1
+		"attempt_capture_master":
+			return 2
+		"attempt_capture_legendary":
+			return 3
 	return 0
+
 
 ## Check if this is a capture item
 func is_capture_item() -> bool:
 	return special_effect.begins_with("attempt_capture")
 
+
 ## Get capture tier for this item (0-3)
 func get_capture_tier() -> int:
 	return _get_capture_tier_from_effect()
+
 
 ## Check if this item can be used on the given target.
 ## @param target The potential target CharacterBase
@@ -225,6 +235,7 @@ func can_use(target: CharacterBase) -> bool:
 			return false
 
 	return true
+
 
 func get_tooltip() -> String:
 	var tooltip := "%s\n%s\n\n" % [display_name, description]

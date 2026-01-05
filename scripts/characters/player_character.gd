@@ -34,12 +34,7 @@ signal equipment_shattered(slot: int, item_id: String)
 ## Player's alignment with each of the 6 pure Brands (0-100%)
 ## Affects equipment requirements and story outcomes
 @export var brand_alignment: Dictionary = {
-	"SAVAGE": 20.0,
-	"IRON": 20.0,
-	"VENOM": 20.0,
-	"SURGE": 20.0,
-	"DREAD": 20.0,
-	"LEECH": 20.0
+	"SAVAGE": 20.0, "IRON": 20.0, "VENOM": 20.0, "SURGE": 20.0, "DREAD": 20.0, "LEECH": 20.0
 }
 
 ## Tracks battles below alignment threshold per equipment slot
@@ -50,14 +45,17 @@ signal equipment_shattered(slot: int, item_id: String)
 # LIFECYCLE
 # =============================================================================
 
+
 func _ready() -> void:
 	super._ready()
 	character_type = Enums.CharacterType.PLAYER
 	_apply_brand_bonuses()
 
+
 # =============================================================================
 # BRAND SYSTEM
 # =============================================================================
+
 
 func set_brand(new_brand: Enums.Brand) -> bool:
 	if new_brand not in unlocked_brands:
@@ -69,13 +67,16 @@ func set_brand(new_brand: Enums.Brand) -> bool:
 	brand_changed.emit(old_brand, new_brand)
 	return true
 
+
 func unlock_brand(new_brand: Enums.Brand) -> void:
 	if new_brand not in unlocked_brands:
 		unlocked_brands.append(new_brand)
 		EventBus.brand_unlocked.emit(new_brand)
 
+
 func has_brand(check_brand: Enums.Brand) -> bool:
 	return check_brand in unlocked_brands
+
 
 func _apply_brand_bonuses() -> void:
 	# Clear previous brand modifiers by removing all with "brand" source
@@ -103,7 +104,7 @@ func _apply_brand_bonuses() -> void:
 	# Apply multipliers as percentage bonuses
 	for key in bonuses:
 		var mult: float = bonuses[key]
-		var bonus: float = (mult - 1.0)  # Convert multiplier to bonus
+		var bonus: float = mult - 1.0  # Convert multiplier to bonus
 
 		match key:
 			"hp_mult":
@@ -121,8 +122,10 @@ func _apply_brand_bonuses() -> void:
 			"crit_mult":
 				add_stat_modifier(Enums.Stat.CRIT_CHANCE, base_crit_chance * bonus, 9999, "brand")
 
+
 func get_brand_name() -> String:
 	return Enums.Brand.keys()[current_brand]
+
 
 func get_brand_description() -> String:
 	match current_brand:
@@ -152,13 +155,16 @@ func get_brand_description() -> String:
 			return "Leech + Savage Hybrid"
 	return "No brand active"
 
+
 # =============================================================================
 # BRAND ALIGNMENT SYSTEM
 # =============================================================================
 
+
 func get_brand_alignment(brand_key: String) -> float:
 	## Get alignment with a specific Brand (0-100)
 	return brand_alignment.get(brand_key, 0.0)
+
 
 func set_brand_alignment(brand_key: String, value: float) -> void:
 	## Set alignment with a specific Brand
@@ -168,10 +174,12 @@ func set_brand_alignment(brand_key: String, value: float) -> void:
 		var brand_enum := _brand_key_to_enum(brand_key)
 		brand_alignment_changed.emit(brand_enum, old, brand_alignment[brand_key])
 
+
 func modify_brand_alignment(brand_key: String, amount: float) -> void:
 	## Add or subtract from Brand alignment
 	var current: float = brand_alignment.get(brand_key, 0.0)
 	set_brand_alignment(brand_key, current + amount)
+
 
 func apply_story_choice_alignment(choice_effects: Dictionary) -> void:
 	## Apply Brand alignment changes from a story choice
@@ -179,8 +187,11 @@ func apply_story_choice_alignment(choice_effects: Dictionary) -> void:
 	for brand_key in choice_effects:
 		var amount: float = choice_effects[brand_key]
 		# Clamp to maximum story effect
-		amount = clampf(amount, -Constants.ALIGNMENT_STORY_MAXIMUM, Constants.ALIGNMENT_STORY_MAXIMUM)
+		amount = clampf(
+			amount, -Constants.ALIGNMENT_STORY_MAXIMUM, Constants.ALIGNMENT_STORY_MAXIMUM
+		)
 		modify_brand_alignment(brand_key, amount)
+
 
 func apply_battle_action_alignment(action: String) -> void:
 	## Apply Brand alignment changes from battle actions
@@ -194,100 +205,124 @@ func apply_battle_action_alignment(action: String) -> void:
 		"execute":
 			modify_brand_alignment("SAVAGE", Constants.ALIGNMENT_BATTLE_EXECUTE_SAVAGE)
 
+
 func get_dominant_brand() -> String:
 	## Get the Brand with highest alignment
 	var highest_brand := "IRON"
 	var highest_value := 0.0
-	
+
 	for brand_key in brand_alignment:
 		if brand_alignment[brand_key] > highest_value:
 			highest_value = brand_alignment[brand_key]
 			highest_brand = brand_key
-	
+
 	return highest_brand
+
 
 func meets_equipment_requirement(brand_key: String) -> bool:
 	## Check if player meets the 55% alignment requirement for brand-locked equipment
 	return get_brand_alignment(brand_key) >= Constants.BRAND_EQUIPMENT_THRESHOLD
 
+
 func meets_hybrid_equipment_requirement(brand_key_1: String, brand_key_2: String) -> bool:
 	## Check if player meets 40%+ in BOTH brands for hybrid equipment
-	return get_brand_alignment(brand_key_1) >= Constants.BRAND_HYBRID_EQUIPMENT_THRESHOLD and \
-		   get_brand_alignment(brand_key_2) >= Constants.BRAND_HYBRID_EQUIPMENT_THRESHOLD
+	return (
+		get_brand_alignment(brand_key_1) >= Constants.BRAND_HYBRID_EQUIPMENT_THRESHOLD
+		and get_brand_alignment(brand_key_2) >= Constants.BRAND_HYBRID_EQUIPMENT_THRESHOLD
+	)
+
 
 func _brand_key_to_enum(brand_key: String) -> Enums.Brand:
 	match brand_key:
-		"SAVAGE": return Enums.Brand.SAVAGE
-		"IRON": return Enums.Brand.IRON
-		"VENOM": return Enums.Brand.VENOM
-		"SURGE": return Enums.Brand.SURGE
-		"DREAD": return Enums.Brand.DREAD
-		"LEECH": return Enums.Brand.LEECH
+		"SAVAGE":
+			return Enums.Brand.SAVAGE
+		"IRON":
+			return Enums.Brand.IRON
+		"VENOM":
+			return Enums.Brand.VENOM
+		"SURGE":
+			return Enums.Brand.SURGE
+		"DREAD":
+			return Enums.Brand.DREAD
+		"LEECH":
+			return Enums.Brand.LEECH
 	return Enums.Brand.NONE
+
 
 # =============================================================================
 # EQUIPMENT ALIGNMENT DECAY
 # =============================================================================
 
+
 func check_equipment_alignment_decay() -> void:
 	## Called after each battle to check equipment alignment decay
-	var slots := [Enums.EquipmentSlot.WEAPON, Enums.EquipmentSlot.ARMOR, 
-				  Enums.EquipmentSlot.ACCESSORY_1, Enums.EquipmentSlot.ACCESSORY_2]
-	
+	var slots := [
+		Enums.EquipmentSlot.WEAPON,
+		Enums.EquipmentSlot.ARMOR,
+		Enums.EquipmentSlot.ACCESSORY_1,
+		Enums.EquipmentSlot.ACCESSORY_2
+	]
+
 	for slot in slots:
 		var item_id := get_equipped_item(slot)
 		if item_id == "":
 			continue
-		
+
 		var required_brand := _get_equipment_required_brand(item_id)
 		if required_brand == "":
 			continue  # No brand requirement
-		
+
 		var meets_requirement := meets_equipment_requirement(required_brand)
-		
+
 		if not meets_requirement:
 			_increment_equipment_decay(slot, item_id)
 		else:
 			_reset_equipment_decay(slot, item_id)
 
+
 func _increment_equipment_decay(slot: Enums.EquipmentSlot, item_id: String) -> void:
 	## Increment decay counter for equipment below alignment threshold
 	if not equipment_decay_tracking.has(slot):
 		equipment_decay_tracking[slot] = {}
-	
+
 	var current: int = equipment_decay_tracking[slot].get(item_id, 0)
 	current += 1
 	equipment_decay_tracking[slot][item_id] = current
-	
+
 	# Check decay stage
 	if current >= Constants.EQUIPMENT_SHATTER_BATTLES:
 		_shatter_equipment(slot, item_id)
 	elif current >= Constants.EQUIPMENT_CORRUPTION_BATTLES:
 		equipment_alignment_warning.emit(slot, item_id, current)
-		EventBus.emit_notification("Equipment corroding! Unequip soon or it will shatter!", "danger")
+		EventBus.emit_notification(
+			"Equipment corroding! Unequip soon or it will shatter!", "danger"
+		)
 	elif current >= Constants.EQUIPMENT_REJECTION_BATTLES:
 		equipment_alignment_warning.emit(slot, item_id, current)
 		EventBus.emit_notification("Equipment rejecting you...", "warning")
 	elif current >= Constants.EQUIPMENT_RESISTANCE_BATTLES:
 		equipment_alignment_warning.emit(slot, item_id, current)
 
+
 func _reset_equipment_decay(slot: Enums.EquipmentSlot, item_id: String) -> void:
 	## Reset decay counter when alignment requirement is met
 	if equipment_decay_tracking.has(slot):
 		equipment_decay_tracking[slot].erase(item_id)
+
 
 func _shatter_equipment(slot: Enums.EquipmentSlot, item_id: String) -> void:
 	## Equipment shatters from alignment decay
 	# Deal 25% max HP damage
 	var damage := int(get_max_hp() * Constants.EQUIPMENT_SHATTER_HP_DAMAGE)
 	take_damage(damage)
-	
+
 	# Remove equipment
 	unequip_item(slot)
-	
+
 	# Equipment is GONE (not returned to inventory)
 	equipment_shattered.emit(slot, item_id)
 	EventBus.emit_notification("Equipment SHATTERED! %s is gone forever!" % item_id, "danger")
+
 
 func _get_equipment_required_brand(item_id: String) -> String:
 	## Get the Brand required for this equipment (from item database)
@@ -307,16 +342,17 @@ func _get_equipment_required_brand(item_id: String) -> String:
 		return "LEECH"
 	return ""
 
+
 func get_equipment_decay_stage(slot: Enums.EquipmentSlot) -> String:
 	## Get the current decay stage for equipment in a slot
 	var item_id := get_equipped_item(slot)
 	if item_id == "":
 		return "none"
-	
+
 	var battles: int = 0
 	if equipment_decay_tracking.has(slot):
 		battles = equipment_decay_tracking[slot].get(item_id, 0)
-	
+
 	if battles >= Constants.EQUIPMENT_CORRUPTION_BATTLES:
 		return "corruption"
 	elif battles >= Constants.EQUIPMENT_REJECTION_BATTLES:
@@ -324,6 +360,7 @@ func get_equipment_decay_stage(slot: Enums.EquipmentSlot) -> String:
 	elif battles >= Constants.EQUIPMENT_RESISTANCE_BATTLES:
 		return "resistance"
 	return "none"
+
 
 # =============================================================================
 # EXPERIENCE & LEVELING
@@ -333,6 +370,7 @@ func get_equipment_decay_stage(slot: Enums.EquipmentSlot) -> String:
 # =============================================================================
 # EQUIPMENT
 # =============================================================================
+
 
 func equip_item(slot: Enums.EquipmentSlot, item_id: String) -> String:
 	var old_item := ""
@@ -357,8 +395,10 @@ func equip_item(slot: Enums.EquipmentSlot, item_id: String) -> String:
 
 	return old_item
 
+
 func unequip_item(slot: Enums.EquipmentSlot) -> String:
 	return equip_item(slot, "")
+
 
 func get_equipped_item(slot: Enums.EquipmentSlot) -> String:
 	match slot:
@@ -372,6 +412,7 @@ func get_equipped_item(slot: Enums.EquipmentSlot) -> String:
 			return equipped_accessory_2
 	return ""
 
+
 # Equipment bonus calculation is handled by parent class CharacterBase
 # which properly queries InventorySystem for equipment stats
 
@@ -379,9 +420,11 @@ func get_equipped_item(slot: Enums.EquipmentSlot) -> String:
 # SKILL LEARNING
 # =============================================================================
 
+
 func get_learnable_skills_for_level() -> Array[String]:
 	# TODO: Return skills that can be learned at current level
 	return []
+
 
 func auto_learn_level_skills() -> Array[String]:
 	var learned: Array[String] = []
@@ -391,23 +434,28 @@ func auto_learn_level_skills() -> Array[String]:
 			learned.append(skill_id)
 	return learned
 
+
 # =============================================================================
 # SERIALIZATION
 # =============================================================================
 
+
 func get_save_data() -> Dictionary:
 	var data := super.get_save_data()
-	data.merge({
-		"player_id": player_id,
-		"current_brand": current_brand,
-		"unlocked_brands": unlocked_brands,
-		"current_experience": current_experience,
-		"total_experience": total_experience,
-		"brand_affinity": brand_affinity,
-		"brand_alignment": brand_alignment,
-		"equipment_decay_tracking": equipment_decay_tracking
-	})
+	data.merge(
+		{
+			"player_id": player_id,
+			"current_brand": current_brand,
+			"unlocked_brands": unlocked_brands,
+			"current_experience": current_experience,
+			"total_experience": total_experience,
+			"brand_affinity": brand_affinity,
+			"brand_alignment": brand_alignment,
+			"equipment_decay_tracking": equipment_decay_tracking
+		}
+	)
 	return data
+
 
 func load_save_data(data: Dictionary) -> void:
 	super.load_save_data(data)
@@ -417,16 +465,18 @@ func load_save_data(data: Dictionary) -> void:
 	current_experience = data.get("current_experience", 0)
 	total_experience = data.get("total_experience", 0)
 	brand_affinity = data.get("brand_affinity", {})
-	brand_alignment = data.get("brand_alignment", {
-		"SAVAGE": 20.0, "IRON": 20.0, "VENOM": 20.0,
-		"SURGE": 20.0, "DREAD": 20.0, "LEECH": 20.0
-	})
+	brand_alignment = data.get(
+		"brand_alignment",
+		{"SAVAGE": 20.0, "IRON": 20.0, "VENOM": 20.0, "SURGE": 20.0, "DREAD": 20.0, "LEECH": 20.0}
+	)
 	equipment_decay_tracking = data.get("equipment_decay_tracking", {})
 	_apply_brand_bonuses()
+
 
 # =============================================================================
 # FACTORY METHOD
 # =============================================================================
+
 
 static func create_new_player(player_name: String = "Veilbreaker") -> PlayerCharacter:
 	var player := PlayerCharacter.new()
@@ -454,23 +504,25 @@ static func create_new_player(player_name: String = "Veilbreaker") -> PlayerChar
 
 	return player
 
+
 # =============================================================================
 # HERO DATA INITIALIZATION
 # =============================================================================
 
+
 func initialize_from_hero_data(hero_data: HeroData) -> void:
 	## Initialize this PlayerCharacter from a HeroData resource
 	## Called when player selects their hero at character select
-	
+
 	# Basic info
 	character_name = hero_data.display_name
 	player_id = hero_data.hero_id
 	level = 1
 	is_protagonist = true
-	
+
 	# Set the hero's Path (this is what defines the hero!)
 	current_path = hero_data.primary_path
-	
+
 	# Set path-aligned brand as starting brand
 	var path_brand_map: Dictionary = {
 		Enums.Path.IRONBOUND: Enums.Brand.IRON,
@@ -481,7 +533,7 @@ func initialize_from_hero_data(hero_data: HeroData) -> void:
 	var starting_brand: Enums.Brand = path_brand_map.get(hero_data.primary_path, Enums.Brand.NONE)
 	current_brand = starting_brand
 	unlocked_brands = [Enums.Brand.NONE, starting_brand]
-	
+
 	# Base stats from hero data
 	base_max_hp = hero_data.base_hp
 	base_max_mp = hero_data.base_mp
@@ -491,29 +543,32 @@ func initialize_from_hero_data(hero_data: HeroData) -> void:
 	base_resistance = hero_data.base_resistance
 	base_speed = hero_data.base_speed
 	base_luck = hero_data.base_luck
-	
+
 	# Initialize current HP/MP to max
 	initialize_stats()
-	
+
 	# Set brand alignment based on hero's path
 	# Give a boost to the path-aligned brand
 	var brand_key: String = Enums.Brand.keys()[starting_brand]
 	if brand_alignment.has(brand_key):
 		brand_alignment[brand_key] = 40.0  # Start with 40% alignment to path brand
-	
+
 	# Learn innate skills
 	for skill_id in hero_data.innate_skills:
 		learn_skill(skill_id)
-	
+
 	# Always have basic attack and defend
 	if "attack_basic" not in known_skills:
 		learn_skill("attack_basic")
 	if "defend" not in known_skills:
 		learn_skill("defend")
-	
+
 	# Apply brand bonuses
 	_apply_brand_bonuses()
-	
-	EventBus.emit_debug("PlayerCharacter initialized from HeroData: %s (Path: %s)" % [
-		character_name, Enums.get_path_name(current_path)
-	])
+
+	EventBus.emit_debug(
+		(
+			"PlayerCharacter initialized from HeroData: %s (Path: %s)"
+			% [character_name, Enums.get_path_name(current_path)]
+		)
+	)
