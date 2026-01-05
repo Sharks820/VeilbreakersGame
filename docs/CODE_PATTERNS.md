@@ -185,6 +185,91 @@ parent.add_child(instance)
 var instance = NodeHelpers.instantiate_to(my_scene, parent)
 ```
 
+### Container Creation
+```gdscript
+# 🚫 ANTI-PATTERN - Found 72+ times in codebase
+var hbox = HBoxContainer.new()
+var vbox = VBoxContainer.new()
+var panel = PanelContainer.new()
+
+# ✅ USE THIS
+var hbox = UIStyleFactory.create_hbox(8)  # with separation
+var vbox = UIStyleFactory.create_vbox(4)
+var panel = UIStyleFactory.create_styled_panel(style)
+```
+
+### Vector Constants
+```gdscript
+# 🚫 ANTI-PATTERN - Found 57+ times in codebase
+Vector2(1.0, 1.0)
+Vector2(0.0, 0.0)
+
+# ✅ USE THIS
+Vector2.ONE
+Vector2.ZERO
+```
+
+### Alpha/Modulate Assignment
+```gdscript
+# 🚫 ANTI-PATTERN - Found 69+ times in codebase
+node.modulate.a = 0.5
+node.modulate.a = 1.0
+
+# ✅ USE THIS
+NodeHelpers.set_alpha(node, 0.5)
+AnimationEffects.fade_in(node)  # for animated
+```
+
+### Array Emptiness Check
+```gdscript
+# 🚫 ANTI-PATTERN - Found 39+ times in codebase
+if array.size() > 0:
+if array.size() == 0:
+
+# ✅ USE THIS
+if not array.is_empty():
+if array.is_empty():
+```
+
+### Tween Easing Chain
+```gdscript
+# 🚫 ANTI-PATTERN - Found 137+ times in codebase
+tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+tween.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+
+# ✅ USE THIS
+AnimationEffects.ease_out(tween)
+AnimationEffects.ease_in(tween)
+AnimationEffects.ease_out_back(tween)
+AnimationEffects.ease_elastic(tween)
+```
+
+### Damage/Heal Formatting
+```gdscript
+# 🚫 ANTI-PATTERN
+var text = "-%d" % damage
+var text = "+%d" % heal_amount
+
+# ✅ USE THIS
+var text = StringHelpers.format_damage(damage)
+var text = StringHelpers.format_heal(heal_amount)
+```
+
+---
+
+## 🔴 Priority Refactoring Files
+
+These files have the most anti-patterns and need attention:
+
+| File | Lines | Issues | Priority |
+|------|-------|--------|----------|
+| `ui/battle_ui_controller.gd` | 4583 | 200+ | 🔴 CRITICAL |
+| `battle/battle_arena.gd` | 2012 | 80+ | 🔴 HIGH |
+| `ui/character_select_controller.gd` | ~800 | 50+ | 🟡 MEDIUM |
+| `battle/animation/battle_sequencer.gd` | ~600 | 40+ | 🟡 MEDIUM |
+
+**Recommendation**: Split large files into focused components before refactoring.
+
 ---
 
 ## Utility Quick Reference
@@ -393,7 +478,27 @@ Constants.ANIM_HALF        # 0.5
 2. **Check scripts/utils/** for existing helpers
 3. **Ask: "Has someone solved this before?"**
 4. If you create a new pattern used 3+ times, **add it to a utility file**
+5. **Run the duplication detector**: `scripts/tools/duplication_detector.gd`
 
 ---
 
-*Last updated: v1.06 | Total utility lines: 5,285*
+## Duplication Statistics Summary
+
+| Pattern Type | Occurrences | Utility |
+|--------------|-------------|---------|
+| Label.new() | 115+ | UIStyleFactory |
+| StyleBoxFlat.new() | 110+ | UIStyleFactory |
+| .set_ease(Tween.EASE_) | 137+ | AnimationEffects |
+| create_timer(N) | 129+ | Constants |
+| add_theme_stylebox_override | 124+ | UIStyleFactory |
+| is_instance_valid() | 148+ | NodeHelpers |
+| modulate.a = | 69+ | NodeHelpers/AnimationEffects |
+| Vector2(1.0, 1.0) | 57+ | Vector2.ONE |
+| Color(...) | 536+ | UIStyleFactory.COLOR_* |
+| "%d/%d" % | 181+ | StringHelpers |
+
+**Total identified patterns**: 1,500+ opportunities for consolidation
+
+---
+
+*Last updated: v1.08 | Total utility lines: 5,285 | Anti-patterns tracked: 40+*
