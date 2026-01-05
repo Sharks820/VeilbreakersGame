@@ -1934,18 +1934,13 @@ func _build_victory_rewards_display(
 		items_label.hide()
 
 	# === TOTAL EXP HEADER ===
-	var exp_header := Label.new()
+	var exp_header := UIStyleFactory.create_centered_header("SPOILS OF BATTLE", UIStyleFactory.FONT_HEADING)
 	exp_header.name = "CharXP_Header"
-	exp_header.text = "SPOILS OF BATTLE"
-	exp_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	exp_header.add_theme_font_size_override("font_size", UIStyleFactory.FONT_HEADING)
-	exp_header.add_theme_color_override("font_color", UIStyleFactory.COLOR_AGED_GOLD)  # Aged gold
-	exp_header.add_theme_color_override("font_outline_color", Color(0.2, 0.15, 0.1))
-	exp_header.add_theme_constant_override("outline_size", 1)
+	UIStyleFactory.add_label_outline(exp_header, Color(0.2, 0.15, 0.1), 1)
 	container.add_child(exp_header)
 
 	# Add decorative separator under header
-	var header_sep := HSeparator.new()
+	var header_sep := UIStyleFactory.create_separator()
 	header_sep.name = "CharXP_HeaderSep"
 	header_sep.modulate = Color(0.6, 0.45, 0.25, 0.6)
 	container.add_child(header_sep)
@@ -1981,7 +1976,7 @@ func _build_victory_rewards_display(
 		delay += 0.15  # Stagger animations
 
 	# === SEPARATOR ===
-	var sep := HSeparator.new()
+	var sep := UIStyleFactory.create_separator()
 	sep.name = "Separator"
 	sep.add_theme_constant_override("separation", 10)
 	sep.modulate = Color(0.6, 0.45, 0.25, 0.6)  # Golden amber to match theme
@@ -2253,11 +2248,7 @@ func _show_level_up_flash(
 	popup.add_child(popup_vbox)
 
 	# Title
-	var title := Label.new()
-	title.text = "⭐ LEVEL UP! ⭐"
-	title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_NORMAL)
-	title.add_theme_color_override("font_color", UIStyleFactory.COLOR_VICTORY_TITLE)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var title := UIStyleFactory.create_centered_label("⭐ LEVEL UP! ⭐", UIStyleFactory.FONT_NORMAL, UIStyleFactory.COLOR_VICTORY_TITLE)
 	popup_vbox.add_child(title)
 
 	# Get stat gains if we have level up data
@@ -2302,12 +2293,7 @@ func _show_level_up_flash(
 
 		for stat in stat_order:
 			if stat_gains.has(stat) and stat_gains[stat] > 0:
-				var stat_label := Label.new()
-				stat_label.text = "%s+%d" % [stat_abbrevs.get(stat, stat), stat_gains[stat]]
-				stat_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SMALL)
-				stat_label.add_theme_color_override(
-					"font_color", stat_colors.get(stat, Color.WHITE)
-				)
+				var stat_label := UIStyleFactory.create_label("%s+%d" % [stat_abbrevs.get(stat, stat), stat_gains[stat]], UIStyleFactory.FONT_SMALL, stat_colors.get(stat, Color.WHITE))
 				stats_grid.add_child(stat_label)
 
 	# Position popup above the row
@@ -2557,44 +2543,30 @@ func _show_level_up_notification(
 	character: CharacterBase, new_level: int, stat_gains: Dictionary
 ) -> void:
 	## Creates a dramatic level up popup
-	var popup := PanelContainer.new()
+	var popup := UIStyleFactory.create_styled_panel(UIStyleFactory.create_capture_popup_style())
 	popup.name = "LevelUpPopup"
 	popup.z_index = 100
-	popup.add_theme_stylebox_override("panel", UIStyleFactory.create_capture_popup_style())
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
+	var vbox := UIStyleFactory.create_vbox(8)
 	popup.add_child(vbox)
 
 	# Title
-	var title := Label.new()
-	title.text = "LEVEL UP!"
-	title.add_theme_font_size_override("font_size", UIStyleFactory.FONT_LARGE_TITLE)
-	title.add_theme_color_override("font_color", UIStyleFactory.COLOR_CAPTURE_TITLE)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var title := UIStyleFactory.create_centered_label("LEVEL UP!", UIStyleFactory.FONT_LARGE_TITLE, UIStyleFactory.COLOR_CAPTURE_TITLE)
 	vbox.add_child(title)
 
 	# Character name and level
-	var name_label := Label.new()
-	name_label.text = "%s → Level %d" % [character.character_name, new_level]
-	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-	name_label.add_theme_color_override("font_color", Color.WHITE)
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var name_label := UIStyleFactory.create_centered_label("%s → Level %d" % [character.character_name, new_level], UIStyleFactory.FONT_SUBHEADING, Color.WHITE)
 	vbox.add_child(name_label)
 
 	# Stat gains
-	var stats_container := HBoxContainer.new()
-	stats_container.add_theme_constant_override("separation", 15)
+	var stats_container := UIStyleFactory.create_hbox(15)
 	stats_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(stats_container)
 
 	for stat_name in stat_gains:
 		var gain: int = stat_gains[stat_name]
 		if gain > 0:
-			var stat_label := Label.new()
-			stat_label.text = "%s +%d" % [stat_name.to_upper().left(3), gain]
-			stat_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_BODY)
-			stat_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_STAT_GAIN)
+			var stat_label := UIStyleFactory.create_label("%s +%d" % [stat_name.to_upper().left(3), gain], UIStyleFactory.FONT_BODY, UIStyleFactory.COLOR_STAT_GAIN)
 			stats_container.add_child(stat_label)
 
 	add_child(popup)
@@ -2640,17 +2612,18 @@ func log_level_up(character_name: String, new_level: int) -> void:
 func show_damage_number(
 	amount: int, position: Vector2, is_critical: bool = false, is_heal: bool = false
 ) -> void:
-	var label := Label.new()
-	label.text = str(amount)
-	label.position = position
-
+	var color: Color
 	if is_heal:
-		label.add_theme_color_override("font_color", Color.GREEN)
+		color = Color.GREEN
 	elif is_critical:
-		label.add_theme_color_override("font_color", Color.ORANGE)
-		label.scale = Vector2(1.5, 1.5)
+		color = Color.ORANGE
 	else:
-		label.add_theme_color_override("font_color", Color.WHITE)
+		color = Color.WHITE
+
+	var label := UIStyleFactory.create_label(str(amount), UIStyleFactory.FONT_NORMAL, color)
+	label.position = position
+	if is_critical:
+		label.scale = Vector2(1.5, 1.5)
 
 	add_child(label)
 
@@ -2759,40 +2732,31 @@ func _on_enemy_panel_hover(enemy: CharacterBase, panel: PanelContainer) -> void:
 			_update_target_display()
 
 	# Create tooltip panel
-	enemy_tooltip = PanelContainer.new()
+	enemy_tooltip = UIStyleFactory.create_styled_panel(UIStyleFactory.create_enemy_tooltip_style())
 	enemy_tooltip.name = "EnemyTooltip"
 	enemy_tooltip.custom_minimum_size = Vector2(280, 0)
-	enemy_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UIStyleFactory.set_mouse_ignore(enemy_tooltip)
 
-	# Style the tooltip
-	enemy_tooltip.add_theme_stylebox_override("panel", UIStyleFactory.create_enemy_tooltip_style())
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
+	var vbox := UIStyleFactory.create_vbox(6)
 	enemy_tooltip.add_child(vbox)
 
 	# Name header
-	var name_label := Label.new()
-	name_label.text = enemy.character_name
-	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_CREAM)
+	var name_label := UIStyleFactory.create_label(enemy.character_name, UIStyleFactory.FONT_SUBHEADING, UIStyleFactory.COLOR_CREAM)
 	vbox.add_child(name_label)
 
 	# Level and tier
-	var level_label := Label.new()
+	var level_text: String
 	if enemy is Monster:
 		var monster := enemy as Monster
 		var tier_name: String = str(Enums.MonsterTier.keys()[monster.monster_tier])
-		level_label.text = "Lv.%d %s" % [enemy.level, tier_name]
+		level_text = "Lv.%d %s" % [enemy.level, tier_name]
 	else:
-		level_label.text = "Level %d" % enemy.level
-	level_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_CAPTION)
-	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
+		level_text = "Level %d" % enemy.level
+	var level_label := UIStyleFactory.create_label(level_text, UIStyleFactory.FONT_CAPTION, UIStyleFactory.COLOR_LEVEL)
 	vbox.add_child(level_label)
 
 	# Separator
-	var sep := HSeparator.new()
-	sep.add_theme_color_override("separator", Color(0.4, 0.3, 0.35))
+	var sep := UIStyleFactory.create_separator(Color(0.4, 0.3, 0.35))
 	vbox.add_child(sep)
 
 	# Stats section
