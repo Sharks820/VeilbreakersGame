@@ -1357,3 +1357,766 @@ static func create_failure_popup_style() -> StyleBoxFlat:
 	style.set_corner_radius_all(8)
 	style.set_content_margin_all(12)
 	return style
+
+# =============================================================================
+# ACTION BUTTON STYLES (v1.16 - Skill/Item action buttons with accent colors)
+# =============================================================================
+
+## Create action button normal style with accent color and shadow
+static func create_action_button_normal(accent_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.12, 0.15, 0.95)
+	style.border_color = accent_color.darkened(0.3)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.shadow_color = Color(0, 0, 0, 0.5)
+	style.shadow_size = 4
+	style.shadow_offset = Vector2(2, 2)
+	return style
+
+## Create action button hover style with glow effect
+static func create_action_button_hover(accent_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.18, 0.18, 0.22, 0.98)
+	style.border_color = accent_color
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.shadow_color = accent_color.darkened(0.5)
+	style.shadow_color.a = 0.6
+	style.shadow_size = 8
+	style.shadow_offset = Vector2.ZERO
+	return style
+
+## Create action button pressed style
+static func create_action_button_pressed(accent_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = accent_color.darkened(0.4)
+	style.border_color = accent_color.lightened(0.2)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	return style
+
+## Create action button disabled style
+static func create_action_button_disabled() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.1, 0.7)
+	style.border_color = Color(0.3, 0.3, 0.3, 0.5)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	return style
+
+## Create action button focus style
+static func create_action_button_focus() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.18, 0.14, 0.22, 0.95)
+	style.border_color = Color(0.7, 0.55, 0.4, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	return style
+
+## Apply full action button styling with accent color
+static func apply_action_button_style(button: Button, accent_color: Color) -> void:
+	button.add_theme_stylebox_override("normal", create_action_button_normal(accent_color))
+	button.add_theme_stylebox_override("hover", create_action_button_hover(accent_color))
+	button.add_theme_stylebox_override("pressed", create_action_button_pressed(accent_color))
+	button.add_theme_stylebox_override("disabled", create_action_button_disabled())
+	button.add_theme_stylebox_override("focus", create_action_button_focus())
+	button.add_theme_color_override("font_color", COLOR_PARCHMENT)
+	button.add_theme_color_override("font_hover_color", Color(1.0, 0.95, 0.85))
+	button.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0))
+	button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
+	button.add_theme_font_size_override("font_size", FONT_SUBHEADING)
+
+# =============================================================================
+# STATUS EFFECT ICON STYLES (v1.16)
+# =============================================================================
+
+## Create status effect buff icon container style (green)
+static func create_status_buff_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.3, 0.1, 0.8)
+	style.border_color = Color(0.3, 0.7, 0.3, 0.9)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	return style
+
+## Create status effect debuff icon container style (red)
+static func create_status_debuff_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.3, 0.1, 0.1, 0.8)
+	style.border_color = Color(0.7, 0.3, 0.3, 0.9)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	return style
+
+# =============================================================================
+# PARTY MEMBER PANEL STYLES (v1.16 - Target selection panels)
+# =============================================================================
+
+## Create party member panel style (green-tinted border)
+static func create_party_member_panel() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.1, 0.15, 0.85)
+	style.border_color = Color(0.3, 0.25, 0.4, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	return style
+
+## Create party member portrait frame style
+static func create_party_member_portrait() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.15, 0.2, 1.0)
+	style.border_color = Color(0.4, 0.35, 0.5, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(3)
+	return style
+
+## Create enemy panel style for target selection (red-tinted)
+static func create_enemy_panel() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.1, 0.1, 0.85)
+	style.border_color = Color(0.5, 0.25, 0.25, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	return style
+
+# =============================================================================
+# COMPACT SIDEBAR PANEL STYLES (v1.16 - With content margins)
+# =============================================================================
+
+## Create compact party sidebar panel with margins
+static func create_party_sidebar_panel() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.12, 0.15, 0.9)
+	style.border_color = Color(0.3, 0.5, 0.4, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 6
+	style.content_margin_right = 6
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	return style
+
+## Create compact enemy sidebar panel with margins
+static func create_enemy_sidebar_panel() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.1, 0.1, 0.9)
+	style.border_color = Color(0.5, 0.3, 0.3, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 6
+	style.content_margin_right = 6
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	return style
+
+# =============================================================================
+# TURN ORDER DISPLAY STYLES (v1.16 - Dynamic styles)
+# =============================================================================
+
+## Create turn order indicator for current turn (bright yellow)
+static func create_turn_order_current_dynamic() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.15, 0.15, 0.95)
+	style.border_color = Color.YELLOW
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	return style
+
+## Create turn order indicator for ally (green, smaller border)
+static func create_turn_order_ally_dynamic() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.15, 0.1, 0.9)
+	style.border_color = Color(0.3, 0.9, 0.3)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	return style
+
+## Create turn order indicator for enemy (red, smaller border)
+static func create_turn_order_enemy_dynamic() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.1, 0.1, 0.9)
+	style.border_color = Color(0.9, 0.3, 0.3)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	return style
+
+# =============================================================================
+# VICTORY PANEL WITH SHADOW (v1.16)
+# =============================================================================
+
+## Create victory panel style with shadow effect
+static func create_victory_panel_with_shadow() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.04, 0.06, 0.98)
+	style.border_color = Color(0.75, 0.55, 0.25, 1.0)
+	style.set_border_width_all(4)
+	style.set_corner_radius_all(8)
+	style.shadow_color = Color(0.6, 0.4, 0.1, 0.6)
+	style.shadow_size = 25
+	style.content_margin_left = 40
+	style.content_margin_right = 40
+	style.content_margin_top = 30
+	style.content_margin_bottom = 30
+	return style
+
+## Create defeat panel style with shadow effect
+static func create_defeat_panel_with_shadow() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.06, 0.06, 0.98)
+	style.border_color = Color(0.7, 0.2, 0.2, 1.0)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(12)
+	style.shadow_color = Color(0.5, 0.1, 0.1, 0.4)
+	style.shadow_size = 20
+	style.content_margin_left = 30
+	style.content_margin_right = 30
+	style.content_margin_top = 25
+	style.content_margin_bottom = 25
+	return style
+
+## Create victory button hover with shadow
+static func create_victory_button_hover_shadow() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.15, 0.1, 0.98)
+	style.border_color = Color(0.9, 0.7, 0.35, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.shadow_color = Color(0.7, 0.5, 0.2, 0.5)
+	style.shadow_size = 10
+	return style
+
+## Apply victory button style with shadow on hover
+static func apply_victory_button_style_with_shadow(button: Button) -> void:
+	button.add_theme_stylebox_override("normal", create_victory_button_normal())
+	button.add_theme_stylebox_override("hover", create_victory_button_hover_shadow())
+	button.add_theme_stylebox_override("pressed", create_victory_button_pressed())
+	button.add_theme_font_size_override("font_size", FONT_TITLE)
+	button.add_theme_color_override("font_color", COLOR_BUTTON_GOLD)
+
+## Create defeat button hover with shadow
+static func create_defeat_button_hover_shadow() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.5, 0.2, 0.2, 0.98)
+	style.border_color = Color(0.8, 0.4, 0.4, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.shadow_color = Color(0.6, 0.2, 0.2, 0.5)
+	style.shadow_size = 8
+	return style
+
+## Apply defeat button style with shadow
+static func apply_defeat_button_style_with_shadow(button: Button) -> void:
+	button.add_theme_stylebox_override("normal", create_defeat_button_normal())
+	button.add_theme_stylebox_override("hover", create_defeat_button_hover_shadow())
+	button.add_theme_stylebox_override("pressed", create_defeat_button_hover_shadow())
+	button.add_theme_font_size_override("font_size", FONT_SUBHEADING)
+	button.add_theme_color_override("font_color", COLOR_BUTTON_LIGHT)
+
+# =============================================================================
+# CAPTURE POPUP STYLES (v1.16 - Larger margins)
+# =============================================================================
+
+## Create capture success popup style (large margins)
+static func create_capture_success_popup() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.2, 0.1, 0.95)
+	style.border_color = Color(0.4, 1.0, 0.4, 1.0)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(12)
+	style.content_margin_left = 40
+	style.content_margin_right = 40
+	style.content_margin_top = 30
+	style.content_margin_bottom = 30
+	return style
+
+## Create capture failure popup style (large margins)
+static func create_capture_failure_popup() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.1, 0.1, 0.95)
+	style.border_color = Color(1.0, 0.4, 0.4, 1.0)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(12)
+	style.content_margin_left = 40
+	style.content_margin_right = 40
+	style.content_margin_top = 30
+	style.content_margin_bottom = 30
+	return style
+
+# =============================================================================
+# XP BAR STYLES (v1.16 - Victory screen golden style)
+# =============================================================================
+
+## Create golden XP bar fill for victory screen
+static func create_victory_xp_bar_fill() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.85, 0.65, 0.25, 1.0)
+	style.set_corner_radius_all(4)
+	return style
+
+## Create golden XP bar background for victory screen
+static func create_victory_xp_bar_bg() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.06, 0.04, 0.9)
+	style.border_color = Color(0.4, 0.3, 0.15, 0.6)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	return style
+
+## Create level up popup style with specific margins
+static func create_level_up_popup_compact() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.12, 0.05, 0.95)
+	style.border_color = Color(1.0, 0.85, 0.3, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	return style
+
+# =============================================================================
+# CHARACTER SELECT STYLES (v1.16)
+# =============================================================================
+
+## Create character select main panel style
+static func create_char_select_panel(margin: int = 15) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.06, 0.06, 0.09, 0.95)
+	style.border_color = Color(0.25, 0.2, 0.3, 0.8)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(12)
+	style.set_content_margin_all(margin)
+	return style
+
+## Create hero card style with class-based accent
+static func create_hero_card_style(class_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.12, 0.95)
+	style.border_color = class_color.darkened(0.4)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+	return style
+
+## Create hero card portrait frame style
+static func create_hero_portrait_frame(class_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.08, 0.14)
+	style.border_color = class_color
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	return style
+
+## Create hero display backdrop (semi-transparent)
+static func create_hero_display_backdrop() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.05, 0.08, 0.7)
+	style.set_corner_radius_all(16)
+	return style
+
+## Create hero name overlay panel
+static func create_hero_name_overlay() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.02, 0.04, 0.9)
+	style.content_margin_left = 20
+	style.content_margin_right = 20
+	style.content_margin_top = 15
+	style.content_margin_bottom = 15
+	return style
+
+## Create monster showcase card style
+static func create_monster_card_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.12, 0.9)
+	style.border_color = Color(0.3, 0.25, 0.35, 0.7)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(8)
+	return style
+
+## Create VERA panel style (purple glowing)
+static func create_vera_panel_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.03, 0.02, 0.06, 0.98)
+	style.border_color = Color(0.5, 0.3, 0.6, 0.9)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(12)
+	style.shadow_color = Color(0.4, 0.2, 0.5, 0.4)
+	style.shadow_size = 10
+	style.content_margin_left = 25
+	style.content_margin_right = 25
+	style.content_margin_top = 15
+	style.content_margin_bottom = 15
+	return style
+
+## Create VERA portrait frame (circular)
+static func create_vera_portrait_frame() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.06, 0.04, 0.1)
+	style.border_color = Color(0.6, 0.4, 0.7)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(45)  # Circular
+	style.shadow_color = Color(0.5, 0.3, 0.6, 0.5)
+	style.shadow_size = 8
+	return style
+
+## Create styled button normal state with custom color
+static func create_color_button_normal(color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color.darkened(0.3)
+	style.border_color = color
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	return style
+
+## Create styled button hover state with custom color
+static func create_color_button_hover(color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color.darkened(0.1)
+	style.border_color = color.lightened(0.2)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.shadow_color = color
+	style.shadow_color.a = 0.4
+	style.shadow_size = 8
+	return style
+
+## Create styled button pressed state with custom color
+static func create_color_button_pressed(color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.border_color = color.lightened(0.3)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	return style
+
+## Apply styled button with custom color
+static func apply_color_button_style(button: Button, color: Color) -> void:
+	button.add_theme_stylebox_override("normal", create_color_button_normal(color))
+	button.add_theme_stylebox_override("hover", create_color_button_hover(color))
+	button.add_theme_stylebox_override("pressed", create_color_button_pressed(color))
+	button.add_theme_font_size_override("font_size", 16)
+	button.add_theme_color_override("font_color", Color.WHITE)
+
+## Create selected hero card style (with glow)
+static func create_hero_card_selected(class_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.1, 0.16, 0.98)
+	style.border_color = class_color
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(8)
+	style.shadow_color = class_color
+	style.shadow_color.a = 0.5
+	style.shadow_size = 10
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+	return style
+
+## Create normal (unselected) hero card style
+static func create_hero_card_normal(class_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.12, 0.95)
+	style.border_color = class_color.darkened(0.5)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.shadow_size = 0
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+	return style
+
+## Create hovered hero card style
+static func create_hero_card_hovered(class_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.09, 0.14, 0.98)
+	style.border_color = class_color.darkened(0.5)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.shadow_size = 0
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+	return style
+
+## Create confirmation popup style
+static func create_confirmation_popup_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.06, 0.06, 0.09, 0.98)
+	style.border_color = Color(0.5, 0.4, 0.6, 0.9)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(12)
+	style.shadow_color = Color(0.3, 0.2, 0.4, 0.6)
+	style.shadow_size = 20
+	style.content_margin_left = 30
+	style.content_margin_right = 30
+	style.content_margin_top = 25
+	style.content_margin_bottom = 25
+	return style
+
+# =============================================================================
+# BATTLE ARENA SIDEBAR STYLES (v1.16)
+# =============================================================================
+
+## Create party sidebar container style (green tint)
+static func create_arena_party_sidebar() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.1, 0.14, 0.92)
+	style.border_color = Color(0.25, 0.4, 0.35, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.set_content_margin_all(8)
+	return style
+
+## Create party member slot style (green border)
+static func create_arena_party_slot() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.15, 0.18, 0.9)
+	style.border_color = Color(0.3, 0.45, 0.4, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.set_content_margin_all(4)
+	return style
+
+## Create ally portrait frame style (green border)
+static func create_arena_ally_portrait() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.1, 1.0)
+	style.border_color = Color(0.4, 0.5, 0.45, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(2)
+	return style
+
+## Create enemy sidebar container style (red tint)
+static func create_arena_enemy_sidebar() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.14, 0.08, 0.08, 0.92)
+	style.border_color = Color(0.5, 0.25, 0.25, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.set_content_margin_all(8)
+	return style
+
+## Create enemy slot style (red border)
+static func create_arena_enemy_slot() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.18, 0.12, 0.12, 0.9)
+	style.border_color = Color(0.5, 0.3, 0.3, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.set_content_margin_all(4)
+	return style
+
+## Create enemy portrait frame style (red border)
+static func create_arena_enemy_portrait() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.06, 0.06, 1.0)
+	style.border_color = Color(0.6, 0.3, 0.3, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(2)
+	return style
+
+## Create arena HP bar fill style (bright green)
+static func create_arena_hp_fill() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.75, 0.3, 1.0)
+	style.set_corner_radius_all(2)
+	return style
+
+## Create arena HP bar background style
+static func create_arena_hp_bg() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.1, 0.1, 1.0)
+	style.set_corner_radius_all(2)
+	return style
+
+## Create arena MP bar fill style (bright blue)
+static func create_arena_mp_fill() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.3, 0.5, 0.9, 1.0)
+	style.set_corner_radius_all(2)
+	return style
+
+## Create arena MP bar background style
+static func create_arena_mp_bg() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.1, 0.15, 1.0)
+	style.set_corner_radius_all(2)
+	return style
+
+## Create arena enemy HP bar fill style (red)
+static func create_arena_enemy_hp_fill() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.85, 0.25, 0.2, 1.0)
+	style.set_corner_radius_all(2)
+	return style
+
+## Create arena enemy HP bar background style
+static func create_arena_enemy_hp_bg() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.08, 0.08, 1.0)
+	style.set_corner_radius_all(2)
+	return style
+
+# =============================================================================
+# PAUSE MENU STYLES (v1.16)
+# =============================================================================
+
+## Create pause menu panel style
+static func create_pause_menu_panel() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.12, 0.98)
+	style.border_color = Color(0.4, 0.35, 0.5, 1.0)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(12)
+	style.shadow_color = Color(0, 0, 0, 0.6)
+	style.shadow_size = 20
+	style.content_margin_left = 30
+	style.content_margin_right = 30
+	style.content_margin_top = 25
+	style.content_margin_bottom = 25
+	return style
+
+## Create pause menu button normal style
+static func create_pause_button_normal() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.12, 0.18, 0.95)
+	style.border_color = Color(0.35, 0.3, 0.45, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	return style
+
+## Create pause menu button hover style
+static func create_pause_button_hover() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.18, 0.16, 0.25, 0.98)
+	style.border_color = Color(0.5, 0.45, 0.65, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	return style
+
+## Create pause menu button pressed style
+static func create_pause_button_pressed() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.22, 0.2, 0.3, 0.98)
+	style.border_color = Color(0.6, 0.55, 0.75, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	return style
+
+## Create pause menu button focus style
+static func create_pause_button_focus() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.14, 0.22, 0.95)
+	style.border_color = Color(0.6, 0.5, 0.7, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	return style
+
+## Apply pause menu button styling
+static func apply_pause_button_style(button: Button) -> void:
+	button.add_theme_stylebox_override("normal", create_pause_button_normal())
+	button.add_theme_stylebox_override("hover", create_pause_button_hover())
+	button.add_theme_stylebox_override("pressed", create_pause_button_pressed())
+	button.add_theme_stylebox_override("focus", create_pause_button_focus())
+
+# =============================================================================
+# FLOATING HP BAR STYLES (v1.16) - In-battle floating HP bars above characters
+# =============================================================================
+
+## Create floating HP bar fill style (bright green)
+static func create_floating_hp_fill() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.8, 0.3, 1.0)
+	style.set_corner_radius_all(2)
+	return style
+
+## Create floating HP bar background style (dark with border)
+static func create_floating_hp_bg() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.1, 0.1, 0.9)
+	style.border_color = Color(0.3, 0.25, 0.2, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(2)
+	return style
+
+## Apply floating HP bar styling
+static func apply_floating_hp_bar_style(bar: ProgressBar) -> void:
+	bar.add_theme_stylebox_override("fill", create_floating_hp_fill())
+	bar.add_theme_stylebox_override("background", create_floating_hp_bg())
+
+# =============================================================================
+# VERA TUTORIAL STYLES (v1.16) - VERA AI assistant UI elements
+# =============================================================================
+
+## Create VERA tutorial panel style (dark fantasy horror theme)
+static func create_vera_tutorial_panel() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.04, 0.06, 0.98)
+	style.border_color = Color(0.5, 0.35, 0.6, 0.9)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(12)
+	style.shadow_color = Color(0.3, 0.2, 0.4, 0.5)
+	style.shadow_size = 15
+	return style
+
+## Create VERA portrait frame (circular)
+static func create_vera_portrait_circle() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.06, 0.1, 1.0)
+	style.border_color = Color(0.5, 0.4, 0.6, 1.0)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(45)
+	return style
+
+## Create VERA button normal state
+static func create_vera_button_normal() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.12, 0.2, 0.95)
+	style.border_color = Color(0.5, 0.4, 0.6, 0.8)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	return style
+
+## Create VERA button hover state
+static func create_vera_button_hover() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.25, 0.2, 0.35, 0.98)
+	style.border_color = Color(0.7, 0.55, 0.8, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.shadow_color = Color(0.5, 0.3, 0.6, 0.4)
+	style.shadow_size = 6
+	return style
+
+## Create VERA button pressed state
+static func create_vera_button_pressed() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.35, 0.28, 0.45, 1.0)
+	style.border_color = Color(0.8, 0.65, 0.9, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	return style
+
+## Apply VERA button styling
+static func apply_vera_button_style(button: Button) -> void:
+	button.add_theme_stylebox_override("normal", create_vera_button_normal())
+	button.add_theme_stylebox_override("hover", create_vera_button_hover())
+	button.add_theme_stylebox_override("pressed", create_vera_button_pressed())
+
+## Create golden highlight panel (for tutorials)
+static func create_tutorial_highlight() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0)
+	style.border_color = Color(1.0, 0.9, 0.3, 1.0)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(8)
+	return style

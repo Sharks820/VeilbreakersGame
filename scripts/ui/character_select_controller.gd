@@ -56,9 +56,13 @@ var back_button: Button = null
 # Animation tweens
 var _selection_tween: Tween = null
 var _vera_tween: Tween = null
+var _vera_flash_tween: Tween = null  # Separate tween for VERA portrait flash effect
 
-# Breathing animation tween (smoother than _process-based approach)
-var _breathing_tween: Tween = null
+# Breathing animation state (using _process for frame-perfect animation)
+var _breathing_enabled: bool = false
+var _breathing_time: float = 0.0
+var _vera_breathing_enabled: bool = false
+var _vera_breathing_time: float = 0.0
 
 # =============================================================================
 # LIFECYCLE
@@ -72,10 +76,25 @@ func _ready() -> void:
 	_select_hero(0)
 
 	# Initial VERA greeting
-	_show_vera_dialogue(
-		"Welcome, Hunter. I am VERA - your Virtual Entity for Reconnaissance and Analysis. Choose your champion wisely. Each walks a different Path, and the monsters you capture will resonate with that choice."
-	)
+	_show_vera_dialogue("Welcome, Hunter. I am VERA - your Virtual Entity for Reconnaissance and Analysis. Choose your champion wisely. Each walks a different Path, and the monsters you capture will resonate with that choice.")
 
+func _process(delta: float) -> void:
+	# Hero portrait breathing animation - smooth sine wave scale
+	if _breathing_enabled and hero_portrait and is_instance_valid(hero_portrait):
+		_breathing_time += delta
+		# Sine wave: 3% amplitude, 3 second full cycle
+		# sin() ranges from -1 to 1, so (sin(x) + 1) / 2 gives 0 to 1
+		var breath: float = (sin(_breathing_time * TAU / 3.0) + 1.0) / 2.0  # 0 to 1 over 3 seconds
+		var scale_value: float = 1.0 + breath * 0.03  # 1.0 to 1.03
+		hero_portrait.scale = Vector2(scale_value, scale_value)
+
+	# VERA portrait breathing animation - smooth sine wave scale
+	if _vera_breathing_enabled and vera_portrait and is_instance_valid(vera_portrait):
+		_vera_breathing_time += delta
+		# Sine wave: 5% amplitude, 4 second full cycle
+		var breath: float = (sin(_vera_breathing_time * TAU / 4.0) + 1.0) / 2.0
+		var scale_value: float = 1.0 + breath * 0.05  # 1.0 to 1.05
+		vera_portrait.scale = Vector2(scale_value, scale_value)
 
 func _load_all_data() -> void:
 	## Load all hero and monster data
@@ -226,18 +245,8 @@ func _create_hero_cards_panel() -> PanelContainer:
 	## Create the left panel with hero selection cards
 	var panel := PanelContainer.new()
 	panel.name = "HeroCardsPanel"
-
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.06, 0.06, 0.09, 0.95)
-	style.border_color = Color(0.25, 0.2, 0.3, 0.8)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(12)
-	style.content_margin_left = 15
-	style.content_margin_right = 15
-	style.content_margin_top = 15
-	style.content_margin_bottom = 15
-	panel.add_theme_stylebox_override("panel", style)
-
+	panel.add_theme_stylebox_override("panel", UIStyleFactory.create_char_select_panel(15))
+	
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 10)
 	panel.add_child(vbox)
@@ -277,17 +286,8 @@ func _create_hero_card(hero_id: String, index: int) -> PanelContainer:
 	var class_color: Color = CLASS_COLORS.get(data.hero_class, Color.WHITE)
 
 	# Card style
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.08, 0.12, 0.95)
-	style.border_color = class_color.darkened(0.4)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(8)
-	style.content_margin_left = 12
-	style.content_margin_right = 12
-	style.content_margin_top = 10
-	style.content_margin_bottom = 10
-	card.add_theme_stylebox_override("panel", style)
-
+	card.add_theme_stylebox_override("panel", UIStyleFactory.create_hero_card_style(class_color))
+	
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 12)
 	card.add_child(hbox)
@@ -295,12 +295,7 @@ func _create_hero_card(hero_id: String, index: int) -> PanelContainer:
 	# Portrait frame
 	var portrait_frame := PanelContainer.new()
 	portrait_frame.custom_minimum_size = Vector2(75, 75)
-	var frame_style := StyleBoxFlat.new()
-	frame_style.bg_color = Color(0.1, 0.08, 0.14)
-	frame_style.border_color = class_color
-	frame_style.set_border_width_all(2)
-	frame_style.set_corner_radius_all(6)
-	portrait_frame.add_theme_stylebox_override("panel", frame_style)
+	portrait_frame.add_theme_stylebox_override("panel", UIStyleFactory.create_hero_portrait_frame(class_color))
 	hbox.add_child(portrait_frame)
 
 	# Portrait image
@@ -356,10 +351,7 @@ func _create_hero_display() -> Control:
 	# Dark backdrop
 	var backdrop := PanelContainer.new()
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var backdrop_style := StyleBoxFlat.new()
-	backdrop_style.bg_color = Color(0.05, 0.05, 0.08, 0.7)
-	backdrop_style.set_corner_radius_all(16)
-	backdrop.add_theme_stylebox_override("panel", backdrop_style)
+	backdrop.add_theme_stylebox_override("panel", UIStyleFactory.create_hero_display_backdrop())
 	container.add_child(backdrop)
 
 	# Hero portrait (large)
@@ -381,13 +373,7 @@ func _create_hero_display() -> Control:
 	var name_panel := PanelContainer.new()
 	name_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	name_panel.offset_top = -140
-	var name_style := StyleBoxFlat.new()
-	name_style.bg_color = Color(0.02, 0.02, 0.04, 0.9)
-	name_style.content_margin_left = 20
-	name_style.content_margin_right = 20
-	name_style.content_margin_top = 15
-	name_style.content_margin_bottom = 15
-	name_panel.add_theme_stylebox_override("panel", name_style)
+	name_panel.add_theme_stylebox_override("panel", UIStyleFactory.create_hero_name_overlay())
 	container.add_child(name_panel)
 
 	var name_vbox := VBoxContainer.new()
@@ -421,18 +407,8 @@ func _create_info_panel() -> PanelContainer:
 	## Create the right panel with stats, path/brand info, and monster showcase
 	var panel := PanelContainer.new()
 	panel.name = "InfoPanel"
-
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.06, 0.06, 0.09, 0.95)
-	style.border_color = Color(0.25, 0.2, 0.3, 0.8)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(12)
-	style.content_margin_left = 20
-	style.content_margin_right = 20
-	style.content_margin_top = 20
-	style.content_margin_bottom = 20
-	panel.add_theme_stylebox_override("panel", style)
-
+	panel.add_theme_stylebox_override("panel", UIStyleFactory.create_char_select_panel(20))
+	
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	panel.add_child(scroll)
@@ -558,18 +534,8 @@ func _create_monster_card(monster_id: String) -> PanelContainer:
 	card.custom_minimum_size = Vector2(110, 130)
 
 	var monster_data = monster_data_cache.get(monster_id)
-
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.08, 0.12, 0.9)
-	style.border_color = Color(0.3, 0.25, 0.35, 0.7)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(6)
-	style.content_margin_left = 8
-	style.content_margin_right = 8
-	style.content_margin_top = 8
-	style.content_margin_bottom = 8
-	card.add_theme_stylebox_override("panel", style)
-
+	card.add_theme_stylebox_override("panel", UIStyleFactory.create_monster_card_style())
+	
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 5)
 	card.add_child(vbox)
@@ -623,18 +589,7 @@ func _create_vera_panel(parent: Control) -> void:
 	vera_panel.custom_minimum_size.y = 120
 
 	# Dark panel with glowing purple border
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.03, 0.02, 0.06, 0.98)
-	style.border_color = Color(0.5, 0.3, 0.6, 0.9)
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(12)
-	style.shadow_color = Color(0.4, 0.2, 0.5, 0.4)
-	style.shadow_size = 10
-	style.content_margin_left = 25
-	style.content_margin_right = 25
-	style.content_margin_top = 15
-	style.content_margin_bottom = 15
-	vera_panel.add_theme_stylebox_override("panel", style)
+	vera_panel.add_theme_stylebox_override("panel", UIStyleFactory.create_vera_panel_style())
 	parent.add_child(vera_panel)
 
 	var hbox := HBoxContainer.new()
@@ -645,14 +600,7 @@ func _create_vera_panel(parent: Control) -> void:
 	var portrait_frame := PanelContainer.new()
 	portrait_frame.name = "PortraitFrame"
 	portrait_frame.custom_minimum_size = Vector2(90, 90)
-	var frame_style := StyleBoxFlat.new()
-	frame_style.bg_color = Color(0.06, 0.04, 0.1)
-	frame_style.border_color = Color(0.6, 0.4, 0.7)
-	frame_style.set_border_width_all(3)
-	frame_style.set_corner_radius_all(45)  # Circular
-	frame_style.shadow_color = Color(0.5, 0.3, 0.6, 0.5)
-	frame_style.shadow_size = 8
-	portrait_frame.add_theme_stylebox_override("panel", frame_style)
+	portrait_frame.add_theme_stylebox_override("panel", UIStyleFactory.create_vera_portrait_frame())
 	hbox.add_child(portrait_frame)
 
 	vera_portrait = TextureRect.new()
@@ -692,34 +640,15 @@ func _create_vera_panel(parent: Control) -> void:
 	vera_dialogue.add_theme_color_override("default_color", Color(0.82, 0.78, 0.72))
 	dialogue_vbox.add_child(vera_dialogue)
 
-
-var _vera_portrait_tween: Tween = null
-
-
 func _start_vera_portrait_animation() -> void:
-	## Animate VERA portrait with subtle pulse and glow
-	if _vera_portrait_tween and _vera_portrait_tween.is_valid():
-		_vera_portrait_tween.kill()
-
+	"""Start smooth _process-based breathing animation on VERA portrait"""
 	if not vera_portrait:
 		return
 
-	# Subtle breathing/pulse effect - larger scale range for smoother visual
-	_vera_portrait_tween = create_tween().set_loops()
-	_vera_portrait_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)  # Smoother processing
-	(
-		_vera_portrait_tween
-		. tween_property(vera_portrait, "scale", Vector2(1.05, 1.05), 2.0)
-		. set_ease(Tween.EASE_IN_OUT)
-		. set_trans(Tween.TRANS_SINE)
-	)
-	(
-		_vera_portrait_tween
-		. tween_property(vera_portrait, "scale", Vector2.ONE, 2.0)
-		. set_ease(Tween.EASE_IN_OUT)
-		. set_trans(Tween.TRANS_SINE)
-	)
-
+	# Reset scale to base before starting
+	vera_portrait.scale = Vector2.ONE
+	_vera_breathing_time = 0.0
+	_vera_breathing_enabled = true
 
 func _create_button_bar(parent: Control) -> void:
 	## Create the bottom button bar
@@ -748,34 +677,7 @@ func _create_styled_button(text: String, color: Color, min_width: int = 150) -> 
 	var button := Button.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(min_width, 55)
-
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = color.darkened(0.3)
-	normal.border_color = color
-	normal.set_border_width_all(2)
-	normal.set_corner_radius_all(8)
-
-	var hover := StyleBoxFlat.new()
-	hover.bg_color = color.darkened(0.1)
-	hover.border_color = color.lightened(0.2)
-	hover.set_border_width_all(2)
-	hover.set_corner_radius_all(8)
-	hover.shadow_color = color
-	hover.shadow_color.a = 0.4
-	hover.shadow_size = 8
-
-	var pressed := StyleBoxFlat.new()
-	pressed.bg_color = color
-	pressed.border_color = color.lightened(0.3)
-	pressed.set_border_width_all(2)
-	pressed.set_corner_radius_all(8)
-
-	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("pressed", pressed)
-	button.add_theme_font_size_override("font_size", 16)
-	button.add_theme_color_override("font_color", Color.WHITE)
-
+	UIStyleFactory.apply_color_button_style(button, color)
 	return button
 
 
@@ -814,28 +716,13 @@ func _update_card_highlights() -> void:
 		var hero_id := HERO_IDS[i]
 		var data: HeroData = hero_data_cache.get(hero_id)
 		var class_color: Color = CLASS_COLORS.get(data.hero_class if data else "", Color.WHITE)
-
-		# Create a NEW StyleBoxFlat to avoid shared resource issues
-		var style := StyleBoxFlat.new()
-		style.set_corner_radius_all(8)
-		style.content_margin_left = 12
-		style.content_margin_right = 12
-		style.content_margin_top = 10
-		style.content_margin_bottom = 10
-
+		
+		# Apply selected or normal style based on selection state
+		var style: StyleBoxFlat
 		if i == selected_hero_index:
-			style.border_color = class_color
-			style.set_border_width_all(3)
-			style.shadow_color = class_color
-			style.shadow_color.a = 0.5
-			style.shadow_size = 10
-			style.bg_color = Color(0.12, 0.1, 0.16, 0.98)
+			style = UIStyleFactory.create_hero_card_selected(class_color)
 		else:
-			style.border_color = class_color.darkened(0.5)
-			style.set_border_width_all(2)
-			style.shadow_size = 0
-			style.bg_color = Color(0.08, 0.08, 0.12, 0.95)
-
+			style = UIStyleFactory.create_hero_card_normal(class_color)
 		card.add_theme_stylebox_override("panel", style)
 
 
@@ -981,12 +868,14 @@ func _show_vera_dialogue(text: String) -> void:
 	if _vera_tween and _vera_tween.is_valid():
 		_vera_tween.kill()
 
-	# Flash the portrait when speaking
+	# Flash the portrait when speaking - kill previous flash to prevent conflicts
 	if vera_portrait:
-		var flash_tween := create_tween()
-		flash_tween.tween_property(vera_portrait, "modulate", Color(1.3, 1.1, 1.4), 0.15)
-		flash_tween.tween_property(vera_portrait, "modulate", Color(1.0, 1.0, 1.0), 0.3)
-
+		if _vera_flash_tween and _vera_flash_tween.is_valid():
+			_vera_flash_tween.kill()
+		_vera_flash_tween = create_tween()
+		_vera_flash_tween.tween_property(vera_portrait, "modulate", Color(1.3, 1.1, 1.4), 0.15)
+		_vera_flash_tween.tween_property(vera_portrait, "modulate", Color(1.0, 1.0, 1.0), 0.3)
+	
 	# Slide in effect for text
 	vera_dialogue.modulate.a = 0
 	vera_dialogue.text = ""
@@ -1014,61 +903,22 @@ func _setup_animations() -> void:
 
 
 func _start_breathing_animation() -> void:
-	## Start smooth tween-based breathing animation on hero portrait
+	"""Start smooth _process-based breathing animation on hero portrait"""
 	if not hero_portrait:
 		return
 
-	# Kill any existing breathing tween
-	if _breathing_tween and _breathing_tween.is_valid():
-		_breathing_tween.kill()
-		_breathing_tween = null
-
-	# Get current scale to avoid visual jump - only reset if significantly off
-	var current_scale: Vector2 = hero_portrait.scale
-	if current_scale.x < 0.95 or current_scale.x > 1.1:
-		hero_portrait.scale = Vector2.ONE
-		current_scale = Vector2.ONE
-
-	# Smooth breathing: 3% amplitude, 3 second full cycle (inhale + exhale)
-	# Uses EASE_IN_OUT + TRANS_SINE for natural breathing motion
-	# TWEEN_PROCESS_IDLE ensures smooth frame timing independent of physics
-	_breathing_tween = create_tween().set_loops()
-	_breathing_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
-
-	# Start from current scale to avoid jump, then normalize
-	if current_scale != Vector2.ONE:
-		_breathing_tween.tween_property(hero_portrait, "scale", Vector2.ONE, 0.2).set_ease(
-			Tween.EASE_OUT
-		)
-
-	(
-		_breathing_tween
-		. tween_property(hero_portrait, "scale", Vector2(1.03, 1.03), 1.5)
-		. set_ease(Tween.EASE_IN_OUT)
-		. set_trans(Tween.TRANS_SINE)
-	)
-	(
-		_breathing_tween
-		. tween_property(hero_portrait, "scale", Vector2.ONE, 1.5)
-		. set_ease(Tween.EASE_IN_OUT)
-		. set_trans(Tween.TRANS_SINE)
-	)
-
+	# Reset scale to base before starting
+	hero_portrait.scale = Vector2.ONE
+	_breathing_time = 0.0
+	_breathing_enabled = true
 
 func _stop_breathing_animation() -> void:
-	## Stop breathing animation and smoothly reset scale
-	if _breathing_tween and _breathing_tween.is_valid():
-		_breathing_tween.kill()
-	_breathing_tween = null
+	"""Stop breathing animation and reset scale"""
+	_breathing_enabled = false
 
-	# Smoothly return to base scale instead of abrupt reset
-	if hero_portrait and hero_portrait.scale != Vector2.ONE:
-		var reset_tween := create_tween()
-		reset_tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
-		reset_tween.tween_property(hero_portrait, "scale", Vector2.ONE, 0.15).set_ease(
-			Tween.EASE_OUT
-		)
-
+	# Reset scale to base
+	if hero_portrait and is_instance_valid(hero_portrait):
+		hero_portrait.scale = Vector2.ONE
 
 # =============================================================================
 # INPUT HANDLING
@@ -1122,24 +972,13 @@ func _update_card_hover_visual(hovered_index: int) -> void:
 		var hero_id := HERO_IDS[i]
 		var data: HeroData = hero_data_cache.get(hero_id)
 		var class_color: Color = CLASS_COLORS.get(data.hero_class if data else "", Color.WHITE)
-
-		# Create a NEW StyleBoxFlat to avoid shared resource issues
-		var style := StyleBoxFlat.new()
-		style.set_corner_radius_all(8)
-		style.content_margin_left = 12
-		style.content_margin_right = 12
-		style.content_margin_top = 10
-		style.content_margin_bottom = 10
-		style.border_color = class_color.darkened(0.5)
-		style.set_border_width_all(2)
-		style.shadow_size = 0
-
-		# If this is the hovered card (but not selected), show subtle hover effect
+		
+		# Apply hovered or normal style based on hover state
+		var style: StyleBoxFlat
 		if i == hovered_index:
-			style.bg_color = Color(0.1, 0.09, 0.14, 0.98)  # Slightly brighter
+			style = UIStyleFactory.create_hero_card_hovered(class_color)
 		else:
-			style.bg_color = Color(0.08, 0.08, 0.12, 0.95)  # Normal
-
+			style = UIStyleFactory.create_hero_card_normal(class_color)
 		card.add_theme_stylebox_override("panel", style)
 
 
@@ -1209,19 +1048,7 @@ func _show_confirmation_popup(hero_name: String, hero_id: String) -> void:
 	_confirmation_popup = PanelContainer.new()
 	_confirmation_popup.name = "ConfirmationPopup"
 	_confirmation_popup.custom_minimum_size = Vector2(500, 240)
-
-	var popup_style := StyleBoxFlat.new()
-	popup_style.bg_color = Color(0.06, 0.06, 0.09, 0.98)
-	popup_style.border_color = Color(0.5, 0.4, 0.6, 0.9)
-	popup_style.set_border_width_all(3)
-	popup_style.set_corner_radius_all(12)
-	popup_style.shadow_color = Color(0.3, 0.2, 0.4, 0.6)
-	popup_style.shadow_size = 20
-	popup_style.content_margin_left = 30
-	popup_style.content_margin_right = 30
-	popup_style.content_margin_top = 25
-	popup_style.content_margin_bottom = 25
-	_confirmation_popup.add_theme_stylebox_override("panel", popup_style)
+	_confirmation_popup.add_theme_stylebox_override("panel", UIStyleFactory.create_confirmation_popup_style())
 	center.add_child(_confirmation_popup)
 
 	var vbox := VBoxContainer.new()
@@ -1328,11 +1155,14 @@ func _on_back_pressed() -> void:
 
 
 func _exit_tree() -> void:
-	# Stop all animations
+	# Stop all breathing animations
 	_stop_breathing_animation()
+	_vera_breathing_enabled = false
+
+	# Kill remaining tweens
 	if _selection_tween and _selection_tween.is_valid():
 		_selection_tween.kill()
 	if _vera_tween and _vera_tween.is_valid():
 		_vera_tween.kill()
-	if _vera_portrait_tween and _vera_portrait_tween.is_valid():
-		_vera_portrait_tween.kill()
+	if _vera_flash_tween and _vera_flash_tween.is_valid():
+		_vera_flash_tween.kill()
