@@ -160,13 +160,13 @@ const SOUNDS: Dictionary = {
 		"paths": ["res://audio/sfx/status/poison_apply.ogg"],
 		"bus": "SFX",
 		"volume_range": Vector2(-3, 0),
-		"pitch_range": Vector2(1.0, 1.0),
+		"pitch_range": Vector2.ONE,
 	},
 	"status_burn": {
 		"paths": ["res://audio/sfx/status/burn_apply.ogg"],
 		"bus": "SFX",
 		"volume_range": Vector2(-3, 0),
-		"pitch_range": Vector2(1.0, 1.0),
+		"pitch_range": Vector2.ONE,
 	},
 	"heal": {
 		"paths": ["res://audio/sfx/effects/heal_01.ogg"],
@@ -180,19 +180,19 @@ const SOUNDS: Dictionary = {
 		"paths": ["res://audio/sfx/ui/select.ogg"],
 		"bus": "SFX",
 		"volume_range": Vector2(-5, -5),
-		"pitch_range": Vector2(1.0, 1.0),
+		"pitch_range": Vector2.ONE,
 	},
 	"ui_confirm": {
 		"paths": ["res://audio/sfx/ui/confirm.ogg"],
 		"bus": "SFX",
 		"volume_range": Vector2(-3, -3),
-		"pitch_range": Vector2(1.0, 1.0),
+		"pitch_range": Vector2.ONE,
 	},
 	"ui_cancel": {
 		"paths": ["res://audio/sfx/ui/cancel.ogg"],
 		"bus": "SFX",
 		"volume_range": Vector2(-5, -5),
-		"pitch_range": Vector2(1.0, 1.0),
+		"pitch_range": Vector2.ONE,
 	},
 	
 	# Capture
@@ -212,7 +212,7 @@ const SOUNDS: Dictionary = {
 		"paths": ["res://audio/sfx/capture/success.ogg"],
 		"bus": "SFX",
 		"volume_range": Vector2(0, 3),
-		"pitch_range": Vector2(1.0, 1.0),
+		"pitch_range": Vector2.ONE,
 	},
 	"capture_fail": {
 		"paths": ["res://audio/sfx/capture/fail.ogg"],

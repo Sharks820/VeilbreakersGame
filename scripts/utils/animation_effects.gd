@@ -600,3 +600,184 @@ const MOD_MAGIC_PURPLE := Color(1.5, 1.3, 1.8, 1.0)
 const MOD_GOLD := Color(1.5, 1.3, 0.8, 1.0)
 const MOD_LOW_HP := Color(1.4, 0.8, 0.8, 1.0)
 const MOD_CORRUPTION := Color(1.4, 1.0, 1.4, 1.0)
+
+# =============================================================================
+# EASING PRESETS (v1.04 - Consolidate 124+ Tween.EASE_ patterns)
+# =============================================================================
+
+# Common easing combinations as static helper functions
+# These wrap the verbose Tween.set_ease().set_trans() pattern
+
+## Apply smooth bounce entrance easing (most common UI pattern)
+static func ease_out_back(tween: Tween) -> Tween:
+	return tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
+## Apply smooth entrance easing (fade in, slide in)
+static func ease_out(tween: Tween) -> Tween:
+	return tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+
+## Apply smooth exit easing (fade out, slide out)
+static func ease_in(tween: Tween) -> Tween:
+	return tween.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+
+## Apply smooth in-out easing (breathing, pulses)
+static func ease_in_out(tween: Tween) -> Tween:
+	return tween.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+## Apply elastic bounce (impact effects)
+static func ease_elastic(tween: Tween) -> Tween:
+	return tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
+
+## Apply linear (no easing, constant speed)
+static func ease_linear(tween: Tween) -> Tween:
+	return tween.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_LINEAR)
+
+# =============================================================================
+# TWEEN FACTORY HELPERS (v1.04 - Common tween setup patterns)
+# =============================================================================
+
+## Create a parallel tween (multiple properties at once)
+static func create_parallel_tween(node: Node) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	return node.create_tween().set_parallel(true)
+
+## Create a looping tween
+static func create_loop_tween(node: Node) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	return node.create_tween().set_loops()
+
+## Create a tween with standard bounce ease
+static func create_bounce_tween(node: Node) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	return node.create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
+# =============================================================================
+# POSITION ANIMATION HELPERS (v1.04 - Consolidate 47+ position tweens)
+# =============================================================================
+
+## Move to position with easing
+static func move_to(node: CanvasItem, target_pos: Vector2, duration: float = 0.3) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var tween := node.create_tween()
+	var prop := "global_position" if node is Control else "position"
+	tween.tween_property(node, prop, target_pos, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	return tween
+
+## Move by offset
+static func move_by(node: CanvasItem, offset: Vector2, duration: float = 0.3) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var current_pos: Vector2 = node.global_position if node is Control else node.position
+	return move_to(node, current_pos + offset, duration)
+
+## Jump animation (up then down)
+static func jump(node: CanvasItem, height: float = 20.0, duration: float = 0.4) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var prop := "position:y" if node is Node2D else "global_position:y"
+	var start_y: float = node.position.y if node is Node2D else node.global_position.y
+	var tween := node.create_tween()
+	tween.tween_property(node, prop, start_y - height, duration * 0.4).set_ease(Tween.EASE_OUT)
+	tween.tween_property(node, prop, start_y, duration * 0.6).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_BOUNCE)
+	return tween
+
+## Knockback animation (move away then return)
+static func knockback(node: CanvasItem, direction: Vector2, distance: float = 30.0, duration: float = 0.3) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var prop := "position" if node is Node2D else "global_position"
+	var start_pos: Vector2 = node.position if node is Node2D else node.global_position
+	var knockback_pos := start_pos + direction.normalized() * distance
+	var tween := node.create_tween()
+	tween.tween_property(node, prop, knockback_pos, duration * 0.3).set_ease(Tween.EASE_OUT)
+	tween.tween_property(node, prop, start_pos, duration * 0.7).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
+	return tween
+
+# =============================================================================
+# COMBINED ANIMATIONS (v1.04 - Multi-property helpers)
+# =============================================================================
+
+## Fade in with scale (common popup pattern)
+static func fade_scale_in(node: CanvasItem, duration: float = 0.25, start_scale: float = 0.8) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	node.modulate.a = 0.0
+	node.scale = Vector2(start_scale, start_scale)
+
+	var tween := node.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(node, "modulate:a", 1.0, duration)
+	tween.tween_property(node, "scale", Vector2.ONE, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	return tween
+
+## Fade out with scale (common popup exit pattern)
+static func fade_scale_out(node: CanvasItem, duration: float = 0.2, end_scale: float = 0.9) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var tween := node.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(node, "modulate:a", 0.0, duration)
+	tween.tween_property(node, "scale", Vector2(end_scale, end_scale), duration)
+	return tween
+
+## Attention pulse (scale + color pop)
+static func attention_pulse(node: CanvasItem, color: Color = MOD_GOLD, duration: float = 0.4) -> Tween:
+	if not is_instance_valid(node):
+		return null
+	var tween := node.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(node, "scale", Vector2(1.15, 1.15), duration * 0.3).set_ease(Tween.EASE_OUT)
+	tween.tween_property(node, "modulate", color, duration * 0.3)
+	tween.chain()
+	tween.set_parallel(true)
+	tween.tween_property(node, "scale", Vector2.ONE, duration * 0.7).set_ease(Tween.EASE_OUT)
+	tween.tween_property(node, "modulate", Color.WHITE, duration * 0.7)
+	return tween
+
+## Victory celebration (scale pop + gold flash)
+static func victory_pop(node: CanvasItem, duration: float = 0.6) -> Tween:
+	return attention_pulse(node, Color(1.6, 1.4, 0.9, 1.0), duration)
+
+# =============================================================================
+# STAGGERED ANIMATIONS (v1.04 - Animate lists of nodes)
+# =============================================================================
+
+## Fade in multiple nodes with stagger delay
+static func stagger_fade_in(nodes: Array, stagger_delay: float = 0.05, fade_duration: float = 0.2) -> Tween:
+	if nodes.is_empty():
+		return null
+	var first_node = nodes[0]
+	if not is_instance_valid(first_node):
+		return null
+
+	var tween := first_node.create_tween()
+	tween.set_parallel(true)
+
+	for i in nodes.size():
+		var node = nodes[i]
+		if is_instance_valid(node) and node is CanvasItem:
+			node.modulate.a = 0.0
+			tween.tween_property(node, "modulate:a", 1.0, fade_duration).set_delay(i * stagger_delay)
+	return tween
+
+## Scale in multiple nodes with stagger
+static func stagger_scale_in(nodes: Array, stagger_delay: float = 0.05, scale_duration: float = 0.2) -> Tween:
+	if nodes.is_empty():
+		return null
+	var first_node = nodes[0]
+	if not is_instance_valid(first_node):
+		return null
+
+	var tween := first_node.create_tween()
+	tween.set_parallel(true)
+
+	for i in nodes.size():
+		var node = nodes[i]
+		if is_instance_valid(node) and node is CanvasItem:
+			node.scale = Vector2.ZERO
+			tween.tween_property(node, "scale", Vector2.ONE, scale_duration).set_delay(i * stagger_delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	return tween

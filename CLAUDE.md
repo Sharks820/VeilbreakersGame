@@ -80,6 +80,42 @@ This keeps the project clean. Screenshots are debug artifacts, not game assets.
 - Session-specific context
 - Duplicate info from CLAUDE.md
 
+## 5. Code Utilities Protocol (MANDATORY)
+
+⚠️ **ALL new code MUST use the centralized utilities in `scripts/utils/`**
+
+This is NON-NEGOTIABLE. Before writing ANY:
+- UI styling → **Use UIStyleFactory** (889 lines)
+- Tween animations → **Use AnimationEffects** (783 lines)
+- Node operations → **Use NodeHelpers** (385 lines)
+- String formatting → **Use StringHelpers** (304 lines)
+- Math calculations → **Use MathHelpers** (228 lines)
+- Magic numbers → **Use Constants** (635 lines)
+
+**NEVER manually:**
+- Create `StyleBoxFlat.new()` → use `UIStyleFactory.create_*`
+- Add font/color overrides → use `UIStyleFactory.FONT_*` and `COLOR_*`
+- Write `is_instance_valid(x): x.queue_free()` → use `NodeHelpers.safe_free(x)`
+- Format `"%d/%d" % [hp, max]` → use `StringHelpers.format_hp()`
+- Hardcode `0.3` durations → use `Constants.WAIT_SHORT`
+
+**Full reference in VEILBREAKERS.md → "MANDATORY UTILITIES" section**
+
+### Prevention Tools
+
+**Before writing new code:**
+1. **Check `docs/CODE_PATTERNS.md`** - Quick anti-pattern reference
+2. **Check `scripts/utils/README.md`** - Utility overview
+
+**When adding new patterns:**
+1. If pattern is used **3+ times**, add it to appropriate utility file
+2. Update `docs/CODE_PATTERNS.md` with the new pattern
+3. Follow the utility function template in `scripts/utils/README.md`
+
+**Duplication detector:** `scripts/tools/duplication_detector.gd`
+- Run in Godot Editor (Script > Run) to scan for anti-patterns
+- Identifies code that should use utilities instead
+
 ---
 
 # THE ARSENAL - 15 MCP SERVERS

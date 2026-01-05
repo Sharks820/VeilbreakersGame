@@ -186,7 +186,7 @@ func trigger_scripted_encounter(encounter: Dictionary) -> void:
 	"""Trigger a specific encounter, bypassing random selection."""
 	var enemies := _create_enemies(encounter)
 
-	if enemies.size() > 0:
+	if not enemies.is_empty():
 		encounter_triggered.emit(enemies)
 		EventBus.battle_started.emit(enemies)
 
@@ -205,6 +205,6 @@ func trigger_boss_encounter(boss_id: String, level: int, minions: Array[Dictiona
 		if minion:
 			enemies.append(minion)
 
-	if enemies.size() > 0:
+	if not enemies.is_empty():
 		encounter_triggered.emit(enemies)
 		EventBus.battle_started.emit(enemies)

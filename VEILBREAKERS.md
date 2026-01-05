@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v1.03** | Last updated: 2026-01-04
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v1.09** | Last updated: 2026-01-04
 
 ---
 
@@ -20,6 +20,81 @@
 - 4 Path system (IRONBOUND, FANGBORN, VOIDTOUCHED, UNCHAINED)
 - 12 Brand system (6 Pure + 6 Hybrid) + PRIMAL tier
 - 3-stage evolution (Pure/Hybrid) vs 2-stage (PRIMAL)
+
+---
+
+## ⚠️ MANDATORY UTILITIES (5,285 lines - MUST USE)
+
+**ALL new code MUST use these utilities. NO exceptions. NO manual implementations.**
+
+### UIStyleFactory (889 lines) - `scripts/utils/ui_style_factory.gd`
+| ❌ DON'T DO THIS | ✅ DO THIS INSTEAD |
+|------------------|-------------------|
+| `var label = Label.new()` + font overrides | `UIStyleFactory.create_label("text", FONT_NORMAL, COLOR_PARCHMENT)` |
+| `add_theme_font_size_override("font_size", 14)` | Use `UIStyleFactory.FONT_*` constants |
+| `add_theme_color_override("font_color", Color(...))` | Use `UIStyleFactory.COLOR_*` constants |
+| `var bar = ProgressBar.new()` + styling | `UIStyleFactory.create_hp_bar()` or `create_mp_bar()` |
+| `var style = StyleBoxFlat.new()` + manual setup | `UIStyleFactory.create_dark_panel()` or `create_panel_style()` |
+| `control.mouse_filter = MOUSE_FILTER_PASS` | `UIStyleFactory.set_mouse_pass(control)` |
+| `control.size_flags_horizontal = SIZE_EXPAND_FILL` | `UIStyleFactory.expand_horizontal(control)` |
+| `var btn = Button.new()` + manual styling | `UIStyleFactory.create_button("text")` |
+
+**Key Constants:** `FONT_TINY(9)`, `FONT_SMALL(10)`, `FONT_NORMAL(14)`, `FONT_HEADING(18)`, `FONT_HERO(42)`
+**Key Colors:** `COLOR_PARCHMENT`, `COLOR_GOLD`, `COLOR_HP_VALUE`, `COLOR_MP_VALUE`, `COLOR_DAMAGE`, `COLOR_HEAL`
+
+### AnimationEffects (783 lines) - `scripts/utils/animation_effects.gd`
+| ❌ DON'T DO THIS | ✅ DO THIS INSTEAD |
+|------------------|-------------------|
+| Manual popup fade+scale tween | `AnimationEffects.popup_entrance(popup)` / `popup_exit(popup)` |
+| Button hover scale+modulate tween | `AnimationEffects.button_hover(btn)` / `button_unhover(btn)` |
+| `node.modulate = Color(1.5,...)` flash | `AnimationEffects.flash_white(node)` or `flash_color(node, color)` |
+| Death fade sequence | `AnimationEffects.death_animation(sprite)` |
+| `.set_ease(EASE_OUT).set_trans(TRANS_BACK)` | `AnimationEffects.ease_out_back(tween)` |
+| `node.create_tween().set_parallel(true)` | `AnimationEffects.create_parallel_tween(node)` |
+| Manual position tween | `AnimationEffects.move_to(node, pos)` or `knockback(node, dir)` |
+| Looping modulate pulse | `AnimationEffects.color_pulse_loop(node, color)` |
+
+**Key Functions:** `fade_in()`, `fade_out()`, `slide_in()`, `slide_out()`, `button_press()`, `skill_announcement()`
+
+### NodeHelpers (385 lines) - `scripts/utils/node_helpers.gd`
+| ❌ DON'T DO THIS | ✅ DO THIS INSTEAD |
+|------------------|-------------------|
+| `if is_instance_valid(node): node.queue_free()` | `NodeHelpers.safe_free(node)` |
+| `for child in parent.get_children(): child.queue_free()` | `NodeHelpers.clear_children(parent)` |
+| Manual type filtering in loops | `NodeHelpers.get_children_of_type(parent, Label)` |
+| `if is_instance_valid(node) and node.visible` | `NodeHelpers.is_valid_visible(node)` |
+| `node.visible = true` with validity check | `NodeHelpers.show(node)` / `hide(node)` |
+| `scene.instantiate(); parent.add_child(inst)` | `NodeHelpers.instantiate_to(scene, parent)` |
+| Manual signal connection with duplicate check | `NodeHelpers.safe_connect(source, "signal", callable)` |
+
+### StringHelpers (304 lines) - `scripts/utils/string_helpers.gd`
+| ❌ DON'T DO THIS | ✅ DO THIS INSTEAD |
+|------------------|-------------------|
+| `"%d/%d" % [hp, max_hp]` | `StringHelpers.format_hp(hp, max_hp)` |
+| `"+%d" % value` or `"-%d" % value` | `StringHelpers.format_stat_change(value)` |
+| `"%.0f%%" % (value * 100)` | `StringHelpers.format_percent(value)` |
+| `"Lv. %d" % level` | `StringHelpers.format_level(level)` |
+| `name.replace("_", " ").capitalize()` | `StringHelpers.enum_to_display(name)` |
+| `"[color=#...]text[/color]"` | `StringHelpers.bbcode_color(text, color)` |
+| Manual pluralization | `StringHelpers.pluralize(count, "item")` |
+
+### MathHelpers (228 lines) - `scripts/utils/math_helpers.gd`
+| ❌ DON'T DO THIS | ✅ DO THIS INSTEAD |
+|------------------|-------------------|
+| `float(hp) / float(max_hp)` | `MathHelpers.get_hp_percent(hp, max_hp)` |
+| `clampf(value, 0.05, 0.95)` | `MathHelpers.clamp_probability(value)` |
+| Division without zero check | `MathHelpers.safe_divide(a, b, default)` |
+| Manual damage variance | `MathHelpers.apply_damage_variance(damage)` |
+
+### Constants (635 lines) - `scripts/utils/constants.gd`
+| ❌ DON'T DO THIS | ✅ DO THIS INSTEAD |
+|------------------|-------------------|
+| `await get_tree().create_timer(0.3).timeout` | `await get_tree().create_timer(Constants.WAIT_SHORT).timeout` |
+| `await get_tree().create_timer(0.5).timeout` | `await get_tree().create_timer(Constants.WAIT_STANDARD).timeout` |
+| Hardcoded animation duration | Use `Constants.ANIM_*` or `Constants.UI_*` |
+| Hardcoded damage multipliers | Use `Constants.SKILL_*` or `Constants.DAMAGE_*` |
+
+**Wait Constants:** `WAIT_INSTANT(0.1)`, `WAIT_QUICK(0.2)`, `WAIT_SHORT(0.3)`, `WAIT_STANDARD(0.5)`, `WAIT_LONG(0.8)`
 
 ---
 

@@ -670,7 +670,7 @@ func _ai_aggressive(_allies: Array, enemies: Array) -> Dictionary:
 		return {"action": Enums.BattleAction.DEFEND, "target": self, "skill": ""}
 
 	# Use skill if available and enough turns have passed
-	if turns_since_last_skill >= 2 and known_skills.size() > 0:
+	if turns_since_last_skill >= 2 and not known_skills.is_empty():
 		var skill_id := known_skills[randi() % known_skills.size()]
 		if can_use_skill(skill_id):
 			turns_since_last_skill = 0
@@ -723,7 +723,7 @@ func _ai_support(allies: Array, enemies: Array) -> Dictionary:
 
 func _ai_boss(allies: Array, enemies: Array) -> Dictionary:
 	# Bosses use skills more frequently
-	if known_skills.size() > 0 and randf() > 0.4:
+	if not known_skills.is_empty() and randf() > 0.4:
 		var skill_id := known_skills[randi() % known_skills.size()]
 		if can_use_skill(skill_id):
 			var target := _get_preferred_target(enemies)
@@ -755,7 +755,7 @@ func _ai_random(_allies: Array, enemies: Array) -> Dictionary:
 	var target: CharacterBase = null
 	if action == Enums.BattleAction.ATTACK:
 		var valid := enemies.filter(func(e): return e.is_alive())
-		if valid.size() > 0:
+		if not valid.is_empty():
 			target = valid[randi() % valid.size()]
 
 	return {"action": action, "target": target, "skill": ""}
