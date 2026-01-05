@@ -433,7 +433,8 @@ battle, ui, art, audio, vera, monsters, critical
 | 2026-01-01 | v0.53: Fixed Variant type inference errors in player_character.gd, added AGENTS.md + opencode.json |
 | 2026-01-02 | **v0.60: MAJOR** - Agent architecture (6 agents), documentation system, style guide, version format change |
 | 2026-01-02 | v0.61: Battle UI polish - VERA tutorial panel repositioned with continue button, combat log skill names + battle header, damage rebalanced (15-35 dmg), larger monster sprites, transparent action bar, sidebar death state handling |
-| 2026-01-04 | **v0.96: CODE DEDUPLICATION** - Major refactoring to eliminate code duplication: Created BrandSystem, UIStyleFactory, AnimationEffects utilities. Deleted 8 deprecated archive files. Removed duplicate window setup from GameManager. Added ambience caching to AudioManager. All existing functionality preserved. |
+| 2026-01-04 | **v0.96: CODE DEDUPLICATION** - Major refactoring, utility systems created |
+| 2026-01-04 | **v1.16: CLEANUP** - Removed tools/ from git (258K lines). Tools are LOCAL DEV ONLY. Documented rigging failure. |
 
 ---
 
