@@ -863,11 +863,8 @@ func _populate_skill_list() -> void:
 		var skill_name := _get_skill_display_name(skill_id)
 		var mp_cost := _get_skill_mp_cost(skill_id)
 
-		var button := Button.new()
-		if mp_cost > 0:
-			button.text = "%s (%d MP)" % [skill_name, mp_cost]
-		else:
-			button.text = skill_name
+		var button_text := "%s (%d MP)" % [skill_name, mp_cost] if mp_cost > 0 else skill_name
+		var button := UIStyleFactory.create_action_button(button_text)
 
 		if can_use:
 			button.pressed.connect(_on_skill_selected.bind(skill_id))
@@ -1556,9 +1553,6 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 			continue
 
 		# Create container for icon with background
-		var icon_container := PanelContainer.new()
-		icon_container.custom_minimum_size = Vector2(20, 20)
-		
 		# Determine if buff or debuff for coloring
 		var is_buff := effect in [
 			Enums.StatusEffect.REGEN, Enums.StatusEffect.SHIELD,
@@ -1569,12 +1563,10 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 
 		# Style the container based on buff/debuff
 		var style := UIStyleFactory.create_status_buff_style() if is_buff else UIStyleFactory.create_status_debuff_style()
-		icon_container.add_theme_stylebox_override("panel", style)
+		var icon_container := UIStyleFactory.create_styled_panel(style)
+		icon_container.custom_minimum_size = Vector2(20, 20)
 
-		var icon := TextureRect.new()
-		icon.custom_minimum_size = Vector2(16, 16)
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		var icon := UIStyleFactory.create_icon(Vector2(16, 16))
 		icon.texture = load(icon_path)
 		icon_container.add_child(icon)
 
@@ -2237,14 +2229,11 @@ func _show_level_up_flash(
 	flash_tween.tween_property(row, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.3)
 
 	# Add "LEVEL UP!" popup with stat gains
-	var popup := PanelContainer.new()
+	var popup := UIStyleFactory.create_styled_panel(UIStyleFactory.create_level_up_popup_compact())
 	popup.name = "LevelUpPopup"
 	popup.z_index = 10
-	
-	popup.add_theme_stylebox_override("panel", UIStyleFactory.create_level_up_popup_compact())
-	
-	var popup_vbox := VBoxContainer.new()
-	popup_vbox.add_theme_constant_override("separation", 2)
+
+	var popup_vbox := UIStyleFactory.create_vbox(2)
 	popup.add_child(popup_vbox)
 
 	# Title
@@ -2696,11 +2685,8 @@ func _get_brand_color(brand: Enums.Brand) -> Color:
 
 func _create_brand_icon(brand: Enums.Brand) -> PanelContainer:
 	## Create a colored icon indicator for the brand
-	var icon := PanelContainer.new()
+	var icon := UIStyleFactory.create_styled_panel(UIStyleFactory.create_brand_indicator(_get_brand_color(brand)))
 	icon.custom_minimum_size = Vector2(14, 14)
-	icon.add_theme_stylebox_override(
-		"panel", UIStyleFactory.create_brand_indicator(_get_brand_color(brand))
-	)
 	return icon
 
 
@@ -3237,7 +3223,7 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 		left_party_sidebar.free()
 		left_party_sidebar = null
 
-	left_party_sidebar = PanelContainer.new()
+	left_party_sidebar = UIStyleFactory.create_styled_panel(UIStyleFactory.create_party_sidebar_header())
 	left_party_sidebar.name = "LeftPartySidebar"
 	left_party_sidebar.custom_minimum_size = Vector2(160, 300)  # Force minimum height
 	left_party_sidebar.size = Vector2(160, 300)
@@ -3246,14 +3232,8 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 	left_party_sidebar.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	left_party_sidebar.position = Vector2(10, 70)  # Below top bar
 
-	# Style the sidebar with green/ally theme
-	left_party_sidebar.add_theme_stylebox_override(
-		"panel", UIStyleFactory.create_party_sidebar_header()
-	)
-
-	var vbox := VBoxContainer.new()
+	var vbox := UIStyleFactory.create_vbox(8)
 	vbox.name = "PartyList"
-	vbox.add_theme_constant_override("separation", 8)
 	left_party_sidebar.add_child(vbox)
 
 	# Add "Your Party" title to match enemy sidebar
@@ -3361,24 +3341,18 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 
 	# MP Bar (if character has MP)
 	if character.get_max_mp() > 0:
-		var mp_bar := ProgressBar.new()
+		var mp_bar := UIStyleFactory.create_mp_bar(Vector2(85, 8))
 		mp_bar.name = "MPBar"
 		mp_bar.max_value = maxi(1, character.get_max_mp())
 		mp_bar.value = character.current_mp
-		mp_bar.show_percentage = false
-		mp_bar.custom_minimum_size = Vector2(85, 8)
-		mp_bar.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
-
-		mp_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_mp_bar_fill())
-		mp_bar.add_theme_stylebox_override("background", UIStyleFactory.create_mp_bar_bg())
+		UIStyleFactory.set_mouse_pass(mp_bar)
 		vbox.add_child(mp_bar)
 
 	# Status icons container - displays active buffs/debuffs
-	var status_icons := HBoxContainer.new()
+	var status_icons := UIStyleFactory.create_hbox(2)
 	status_icons.name = "StatusIcons"
-	status_icons.add_theme_constant_override("separation", 2)
 	status_icons.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	status_icons.mouse_filter = Control.MOUSE_FILTER_PASS  # Pass mouse to parent
+	UIStyleFactory.set_mouse_pass(status_icons)
 	vbox.add_child(status_icons)
 
 	# Store reference for updates
@@ -3433,7 +3407,7 @@ func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
 		right_enemy_sidebar.free()
 		right_enemy_sidebar = null
 
-	right_enemy_sidebar = PanelContainer.new()
+	right_enemy_sidebar = UIStyleFactory.create_styled_panel(UIStyleFactory.create_enemy_sidebar_header())
 	right_enemy_sidebar.name = "RightEnemySidebar"
 	right_enemy_sidebar.custom_minimum_size = Vector2(160, 300)
 	right_enemy_sidebar.size = Vector2(160, 300)
@@ -3443,22 +3417,12 @@ func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
 	right_enemy_sidebar.position = Vector2(viewport_size.x - 170, 70)  # Same Y=70 as party sidebar
 	print("[BATTLE_UI] Enemy sidebar position set to: %s" % str(right_enemy_sidebar.position))
 
-	# Style with red theme for enemies
-	right_enemy_sidebar.add_theme_stylebox_override(
-		"panel", UIStyleFactory.create_enemy_sidebar_header()
-	)
-
-	var vbox := VBoxContainer.new()
+	var vbox := UIStyleFactory.create_vbox(8)
 	vbox.name = "EnemyList"
-	vbox.add_theme_constant_override("separation", 8)
 	right_enemy_sidebar.add_child(vbox)
 
 	# Add "Enemies" title
-	var title_label := Label.new()
-	title_label.text = "Enemies"
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_BODY)
-	title_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_PANEL_TITLE_RED)
+	var title_label := UIStyleFactory.create_centered_label("Enemies", UIStyleFactory.FONT_BODY, UIStyleFactory.COLOR_PANEL_TITLE_RED)
 	vbox.add_child(title_label)
 
 	# Populate with enemies
@@ -3479,12 +3443,9 @@ func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
 
 func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	## Create a compact enemy slot for the right sidebar
-	var panel := PanelContainer.new()
+	var panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_enemy_sidebar_panel())
 	panel.custom_minimum_size = Vector2(144, 70)
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-
-	# Style with enemy colors
-	panel.add_theme_stylebox_override("panel", UIStyleFactory.create_enemy_sidebar_panel())
+	UIStyleFactory.set_mouse_stop(panel)
 
 	# Connect hover signals
 	panel.mouse_entered.connect(_on_enemy_panel_hover.bind(enemy, panel))
@@ -3493,25 +3454,18 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	# Connect click signal for target selection
 	panel.gui_input.connect(_on_enemy_panel_clicked.bind(enemy))
 
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 6)
-	hbox.mouse_filter = Control.MOUSE_FILTER_PASS
+	var hbox := UIStyleFactory.create_hbox(6)
+	UIStyleFactory.set_mouse_pass(hbox)
 	panel.add_child(hbox)
 
 	# Portrait
-	var portrait_container := PanelContainer.new()
+	var portrait_container := UIStyleFactory.create_styled_panel(UIStyleFactory.create_sidebar_portrait_frame(true))
 	portrait_container.custom_minimum_size = Vector2(36, 36)
-	portrait_container.mouse_filter = Control.MOUSE_FILTER_PASS
-	portrait_container.add_theme_stylebox_override(
-		"panel", UIStyleFactory.create_sidebar_portrait_frame(true)
-	)
+	UIStyleFactory.set_mouse_pass(portrait_container)
 	hbox.add_child(portrait_container)
 
-	var portrait := TextureRect.new()
-	portrait.custom_minimum_size = Vector2(32, 32)
-	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	portrait.mouse_filter = Control.MOUSE_FILTER_PASS
+	var portrait := UIStyleFactory.create_icon(Vector2(32, 32))
+	UIStyleFactory.set_mouse_pass(portrait)
 	var portrait_path := _get_portrait_path(enemy)
 	if portrait_path != "":
 		var tex := load(portrait_path)
@@ -3520,57 +3474,42 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	portrait_container.add_child(portrait)
 
 	# Info container
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 2)
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.mouse_filter = Control.MOUSE_FILTER_PASS
+	var vbox := UIStyleFactory.create_vbox(2)
+	UIStyleFactory.expand_horizontal(vbox)
+	UIStyleFactory.set_mouse_pass(vbox)
 	hbox.add_child(vbox)
 
 	# Name
-	var name_label := Label.new()
-	name_label.text = enemy.character_name
-	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SMALL)
-	name_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_NAME)
-	name_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	var name_label := UIStyleFactory.create_label(enemy.character_name, UIStyleFactory.FONT_SMALL, UIStyleFactory.COLOR_ENEMY_NAME)
+	UIStyleFactory.set_mouse_pass(name_label)
 	vbox.add_child(name_label)
 
 	# Brand display for enemies
 	if enemy.brand != Enums.Brand.NONE:
-		var brand_label := Label.new()
-		brand_label.name = "BrandLabel"
 		var brand_name: String = Enums.get_brand_name(enemy.brand)
-		brand_label.text = brand_name
-		brand_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TINY)
-		brand_label.add_theme_color_override("font_color", _get_brand_color(enemy.brand))
-		brand_label.mouse_filter = Control.MOUSE_FILTER_PASS
+		var brand_label := UIStyleFactory.create_label(brand_name, UIStyleFactory.FONT_TINY, _get_brand_color(enemy.brand))
+		brand_label.name = "BrandLabel"
+		UIStyleFactory.set_mouse_pass(brand_label)
 		vbox.add_child(brand_label)
 
 	# HP Bar - red themed
-	var hp_bar := ProgressBar.new()
+	var hp_bar := UIStyleFactory.create_enemy_hp_bar(Vector2(85, 10))
 	hp_bar.name = "HPBar"
 	hp_bar.max_value = maxi(1, enemy.get_max_hp())
 	hp_bar.value = enemy.current_hp
-	hp_bar.show_percentage = false
-	hp_bar.custom_minimum_size = Vector2(85, 10)
-	hp_bar.mouse_filter = Control.MOUSE_FILTER_PASS
-
-	hp_bar.add_theme_stylebox_override("fill", UIStyleFactory.create_enemy_hp_bar_fill())
-	hp_bar.add_theme_stylebox_override("background", UIStyleFactory.create_hp_bar_bg())
+	UIStyleFactory.set_mouse_pass(hp_bar)
 	vbox.add_child(hp_bar)
 
 	# HP Label (numeric) - matches party sidebar
-	var hp_label := Label.new()
+	var hp_label := UIStyleFactory.create_label("%d/%d" % [enemy.current_hp, enemy.get_max_hp()], UIStyleFactory.FONT_TINY, UIStyleFactory.COLOR_ENEMY_HP_LABEL)
 	hp_label.name = "HPLabel"
-	hp_label.text = "%d/%d" % [enemy.current_hp, enemy.get_max_hp()]
-	hp_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TINY)
-	hp_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_ENEMY_HP_LABEL)
-	hp_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	UIStyleFactory.set_mouse_pass(hp_label)
 	vbox.add_child(hp_label)
 
 	# Corruption bar for monsters
 	if enemy is Monster:
 		var monster := enemy as Monster
-		var corruption_bar := ProgressBar.new()
+		var corruption_bar := UIStyleFactory.create_corruption_bar(Vector2(85, 6))
 		corruption_bar.name = "CorruptionBar"
 		corruption_bar.max_value = 100.0
 		var corruption_percent := (monster.corruption_level / monster.max_corruption) * 100.0
@@ -3682,12 +3621,8 @@ func _mark_sidebar_panel_dead(panel: PanelContainer) -> void:
 	tween.tween_property(panel, "modulate:a", 0.35, 0.5)
 
 	# Add "DEAD" overlay text
-	var dead_label := Label.new()
+	var dead_label := UIStyleFactory.create_centered_label("DEAD", UIStyleFactory.FONT_NORMAL, UIStyleFactory.COLOR_DEAD)
 	dead_label.name = "DeadOverlay"
-	dead_label.text = "DEAD"
-	dead_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_NORMAL)
-	dead_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_DEAD)
-	dead_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dead_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	dead_label.set_anchors_preset(Control.PRESET_CENTER)
 	dead_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -3956,13 +3891,10 @@ func _get_monster_corruption_bar(monster: Node) -> ProgressBar:
 
 func _show_corruption_reduction_popup(monster: Node, amount: float) -> void:
 	## Show floating popup when corruption is reduced
-	var popup := Label.new()
-	popup.text = "-%.0f%% CORRUPTION" % amount
-	popup.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SUBHEADING)
-	popup.add_theme_color_override("font_color", UIStyleFactory.COLOR_CAPTURE_PURPLE)  # Purple
+	var popup := UIStyleFactory.create_centered_label("-%.0f%% CORRUPTION" % amount, UIStyleFactory.FONT_SUBHEADING)
+	popup.add_theme_color_override("font_color", UIStyleFactory.COLOR_CAPTURE_PURPLE)
 	popup.add_theme_color_override("font_outline_color", Color(0.1, 0.0, 0.15))
 	popup.add_theme_constant_override("outline_size", 3)
-	popup.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	popup.z_index = 100
 
 	# Position near the monster's sidebar panel
@@ -4134,44 +4066,29 @@ func _hide_capture_overlay() -> void:
 
 func _show_capture_result_popup(success: bool, monster_name: String, method_name: String) -> void:
 	## Show dramatic capture result popup
-	var popup := PanelContainer.new()
+	var style := UIStyleFactory.create_capture_success_popup() if success else UIStyleFactory.create_capture_failure_popup()
+	var popup := UIStyleFactory.create_styled_panel(style)
 	popup.name = "CaptureResultPopup"
 	popup.z_index = 100
 
-	# Style based on success/failure
-	var style := UIStyleFactory.create_capture_success_popup() if success else UIStyleFactory.create_capture_failure_popup()
-	popup.add_theme_stylebox_override("panel", style)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
+	var vbox := UIStyleFactory.create_vbox(10)
 	popup.add_child(vbox)
 
 	# Title
-	var title := Label.new()
-	if success:
-		title.text = "★ CAPTURED! ★"
-		title.add_theme_color_override("font_color", UIStyleFactory.COLOR_SUCCESS)
-	else:
-		title.text = "✗ ESCAPED!"
-		title.add_theme_color_override("font_color", UIStyleFactory.COLOR_ERROR)
-	title.add_theme_font_size_override("font_size", 32)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var title_text := "★ CAPTURED! ★" if success else "✗ ESCAPED!"
+	var title_color := UIStyleFactory.COLOR_SUCCESS if success else UIStyleFactory.COLOR_ERROR
+	var title := UIStyleFactory.create_centered_label(title_text, 32)
+	title.add_theme_color_override("font_color", title_color)
 	vbox.add_child(title)
 
 	# Monster name
-	var name_label := Label.new()
-	name_label.text = monster_name
-	name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_TITLE)
+	var name_label := UIStyleFactory.create_centered_label(monster_name, UIStyleFactory.FONT_TITLE)
 	name_label.add_theme_color_override("font_color", Color.WHITE)
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(name_label)
 
 	# Method used
-	var method_label := Label.new()
-	method_label.text = "via %s" % method_name
-	method_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_NORMAL)
+	var method_label := UIStyleFactory.create_centered_label("via %s" % method_name, UIStyleFactory.FONT_NORMAL)
 	method_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL)
-	method_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(method_label)
 
 	add_child(popup)
