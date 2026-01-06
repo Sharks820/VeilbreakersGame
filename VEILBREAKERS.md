@@ -440,6 +440,22 @@ battle, ui, art, audio, vera, monsters, critical
 | 2026-01-02 | v0.61: Battle UI polish - VERA tutorial panel repositioned with continue button, combat log skill names + battle header, damage rebalanced (15-35 dmg), larger monster sprites, transparent action bar, sidebar death state handling |
 | 2026-01-04 | **v0.96: CODE DEDUPLICATION** - Major refactoring, utility systems created |
 | 2026-01-04 | **v1.16: CLEANUP** - Removed tools/ from git (258K lines). Tools are LOCAL DEV ONLY. Documented rigging failure. |
+| 2026-01-04 | **v1.21: HOLLOW EXPANSION** - 8 sprite sheets configured, 7 new skills, Scenario MCP added |
+
+---
+
+## NEXT SESSION: Hollow Sprite Sheets
+
+**Task**: Use Scenario MCP to remove gray backgrounds from 5 sprite sheets.
+
+**Files to create** (save to assets/sprites/monsters/sheets/):
+- hollow_claw_sheet.png (4x4) - X-slash, beam, death
+- hollow_hurt_sheet.png (4x4) - Hurt reactions, stagger  
+- hollow_tendril_sheet.png (4x4) - Sweep, lance, orb
+- hollow_vortex_sheet.png (4x4) - Channel, whip, vortex
+- hollow_power_sheet.png (4x5) - Rage mode, heavy attacks
+
+**Skills created**: shadow_rend, void_orb, tendril_lash, tendril_sweep, consuming_vortex, dread_surge, abyssal_rage
 
 ---
 

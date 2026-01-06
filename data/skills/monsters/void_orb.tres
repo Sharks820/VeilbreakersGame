@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "void_orb"
+display_name = "Void Orb"
+description = "The Hollow compresses void energy into an unstable sphere that detonates on impact, dealing splash damage."
+icon_path = "res://assets/ui/skills/monsters/void_orb.png"
+
+skill_type = 0
+element = 9
+damage_type = 1
+target_type = 3
+brand_requirement = 0
+brand_type = 4
+
+mp_cost = 6
+hp_cost = 0
+cooldown_turns = 2
+
+base_power = 38
+scaling_stat = 6
+scaling_ratio = 1.15
+hit_count = 1
+accuracy_modifier = 0.0
+crit_modifier = 0.2
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["splash_30"]
+
+animation_id = "void_orb"
+sound_effect = "sfx_explosion"
+particle_effect = "void_explosion"
+screen_shake = true
+
+level_requirement = 5
+path_requirement = 0.0
+prerequisite_skills = []

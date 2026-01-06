@@ -116,6 +116,16 @@ This is NON-NEGOTIABLE. Before writing ANY:
 - Run in Godot Editor (Script > Run) to scan for anti-patterns
 - Identifies code that should use utilities instead
 
+## 6. High-Risk Items (MUST ASK USER)
+
+- Change Brand/Path system design
+- Modify save file format
+- Remove or rename core classes
+- Change corruption philosophy
+- Major UI flow changes
+- Game function/story/big script changes
+- Delete ANY file (archive only, never delete)
+
 ---
 
 # THE ARSENAL - 15 MCP SERVERS
@@ -354,36 +364,239 @@ VeilbreakersGame/
 
 ---
 
-# ART STYLE
+# ART STYLE & GENERATION
 
-**Battle Chasers: Nightwar** (Joe Madureira)
-- Hand-painted 2D, comic book influence
+## Style Reference
+**Dark Fantasy Horror** - NOT Battle Chasers style for generation
+- Hand-painted 2D, atmospheric
 - Dynamic lighting, dramatic shadows
-- Bold outlines, saturated colors
-- Heroic proportions
+- Glowing eyes/cores, ominous mood
+- High detail, painterly quality
+
+## Art Generation Rules (MANDATORY)
+
+### Model Rules
+| Status | Model | Notes |
+|--------|-------|-------|
+| **PREFERRED** | Seedream (`model_bytedance-seedream-4-5`) | Best quality, use for all new art |
+| **ALLOWED** | VeilBreakersV1 (`model_fmiEeZzx1zUMf4dhKeo16nqK`) | Fallback option |
+| **FORBIDDEN** | ~~Scenario V2 / Dark Fantasy V2~~ | INACCURATE - needs retraining |
+
+### Style Prompt (INCLUDE IN EVERY PROMPT)
+```
+dark fantasy horror, [creature description], dark atmospheric,
+glowing [color] eyes/core, dramatic lighting, deep shadows,
+high detail, painterly quality, ominous mood,
+2D game sprite, transparent background
+```
+
+### DO NOT Use in Prompts
+- ❌ "Battle Chasers" or "Joe Madureira" (WRONG STYLE)
+- ❌ "thick linework" or "comic book" (WRONG STYLE)
+- ❌ anime/cel-shaded style
+- ❌ flat colors or comic halftone
+- ❌ checker pattern backgrounds
+
+### Output Specs
+| Parameter | Value |
+|-----------|-------|
+| Resolution | 1024-2048px |
+| Format | PNG with transparency |
+| Save to | `assets/sprites/monsters/` |
+| Scale in-game | 0.08 |
+
+---
+
+# CODE STYLE
+
+## File Structure
+```gdscript
+class_name ClassName
+extends ParentClass
+## Brief description of the class.
+
+# =============================================================================
+# SIGNALS
+# =============================================================================
+
+signal something_happened(param: Type)
+
+# =============================================================================
+# CONSTANTS
+# =============================================================================
+
+const MY_CONSTANT := 10
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+@export var my_var: int = 0
+
+# =============================================================================
+# STATE
+# =============================================================================
+
+var internal_state: Dictionary = {}
+```
+
+## Naming Conventions
+- **Classes:** PascalCase (`BattleManager`, `CharacterBase`)
+- **Functions:** snake_case (`calculate_damage`, `get_stat`)
+- **Variables:** snake_case (`current_hp`, `turn_order`)
+- **Constants:** SCREAMING_SNAKE_CASE (`MAX_PARTY_SIZE`, `BRAND_STRONG`)
+- **Signals:** snake_case past tense (`damage_dealt`, `turn_ended`)
+- **Enums:** PascalCase enum, SCREAMING_SNAKE values
+- **Private functions:** prefix with `_` (`_on_button_pressed`)
+
+## Type Hints (REQUIRED)
+```gdscript
+# Always use explicit types - Godot treats Variant inference as warning/error
+var value: float = some_dict.get("key", 0.0)  # Correct
+var value := some_dict.get("key", 0.0)        # ERROR - infers Variant
+
+# Function signatures
+func calculate_damage(attacker: CharacterBase, defender: CharacterBase) -> int:
+
+# Arrays with types
+var party: Array[CharacterBase] = []
+```
+
+## Null Safety
+```gdscript
+# Always check before accessing
+var node := get_node_or_null("/root/GameManager")
+if node and node.has_method("some_method"):
+    node.some_method()
+
+# Safe dictionary access
+var value: float = data.get("key", default_value)
+```
+
+---
+
+# KEY SYSTEMS (DO NOT BREAK)
+
+## Autoload Order (project.godot)
+1. ErrorLogger
+2. EventBus
+3. DataManager
+4. GameManager
+5. SaveManager
+6. AudioManager
+7. SceneManager
+8. SettingsManager
+9. VERASystem
+10. InventorySystem
+11. PathSystem
+12. CrashHandler
+
+## Brand System (12 Brands - LOCKED)
+**Pure:** SAVAGE, IRON, VENOM, SURGE, DREAD, LEECH
+**Hybrid:** BLOODIRON, CORROSIVE, VENOMSTRIKE, TERRORFLUX, NIGHTLEECH, RAVENOUS
+
+Effectiveness wheel: SAVAGE > IRON > VENOM > SURGE > DREAD > LEECH > SAVAGE
+
+## Path System (4 Paths)
+IRONBOUND, FANGBORN, VOIDTOUCHED, UNCHAINED, NONE
+
+## Corruption System
+- 0-10%: ASCENDED (+25% stats)
+- 11-25%: Purified (+10% stats)
+- 26-50%: Unstable (normal)
+- 51-75%: Corrupted (-10% stats)
+- 76-100%: Abyssal (-20% stats)
+
+**Core philosophy:** Lower corruption = STRONGER monster. Goal is ASCENSION.
+
+---
+
+# COMMON PATTERNS
+
+## Signals via EventBus
+```gdscript
+# Emit
+EventBus.damage_dealt.emit(source, target, amount, is_critical)
+
+# Connect (use NodeHelpers for safe connection)
+NodeHelpers.safe_connect(EventBus, "damage_dealt", _on_damage_dealt)
+```
+
+## Using Constants
+```gdscript
+# Wait timers - USE CONSTANTS
+await get_tree().create_timer(Constants.WAIT_SHORT).timeout
+await get_tree().create_timer(Constants.WAIT_STANDARD).timeout
+
+# DON'T use Constants in const declarations (load order issues)
+const BAD := [Constants.SOME_VALUE]  # Parse error!
+const GOOD: Array[float] = [75.0, 50.0, 25.0]  # Hardcode instead
+```
+
+## Using Enums
+```gdscript
+var state: Enums.BattleState = Enums.BattleState.INITIALIZING
+var brand: Enums.Brand = Enums.Brand.SAVAGE
+```
+
+## Using UIStyleFactory
+```gdscript
+var label := UIStyleFactory.create_label("Text", UIStyleFactory.FONT_HEADING, UIStyleFactory.COLOR_GOLD)
+var hp_bar := UIStyleFactory.create_hp_bar()
+var vbox := UIStyleFactory.create_vbox(8)
+var button := UIStyleFactory.create_button("Click Me")
+```
+
+## Using NodeHelpers
+```gdscript
+NodeHelpers.safe_free(node)
+NodeHelpers.clear_children(container)
+NodeHelpers.show(node)
+var labels := NodeHelpers.get_children_of_type(parent, Label)
+```
+
+## Using StringHelpers
+```gdscript
+var hp_text := StringHelpers.format_hp(current_hp, max_hp)  # "45/100"
+var change := StringHelpers.format_stat_change(5)  # "+5"
+var pct := StringHelpers.format_percent(0.75)  # "75%"
+```
+
+## Using AnimationEffects
+```gdscript
+AnimationEffects.button_hover(button)
+AnimationEffects.popup_entrance(popup)
+AnimationEffects.flash_white(node)
+AnimationEffects.death_animation(sprite)
+```
 
 ---
 
 # ANIMATION PATTERNS
 
-## Button Hover (Working)
+## Button Hover (USE AnimationEffects!)
 ```gdscript
+# ❌ OLD WAY - DON'T DO THIS
 func _on_button_hover(button: BaseButton) -> void:
     create_tween().tween_property(button, "scale", Vector2(1.05, 1.05), 0.15)
-    create_tween().tween_property(button, "modulate", Color(1.4, 0.9, 0.9, 1.0), 0.15)
+
+# ✅ NEW WAY - USE THIS
+func _on_button_hover(button: BaseButton) -> void:
+    AnimationEffects.button_hover(button)
 
 func _on_button_unhover(button: BaseButton) -> void:
-    create_tween().tween_property(button, "scale", Vector2(1.0, 1.0), 0.15)
-    create_tween().tween_property(button, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
+    AnimationEffects.button_unhover(button)
 ```
 
-## Standard Timings
-| Animation | Duration |
-|-----------|----------|
-| Button hover | 0.15s |
-| Button press | 0.1s |
-| Scene fade | 0.3s |
-| Menu slide | 0.25s |
+## Standard Timings (USE Constants!)
+| Animation | Constant | Value |
+|-----------|----------|-------|
+| Button hover | `Constants.UI_BUTTON_HOVER` | 0.15s |
+| Button press | `Constants.UI_BUTTON_PRESS` | 0.1s |
+| Scene fade | `Constants.UI_SCENE_FADE` | 0.3s |
+| Menu slide | `Constants.UI_MENU_SLIDE` | 0.25s |
+| Wait short | `Constants.WAIT_SHORT` | 0.3s |
+| Wait standard | `Constants.WAIT_STANDARD` | 0.5s |
 
 ---
 
@@ -393,12 +606,18 @@ func _on_button_unhover(button: BaseButton) -> void:
 - Lightning effects - background has them
 - Custom eye drawing - artwork has them
 - Complex logo animation - caused glitching
+- Fake transparency (checker pattern) - use REAL alpha
+- **Spine/Cutout rigging for Godot** - Too complex, animations glitchy, STICK TO SPRITE SHEETS
 
 ## WORKS
 - TextureButton with texture_disabled
 - Simple scale/modulate tweens
 - Clean button transparency
 - Subtle, fast animations
+- GSAP power3.out = Godot EASE_OUT + TRANS_CUBIC
+- Sprite sheet animation with hframes/vframes
+- Python PIL for removing white backgrounds (threshold >220)
+- Force Godot reimport: `godot --headless --path PROJECT --import --quit`
 
 ---
 

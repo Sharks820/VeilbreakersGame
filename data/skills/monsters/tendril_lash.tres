@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "tendril_lash"
+display_name = "Tendril Lash"
+description = "A razor-sharp tendril whips out at blinding speed, striking with precision to exploit weak points."
+icon_path = "res://assets/ui/skills/monsters/tendril_lash.png"
+
+skill_type = 0
+element = 9
+damage_type = 0
+target_type = 3
+brand_requirement = 0
+brand_type = 4
+
+mp_cost = 3
+hp_cost = 0
+cooldown_turns = 0
+
+base_power = 22
+scaling_stat = 8
+scaling_ratio = 1.2
+hit_count = 1
+accuracy_modifier = 0.15
+crit_modifier = 0.25
+
+status_effects = []
+stat_modifiers = []
+special_effects = ["armor_pierce_20"]
+
+animation_id = "tendril_lash"
+sound_effect = "sfx_whip"
+particle_effect = "shadow_lash"
+screen_shake = false
+
+level_requirement = 8
+path_requirement = 0.0
+prerequisite_skills = []

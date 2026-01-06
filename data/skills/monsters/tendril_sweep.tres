@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+skill_id = "tendril_sweep"
+display_name = "Tendril Sweep"
+description = "Shadow tendrils erupt from the ground, sweeping across all enemies and dragging them into darkness."
+icon_path = "res://assets/ui/skills/monsters/tendril_sweep.png"
+
+skill_type = 0
+element = 9
+damage_type = 0
+target_type = 4
+brand_requirement = 0
+brand_type = 4
+
+mp_cost = 10
+hp_cost = 0
+cooldown_turns = 3
+
+base_power = 28
+scaling_stat = 4
+scaling_ratio = 0.9
+hit_count = 1
+accuracy_modifier = -0.05
+crit_modifier = 0.0
+
+status_effects = [{"effect": 17, "chance": 0.4, "duration": 2}]
+stat_modifiers = []
+special_effects = []
+
+animation_id = "tendril_sweep"
+sound_effect = "sfx_tendril"
+particle_effect = "shadow_wave"
+screen_shake = true
+
+level_requirement = 10
+path_requirement = 0.0
+prerequisite_skills = []
