@@ -139,12 +139,11 @@ func _create_bar_structure() -> void:
 
 	# Text label
 	if show_text:
-		_text_label = Label.new()
+		_text_label = UIStyleFactory.create_label("", int(bar_size.y * 0.65))
 		_text_label.name = "ValueLabel"
 		_text_label.size = bar_size
 		_text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_text_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_text_label.add_theme_font_size_override("font_size", int(bar_size.y * 0.65))
 		_text_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.95))
 		_text_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.8))
 		_text_label.add_theme_constant_override("outline_size", 1)

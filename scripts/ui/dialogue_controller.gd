@@ -255,8 +255,7 @@ func _show_choices(choices: Array) -> void:
 
 	for i in range(choices.size()):
 		var choice: Dictionary = choices[i]
-		var button := Button.new()
-		button.text = choice.get("text", "...")
+		var button := UIStyleFactory.create_action_button(choice.get("text", "..."))
 		button.pressed.connect(_on_choice_selected.bind(i, choice.get("next", current_index + 1)))
 		button.focus_mode = Control.FOCUS_ALL
 		choices_container.add_child(button)

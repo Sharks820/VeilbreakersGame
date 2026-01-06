@@ -151,10 +151,8 @@ func _update_abilities(vera) -> void:
 	# Add ability icons
 	var abilities: Array[String] = vera.get_available_abilities()
 	for ability in abilities:
-		var button := Button.new()
-		button.text = ability.capitalize().substr(0, 4)
+		var button := UIStyleFactory.create_button(ability.capitalize().substr(0, 4), UIStyleFactory.FONT_SMALL, Vector2(40, 30))
 		button.tooltip_text = ability
-		button.custom_minimum_size = Vector2(40, 30)
 		button.pressed.connect(_on_ability_pressed.bind(ability))
 		ability_container.add_child(button)
 
