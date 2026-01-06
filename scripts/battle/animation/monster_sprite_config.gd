@@ -327,11 +327,18 @@ static func _get_blightspawn_config() -> Dictionary:
 	sheet1.v_frames = 4
 	# Row 1: Idle floating with eyes
 	sheet1.add_animation("idle", 0, 3, 5.0, true)
-	# Row 2: More idle poses
+	# Row 2: More idle poses - can also serve as block/defensive
 	sheet1.add_animation("idle_alt", 4, 7, 4.0, true)
-	# Row 3: Void vortex attack (purple spiral)
+	sheet1.add_animation("block", 4, 5, 6.0, false)  # Eyes close for defense
+	sheet1.add_animation("skill_eldritch_shield", 4, 5, 6.0, false)
+	# Row 3: Void vortex attack (purple spiral) - MULTI-USE
 	sheet1.add_animation("attack", 8, 11, 10.0, false, 10)
 	sheet1.add_animation("skill_void_burst", 8, 11, 8.0, false, 10)
+	sheet1.add_animation("skill_chaos_vortex", 8, 11, 8.0, false, 10)
+	sheet1.add_animation("skill_mind_rend", 8, 11, 10.0, false, 10)
+	sheet1.add_animation("skill_nightmare_pulse", 8, 11, 8.0, false, 10)
+	sheet1.add_animation("skill_eldritch_blast", 8, 11, 10.0, false, 10)
+	sheet1.add_animation("attack_heavy", 8, 11, 8.0, false, 10)
 	# Row 4: Hurt and death
 	sheet1.add_animation("hurt", 12, 13, 10.0, false)
 	sheet1.add_animation("death", 12, 15, 5.0, false)
@@ -365,12 +372,19 @@ static func _get_venomspine_config() -> Dictionary:
 	sheet1.v_frames = 4
 	# Row 1: Idle swaying
 	sheet1.add_animation("idle", 0, 3, 5.0, true)
-	# Row 2: Projectile attack (green shots)
+	# Row 2: Projectile attack (green shots) - MULTI-USE
 	sheet1.add_animation("attack", 4, 7, 10.0, false, 6)
 	sheet1.add_animation("skill_venom_spit", 4, 7, 8.0, false, 6)
-	# Row 3: Burst attack (radial projectiles)
+	sheet1.add_animation("skill_acid_spray", 4, 7, 8.0, false, 6)
+	sheet1.add_animation("skill_poison_bolt", 4, 7, 10.0, false, 6)
+	sheet1.add_animation("skill_fang_strike", 4, 7, 10.0, false, 6)
+	# Row 3: Burst attack (radial projectiles) - MULTI-USE
 	sheet1.add_animation("skill_toxic_burst", 8, 11, 12.0, false, 10)
+	sheet1.add_animation("skill_venom_nova", 8, 11, 10.0, false, 10)
+	sheet1.add_animation("skill_corrosive_wave", 8, 11, 10.0, false, 10)
+	sheet1.add_animation("skill_spore_cloud", 8, 11, 8.0, false, 10)
 	sheet1.add_animation("attack_heavy", 8, 11, 10.0, false, 10)
+	sheet1.add_animation("block", 8, 9, 6.0, false)  # Coiled defensive stance
 	# Row 4: Hurt and death
 	sheet1.add_animation("hurt", 12, 13, 10.0, false)
 	sheet1.add_animation("death", 12, 15, 5.0, false)
@@ -404,12 +418,18 @@ static func _get_bonecrusher_config() -> Dictionary:
 	sheet1.v_frames = 5
 	# Row 1: Idle standing menacingly
 	sheet1.add_animation("idle", 0, 3, 4.0, true)
-	# Row 2: Slash attack (red trail)
+	# Row 2: Slash attack (red trail) - MULTI-USE
 	sheet1.add_animation("attack", 4, 7, 10.0, false, 6)
 	sheet1.add_animation("skill_bone_slash", 4, 7, 8.0, false, 6)
-	# Row 3: Ground pound (shockwave)
+	sheet1.add_animation("skill_cleave", 4, 7, 8.0, false, 6)
+	sheet1.add_animation("skill_rend", 4, 7, 10.0, false, 6)
+	# Row 3: Ground pound (shockwave) - MULTI-USE
 	sheet1.add_animation("skill_ground_pound", 8, 11, 8.0, false, 10)
+	sheet1.add_animation("skill_earthquake", 8, 11, 8.0, false, 10)
+	sheet1.add_animation("skill_shockwave", 8, 11, 8.0, false, 10)
 	sheet1.add_animation("attack_heavy", 8, 11, 8.0, false, 10)
+	sheet1.add_animation("block", 8, 9, 6.0, false)  # Use first frames for block stance
+	sheet1.add_animation("skill_iron_defense", 8, 9, 6.0, false)
 	# Row 4: Hurt reactions
 	sheet1.add_animation("hurt", 12, 15, 10.0, false)
 	# Row 5: Death collapse
@@ -444,11 +464,17 @@ static func _get_blightsworn_config() -> Dictionary:
 	sheet1.v_frames = 5
 	# Row 1: Idle standing
 	sheet1.add_animation("idle", 0, 3, 4.0, true)
-	# Row 2: Energy slash attack (green arc)
+	# Row 2: Energy slash attack (green arc) - MULTI-USE
 	sheet1.add_animation("attack", 4, 7, 10.0, false, 6)
 	sheet1.add_animation("skill_plague_slash", 4, 7, 8.0, false, 6)
-	# Row 3: Explosion attack (massive green burst)
+	sheet1.add_animation("skill_toxic_strike", 4, 7, 8.0, false, 6)
+	sheet1.add_animation("skill_corrupted_blade", 4, 7, 10.0, false, 6)
+	sheet1.add_animation("block", 4, 5, 6.0, false)  # Defensive stance
+	# Row 3: Explosion attack (massive green burst) - MULTI-USE
 	sheet1.add_animation("skill_plague_burst", 8, 11, 6.0, false, 10)
+	sheet1.add_animation("skill_toxic_nova", 8, 11, 6.0, false, 10)
+	sheet1.add_animation("skill_blight_explosion", 8, 11, 6.0, false, 10)
+	sheet1.add_animation("skill_virulent_wave", 8, 11, 6.0, false, 10)
 	sheet1.add_animation("attack_heavy", 8, 11, 6.0, false, 10)
 	# Row 4: Hurt reactions with green splatter
 	sheet1.add_animation("hurt", 12, 15, 10.0, false)
@@ -484,11 +510,19 @@ static func _get_voidwraith_config() -> Dictionary:
 	sheet1.v_frames = 5
 	# Row 1: Idle with glowing red eyes
 	sheet1.add_animation("idle", 0, 3, 3.0, true)
-	# Row 2: Tendril sweep attack
+	# Row 2: Tendril sweep attack - MULTI-USE
 	sheet1.add_animation("attack", 4, 7, 8.0, false, 6)
 	sheet1.add_animation("skill_shadow_sweep", 4, 7, 8.0, false, 6)
-	# Row 3: DEVASTATING RED BEAM ATTACK
+	sheet1.add_animation("skill_tendril_lash", 4, 7, 8.0, false, 6)
+	sheet1.add_animation("skill_dark_grasp", 4, 7, 8.0, false, 6)
+	sheet1.add_animation("skill_shadow_strike", 4, 7, 10.0, false, 6)
+	sheet1.add_animation("block", 4, 5, 6.0, false)  # Shadow barrier stance
+	sheet1.add_animation("skill_shadow_veil", 4, 5, 6.0, false)
+	# Row 3: DEVASTATING RED BEAM ATTACK - MULTI-USE
 	sheet1.add_animation("skill_void_beam", 8, 11, 6.0, false, 10)
+	sheet1.add_animation("skill_annihilation_ray", 8, 11, 5.0, false, 10)
+	sheet1.add_animation("skill_crimson_blast", 8, 11, 6.0, false, 10)
+	sheet1.add_animation("skill_doom_laser", 8, 11, 5.0, false, 10)
 	sheet1.add_animation("attack_heavy", 8, 11, 6.0, false, 10)
 	# Row 4: Hurt reactions
 	sheet1.add_animation("hurt", 12, 15, 10.0, false)
