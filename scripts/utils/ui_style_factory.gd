@@ -859,6 +859,164 @@ static func create_xp_bar(min_size: Vector2 = Vector2(100, 6)) -> ProgressBar:
 
 
 # =============================================================================
+# BATTLE CHASERS STYLE BARS (Ornate textured frames)
+# =============================================================================
+
+## Path to Battle Chasers HP/MP bar frames asset
+const BC_BAR_FRAMES_PATH := "res://assets/ui/battlechasers/hp_mp_bar_frames.png"
+
+## Create a Battle Chasers style HP bar with ornate frame
+## Returns a Control containing the frame TextureRect and ProgressBar
+static func create_bc_hp_bar(min_size: Vector2 = Vector2(200, 32)) -> Control:
+	var container := Control.new()
+	container.custom_minimum_size = min_size
+
+	# Load the bar frames texture
+	var frames_tex: Texture2D = load(BC_BAR_FRAMES_PATH)
+	if not frames_tex:
+		# Fallback to regular HP bar
+		var fallback := create_hp_bar(min_size)
+		return fallback
+
+	# Create atlas texture for HP bar (top half of sprite)
+	var hp_atlas := AtlasTexture.new()
+	hp_atlas.atlas = frames_tex
+	hp_atlas.region = Rect2(0, 0, frames_tex.get_width(), frames_tex.get_height() / 2)
+
+	# Frame background (ornate border)
+	var frame := TextureRect.new()
+	frame.texture = hp_atlas
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_SCALE
+	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+	container.add_child(frame)
+
+	# Progress bar (positioned inside the frame)
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Inset the bar inside the frame
+	bar.offset_left = min_size.x * 0.22  # Account for heart emblem
+	bar.offset_right = -min_size.x * 0.05
+	bar.offset_top = min_size.y * 0.25
+	bar.offset_bottom = -min_size.y * 0.25
+	bar.add_theme_stylebox_override("background", _create_bc_bar_bg(Color(0.2, 0.05, 0.05, 0.8)))
+	bar.add_theme_stylebox_override("fill", _create_bc_bar_fill(Color(0.9, 0.2, 0.2)))
+	bar.name = "HPBar"
+	container.add_child(bar)
+
+	return container
+
+
+## Create a Battle Chasers style MP bar with ornate frame
+static func create_bc_mp_bar(min_size: Vector2 = Vector2(200, 32)) -> Control:
+	var container := Control.new()
+	container.custom_minimum_size = min_size
+
+	# Load the bar frames texture
+	var frames_tex: Texture2D = load(BC_BAR_FRAMES_PATH)
+	if not frames_tex:
+		# Fallback to regular MP bar
+		var fallback := create_mp_bar(min_size)
+		return fallback
+
+	# Create atlas texture for MP bar (bottom half of sprite)
+	var mp_atlas := AtlasTexture.new()
+	mp_atlas.atlas = frames_tex
+	mp_atlas.region = Rect2(0, frames_tex.get_height() / 2, frames_tex.get_width(), frames_tex.get_height() / 2)
+
+	# Frame background (ornate border)
+	var frame := TextureRect.new()
+	frame.texture = mp_atlas
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_SCALE
+	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+	container.add_child(frame)
+
+	# Progress bar (positioned inside the frame)
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Inset the bar inside the frame
+	bar.offset_left = min_size.x * 0.22  # Account for crystal emblem
+	bar.offset_right = -min_size.x * 0.05
+	bar.offset_top = min_size.y * 0.25
+	bar.offset_bottom = -min_size.y * 0.25
+	bar.add_theme_stylebox_override("background", _create_bc_bar_bg(Color(0.05, 0.1, 0.2, 0.8)))
+	bar.add_theme_stylebox_override("fill", _create_bc_bar_fill(Color(0.2, 0.5, 0.9)))
+	bar.name = "MPBar"
+	container.add_child(bar)
+
+	return container
+
+
+## Internal: Create BC bar background style
+static func _create_bc_bar_bg(color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.set_corner_radius_all(2)
+	return style
+
+
+## Internal: Create BC bar fill style
+static func _create_bc_bar_fill(color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.set_corner_radius_all(2)
+	return style
+
+
+## Create a Battle Chasers style dialogue box frame
+static func create_bc_dialogue_frame(size: Vector2 = Vector2(800, 200)) -> TextureRect:
+	var frame := TextureRect.new()
+	var tex: Texture2D = load("res://assets/ui/battlechasers/dialogue_box_frame.png")
+	if tex:
+		frame.texture = tex
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_SCALE
+	frame.custom_minimum_size = size
+	return frame
+
+
+## Create a status effect icon from the status effects sheet
+## icon_index: 0-15 (4x4 grid)
+static func create_bc_status_icon(icon_index: int, size: Vector2 = Vector2(32, 32)) -> TextureRect:
+	var icon := TextureRect.new()
+	var tex: Texture2D = load("res://assets/ui/battlechasers/status_effects_icons.png")
+	if tex:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = tex
+		var col := icon_index % 4
+		var row := icon_index / 4
+		var icon_size := Vector2(128, 128)  # Each icon is 128x128
+		atlas.region = Rect2(col * icon_size.x, row * icon_size.y, icon_size.x, icon_size.y)
+		icon.texture = atlas
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = size
+	return icon
+
+
+## Create a loot rarity frame from the rarity frames sheet
+## rarity: 0=Common, 1=Uncommon, 2=Rare, 3=Epic, 4=Legendary, 5=Mythic, 6=Artifact, 7=Divine
+static func create_bc_rarity_frame(rarity: int, size: Vector2 = Vector2(64, 64)) -> TextureRect:
+	var frame := TextureRect.new()
+	var tex: Texture2D = load("res://assets/ui/battlechasers/loot_rarity_frames.png")
+	if tex:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = tex
+		var col := rarity % 4
+		var row := rarity / 4
+		var frame_size := Vector2(128, 128)  # Each frame is 128x128
+		atlas.region = Rect2(col * frame_size.x, row * frame_size.y, frame_size.x, frame_size.y)
+		frame.texture = atlas
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	frame.custom_minimum_size = size
+	return frame
+
+
+# =============================================================================
 # TEXTURE RECT HELPERS (v1.03 - Consolidate 14+ TextureRect patterns)
 # =============================================================================
 
