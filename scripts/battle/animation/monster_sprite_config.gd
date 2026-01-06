@@ -59,6 +59,16 @@ static func get_config(monster_id: String) -> Dictionary:
 			return _get_chainbound_config()
 		"mawling":
 			return _get_mawling_config()
+		"blightspawn":
+			return _get_blightspawn_config()
+		"venomspine":
+			return _get_venomspine_config()
+		"bonecrusher":
+			return _get_bonecrusher_config()
+		"blightsworn":
+			return _get_blightsworn_config()
+		"voidwraith":
+			return _get_voidwraith_config()
 		_:
 			return _get_default_config()
 
@@ -286,6 +296,203 @@ static func _get_mawling_config() -> Dictionary:
 	sheet2.add_animation("death_alt", 16, 19, 4.0, false)
 	sheet2.add_animation("spawn", 19, 16, 6.0, false)  # Reverse for spawn
 	config.sheets.append(sheet2)
+
+	return config
+
+
+# =============================================================================
+# BLIGHTSPAWN - Eldritch Eye Horror with Void Magic
+# =============================================================================
+
+
+static func _get_blightspawn_config() -> Dictionary:
+	var config := {
+		"monster_id": "blightspawn",
+		"display_name": "Blightspawn",
+		"default_sheet": 0,
+		"h_frames": 4,
+		"v_frames": 4,
+		"scale": Vector2(1.25, 1.25),
+		"sheets": [],
+		"brand_color": Color(0.5, 0.2, 0.5),  # Purple corruption
+		"glow_color": Color(0.8, 0.3, 0.8),
+		"particle_color": Color(0.4, 0.1, 0.4),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/blightspawn_idle_sheet.png"
+	sheet1.h_frames = 4
+	sheet1.v_frames = 4
+	# Row 1: Idle floating with eyes
+	sheet1.add_animation("idle", 0, 3, 5.0, true)
+	# Row 2: More idle poses
+	sheet1.add_animation("idle_alt", 4, 7, 4.0, true)
+	# Row 3: Void vortex attack (purple spiral)
+	sheet1.add_animation("attack", 8, 11, 10.0, false, 10)
+	sheet1.add_animation("skill_void_burst", 8, 11, 8.0, false, 10)
+	# Row 4: Hurt and death
+	sheet1.add_animation("hurt", 12, 13, 10.0, false)
+	sheet1.add_animation("death", 12, 15, 5.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# VENOMSPINE - Serpentine Creature with Toxic Projectiles
+# =============================================================================
+
+
+static func _get_venomspine_config() -> Dictionary:
+	var config := {
+		"monster_id": "venomspine",
+		"display_name": "Venomspine",
+		"default_sheet": 0,
+		"h_frames": 4,
+		"v_frames": 4,
+		"scale": Vector2(1.25, 1.25),
+		"sheets": [],
+		"brand_color": Color(0.2, 0.8, 0.3),  # Toxic green
+		"glow_color": Color(0.4, 1.0, 0.5),
+		"particle_color": Color(0.1, 0.5, 0.2),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/venomspine_idle_sheet.png"
+	sheet1.h_frames = 4
+	sheet1.v_frames = 4
+	# Row 1: Idle swaying
+	sheet1.add_animation("idle", 0, 3, 5.0, true)
+	# Row 2: Projectile attack (green shots)
+	sheet1.add_animation("attack", 4, 7, 10.0, false, 6)
+	sheet1.add_animation("skill_venom_spit", 4, 7, 8.0, false, 6)
+	# Row 3: Burst attack (radial projectiles)
+	sheet1.add_animation("skill_toxic_burst", 8, 11, 12.0, false, 10)
+	sheet1.add_animation("attack_heavy", 8, 11, 10.0, false, 10)
+	# Row 4: Hurt and death
+	sheet1.add_animation("hurt", 12, 13, 10.0, false)
+	sheet1.add_animation("death", 12, 15, 5.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# BONECRUSHER - Armored Brute with Devastating Melee
+# =============================================================================
+
+
+static func _get_bonecrusher_config() -> Dictionary:
+	var config := {
+		"monster_id": "bonecrusher",
+		"display_name": "Bonecrusher",
+		"default_sheet": 0,
+		"h_frames": 4,
+		"v_frames": 5,
+		"scale": Vector2(1.4, 1.4),  # Larger brute
+		"sheets": [],
+		"brand_color": Color(0.6, 0.5, 0.4),  # Bone/metal
+		"glow_color": Color(0.9, 0.7, 0.5),
+		"particle_color": Color(0.4, 0.3, 0.25),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/bonecrusher_idle_sheet.png"
+	sheet1.h_frames = 4
+	sheet1.v_frames = 5
+	# Row 1: Idle standing menacingly
+	sheet1.add_animation("idle", 0, 3, 4.0, true)
+	# Row 2: Slash attack (red trail)
+	sheet1.add_animation("attack", 4, 7, 10.0, false, 6)
+	sheet1.add_animation("skill_bone_slash", 4, 7, 8.0, false, 6)
+	# Row 3: Ground pound (shockwave)
+	sheet1.add_animation("skill_ground_pound", 8, 11, 8.0, false, 10)
+	sheet1.add_animation("attack_heavy", 8, 11, 8.0, false, 10)
+	# Row 4: Hurt reactions
+	sheet1.add_animation("hurt", 12, 15, 10.0, false)
+	# Row 5: Death collapse
+	sheet1.add_animation("death", 16, 19, 5.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# BLIGHTSWORN - Corrupted Plague Knight with Toxic Magic
+# =============================================================================
+
+
+static func _get_blightsworn_config() -> Dictionary:
+	var config := {
+		"monster_id": "blightsworn",
+		"display_name": "Blightsworn",
+		"default_sheet": 0,
+		"h_frames": 4,
+		"v_frames": 5,
+		"scale": Vector2(1.3, 1.3),
+		"sheets": [],
+		"brand_color": Color(0.4, 0.7, 0.2),  # Plague green
+		"glow_color": Color(0.6, 1.0, 0.3),
+		"particle_color": Color(0.2, 0.4, 0.1),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/blightsworn_idle_sheet.png"
+	sheet1.h_frames = 4
+	sheet1.v_frames = 5
+	# Row 1: Idle standing
+	sheet1.add_animation("idle", 0, 3, 4.0, true)
+	# Row 2: Energy slash attack (green arc)
+	sheet1.add_animation("attack", 4, 7, 10.0, false, 6)
+	sheet1.add_animation("skill_plague_slash", 4, 7, 8.0, false, 6)
+	# Row 3: Explosion attack (massive green burst)
+	sheet1.add_animation("skill_plague_burst", 8, 11, 6.0, false, 10)
+	sheet1.add_animation("attack_heavy", 8, 11, 6.0, false, 10)
+	# Row 4: Hurt reactions with green splatter
+	sheet1.add_animation("hurt", 12, 15, 10.0, false)
+	# Row 5: Death melting into toxic puddle
+	sheet1.add_animation("death", 16, 19, 4.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# VOIDWRAITH - Shadow Titan with Devastating Beam Attack
+# =============================================================================
+
+
+static func _get_voidwraith_config() -> Dictionary:
+	var config := {
+		"monster_id": "voidwraith",
+		"display_name": "Voidwraith",
+		"default_sheet": 0,
+		"h_frames": 4,
+		"v_frames": 5,
+		"scale": Vector2(1.5, 1.5),  # Large boss-tier
+		"sheets": [],
+		"brand_color": Color(0.2, 0.1, 0.2),  # Dark shadow
+		"glow_color": Color(1.0, 0.2, 0.2),  # Red eye glow
+		"particle_color": Color(0.1, 0.05, 0.1),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/voidwraith_idle_sheet.png"
+	sheet1.h_frames = 4
+	sheet1.v_frames = 5
+	# Row 1: Idle with glowing red eyes
+	sheet1.add_animation("idle", 0, 3, 3.0, true)
+	# Row 2: Tendril sweep attack
+	sheet1.add_animation("attack", 4, 7, 8.0, false, 6)
+	sheet1.add_animation("skill_shadow_sweep", 4, 7, 8.0, false, 6)
+	# Row 3: DEVASTATING RED BEAM ATTACK
+	sheet1.add_animation("skill_void_beam", 8, 11, 6.0, false, 10)
+	sheet1.add_animation("attack_heavy", 8, 11, 6.0, false, 10)
+	# Row 4: Hurt reactions
+	sheet1.add_animation("hurt", 12, 15, 10.0, false)
+	# Row 5: Death collapse
+	sheet1.add_animation("death", 16, 19, 4.0, false)
+	config.sheets.append(sheet1)
 
 	return config
 
