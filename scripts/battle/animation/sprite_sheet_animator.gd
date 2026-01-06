@@ -415,12 +415,23 @@ func _process_breathing(delta: float) -> void:
 		return
 
 	_breathing_time += delta * breathing_speed
-	var breath_offset := sin(_breathing_time * TAU) * breathing_amount
-	sprite.scale = _original_scale * Vector2(1.0, 1.0 + breath_offset)
 
-	# Subtle vertical bob
+	# AAA QUALITY: Use smoothstep for organic breathing feel
+	var breath_raw := sin(_breathing_time * TAU)
+	var breath_normalized := (breath_raw + 1.0) * 0.5  # 0 to 1
+	# Apply smoothstep for more natural in/out easing
+	var breath_eased := breath_normalized * breath_normalized * (3.0 - 2.0 * breath_normalized)
+	var breath_offset := breath_eased * breathing_amount
+
+	# CRITICAL: Use lerp for frame-rate independent smoothing (prevents glitching)
+	var target_scale := _original_scale * Vector2(1.0, 1.0 + breath_offset)
+	var smoothing := minf(delta * 10.0, 1.0)  # Smooth but responsive
+	sprite.scale = sprite.scale.lerp(target_scale, smoothing)
+
+	# Subtle vertical bob with lerp
 	var bob_offset := sin(_breathing_time * TAU * 0.5) * 2.0
-	sprite.position.y = _original_position.y + bob_offset
+	var target_y := _original_position.y + bob_offset
+	sprite.position.y = lerpf(sprite.position.y, target_y, smoothing)
 
 
 # =============================================================================

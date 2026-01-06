@@ -79,22 +79,32 @@ func _ready() -> void:
 	_show_vera_dialogue("Welcome, Hunter. I am VERA - your Virtual Entity for Reconnaissance and Analysis. Choose your champion wisely. Each walks a different Path, and the monsters you capture will resonate with that choice.")
 
 func _process(delta: float) -> void:
-	# Hero portrait breathing animation - smooth sine wave scale
+	# Hero portrait breathing animation - SMOOTH sine wave using lerp for AAA quality
 	if _breathing_enabled and hero_portrait and is_instance_valid(hero_portrait):
 		_breathing_time += delta
-		# Sine wave: 3% amplitude, 3 second full cycle
-		# sin() ranges from -1 to 1, so (sin(x) + 1) / 2 gives 0 to 1
-		var breath: float = (sin(_breathing_time * TAU / 3.0) + 1.0) / 2.0  # 0 to 1 over 3 seconds
-		var scale_value: float = 1.0 + breath * 0.03  # 1.0 to 1.03
-		hero_portrait.scale = Vector2(scale_value, scale_value)
+		# Sine wave: 2.5% amplitude, 3.5 second full cycle (slower = more natural)
+		# Using smoother easing for AAA feel
+		var breath_raw: float = sin(_breathing_time * TAU / 3.5)
+		# Apply ease-in-out curve for more organic breathing
+		var breath: float = (breath_raw * 0.5 + 0.5)  # Normalize to 0-1
+		breath = breath * breath * (3.0 - 2.0 * breath)  # Smoothstep for organic feel
+		var target_scale: float = 1.0 + breath * 0.025  # 1.0 to 1.025 (subtle)
+		# Lerp for frame-rate independent smoothing (prevents glitching)
+		var current_scale: float = hero_portrait.scale.x
+		var smoothed_scale: float = lerpf(current_scale, target_scale, minf(delta * 8.0, 1.0))
+		hero_portrait.scale = Vector2(smoothed_scale, smoothed_scale)
 
-	# VERA portrait breathing animation - smooth sine wave scale
+	# VERA portrait breathing animation - SMOOTH sine wave using lerp
 	if _vera_breathing_enabled and vera_portrait and is_instance_valid(vera_portrait):
 		_vera_breathing_time += delta
-		# Sine wave: 5% amplitude, 4 second full cycle
-		var breath: float = (sin(_vera_breathing_time * TAU / 4.0) + 1.0) / 2.0
-		var scale_value: float = 1.0 + breath * 0.05  # 1.0 to 1.05
-		vera_portrait.scale = Vector2(scale_value, scale_value)
+		# Sine wave: 4% amplitude, 4.5 second full cycle
+		var breath_raw: float = sin(_vera_breathing_time * TAU / 4.5)
+		var breath: float = (breath_raw * 0.5 + 0.5)
+		breath = breath * breath * (3.0 - 2.0 * breath)  # Smoothstep
+		var target_scale: float = 1.0 + breath * 0.04  # 1.0 to 1.04
+		var current_scale: float = vera_portrait.scale.x
+		var smoothed_scale: float = lerpf(current_scale, target_scale, minf(delta * 8.0, 1.0))
+		vera_portrait.scale = Vector2(smoothed_scale, smoothed_scale)
 
 func _load_all_data() -> void:
 	## Load all hero and monster data
@@ -332,6 +342,9 @@ func _create_hero_display() -> Control:
 	hero_portrait.offset_bottom = 200
 	hero_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	hero_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	# CRITICAL: Use LINEAR filtering for smooth scaling animations
+	# Point filtering causes visible pixel stepping when scaling by small amounts
+	hero_portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	# Pivot at exact center of the rect (400x450) for smooth scale animations
 	# This ensures breathing animation scales uniformly from center
 	hero_portrait.pivot_offset = Vector2(200, 225)  # Center: width/2, height/2
@@ -523,6 +536,8 @@ func _create_vera_panel(parent: Control) -> void:
 	vera_portrait = UIStyleFactory.create_portrait(Vector2(84, 84))
 	vera_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	vera_portrait.pivot_offset = Vector2(42, 42)  # Center pivot for animations
+	# CRITICAL: Use LINEAR filtering for smooth breathing animation
+	vera_portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	if ResourceLoader.exists("res://assets/characters/vera/vera_interface.png"):
 		vera_portrait.texture = load("res://assets/characters/vera/vera_interface.png")
 	portrait_frame.add_child(vera_portrait)
@@ -637,7 +652,7 @@ func _update_card_highlights() -> void:
 
 
 func _animate_hero_change(data: HeroData) -> void:
-	## Animate the hero portrait change
+	## Animate the hero portrait change - AAA QUALITY with smooth transitions
 	if _selection_tween and _selection_tween.is_valid():
 		_selection_tween.kill()
 
@@ -645,9 +660,13 @@ func _animate_hero_change(data: HeroData) -> void:
 	_stop_breathing_animation()
 
 	_selection_tween = create_tween()
+	_selection_tween.set_ease(Tween.EASE_OUT)
 
-	# Fade out
-	_selection_tween.tween_property(hero_portrait, "modulate:a", 0.0, 0.12)
+	# Fade out with subtle scale down
+	_selection_tween.set_parallel(true)
+	_selection_tween.tween_property(hero_portrait, "modulate:a", 0.0, 0.15)
+	_selection_tween.tween_property(hero_portrait, "scale", Vector2(0.95, 0.95), 0.15)
+	_selection_tween.set_parallel(false)
 
 	# Change content
 	_selection_tween.tween_callback(
@@ -657,6 +676,19 @@ func _animate_hero_change(data: HeroData) -> void:
 				hero_portrait.texture = load(data.battle_sprite_path)
 			elif data.sprite_path != "" and ResourceLoader.exists(data.sprite_path):
 				hero_portrait.texture = load(data.sprite_path)
+
+			# CRITICAL: Update pivot offset based on actual texture size
+			# This prevents animation glitching when texture dimensions change
+			if hero_portrait.texture:
+				var tex_size: Vector2 = hero_portrait.texture.get_size()
+				# Scale down to fit in container (400x450 area)
+				var scale_factor: float = minf(400.0 / tex_size.x, 450.0 / tex_size.y)
+				var display_size: Vector2 = tex_size * scale_factor
+				# Set pivot to center of displayed size
+				hero_portrait.pivot_offset = display_size / 2.0
+
+			# Reset scale for fade-in animation start point
+			hero_portrait.scale = Vector2(0.9, 0.9)
 
 			# Update labels
 			hero_name_label.text = data.display_name.to_upper()
@@ -671,18 +703,23 @@ func _animate_hero_change(data: HeroData) -> void:
 			hero_title_label.text = '"' + data.title + '"'
 	)
 
-	# Fade in with pop
-	_selection_tween.tween_property(hero_portrait, "modulate:a", 1.0, 0.18)
+	# Fade in with smooth elastic pop - AAA quality entrance
+	_selection_tween.set_parallel(true)
+	_selection_tween.tween_property(hero_portrait, "modulate:a", 1.0, 0.2)
 	(
 		_selection_tween
-		. parallel()
-		. tween_property(hero_portrait, "scale", Vector2(1.08, 1.08), 0.12)
+		. tween_property(hero_portrait, "scale", Vector2(1.05, 1.05), 0.18)
 		. set_ease(Tween.EASE_OUT)
 		. set_trans(Tween.TRANS_BACK)
 	)
-	_selection_tween.tween_property(hero_portrait, "scale", Vector2.ONE, 0.08)
+	_selection_tween.set_parallel(false)
 
-	# Restart breathing animation after hero change completes
+	# Settle to base scale with slight overshoot for polish
+	_selection_tween.tween_property(hero_portrait, "scale", Vector2(0.98, 0.98), 0.08)
+	_selection_tween.tween_property(hero_portrait, "scale", Vector2.ONE, 0.06)
+
+	# Small delay before breathing starts for clean transition
+	_selection_tween.tween_interval(0.1)
 	_selection_tween.tween_callback(_start_breathing_animation)
 
 
