@@ -69,6 +69,8 @@ static func get_config(monster_id: String) -> Dictionary:
 			return _get_blightsworn_config()
 		"voidwraith":
 			return _get_voidwraith_config()
+		"crackling":
+			return _get_crackling_config()
 		_:
 			return _get_default_config()
 
@@ -492,6 +494,50 @@ static func _get_voidwraith_config() -> Dictionary:
 	sheet1.add_animation("hurt", 12, 15, 10.0, false)
 	# Row 5: Death collapse
 	sheet1.add_animation("death", 16, 19, 4.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# CRACKLING - Blue Lightning Imp (4 Variants)
+# =============================================================================
+
+
+static func _get_crackling_config() -> Dictionary:
+	# Randomly select one of 4 variants for visual variety
+	var variants := ["a", "b", "c", "d"]
+	var variant: String = variants[randi() % variants.size()]
+
+	var config := {
+		"monster_id": "crackling",
+		"display_name": "Crackling",
+		"default_sheet": 0,
+		"h_frames": 5,
+		"v_frames": 5,
+		"scale": Vector2(1.0, 1.0),  # Small imp size
+		"sheets": [],
+		"brand_color": Color(0.3, 0.6, 0.9),  # Electric blue
+		"glow_color": Color(0.5, 0.8, 1.0),
+		"particle_color": Color(0.2, 0.5, 0.8),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/crackling_%s_sheet.png" % variant
+	sheet1.h_frames = 5
+	sheet1.v_frames = 5
+	# Row 1: Idle standing
+	sheet1.add_animation("idle", 0, 4, 6.0, true)
+	# Row 2: Lightning attack
+	sheet1.add_animation("attack", 5, 9, 12.0, false, 4)
+	sheet1.add_animation("skill_lightning_bolt", 5, 9, 10.0, false, 4)
+	# Row 3: Shield/Block
+	sheet1.add_animation("block", 10, 14, 8.0, false)
+	sheet1.add_animation("skill_shield", 10, 14, 8.0, false)
+	# Row 4: Hurt/Damage taken
+	sheet1.add_animation("hurt", 15, 19, 10.0, false)
+	# Row 5: Death sequence
+	sheet1.add_animation("death", 20, 24, 6.0, false)
 	config.sheets.append(sheet1)
 
 	return config
