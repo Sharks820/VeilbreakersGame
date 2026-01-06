@@ -152,20 +152,17 @@ func _exit_tree() -> void:
 
 
 var _arena_hovered_character: CharacterBase = null
+var _cached_canvas_transform: Transform2D = Transform2D.IDENTITY
 
 
-func _process(_delta: float) -> void:
+func _input(event: InputEvent) -> void:
 	if not is_battle_active:
 		return
-
-	# Get mouse position in viewport coordinates, then convert to canvas coordinates
-	# This accounts for the camera transform
-	var viewport := get_viewport()
-	var mouse_viewport := viewport.get_mouse_position()
-	var canvas_transform := get_canvas_transform()
-	var mouse_canvas := canvas_transform.affine_inverse() * mouse_viewport
-
-	_check_arena_sprite_hover(mouse_canvas)
+	# Event-based mouse hover - only check when mouse actually moves
+	if event is InputEventMouseMotion:
+		_cached_canvas_transform = get_canvas_transform()
+		var mouse_canvas := _cached_canvas_transform.affine_inverse() * event.position
+		_check_arena_sprite_hover(mouse_canvas)
 
 
 func _check_arena_sprite_hover(mouse_pos: Vector2) -> void:
@@ -255,9 +252,7 @@ func _check_sprite_click(mouse_pos: Vector2) -> void:
 func _on_character_sprite_clicked(character: CharacterBase) -> void:
 	## Handle click on character sprite
 	# Emit target_selected signal - let the UI controller handle the logic
-	# The UI controller knows if we're in target selection mode
 	EventBus.target_selected.emit(character)
-	print("[BATTLE_ARENA] Target clicked via sprite: %s" % character.character_name)
 
 
 func _setup_background() -> void:
@@ -282,12 +277,6 @@ func _setup_background() -> void:
 		bg_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		bg_rect.size = Vector2(1920, 1080)
 		bg_rect.position = Vector2.ZERO
-		print(
-			(
-				"[BattleArena] Background texture loaded: %s, size: %s"
-				% [bg_texture.resource_path, bg_rect.size]
-			)
-		)
 		return
 
 	# Fallback: Try BackgroundSprite (Sprite2D - legacy)
@@ -403,17 +392,10 @@ func _setup_battle_ui() -> void:
 
 func _setup_battle_manager() -> void:
 	# Connect battle manager signals
-	print("[BattleArena] Connecting battle_manager signals...")
 	battle_manager.battle_initialized.connect(_on_battle_initialized)
 	battle_manager.action_animation_started.connect(_on_action_animation_started)
 	battle_manager.battle_victory.connect(_on_battle_victory)
 	battle_manager.battle_defeat.connect(_on_battle_defeat)
-	print(
-		(
-			"[BattleArena] action_animation_started connected: %s"
-			% battle_manager.action_animation_started.is_connected(_on_action_animation_started)
-		)
-	)
 
 	# Link subsystems
 	battle_manager.turn_manager = turn_manager
@@ -426,43 +408,18 @@ func _setup_battle_manager() -> void:
 
 
 func initialize_battle(players: Array[CharacterBase], enemies: Array[CharacterBase]) -> void:
-	print(
-		(
-			"[DEBUG] initialize_battle called with %d players, %d enemies"
-			% [players.size(), enemies.size()]
-		)
-	)
 	is_battle_active = true
 
 	# Place characters on the battlefield
-	print("[DEBUG]   Placing player characters...")
-	print("[DEBUG]   player_positions: %s" % str(player_positions))
-	print("[DEBUG]   players_container: %s" % str(players_container))
 	_place_characters(players, player_positions, players_container, player_sprites)
-	print("[DEBUG]   Player sprites created: %d" % player_sprites.size())
-
-	print("[DEBUG]   Placing enemy characters...")
-	print("[DEBUG]   enemy_positions: %s" % str(enemy_positions))
-	print("[DEBUG]   enemies_container: %s" % str(enemies_container))
 	_place_characters(enemies, enemy_positions, enemies_container, enemy_sprites)
-	print("[DEBUG]   Enemy sprites created: %d" % enemy_sprites.size())
 
-	# Setup battle UI with party and enemy info (CRITICAL for button functionality!)
-	print("[DEBUG]   Setting up battle UI...")
+	# Setup battle UI with party and enemy info
 	if battle_ui and battle_ui.has_method("setup_battle"):
-		print("[DEBUG]   Calling battle_ui.setup_battle()")
 		battle_ui.setup_battle(players, enemies)
-	else:
-		print("[DEBUG]   WARNING: battle_ui is null or missing setup_battle method!")
-
-	# Sidebars are created by battle_ui_controller.gd - do NOT duplicate here
-	# _create_party_sidebar(players)  # DISABLED - battle_ui_controller creates left_party_sidebar
-	# _create_enemy_sidebar(enemies)   # DISABLED - battle_ui_controller creates enemy sidebar
 
 	# Start battle logic
-	print("[DEBUG]   Starting battle_manager...")
 	battle_manager.start_battle(players, enemies)
-	print("[DEBUG]   Battle manager started!")
 
 	EventBus.emit_debug(
 		"Battle initialized with %d players vs %d enemies" % [players.size(), enemies.size()]
@@ -1356,12 +1313,6 @@ func _play_hit_animation(
 	if character:
 		var animated_sprite: Node2D = character.get_meta("animated_battle_sprite", null)
 		if animated_sprite and animated_sprite.has_method("play_hurt"):
-			print(
-				(
-					"[BattleArena] Playing hurt animation via animated sprite for %s"
-					% character.character_name
-				)
-			)
 			animated_sprite.play_hurt(is_critical)
 			return
 
@@ -1376,15 +1327,7 @@ func _play_heal_animation(sprite: Node2D) -> void:
 
 
 func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> void:
-	print(
-		(
-			"[BattleArena] _play_death_animation called for sprite: %s, character: %s"
-			% [str(sprite), character.character_name if character else "null"]
-		)
-	)
-
 	if not sprite or not is_instance_valid(sprite):
-		print("[BattleArena] ERROR: Invalid sprite for death animation!")
 		return
 
 	# Mark sprite as dead so hover/highlight code doesn't reset it
@@ -1394,18 +1337,13 @@ func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> v
 	if character:
 		var animated_sprite: Node2D = character.get_meta("animated_battle_sprite", null)
 		if animated_sprite and animated_sprite.has_method("play_death"):
-			print(
-				"[BattleArena] Using sprite sheet death animation for %s" % character.character_name
-			)
 			animated_sprite.play_death()
 
 			# Use a one-shot signal connection to hide sprite when animation completes
-			# This works even though we can't await in a signal handler
 			if animated_sprite.has_signal("death_animation_complete"):
 				var hide_callback := func():
 					if is_instance_valid(sprite):
 						sprite.visible = false
-						print("[BattleArena] Sprite sheet death animation complete, sprite hidden")
 				animated_sprite.death_animation_complete.connect(hide_callback, CONNECT_ONE_SHOT)
 			else:
 				# Fallback: use a timer to hide sprite
@@ -1414,12 +1352,10 @@ func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> v
 					func():
 						if is_instance_valid(sprite):
 							sprite.visible = false
-							print("[BattleArena] Fallback timer: sprite hidden")
 				)
 			return
 
 	# Fallback: Clean tween-based death animation for non-sprite-sheet monsters
-	print("[BattleArena] Using fallback tween death animation")
 	var original_scale := sprite.scale
 	var original_global_pos := sprite.global_position
 
@@ -1451,7 +1387,6 @@ func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> v
 
 	# Hide sprite completely
 	sprite.visible = false
-	print("[BattleArena] Fallback death animation complete, sprite hidden")
 
 
 # =============================================================================
@@ -1492,7 +1427,6 @@ func _spawn_damage_number(
 
 func _auto_start_test_battle() -> void:
 	## Auto-start a test battle when running scene directly (for debugging)
-	print("[DEBUG] Auto-starting test battle...")
 	
 	# Create test player party
 	var players: Array[CharacterBase] = []
@@ -1534,73 +1468,38 @@ func _auto_start_test_battle() -> void:
 		enemy.base_speed = 8 + test_party_level
 		enemy.known_skills = ["basic_attack"]
 		enemies.append(enemy)
-	
-	print("[DEBUG] Created %d players and %d enemies" % [players.size(), enemies.size()])
+
 	initialize_battle(players, enemies)
 
 
 func _on_battle_started(enemy_data: Array) -> void:
-	print("[DEBUG] _on_battle_started called")
-	print("[DEBUG]   is_battle_active: %s" % is_battle_active)
-	print("[DEBUG]   enemy_data size: %d" % enemy_data.size())
-
-	# Guard against being called twice (battle_manager also emits this signal)
+	# Guard against being called twice
 	if is_battle_active:
-		print("[DEBUG]   RETURNING EARLY - battle already active!")
 		return
 
-	# Create enemy characters from data if provided
 	if enemy_data.is_empty():
-		print("[DEBUG]   RETURNING EARLY - enemy_data is empty!")
 		return
 
 	var enemies: Array[CharacterBase] = []
 	for data in enemy_data:
-		print(
-			(
-				"[DEBUG]   Processing enemy data - is CharacterBase: %s, is Monster: %s"
-				% [data is CharacterBase, data is Monster]
-			)
-		)
 		if data is CharacterBase:
 			enemies.append(data as CharacterBase)
-			print("[DEBUG]     -> Added CharacterBase: %s" % [data.character_name])
 		elif data is Dictionary:
 			var new_monster := Monster.create_from_data(data)
 			enemies.append(new_monster)
-			print(
-				"[DEBUG]     -> Created Monster from Dictionary: %s" % [new_monster.character_name]
-			)
-		else:
-			print("[DEBUG]     -> UNKNOWN DATA TYPE: %s, skipping!" % typeof(data))
 		# Limit to 4 enemy monsters
 		if enemies.size() >= 4:
 			break
 
-	print("[DEBUG]   Processed enemies count: %d" % enemies.size())
-
 	# Get full party (1 player + up to 3 allied monsters = 4 max)
-	print("[DEBUG]   GameManager.player_party size: %d" % GameManager.player_party.size())
 	var players: Array[CharacterBase] = []
 	for i in range(mini(4, GameManager.player_party.size())):
 		var member = GameManager.player_party[i]
-		print(
-			(
-				"[DEBUG]   Checking party member %d: %s (is CharacterBase: %s)"
-				% [i, str(member), member is CharacterBase]
-			)
-		)
 		if member is CharacterBase:
 			players.append(member)
-			print("[DEBUG]     -> Added to players: %s" % [member.character_name])
-
-	print("[DEBUG]   Final players count: %d, enemies count: %d" % [players.size(), enemies.size()])
 
 	if not players.is_empty() and not enemies.is_empty():
-		print("[DEBUG]   Calling initialize_battle!")
 		initialize_battle(players, enemies)
-	else:
-		print("[DEBUG]   NOT calling initialize_battle - players or enemies empty!")
 
 
 func _on_battle_initialized() -> void:
