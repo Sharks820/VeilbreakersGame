@@ -979,16 +979,17 @@ static func create_bc_dialogue_frame(size: Vector2 = Vector2(800, 200)) -> Textu
 
 
 ## Create a status effect icon from the status effects sheet
-## icon_index: 0-15 (4x4 grid)
+## icon_index: 0-63 (8x8 grid of 64 icons)
 static func create_bc_status_icon(icon_index: int, size: Vector2 = Vector2(32, 32)) -> TextureRect:
 	var icon := TextureRect.new()
 	var tex: Texture2D = load("res://assets/ui/battlechasers/status_effects_icons.png")
 	if tex:
 		var atlas := AtlasTexture.new()
 		atlas.atlas = tex
-		var col := icon_index % 4
-		var row := icon_index / 4
-		var icon_size := Vector2(128, 128)  # Each icon is 128x128
+		# 8x8 grid layout (64 icons, indices 0-63)
+		var col := icon_index % 8
+		var row := icon_index / 8
+		var icon_size := Vector2(tex.get_width() / 8.0, tex.get_height() / 8.0)
 		atlas.region = Rect2(col * icon_size.x, row * icon_size.y, icon_size.x, icon_size.y)
 		icon.texture = atlas
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE

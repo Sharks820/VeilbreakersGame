@@ -59,6 +59,32 @@ static func get_config(monster_id: String) -> Dictionary:
 			return _get_chainbound_config()
 		"mawling":
 			return _get_mawling_config()
+		"crackling":
+			return _get_crackling_config()
+		"flicker":
+			return _get_flicker_config()
+		"skitter_teeth":
+			return _get_skitter_teeth_config()
+		"the_vessel":
+			return _get_the_vessel_config()
+		"ravener":
+			return _get_ravener_config()
+		"gluttony_polyp":
+			return _get_gluttony_polyp_config()
+		"voltgeist":
+			return _get_voltgeist_config()
+		"needlefang":
+			return _get_needlefang_config()
+		"corrodex":
+			return _get_corrodex_config()
+		"the_weeping":
+			return _get_the_weeping_config()
+		"sporecaller":
+			return _get_sporecaller_config()
+		"ironjaw":
+			return _get_ironjaw_config()
+		"bloodshade":
+			return _get_bloodshade_config()
 		"blightspawn":
 			return _get_blightspawn_config()
 		"venomspine":
@@ -69,8 +95,6 @@ static func get_config(monster_id: String) -> Dictionary:
 			return _get_blightsworn_config()
 		"voidwraith":
 			return _get_voidwraith_config()
-		"crackling":
-			return _get_crackling_config()
 		_:
 			return _get_default_config()
 
@@ -650,3 +674,394 @@ static func has_sprite_sheets(monster_id: String) -> bool:
 	var config := get_config(monster_id)
 	var sheets: Array = config.get("sheets", [])
 	return not sheets.is_empty()
+# =============================================================================
+# FLICKER - Flying Spider with Blue Wings (9 variants: a-i)
+# =============================================================================
+
+static func _get_flicker_config() -> Dictionary:
+	var variants := ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+	var variant: String = variants[randi() % variants.size()]
+
+	var config := {
+		"monster_id": "flicker",
+		"display_name": "Flicker",
+		"default_sheet": 0,
+		"h_frames": 5,
+		"v_frames": 5,
+		"scale": Vector2(1.0, 1.0),
+		"sheets": [],
+		"brand_color": Color(0.2, 0.6, 0.9),
+		"glow_color": Color(0.4, 0.8, 1.0),
+		"particle_color": Color(0.2, 0.5, 0.8),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/flicker_%s_sheet.png" % variant
+	sheet1.h_frames = 5
+	sheet1.v_frames = 5
+	sheet1.add_animation("idle", 0, 4, 8.0, true)
+	sheet1.add_animation("attack", 5, 9, 12.0, false, 7)
+	sheet1.add_animation("skill_lightning_strike", 5, 9, 10.0, false, 7)
+	sheet1.add_animation("block", 10, 14, 8.0, false)
+	sheet1.add_animation("hurt", 15, 19, 10.0, false)
+	sheet1.add_animation("death", 20, 24, 6.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# SKITTER-TEETH - Armored Insectoid Brute (9 variants: a-i)
+# =============================================================================
+
+static func _get_skitter_teeth_config() -> Dictionary:
+	var variants := ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+	var variant: String = variants[randi() % variants.size()]
+
+	var config := {
+		"monster_id": "skitter_teeth",
+		"display_name": "Skitter-Teeth",
+		"default_sheet": 0,
+		"h_frames": 5,
+		"v_frames": 5,
+		"scale": Vector2(1.3, 1.3),
+		"sheets": [],
+		"brand_color": Color(0.6, 0.5, 0.3),
+		"glow_color": Color(0.9, 0.3, 0.2),
+		"particle_color": Color(0.4, 0.3, 0.2),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/skitter_teeth_%s_sheet.png" % variant
+	sheet1.h_frames = 5
+	sheet1.v_frames = 5
+	sheet1.add_animation("idle", 0, 4, 5.0, true)
+	sheet1.add_animation("attack", 5, 9, 10.0, false, 7)
+	sheet1.add_animation("skill_claw_slash", 5, 9, 10.0, false, 7)
+	sheet1.add_animation("block", 10, 14, 6.0, false)
+	sheet1.add_animation("hurt", 15, 19, 10.0, false)
+	sheet1.add_animation("death", 20, 24, 5.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# THE VESSEL - Floating Hooded Figure (5 variants: a-e)
+# =============================================================================
+
+static func _get_the_vessel_config() -> Dictionary:
+	var variants := ["a", "b", "c", "d", "e"]
+	var variant: String = variants[randi() % variants.size()]
+
+	var config := {
+		"monster_id": "the_vessel",
+		"display_name": "The Vessel",
+		"default_sheet": 0,
+		"h_frames": 5,
+		"v_frames": 5,
+		"scale": Vector2(1.2, 1.2),
+		"sheets": [],
+		"brand_color": Color(0.9, 0.8, 0.5),
+		"glow_color": Color(1.0, 0.95, 0.7),
+		"particle_color": Color(0.5, 0.4, 0.2),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/the_vessel_%s_sheet.png" % variant
+	sheet1.h_frames = 5
+	sheet1.v_frames = 5
+	sheet1.add_animation("idle", 0, 4, 4.0, true)
+	sheet1.add_animation("attack", 5, 9, 8.0, false, 7)
+	sheet1.add_animation("skill_stolen_grace", 5, 9, 8.0, false, 7)
+	sheet1.add_animation("block", 10, 14, 6.0, false)
+	sheet1.add_animation("hurt", 15, 19, 10.0, false)
+	sheet1.add_animation("death", 20, 24, 5.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# RAVENER - Black/Red Quadrupedal Beast (3 variants: a-c)
+# =============================================================================
+
+static func _get_ravener_config() -> Dictionary:
+	var variants := ["a", "b", "c"]
+	var variant: String = variants[randi() % variants.size()]
+
+	var config := {
+		"monster_id": "ravener",
+		"display_name": "Ravener",
+		"default_sheet": 0,
+		"h_frames": 5,
+		"v_frames": 5,
+		"scale": Vector2(1.4, 1.4),
+		"sheets": [],
+		"brand_color": Color(0.2, 0.1, 0.1),
+		"glow_color": Color(1.0, 0.3, 0.2),
+		"particle_color": Color(0.3, 0.1, 0.1),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/ravener_%s_sheet.png" % variant
+	sheet1.h_frames = 5
+	sheet1.v_frames = 5
+	sheet1.add_animation("idle", 0, 4, 5.0, true)
+	sheet1.add_animation("attack", 5, 9, 12.0, false, 7)
+	sheet1.add_animation("skill_savage_bite", 5, 9, 12.0, false, 7)
+	sheet1.add_animation("block", 10, 14, 8.0, false)
+	sheet1.add_animation("hurt", 15, 19, 10.0, false)
+	sheet1.add_animation("death", 20, 24, 5.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# GLUTTONY POLYP - Green Stomach Creature (2 variants: a-b)
+# =============================================================================
+
+static func _get_gluttony_polyp_config() -> Dictionary:
+	var variants := ["a", "b"]
+	var variant: String = variants[randi() % variants.size()]
+
+	var config := {
+		"monster_id": "gluttony_polyp",
+		"display_name": "Gluttony Polyp",
+		"default_sheet": 0,
+		"h_frames": 5,
+		"v_frames": 5,
+		"scale": Vector2(1.3, 1.3),
+		"sheets": [],
+		"brand_color": Color(0.3, 0.7, 0.2),
+		"glow_color": Color(0.5, 1.0, 0.3),
+		"particle_color": Color(0.2, 0.5, 0.1),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/gluttony_polyp_%s_sheet.png" % variant
+	sheet1.h_frames = 5
+	sheet1.v_frames = 5
+	sheet1.add_animation("idle", 0, 4, 4.0, true)
+	sheet1.add_animation("attack", 5, 9, 8.0, false, 7)
+	sheet1.add_animation("skill_acid_spit", 5, 9, 8.0, false, 7)
+	sheet1.add_animation("block", 10, 12, 6.0, false)
+	sheet1.add_animation("hurt", 15, 19, 10.0, false)
+	sheet1.add_animation("death", 20, 24, 5.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# VOLTGEIST - Lightning Elemental (4 variants: a-d)
+# =============================================================================
+
+static func _get_voltgeist_config() -> Dictionary:
+	var variants := ["a", "b", "c", "d"]
+	var variant: String = variants[randi() % variants.size()]
+
+	var config := {
+		"monster_id": "voltgeist",
+		"display_name": "Voltgeist",
+		"default_sheet": 0,
+		"h_frames": 5,
+		"v_frames": 5,
+		"scale": Vector2(1.2, 1.2),
+		"sheets": [],
+		"brand_color": Color(0.3, 0.5, 0.9),
+		"glow_color": Color(0.5, 0.8, 1.0),
+		"particle_color": Color(0.2, 0.4, 0.8),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/voltgeist_%s_sheet.png" % variant
+	sheet1.h_frames = 5
+	sheet1.v_frames = 5
+	sheet1.add_animation("idle", 0, 4, 6.0, true)
+	sheet1.add_animation("attack", 5, 9, 10.0, false, 7)
+	sheet1.add_animation("skill_lightning_bolt", 5, 9, 10.0, false, 7)
+	sheet1.add_animation("block", 10, 12, 6.0, false)
+	sheet1.add_animation("hurt", 15, 19, 10.0, false)
+	sheet1.add_animation("death", 20, 24, 6.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# NEEDLEFANG - Serpentine with Green Nodes
+# =============================================================================
+
+static func _get_needlefang_config() -> Dictionary:
+	var config := {
+		"monster_id": "needlefang",
+		"display_name": "Needlefang",
+		"default_sheet": 0,
+		"h_frames": 4,
+		"v_frames": 4,
+		"scale": Vector2(1.3, 1.3),
+		"sheets": [],
+		"brand_color": Color(0.2, 0.6, 0.3),
+		"glow_color": Color(0.4, 1.0, 0.5),
+		"particle_color": Color(0.1, 0.4, 0.2),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/needlefang_sheet.png"
+	sheet1.h_frames = 4
+	sheet1.v_frames = 4
+	sheet1.add_animation("idle", 0, 3, 5.0, true)
+	sheet1.add_animation("attack", 4, 7, 10.0, false, 6)
+	sheet1.add_animation("skill_venom_spit", 4, 7, 8.0, false, 6)
+	sheet1.add_animation("block", 8, 9, 6.0, false)
+	sheet1.add_animation("hurt", 12, 13, 10.0, false)
+	sheet1.add_animation("death", 12, 15, 5.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# CORRODEX - Knight Armor with Acid
+# =============================================================================
+
+static func _get_corrodex_config() -> Dictionary:
+	var config := {
+		"monster_id": "corrodex",
+		"display_name": "Corrodex",
+		"default_sheet": 0,
+		"h_frames": 5,
+		"v_frames": 5,
+		"scale": Vector2(1.3, 1.3),
+		"sheets": [],
+		"brand_color": Color(0.4, 0.6, 0.2),
+		"glow_color": Color(0.6, 1.0, 0.3),
+		"particle_color": Color(0.3, 0.5, 0.1),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/corrodex_sheet.png"
+	sheet1.h_frames = 5
+	sheet1.v_frames = 5
+	sheet1.add_animation("idle", 0, 4, 4.0, true)
+	sheet1.add_animation("attack", 5, 9, 10.0, false, 7)
+	sheet1.add_animation("skill_acid_slash", 5, 9, 8.0, false, 7)
+	sheet1.add_animation("block", 10, 12, 6.0, false)
+	sheet1.add_animation("hurt", 15, 19, 10.0, false)
+	sheet1.add_animation("death", 20, 24, 5.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# THE WEEPING - Floating Eye Cluster
+# =============================================================================
+
+static func _get_the_weeping_config() -> Dictionary:
+	var config := {
+		"monster_id": "the_weeping",
+		"display_name": "The Weeping",
+		"default_sheet": 0,
+		"h_frames": 5,
+		"v_frames": 5,
+		"scale": Vector2(1.2, 1.2),
+		"sheets": [],
+		"brand_color": Color(0.5, 0.2, 0.3),
+		"glow_color": Color(0.8, 0.4, 0.5),
+		"particle_color": Color(0.3, 0.1, 0.2),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/the_weeping_sheet.png"
+	sheet1.h_frames = 5
+	sheet1.v_frames = 5
+	sheet1.add_animation("idle", 0, 4, 4.0, true)
+	sheet1.add_animation("attack", 5, 9, 8.0, false, 7)
+	sheet1.add_animation("skill_gaze", 5, 9, 6.0, false, 7)
+	sheet1.add_animation("block", 10, 12, 6.0, false)
+	sheet1.add_animation("hurt", 15, 19, 10.0, false)
+	sheet1.add_animation("death", 20, 24, 5.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# SPORECALLER - Corrupted Deer with Spore Magic (6 variants: a-f)
+# =============================================================================
+
+static func _get_sporecaller_config() -> Dictionary:
+	var variants := ["a", "b", "c", "d", "e", "f"]
+	var variant: String = variants[randi() % variants.size()]
+
+	var config := {
+		"monster_id": "sporecaller",
+		"display_name": "Sporecaller",
+		"default_sheet": 0,
+		"h_frames": 5,
+		"v_frames": 5,
+		"scale": Vector2(1.3, 1.3),
+		"sheets": [],
+		"brand_color": Color(0.3, 0.5, 0.2),
+		"glow_color": Color(0.5, 0.8, 0.3),
+		"particle_color": Color(0.2, 0.4, 0.1),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/sporecaller_%s_sheet.png" % variant
+	sheet1.h_frames = 5
+	sheet1.v_frames = 5
+	sheet1.add_animation("idle", 0, 4, 5.0, true)
+	sheet1.add_animation("attack", 5, 9, 10.0, false, 7)
+	sheet1.add_animation("skill_spore_burst", 5, 9, 8.0, false, 7)
+	sheet1.add_animation("block", 10, 12, 6.0, false)
+	sheet1.add_animation("hurt", 15, 19, 10.0, false)
+	sheet1.add_animation("death", 20, 24, 5.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# IRONJAW - Bear-like Beast with Trap Jaw
+# =============================================================================
+
+static func _get_ironjaw_config() -> Dictionary:
+	var config := {
+		"monster_id": "ironjaw",
+		"display_name": "Ironjaw",
+		"default_sheet": 0,
+		"h_frames": 5,
+		"v_frames": 5,
+		"scale": Vector2(1.4, 1.4),
+		"sheets": [],
+		"brand_color": Color(0.5, 0.3, 0.2),
+		"glow_color": Color(0.8, 0.5, 0.3),
+		"particle_color": Color(0.3, 0.2, 0.15),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/ironjaw_sheet.png"
+	sheet1.h_frames = 5
+	sheet1.v_frames = 5
+	sheet1.add_animation("idle", 0, 4, 4.0, true)
+	sheet1.add_animation("attack", 5, 9, 10.0, false, 7)
+	sheet1.add_animation("skill_trap_bite", 5, 9, 12.0, false, 7)
+	sheet1.add_animation("block", 10, 12, 6.0, false)
+	sheet1.add_animation("hurt", 15, 19, 10.0, false)
+	sheet1.add_animation("death", 20, 24, 5.0, false)
+	config.sheets.append(sheet1)
+
+	return config
+
+
+# =============================================================================
+# BLOODSHADE - Shadow That Drinks
+# =============================================================================
+
+static func _get_bloodshade_config() -> Dictionary:
+	# TODO: Bloodshade sprites not yet created - uses default fallback
+	return _get_default_config()

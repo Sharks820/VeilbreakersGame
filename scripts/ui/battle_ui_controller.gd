@@ -1456,57 +1456,61 @@ func update_enemy_hp(enemy: CharacterBase) -> void:
 				hp_label.text = "%d/%d" % [enemy.current_hp, enemy.get_max_hp()]
 
 
-func _get_status_effect_icon_path(effect: Enums.StatusEffect) -> String:
-	## Map status effects to icon paths
+func _get_status_effect_icon_index(effect: Enums.StatusEffect) -> int:
+	## Map status effects to BC icon indices (8x8 grid, 64 icons total)
+	## Row 0 (0-7): Primary debuffs
+	## Row 1 (8-15): Secondary debuffs and stat downs
+	## Row 2 (16-23): Buffs and positive effects
 	match effect:
-		# Debuffs
+		# Row 0: Primary debuffs (indices 0-7)
 		Enums.StatusEffect.POISON:
-			return "res://assets/ui/icons/debuffs/poison.png"
+			return 0
 		Enums.StatusEffect.BURN:
-			return "res://assets/ui/icons/debuffs/burn.png"
+			return 1
 		Enums.StatusEffect.FREEZE:
-			return "res://assets/ui/icons/debuffs/freeze.png"
+			return 2
 		Enums.StatusEffect.PARALYSIS:
-			return "res://assets/ui/icons/debuffs/stun.png"
+			return 3
 		Enums.StatusEffect.SLEEP:
-			return "res://assets/ui/icons/debuffs/sleep.png"
+			return 4
 		Enums.StatusEffect.CONFUSION:
-			return "res://assets/ui/icons/debuffs/confuse.png"
+			return 5
 		Enums.StatusEffect.BLIND:
-			return "res://assets/ui/icons/debuffs/blind.png"
+			return 6
 		Enums.StatusEffect.SILENCE:
-			return "res://assets/ui/icons/debuffs/silence.png"
+			return 7
+		# Row 1: Secondary debuffs (indices 8-15)
 		Enums.StatusEffect.BLEED:
-			return "res://assets/ui/icons/debuffs/bleed.png"
+			return 8
 		Enums.StatusEffect.CORRUPTED:
-			return "res://assets/ui/icons/debuffs/corruption.png"
+			return 9
 		Enums.StatusEffect.SORROW:
-			return "res://assets/ui/icons/debuffs/curse.png"
+			return 10
 		Enums.StatusEffect.ATTACK_DOWN:
-			return "res://assets/ui/icons/debuffs/attack_down.png"
+			return 11
 		Enums.StatusEffect.DEFENSE_DOWN:
-			return "res://assets/ui/icons/debuffs/defense_down.png"
+			return 12
 		Enums.StatusEffect.SPEED_DOWN:
-			return "res://assets/ui/icons/debuffs/speed_down.png"
-		# Buffs
+			return 13
+		# Row 2: Buffs (indices 16-23)
 		Enums.StatusEffect.REGEN:
-			return "res://assets/ui/icons/buffs/regen.png"
+			return 16
 		Enums.StatusEffect.SHIELD:
-			return "res://assets/ui/icons/buffs/shield.png"
+			return 17
 		Enums.StatusEffect.ATTACK_UP:
-			return "res://assets/ui/icons/buffs/attack_up.png"
+			return 18
 		Enums.StatusEffect.DEFENSE_UP:
-			return "res://assets/ui/icons/buffs/defense_up.png"
+			return 19
 		Enums.StatusEffect.SPEED_UP:
-			return "res://assets/ui/icons/buffs/speed_up.png"
+			return 20
 		Enums.StatusEffect.PURIFYING:
-			return "res://assets/ui/icons/buffs/blessed.png"
+			return 21
 		Enums.StatusEffect.UNTARGETABLE:
-			return "res://assets/ui/icons/buffs/invisible.png"
+			return 22
 		Enums.StatusEffect.GUARDED:
-			return "res://assets/ui/icons/buffs/shield.png"  # Reuse shield icon for guarded
+			return 23
 		_:
-			return ""
+			return -1  # Invalid/unknown effect
 
 
 func _get_status_effect_name(effect: Enums.StatusEffect) -> String:
@@ -1526,7 +1530,7 @@ func _on_status_effect_changed(target: Node, _effect: int, _extra: int = 0) -> v
 
 
 func _update_character_status_icons(character: CharacterBase) -> void:
-	## Update the status icon display for a character's panel
+	## Update the status icon display for a character's panel using BC status icons
 	if not character.has_meta("status_icons"):
 		return
 
@@ -1547,13 +1551,13 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 			break
 
 		var effect: Enums.StatusEffect = effect_key as Enums.StatusEffect
-		var icon_path := _get_status_effect_icon_path(effect)
+		var icon_index := _get_status_effect_icon_index(effect)
 
-		if icon_path == "" or not ResourceLoader.exists(icon_path):
+		# Skip invalid/unknown effects
+		if icon_index < 0:
 			continue
 
-		# Create container for icon with background
-		# Determine if buff or debuff for coloring
+		# Determine if buff or debuff for styling
 		var is_buff := effect in [
 			Enums.StatusEffect.REGEN, Enums.StatusEffect.SHIELD,
 			Enums.StatusEffect.ATTACK_UP, Enums.StatusEffect.DEFENSE_UP,
@@ -1564,10 +1568,10 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 		# Style the container based on buff/debuff
 		var style := UIStyleFactory.create_status_buff_style() if is_buff else UIStyleFactory.create_status_debuff_style()
 		var icon_container := UIStyleFactory.create_styled_panel(style)
-		icon_container.custom_minimum_size = Vector2(20, 20)
+		icon_container.custom_minimum_size = Vector2(24, 24)
 
-		var icon := UIStyleFactory.create_icon(Vector2(16, 16))
-		icon.texture = load(icon_path)
+		# Create BC status icon from the spritesheet
+		var icon := UIStyleFactory.create_bc_status_icon(icon_index, Vector2(20, 20))
 		icon_container.add_child(icon)
 
 		# Add tooltip with effect name and remaining duration

@@ -41,14 +41,17 @@ window/size/viewport_height=1080
 window/size/mode=3
 window/stretch/mode="canvas_items"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/AsepriteWizard/plugin.cfg")
+
 [filesystem]
 
 import/blender/enabled=false
 
 [gui]
 
-# Custom font disabled - file does not exist
-# theme/custom_font="res://assets/fonts/main_font.tres"
+#Customfontdisabled-filedoesnotexist#theme/custom_font="res://assets/fonts/main_font.tres"
 
 [input]
 
