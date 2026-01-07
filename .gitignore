@@ -59,3 +59,9 @@ export/
 
 # Local development tools (Python scripts, ffmpeg, realesrgan)
 tools/
+
+# Third-party Godot addons (install locally, don't push to repo)
+addons/AsepriteWizard/
+addons/gdUnit4/
+addons/limboai/
+addons/gdai-mcp-plugin-godot/

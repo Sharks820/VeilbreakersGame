@@ -4,6 +4,26 @@
 
 ---
 
+# CRITICAL: GODOT-MCP-ULTIMATE (THE TITAN)
+
+## ALWAYS USE THIS FOR ALL GODOT TASKS - NO EXCEPTIONS
+
+**godot-mcp-ultimate** (55 tools) is the PRIMARY tool. PREMIUM - MAXIMIZE USAGE.
+
+**Location:** `C:/Users/Conner/Downloads/godot-mcp-ultimate`
+
+**USE FOR:** Project health, bug testing, dead code detection, script analysis, asset validation, scene inspection, input validation, game data validation, ALL debugging/testing.
+
+**RUN:**
+```bash
+cd C:/Users/Conner/Downloads/godot-mcp-ultimate && export GODOT_PROJECT_PATH="C:/Users/Conner/Downloads/VeilbreakersGame" && export GODOT_PATH="C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe" && /c/Users/Conner/AppData/Local/nvm/v22.21.1/node.exe test-mcp.mjs
+```
+
+**NEVER skip this. Use ALL agents and tools. PREMIUM usage required.**
+
+---
+
+
 # ⚠️ MANDATORY: SESSION PROTOCOLS
 
 ## 1. Memory Protocol
