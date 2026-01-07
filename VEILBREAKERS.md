@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v1.26** | Last updated: 2026-01-06
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v1.27** | Last updated: 2026-01-07
 
 ---
 
@@ -441,10 +441,26 @@ battle, ui, art, audio, vera, monsters, critical
 | 2026-01-04 | **v0.96: CODE DEDUPLICATION** - Major refactoring, utility systems created |
 | 2026-01-04 | **v1.16: CLEANUP** - Removed tools/ from git (258K lines). Tools are LOCAL DEV ONLY. Documented rigging failure. |
 | 2026-01-04 | **v1.21: HOLLOW EXPANSION** - 8 sprite sheets configured, 7 new skills, Scenario MCP added |
+| 2026-01-07 | **v1.27: OVERWORLD DESIGN** - Complete overworld/story design doc locked. HD-2D camera, shadow encounters, shrine system, VERA's hidden story, the betrayal twist. See `docs/OVERWORLD_DESIGN.md` |
 
 ---
 
-## NEXT SESSION: Hollow Sprite Sheets
+## NEXT SESSION: Overworld Implementation
+
+**Design Doc:** `docs/OVERWORLD_DESIGN.md` (LOCKED)
+
+**Key Systems to Implement:**
+1. HD-2D camera with parallax layers
+2. Shadow encounter system (biome-locked monster pools)
+3. Shrine save/service points
+4. Day/night cycle + weather
+5. World color progression (vibrant → crimson)
+
+**First Boss:** THE CONGREGATION
+
+---
+
+## PREVIOUS: Hollow Sprite Sheets
 
 **Task**: Use Scenario MCP to remove gray backgrounds from 5 sprite sheets.
 
