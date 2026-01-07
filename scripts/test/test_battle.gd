@@ -32,6 +32,7 @@ var vera_tutorial_panel: Control = null
 var _vera_breathing_time: float = 0.0
 var _vera_breathing_enabled: bool = false
 var _vera_breathing_portrait: TextureRect = null
+var _vera_glow_ring: Control = null  # Outer glow ring for more visible animation
 
 # Tutorial progress tracking
 var _tutorial_shown_turn_start: bool = false
@@ -161,12 +162,22 @@ func _process(delta: float) -> void:
 		and is_instance_valid(_vera_breathing_portrait)
 	):
 		_vera_breathing_time += delta
-		# Gentle sine wave pulse on modulate for smooth glow effect
-		var pulse: float = sin(_vera_breathing_time * 2.0) * 0.5 + 0.5  # 0 to 1 range
-		var glow_intensity: float = 1.0 + pulse * 0.15  # 1.0 to 1.15 range
+		# More visible sine wave pulse for breathing effect
+		var pulse: float = sin(_vera_breathing_time * 2.5) * 0.5 + 0.5  # 0 to 1 range, slightly faster
+		var glow_intensity: float = 1.0 + pulse * 0.25  # 1.0 to 1.25 range - more visible
+		# Purple-ish glow for VERA's mystical appearance
 		_vera_breathing_portrait.modulate = Color(
-			glow_intensity, glow_intensity * 0.95, glow_intensity * 1.05, 1.0
+			glow_intensity * 0.95, glow_intensity * 0.9, glow_intensity * 1.1, 1.0
 		)
+
+		# Also animate the glow ring if it exists
+		if _vera_glow_ring and is_instance_valid(_vera_glow_ring):
+			# Outer glow pulses opposite to portrait for layered effect
+			var ring_pulse: float = sin(_vera_breathing_time * 2.5 + PI) * 0.5 + 0.5
+			var ring_alpha: float = 0.3 + ring_pulse * 0.5  # 0.3 to 0.8 alpha
+			var ring_scale: float = 1.0 + ring_pulse * 0.08  # Subtle size pulse
+			_vera_glow_ring.modulate.a = ring_alpha
+			_vera_glow_ring.scale = Vector2(ring_scale, ring_scale)
 
 
 func _setup_test_battle() -> void:
@@ -864,10 +875,15 @@ func _display_vera_tutorial(dialogue: Dictionary) -> void:
 
 	vera_tutorial_panel.visible = true
 
-	# Update content - use new node paths
+	# Update content - use new node paths (updated for PortraitWrapper/PortraitContainer structure)
 	var speaker_label: Label = vera_tutorial_panel.get_node("MainVBox/HBox/VBox/SpeakerLabel")
 	var text_label: RichTextLabel = vera_tutorial_panel.get_node("MainVBox/HBox/VBox/TextLabel")
-	var portrait: TextureRect = vera_tutorial_panel.get_node("MainVBox/HBox/PortraitFrame/Portrait")
+	var portrait: TextureRect = vera_tutorial_panel.get_node(
+		"MainVBox/HBox/PortraitWrapper/PortraitContainer/PortraitFrame/PortraitCenter/Portrait"
+	)
+	var glow_ring: Panel = vera_tutorial_panel.get_node(
+		"MainVBox/HBox/PortraitWrapper/PortraitContainer/GlowRing"
+	)
 	var continue_button: Button = vera_tutorial_panel.get_node(
 		"MainVBox/ButtonContainer/ContinueButton"
 	)
@@ -882,8 +898,8 @@ func _display_vera_tutorial(dialogue: Dictionary) -> void:
 	if ResourceLoader.exists("res://assets/characters/vera/vera_interface.png"):
 		portrait.texture = load("res://assets/characters/vera/vera_interface.png")
 
-	# Start smooth breathing animation on portrait
-	_start_vera_tutorial_breathing(portrait)
+	# Start smooth breathing animation on portrait and glow ring
+	_start_vera_tutorial_breathing(portrait, glow_ring)
 
 	# Typewriter effect - FAST for snappy UX (3-4 chars at a time)
 	var full_text: String = dialogue.text
@@ -964,15 +980,49 @@ func _create_vera_tutorial_panel() -> void:
 	hbox.name = "HBox"
 	main_vbox.add_child(hbox)
 
-	# Portrait with circular frame
+	# Portrait with circular frame and glow effect - use CenterContainer for vertical centering
+	var portrait_wrapper := CenterContainer.new()
+	portrait_wrapper.name = "PortraitWrapper"
+	hbox.add_child(portrait_wrapper)
+
+	var portrait_container := Control.new()
+	portrait_container.name = "PortraitContainer"
+	portrait_container.custom_minimum_size = Vector2(100, 100)
+	portrait_wrapper.add_child(portrait_container)
+
+	# Outer glow ring (animated, behind frame) - creates pulsing aura effect
+	var glow_ring := Panel.new()
+	glow_ring.name = "GlowRing"
+	var glow_style := StyleBoxFlat.new()
+	glow_style.bg_color = Color(0.6, 0.4, 0.8, 0.0)  # Transparent center
+	glow_style.border_color = Color(0.7, 0.5, 0.9, 0.7)  # Purple glow border, slightly brighter
+	glow_style.set_border_width_all(5)
+	glow_style.set_corner_radius_all(50)  # Circular
+	glow_style.shadow_color = Color(0.5, 0.3, 0.7, 0.4)  # Soft outer glow
+	glow_style.shadow_size = 8
+	glow_ring.add_theme_stylebox_override("panel", glow_style)
+	glow_ring.size = Vector2(98, 98)
+	glow_ring.position = Vector2(1, 1)  # Center in container
+	glow_ring.pivot_offset = Vector2(49, 49)  # Scale from center
+	glow_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	portrait_container.add_child(glow_ring)
+
+	# Portrait frame (circular, contains the image)
 	var portrait_frame := UIStyleFactory.create_styled_panel(UIStyleFactory.create_vera_portrait_circle())
 	portrait_frame.name = "PortraitFrame"
-	portrait_frame.custom_minimum_size = Vector2(90, 90)
-	hbox.add_child(portrait_frame)
+	portrait_frame.size = Vector2(88, 88)
+	portrait_frame.position = Vector2(6, 6)  # Center in container
+	portrait_container.add_child(portrait_frame)
 
-	var portrait := UIStyleFactory.create_portrait(Vector2(84, 84))
+	# Portrait image - centered in frame using CenterContainer
+	var portrait_center := CenterContainer.new()
+	portrait_center.name = "PortraitCenter"
+	portrait_center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	portrait_frame.add_child(portrait_center)
+
+	var portrait := UIStyleFactory.create_portrait(Vector2(78, 78))
 	portrait.name = "Portrait"
-	portrait_frame.add_child(portrait)
+	portrait_center.add_child(portrait)
 
 	# Text content
 	var vbox := UIStyleFactory.create_vbox(6)
@@ -1025,7 +1075,7 @@ func _create_vera_tutorial_panel() -> void:
 	canvas.add_child(vera_tutorial_panel)
 
 
-func _start_vera_tutorial_breathing(portrait: TextureRect) -> void:
+func _start_vera_tutorial_breathing(portrait: TextureRect, glow_ring: Panel = null) -> void:
 	## Start smooth breathing animation on VERA portrait using _process()
 	if not portrait:
 		return
@@ -1035,8 +1085,14 @@ func _start_vera_tutorial_breathing(portrait: TextureRect) -> void:
 	# Works even when game is paused because process_mode = PROCESS_MODE_ALWAYS
 	_vera_breathing_time = 0.0
 	_vera_breathing_portrait = portrait
+	_vera_glow_ring = glow_ring
 	_vera_breathing_enabled = true
 	portrait.modulate = Color(1.0, 1.0, 1.0, 1.0)
+
+	# Initialize glow ring
+	if glow_ring:
+		glow_ring.modulate.a = 0.5
+		glow_ring.scale = Vector2(1.0, 1.0)
 
 
 func _stop_vera_tutorial_breathing() -> void:
@@ -1045,6 +1101,12 @@ func _stop_vera_tutorial_breathing() -> void:
 	if _vera_breathing_portrait and is_instance_valid(_vera_breathing_portrait):
 		_vera_breathing_portrait.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	_vera_breathing_portrait = null
+
+	# Reset glow ring
+	if _vera_glow_ring and is_instance_valid(_vera_glow_ring):
+		_vera_glow_ring.modulate.a = 0.5
+		_vera_glow_ring.scale = Vector2(1.0, 1.0)
+	_vera_glow_ring = null
 
 
 func _wait_for_tutorial_continue() -> void:

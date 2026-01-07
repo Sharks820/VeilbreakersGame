@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cvf1wr0kk06j1"
-path="res://.godot/imported/mawling_sheet2.png-fea96c65c9cdbbabc39a3f884c6d6ce6.ctex"
+path="res://.godot/imported/mawling_a_sheet.png-877bd2ad995820370f89a73a7505a7f2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/monsters/sheets/mawling_sheet2.png"
-dest_files=["res://.godot/imported/mawling_sheet2.png-fea96c65c9cdbbabc39a3f884c6d6ce6.ctex"]
+source_file="res://assets/sprites/monsters/sheets/mawling_a_sheet.png"
+dest_files=["res://.godot/imported/mawling_a_sheet.png-877bd2ad995820370f89a73a7505a7f2.ctex"]
 
 [params]
 

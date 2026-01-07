@@ -59,6 +59,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 color = Color(0.8, 0.1, 0.05, 0.0)
 
 [node name="DarkOverlay" type="ColorRect" parent="."]
@@ -68,6 +69,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 color = Color(0, 0, 0, 0.1)
 
 [node name="Vignette" type="ColorRect" parent="."]
@@ -177,6 +179,7 @@ offset_right = 300.0
 grow_vertical = 0
 text = "v0.1.0 - Development Build"
 modulate = Color(1, 1, 1, 0.6)
+mouse_filter = 2
 
 [connection signal="pressed" from="ButtonContainer/NewGameButton" to="." method="_on_new_game_pressed"]
 [connection signal="pressed" from="ButtonContainer/ContinueButton" to="." method="_on_continue_pressed"]

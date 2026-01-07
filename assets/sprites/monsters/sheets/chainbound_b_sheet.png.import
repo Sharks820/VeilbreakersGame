@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bp0doseio3sel"
-path="res://.godot/imported/chainbound_sheet3.png-eb92e6c5cf8c8956202fec3699e9cc03.ctex"
+path="res://.godot/imported/chainbound_b_sheet.png-ccbfc142be685f2ec8135fcb35479f9c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/monsters/sheets/chainbound_sheet3.png"
-dest_files=["res://.godot/imported/chainbound_sheet3.png-eb92e6c5cf8c8956202fec3699e9cc03.ctex"]
+source_file="res://assets/sprites/monsters/sheets/chainbound_b_sheet.png"
+dest_files=["res://.godot/imported/chainbound_b_sheet.png-ccbfc142be685f2ec8135fcb35479f9c.ctex"]
 
 [params]
 

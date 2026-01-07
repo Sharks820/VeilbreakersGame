@@ -79,7 +79,7 @@ func _ready() -> void:
 	_show_vera_dialogue("Welcome, Hunter. I am VERA - your Virtual Entity for Reconnaissance and Analysis. Choose your champion wisely. Each walks a different Path, and the monsters you capture will resonate with that choice.")
 
 func _process(delta: float) -> void:
-	# Hero portrait breathing animation - SMOOTH sine wave using lerp for AAA quality
+	# Hero portrait breathing animation - SMOOTH sine wave for AAA quality
 	if _breathing_enabled and hero_portrait and is_instance_valid(hero_portrait):
 		_breathing_time += delta
 		# Sine wave: 2.5% amplitude, 3.5 second full cycle (slower = more natural)
@@ -89,12 +89,14 @@ func _process(delta: float) -> void:
 		var breath: float = (breath_raw * 0.5 + 0.5)  # Normalize to 0-1
 		breath = breath * breath * (3.0 - 2.0 * breath)  # Smoothstep for organic feel
 		var target_scale: float = 1.0 + breath * 0.025  # 1.0 to 1.025 (subtle)
-		# Lerp for frame-rate independent smoothing (prevents glitching)
+		# FIX: Use exponential decay smoothing for frame-rate independence
+		# The factor 1.0 - exp(-delta * 12.0) ensures consistent behavior at any FPS
+		var smooth_factor: float = 1.0 - exp(-delta * 12.0)
 		var current_scale: float = hero_portrait.scale.x
-		var smoothed_scale: float = lerpf(current_scale, target_scale, minf(delta * 8.0, 1.0))
+		var smoothed_scale: float = lerpf(current_scale, target_scale, smooth_factor)
 		hero_portrait.scale = Vector2(smoothed_scale, smoothed_scale)
 
-	# VERA portrait breathing animation - SMOOTH sine wave using lerp
+	# VERA portrait breathing animation - SMOOTH sine wave
 	if _vera_breathing_enabled and vera_portrait and is_instance_valid(vera_portrait):
 		_vera_breathing_time += delta
 		# Sine wave: 4% amplitude, 4.5 second full cycle
@@ -102,8 +104,10 @@ func _process(delta: float) -> void:
 		var breath: float = (breath_raw * 0.5 + 0.5)
 		breath = breath * breath * (3.0 - 2.0 * breath)  # Smoothstep
 		var target_scale: float = 1.0 + breath * 0.04  # 1.0 to 1.04
+		# FIX: Use exponential decay smoothing for frame-rate independence
+		var smooth_factor: float = 1.0 - exp(-delta * 12.0)
 		var current_scale: float = vera_portrait.scale.x
-		var smoothed_scale: float = lerpf(current_scale, target_scale, minf(delta * 8.0, 1.0))
+		var smoothed_scale: float = lerpf(current_scale, target_scale, smooth_factor)
 		vera_portrait.scale = Vector2(smoothed_scale, smoothed_scale)
 
 func _load_all_data() -> void:
@@ -116,20 +120,27 @@ func _load_all_data() -> void:
 			if data:
 				hero_data_cache[hero_id] = data
 
-	# Load monsters for showcase
+	# Load monsters for showcase - includes all starter monsters for all heroes
 	var monster_ids := [
+		# IRON brand (Bastion starters)
 		"chainbound",
-		"ironjaw",
+		"skitter_teeth",
 		"the_bulwark",
-		"ravener",
+		"ironjaw",  # BLOODIRON hybrid
+		# SAVAGE brand (Rend starters)
 		"mawling",
-		"bloodshade",
-		"the_weeping",
-		"hollow",
+		"ravener",
+		"needlefang",  # VENOMSTRIKE - fast assassin
+		# LEECH/DREAD brand (Marrow starters)
 		"gluttony_polyp",
+		"bloodshade",  # NIGHTLEECH hybrid
+		"hollow",
+		"sporecaller",
+		# SURGE/DREAD brand (Mirage starters)
 		"flicker",
-		"voltgeist",
-		"crackling"
+		"crackling",
+		"voltgeist",  # TERRORFLUX hybrid
+		"the_weeping"
 	]
 	for monster_id in monster_ids:
 		var path := "res://data/monsters/%s.tres" % monster_id
@@ -490,6 +501,8 @@ func _create_monster_card(monster_id: String) -> PanelContainer:
 	vbox.add_child(sprite_container)
 
 	var sprite := UIStyleFactory.create_icon(Vector2(60, 60))
+	# Use LINEAR filtering for smooth scaling/animations
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	var sprite_path := "res://assets/sprites/monsters/%s.png" % monster_id
 	if ResourceLoader.exists(sprite_path):
 		sprite.texture = load(sprite_path)
@@ -568,10 +581,11 @@ func _create_vera_panel(parent: Control) -> void:
 
 func _start_vera_portrait_animation() -> void:
 	"""Start smooth _process-based breathing animation on VERA portrait"""
-	if not vera_portrait:
+	if not vera_portrait or not is_instance_valid(vera_portrait):
 		return
 
-	# Reset scale to base before starting
+	# Reset scale to base before starting breathing animation
+	# This ensures clean transition without visual jumping
 	vera_portrait.scale = Vector2.ONE
 	_vera_breathing_time = 0.0
 	_vera_breathing_enabled = true
@@ -677,8 +691,11 @@ func _animate_hero_change(data: HeroData) -> void:
 			elif data.sprite_path != "" and ResourceLoader.exists(data.sprite_path):
 				hero_portrait.texture = load(data.sprite_path)
 
-			# CRITICAL: Update pivot offset based on actual texture size
-			# This prevents animation glitching when texture dimensions change
+			# CRITICAL FIX: Set pivot FIRST at scale 1.0 to prevent visual jumping
+			# The pivot determines the center point for scale transforms
+			# Changing pivot while scaled != 1.0 causes position shifts
+			hero_portrait.scale = Vector2.ONE  # Reset to 1.0 before pivot change
+
 			if hero_portrait.texture:
 				var tex_size: Vector2 = hero_portrait.texture.get_size()
 				# Scale down to fit in container (400x450 area)
@@ -686,8 +703,11 @@ func _animate_hero_change(data: HeroData) -> void:
 				var display_size: Vector2 = tex_size * scale_factor
 				# Set pivot to center of displayed size
 				hero_portrait.pivot_offset = display_size / 2.0
+			else:
+				# Fallback pivot for missing textures
+				hero_portrait.pivot_offset = Vector2(200, 225)
 
-			# Reset scale for fade-in animation start point
+			# NOW set the starting scale for fade-in animation (after pivot is correct)
 			hero_portrait.scale = Vector2(0.9, 0.9)
 
 			# Update labels
@@ -845,11 +865,15 @@ func _setup_animations() -> void:
 
 func _start_breathing_animation() -> void:
 	"""Start smooth _process-based breathing animation on hero portrait"""
-	if not hero_portrait:
+	if not hero_portrait or not is_instance_valid(hero_portrait):
 		return
 
-	# Reset scale to base before starting
+	# CRITICAL FIX: Ensure scale is exactly 1.0 before starting breathing
+	# This prevents glitches when transitioning from hero change animation
 	hero_portrait.scale = Vector2.ONE
+
+	# Reset breathing time to 0 for a clean sine wave start
+	# Starting at 0 means we begin at the midpoint of the breath cycle (natural)
 	_breathing_time = 0.0
 	_breathing_enabled = true
 
@@ -1063,6 +1087,12 @@ func _on_confirmation_confirm(hero_id: String, overlay: Control) -> void:
 	var player := GameManager.initialize_player_character()
 	if player:
 		print("[CHARACTER_SELECT] Player character created: %s" % player.character_name)
+		# Add 4 starting monsters based on hero's path/brand alignment
+		var starter_monsters := _get_starter_monsters_for_hero(hero_id)
+		for monster_id in starter_monsters:
+			GameManager.add_monster_to_collection(monster_id, 5)  # Level 5 starters
+			print("[CHARACTER_SELECT] Added starter monster: %s" % monster_id)
+
 
 		# Set tutorial flag for first battle
 		GameManager.set_story_flag("tutorial_battle_pending", true)
@@ -1081,17 +1111,46 @@ func _on_back_pressed() -> void:
 	SceneManager.goto_main_menu()
 
 
+func _get_starter_monsters_for_hero(hero_id: String) -> Array[String]:
+	## Returns 4 starter monsters appropriate for the hero's path and brand alignment
+	match hero_id:
+		"bastion":
+			# IRONBOUND path / IRON brand - Defensive monsters
+			# chainbound (IRON), skitter_teeth (IRON), the_bulwark (IRON), ironjaw (BLOODIRON hybrid)
+			return ["chainbound", "skitter_teeth", "the_bulwark", "ironjaw"]
+		"rend":
+			# FANGBORN path / SAVAGE brand - Aggressive attack monsters
+			# mawling (SAVAGE), ravener (SAVAGE), ironjaw (BLOODIRON hybrid), needlefang (VENOMSTRIKE - fast assassin)
+			return ["mawling", "ravener", "ironjaw", "needlefang"]
+		"marrow":
+			# VOIDTOUCHED path / LEECH brand - Life-drain and support monsters
+			# gluttony_polyp (LEECH), bloodshade (NIGHTLEECH), hollow (DREAD - void), sporecaller (VENOM - debuffer)
+			return ["gluttony_polyp", "bloodshade", "hollow", "sporecaller"]
+		"mirage":
+			# UNCHAINED path / SURGE+DREAD brands - Speed and terror monsters
+			# flicker (SURGE), crackling (SURGE), voltgeist (TERRORFLUX), the_weeping (DREAD)
+			return ["flicker", "crackling", "voltgeist", "the_weeping"]
+		_:
+			# Fallback - balanced starter set
+			push_warning("[CHARACTER_SELECT] Unknown hero_id: %s, using fallback starters" % hero_id)
+			return ["mawling", "chainbound", "crackling", "hollow"]
+
+
 # =============================================================================
 # CLEANUP
 # =============================================================================
 
 
 func _exit_tree() -> void:
-	# Stop all breathing animations
+	# Stop all breathing animations and reset states
 	_stop_breathing_animation()
 	_vera_breathing_enabled = false
 
-	# Kill remaining tweens
+	# Reset VERA portrait scale to prevent any residual state
+	if vera_portrait and is_instance_valid(vera_portrait):
+		vera_portrait.scale = Vector2.ONE
+
+	# Kill remaining tweens to prevent orphaned callbacks
 	if _selection_tween and _selection_tween.is_valid():
 		_selection_tween.kill()
 	if _vera_tween and _vera_tween.is_valid():

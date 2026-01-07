@@ -114,6 +114,8 @@ const VIGNETTE_MAX: float = 0.35
 
 
 func _ready() -> void:
+	print(">>> MAIN MENU READY - Script is running!")
+	print(">>> Button node: ", $ButtonContainer/NewGameButton)
 	GameManager.change_state(Enums.GameState.MAIN_MENU)
 
 	# Update version label

@@ -68,7 +68,7 @@ func _setup_transition_ui() -> void:
 	center.add_child(vbox)
 
 	# Loading label
-	_loading_label = UIStyleFactory.create_centered_label("Loading...", UIStyleFactory.FONT_NORMAL, UIStyleFactory.COLOR_DEFAULT)
+	_loading_label = UIStyleFactory.create_centered_label("Loading...", UIStyleFactory.FONT_NORMAL, UIStyleFactory.COLOR_PARCHMENT)
 	vbox.add_child(_loading_label)
 
 	# Progress bar

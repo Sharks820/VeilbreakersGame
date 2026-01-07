@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+
+monster_id = "grimthorn"
+display_name = "Grimthorn"
+description = "A twisted mass of thorny vines that has gained sentience through absorbing the life force of countless victims. Its body bristles with razor-sharp barbs that drip with paralytic toxin. Where it walks, nothing grows again - the soil becomes barren and poisoned. It speaks through the rustling of its leaves, whispering the last words of those it has consumed."
+tier = 1
+brand = 2
+rarity = 1
+
+brand_tier = 0
+secondary_brand = -1
+evolution_stage = 0
+
+sprite_path = "res://assets/sprites/monsters/grimthorn.png"
+portrait_path = "res://assets/characters/monsters/grimthorn_portrait.png"
+color_palette = Color(0.2, 0.5, 0.15, 1)
+
+base_hp = 58
+base_mp = 22
+base_attack = 12
+base_defense = 10
+base_magic = 16
+base_resistance = 12
+base_speed = 9
+base_luck = 8
+
+hp_growth = 1.18
+mp_growth = 1.15
+attack_growth = 1.12
+defense_growth = 1.1
+magic_growth = 1.18
+resistance_growth = 1.14
+speed_growth = 1.08
+
+innate_skills = ["basic_attack", "poison_sting", "vine_whip"]
+learnable_skills = {8: "toxic_spores", 14: "thorn_barrier", 22: "venomous_bloom", 32: "natures_wrath"}
+
+ai_pattern = "aggressive"
+skill_weights = {"basic_attack": 20, "poison_sting": 45, "vine_whip": 35}
+
+base_corruption = 70.0
+corruption_resistance = 6.0
+
+base_experience = 22
+base_currency = 10
+drop_table = [{"item_id": "thorny_vine", "chance": 0.5, "quantity": 1}, {"item_id": "toxic_sap", "chance": 0.35, "quantity": 1}, {"item_id": "grimthorn_seed", "chance": 0.08, "quantity": 1}]
+
+habitat = "Corrupted forests, poisoned swamps, places where nature has turned hostile"
+behavior_notes = "Aggressive when threatened, prefers to poison enemies and let the toxin do its work. Uses vine whip to keep foes at distance while poison takes effect. The thorns rattle when it moves, creating an eerie warning sound."
+purification_hint = "The thorns soften into protective bark, the poison becomes healing nectar. It becomes a guardian of growth rather than decay, helping restore life to barren lands."

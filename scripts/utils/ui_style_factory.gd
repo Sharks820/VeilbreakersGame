@@ -1118,9 +1118,9 @@ static func create_menu_button(text: String) -> Button:
 	return create_button(text, FONT_SUBHEADING, Vector2(200, 50))
 
 
-## Create a small action button
+## Create a battle action button (AAA styled, 100x80 minimum size)
 static func create_action_button(text: String) -> Button:
-	return create_button(text, FONT_NORMAL, Vector2(80, 32))
+	return create_button(text, FONT_HEADING, Vector2(100, 80))
 
 
 ## Create a continue/confirm button
@@ -1521,70 +1521,98 @@ static func create_failure_popup_style() -> StyleBoxFlat:
 # ACTION BUTTON STYLES (v1.16 - Skill/Item action buttons with accent colors)
 # =============================================================================
 
-## Create action button normal style with accent color and shadow
+## Create action button normal style with accent color and shadow (AAA styling)
+## Enhanced for larger 100x80 pixel battle buttons with prominent borders
 static func create_action_button_normal(accent_color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.12, 0.12, 0.15, 0.95)
-	style.border_color = accent_color.darkened(0.3)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(6)
-	style.shadow_color = Color(0, 0, 0, 0.5)
-	style.shadow_size = 4
-	style.shadow_offset = Vector2(2, 2)
+	# Darker, more prominent background
+	style.bg_color = Color(0.1, 0.1, 0.14, 0.98)
+	# Thicker accent-colored border for visibility
+	style.border_color = accent_color.darkened(0.2)
+	style.set_border_width_all(3)
+	# Larger corner radius for modern AAA look
+	style.set_corner_radius_all(10)
+	# Stronger drop shadow for depth
+	style.shadow_color = Color(0, 0, 0, 0.7)
+	style.shadow_size = 6
+	style.shadow_offset = Vector2(3, 3)
+	# Content margins for padding
+	style.set_content_margin_all(8)
 	return style
 
-## Create action button hover style with glow effect
+## Create action button hover style with glow effect (AAA styling)
 static func create_action_button_hover(accent_color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.18, 0.18, 0.22, 0.98)
-	style.border_color = accent_color
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(6)
-	style.shadow_color = accent_color.darkened(0.5)
-	style.shadow_color.a = 0.6
-	style.shadow_size = 8
+	# Lighter background on hover
+	style.bg_color = Color(0.16, 0.16, 0.22, 0.98)
+	# Bright accent border
+	style.border_color = accent_color.lightened(0.1)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(10)
+	# Prominent glow effect
+	style.shadow_color = accent_color
+	style.shadow_color.a = 0.7
+	style.shadow_size = 12
 	style.shadow_offset = Vector2.ZERO
+	style.set_content_margin_all(8)
 	return style
 
-## Create action button pressed style
+## Create action button pressed style (AAA styling)
 static func create_action_button_pressed(accent_color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = accent_color.darkened(0.4)
-	style.border_color = accent_color.lightened(0.2)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(6)
+	# Accent-tinted background when pressed
+	style.bg_color = accent_color.darkened(0.5)
+	style.border_color = accent_color.lightened(0.3)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(10)
+	# Inner shadow effect
+	style.shadow_color = Color(0, 0, 0, 0.4)
+	style.shadow_size = 2
+	style.shadow_offset = Vector2(1, 1)
+	style.set_content_margin_all(8)
 	return style
 
-## Create action button disabled style
+## Create action button disabled style (AAA styling)
 static func create_action_button_disabled() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.08, 0.1, 0.7)
-	style.border_color = Color(0.3, 0.3, 0.3, 0.5)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(6)
+	style.bg_color = Color(0.06, 0.06, 0.08, 0.8)
+	style.border_color = Color(0.25, 0.25, 0.3, 0.6)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(10)
+	style.set_content_margin_all(8)
 	return style
 
-## Create action button focus style
+## Create action button focus style (AAA styling - gold/amber highlight)
 static func create_action_button_focus() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.18, 0.14, 0.22, 0.95)
-	style.border_color = Color(0.7, 0.55, 0.4, 1.0)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(6)
+	style.bg_color = Color(0.14, 0.12, 0.18, 0.98)
+	# Gold focus border for clear visibility
+	style.border_color = Color(0.85, 0.65, 0.25, 1.0)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(10)
+	# Gold glow effect
+	style.shadow_color = Color(0.85, 0.65, 0.25, 0.6)
+	style.shadow_size = 10
+	style.shadow_offset = Vector2.ZERO
+	style.set_content_margin_all(8)
 	return style
 
-## Apply full action button styling with accent color
+## Apply full action button styling with accent color (AAA battle buttons)
+## Designed for large 100x80 pixel buttons with high visibility
 static func apply_action_button_style(button: Button, accent_color: Color) -> void:
 	button.add_theme_stylebox_override("normal", create_action_button_normal(accent_color))
 	button.add_theme_stylebox_override("hover", create_action_button_hover(accent_color))
 	button.add_theme_stylebox_override("pressed", create_action_button_pressed(accent_color))
 	button.add_theme_stylebox_override("disabled", create_action_button_disabled())
 	button.add_theme_stylebox_override("focus", create_action_button_focus())
-	button.add_theme_color_override("font_color", COLOR_PARCHMENT)
-	button.add_theme_color_override("font_hover_color", Color(1.0, 0.95, 0.85))
+	# High contrast text colors
+	button.add_theme_color_override("font_color", Color(0.95, 0.9, 0.8))
+	button.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 0.95))
 	button.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0))
-	button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
-	button.add_theme_font_size_override("font_size", FONT_SUBHEADING)
+	button.add_theme_color_override("font_disabled_color", Color(0.4, 0.4, 0.45))
+	button.add_theme_color_override("font_focus_color", Color(1.0, 0.95, 0.85))
+	# Larger font size for 80px tall buttons (FONT_HEADING = 18)
+	button.add_theme_font_size_override("font_size", FONT_HEADING)
 
 # =============================================================================
 # STATUS EFFECT ICON STYLES (v1.16)
@@ -2279,3 +2307,414 @@ static func create_tutorial_highlight() -> StyleBoxFlat:
 	style.set_border_width_all(3)
 	style.set_corner_radius_all(8)
 	return style
+
+# =============================================================================
+# CUSTOM ASSET-BASED UI COMPONENTS (v1.20 - Integration of art assets)
+# =============================================================================
+
+## Asset paths for UI textures
+const ASSET_HP_BAR_FRAME := "res://assets/ui/bars/hp_bar_frame.png"
+const ASSET_MP_BAR_FRAME := "res://assets/ui/bars/mp_bar_frame.png"
+const ASSET_HP_MP_BARS := "res://assets/ui/bars/hp_mp_bars.png"
+const ASSET_DIALOGUE_FRAME := "res://assets/ui/frames/DIALOGUE_FRAMENOBG.png"
+
+## Buff icon paths
+const BUFF_ICON_PATHS := {
+	"attack_up": "res://assets/ui/icons/buffs/attack_up.png",
+	"defense_up": "res://assets/ui/icons/buffs/defense_up.png",
+	"speed_up": "res://assets/ui/icons/buffs/haste.png",
+	"magic_up": "res://assets/ui/icons/buffs/magic_up.png",
+	"regen": "res://assets/ui/icons/buffs/regen.png",
+	"shield": "res://assets/ui/icons/buffs/shield.png",
+	"protected": "res://assets/ui/icons/buffs/protected.png",
+	"counter": "res://assets/ui/icons/buffs/counter.png",
+	"reflect": "res://assets/ui/icons/buffs/reflect.png",
+	"absorb": "res://assets/ui/icons/buffs/absorb.png",
+	"berserk": "res://assets/ui/icons/buffs/berserk.png",
+	"blessed": "res://assets/ui/icons/buffs/blessed.png",
+	"clarity": "res://assets/ui/icons/buffs/clarity.png",
+	"critical_up": "res://assets/ui/icons/buffs/critical_up.png",
+	"empower": "res://assets/ui/icons/buffs/empower.png",
+	"focus": "res://assets/ui/icons/buffs/focus.png",
+	"fortify": "res://assets/ui/icons/buffs/fortify.png",
+	"haste": "res://assets/ui/icons/buffs/haste.png",
+	"inspired": "res://assets/ui/icons/buffs/inspired.png",
+	"invisible": "res://assets/ui/icons/buffs/invisible.png",
+	"lucky": "res://assets/ui/icons/buffs/lucky.png",
+	"overcharge": "res://assets/ui/icons/buffs/overcharge.png",
+}
+
+## Debuff icon paths
+const DEBUFF_ICON_PATHS := {
+	"poison": "res://assets/ui/icons/debuffs/poison.png",
+	"burn": "res://assets/ui/icons/debuffs/burn.png",
+	"freeze": "res://assets/ui/icons/debuffs/freeze.png",
+	"frozen": "res://assets/ui/icons/debuffs/frozen.png",
+	"paralysis": "res://assets/ui/icons/debuffs/shock.png",
+	"sleep": "res://assets/ui/icons/debuffs/sleep.png",
+	"confusion": "res://assets/ui/icons/debuffs/confusion.png",
+	"confuse": "res://assets/ui/icons/debuffs/confuse.png",
+	"blind": "res://assets/ui/icons/debuffs/blind.png",
+	"silence": "res://assets/ui/icons/debuffs/silence.png",
+	"bleed": "res://assets/ui/icons/debuffs/bleed.png",
+	"corrupted": "res://assets/ui/icons/debuffs/corruption.png",
+	"corruption": "res://assets/ui/icons/debuffs/corruption.png",
+	"attack_down": "res://assets/ui/icons/debuffs/attack_down.png",
+	"defense_down": "res://assets/ui/icons/debuffs/defense_down.png",
+	"speed_down": "res://assets/ui/icons/debuffs/speed_down.png",
+	"magic_down": "res://assets/ui/icons/debuffs/magic_down.png",
+	"curse": "res://assets/ui/icons/debuffs/curse.png",
+	"doom": "res://assets/ui/icons/debuffs/doom.png",
+	"exhausted": "res://assets/ui/icons/debuffs/exhausted.png",
+	"fear": "res://assets/ui/icons/debuffs/fear.png",
+	"marked": "res://assets/ui/icons/debuffs/marked.png",
+	"slow": "res://assets/ui/icons/debuffs/slow.png",
+	"stun": "res://assets/ui/icons/debuffs/stun.png",
+	"weak": "res://assets/ui/icons/debuffs/weak.png",
+}
+
+## Action icon paths
+const ACTION_ICON_PATHS := {
+	"attack": "res://assets/ui/icons/actions/attack.png",
+	"defend": "res://assets/ui/icons/actions/defend.png",
+	"skill": "res://assets/ui/icons/actions/skill.png",
+	"item": "res://assets/ui/icons/actions/item.png",
+	"flee": "res://assets/ui/icons/actions/flee.png",
+	"special": "res://assets/ui/icons/actions/special.png",
+	"analyze": "res://assets/ui/icons/actions/analyze.png",
+	"wait": "res://assets/ui/icons/actions/wait.png",
+}
+
+## Create an HP bar with custom ornate frame texture overlay
+## Returns a Control containing the textured frame and progress bar
+static func create_textured_hp_bar(min_size: Vector2 = Vector2(180, 36)) -> Control:
+	var container := Control.new()
+	container.custom_minimum_size = min_size
+	container.name = "TexturedHPBar"
+
+	# Load the HP bar frame texture
+	var frame_tex: Texture2D = null
+	if ResourceLoader.exists(ASSET_HP_BAR_FRAME):
+		frame_tex = load(ASSET_HP_BAR_FRAME)
+
+	if not frame_tex:
+		# Fallback to regular HP bar if texture missing
+		var fallback := create_hp_bar(min_size)
+		container.add_child(fallback)
+		return container
+
+	# Progress bar (positioned behind the frame)
+	var bar := ProgressBar.new()
+	bar.name = "HPBar"
+	bar.show_percentage = false
+	bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Inset the bar inside the ornate frame (heart emblem on left)
+	bar.offset_left = min_size.x * 0.20
+	bar.offset_right = -min_size.x * 0.04
+	bar.offset_top = min_size.y * 0.28
+	bar.offset_bottom = -min_size.y * 0.28
+	bar.add_theme_stylebox_override("background", _create_textured_bar_bg(Color(0.15, 0.05, 0.05, 0.7)))
+	bar.add_theme_stylebox_override("fill", _create_textured_bar_fill(Color(0.85, 0.25, 0.2)))
+	container.add_child(bar)
+
+	# Frame overlay (ornate border on top)
+	var frame := TextureRect.new()
+	frame.name = "Frame"
+	frame.texture = frame_tex
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_SCALE
+	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(frame)
+
+	return container
+
+
+## Create an MP bar with custom ornate frame texture overlay
+static func create_textured_mp_bar(min_size: Vector2 = Vector2(180, 36)) -> Control:
+	var container := Control.new()
+	container.custom_minimum_size = min_size
+	container.name = "TexturedMPBar"
+
+	# Load the MP bar frame texture
+	var frame_tex: Texture2D = null
+	if ResourceLoader.exists(ASSET_MP_BAR_FRAME):
+		frame_tex = load(ASSET_MP_BAR_FRAME)
+
+	if not frame_tex:
+		# Fallback to regular MP bar if texture missing
+		var fallback := create_mp_bar(min_size)
+		container.add_child(fallback)
+		return container
+
+	# Progress bar (positioned behind the frame)
+	var bar := ProgressBar.new()
+	bar.name = "MPBar"
+	bar.show_percentage = false
+	bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Inset the bar inside the ornate frame (crystal emblem on left)
+	bar.offset_left = min_size.x * 0.20
+	bar.offset_right = -min_size.x * 0.04
+	bar.offset_top = min_size.y * 0.28
+	bar.offset_bottom = -min_size.y * 0.28
+	bar.add_theme_stylebox_override("background", _create_textured_bar_bg(Color(0.05, 0.08, 0.18, 0.7)))
+	bar.add_theme_stylebox_override("fill", _create_textured_bar_fill(Color(0.25, 0.55, 0.9)))
+	container.add_child(bar)
+
+	# Frame overlay (ornate border on top)
+	var frame := TextureRect.new()
+	frame.name = "Frame"
+	frame.texture = frame_tex
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_SCALE
+	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(frame)
+
+	return container
+
+
+## Internal: Create textured bar background style
+static func _create_textured_bar_bg(color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.set_corner_radius_all(3)
+	return style
+
+
+## Internal: Create textured bar fill style with gradient effect
+static func _create_textured_bar_fill(color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.set_corner_radius_all(2)
+	# Add subtle inner glow effect
+	style.shadow_color = color.lightened(0.3)
+	style.shadow_size = 2
+	style.shadow_offset = Vector2(0, -1)
+	return style
+
+
+## Create a status effect icon from individual asset files
+## effect_name: lowercase name matching file (e.g., "poison", "attack_up")
+## is_buff: true for buff icons, false for debuffs
+static func create_status_effect_icon(effect_name: String, is_buff: bool, size: Vector2 = Vector2(24, 24)) -> TextureRect:
+	var icon := TextureRect.new()
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = size
+
+	# Look up the icon path
+	var icon_path: String = ""
+	var lookup_name := effect_name.to_lower().replace(" ", "_")
+
+	if is_buff and BUFF_ICON_PATHS.has(lookup_name):
+		icon_path = BUFF_ICON_PATHS[lookup_name]
+	elif not is_buff and DEBUFF_ICON_PATHS.has(lookup_name):
+		icon_path = DEBUFF_ICON_PATHS[lookup_name]
+
+	# Try to load the texture
+	if icon_path != "" and ResourceLoader.exists(icon_path):
+		var tex := load(icon_path) as Texture2D
+		if tex:
+			icon.texture = tex
+
+	return icon
+
+
+## Create a status effect icon with styled container
+static func create_status_icon_with_container(effect_name: String, is_buff: bool, size: Vector2 = Vector2(28, 28)) -> PanelContainer:
+	var container := PanelContainer.new()
+	var style := create_status_buff_style() if is_buff else create_status_debuff_style()
+	container.add_theme_stylebox_override("panel", style)
+	container.custom_minimum_size = size
+
+	var icon := create_status_effect_icon(effect_name, is_buff, size - Vector2(4, 4))
+	container.add_child(icon)
+
+	return container
+
+
+## Get action icon texture by name
+static func get_action_icon(action_name: String) -> Texture2D:
+	var lookup_name := action_name.to_lower().replace(" ", "_")
+	if ACTION_ICON_PATHS.has(lookup_name):
+		var path: String = ACTION_ICON_PATHS[lookup_name]
+		if ResourceLoader.exists(path):
+			return load(path) as Texture2D
+	return null
+
+
+## Create a dialogue frame using the custom texture
+static func create_dialogue_frame_textured(size: Vector2 = Vector2(800, 200)) -> TextureRect:
+	var frame := TextureRect.new()
+	if ResourceLoader.exists(ASSET_DIALOGUE_FRAME):
+		var tex := load(ASSET_DIALOGUE_FRAME) as Texture2D
+		if tex:
+			frame.texture = tex
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_SCALE
+	frame.custom_minimum_size = size
+	return frame
+
+
+## Create a panel with NinePatchRect frame overlay for ornate borders
+static func create_ornate_panel(frame_texture_path: String, size: Vector2) -> Control:
+	var container := Control.new()
+	container.custom_minimum_size = size
+
+	# Background panel
+	var bg := PanelContainer.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.add_theme_stylebox_override("panel", create_dark_panel(BORDER_DEFAULT, 0))  # No border, we use texture
+	container.add_child(bg)
+
+	# Frame overlay
+	if ResourceLoader.exists(frame_texture_path):
+		var frame := TextureRect.new()
+		frame.texture = load(frame_texture_path)
+		frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		frame.stretch_mode = TextureRect.STRETCH_SCALE
+		frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		container.add_child(frame)
+
+	return container
+
+
+## Apply action icon to a button
+static func apply_action_icon_to_button(button: Button, action_name: String) -> void:
+	var icon := get_action_icon(action_name)
+	if icon:
+		button.icon = icon
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.expand_icon = true
+		button.add_theme_constant_override("icon_max_width", 28)
+
+
+## Create a compact textured HP bar for sidebars (smaller version)
+static func create_compact_textured_hp_bar(min_size: Vector2 = Vector2(100, 20)) -> Control:
+	var container := Control.new()
+	container.custom_minimum_size = min_size
+	container.name = "CompactHPBar"
+
+	# Load the HP bar frame texture
+	var frame_tex: Texture2D = null
+	if ResourceLoader.exists(ASSET_HP_BAR_FRAME):
+		frame_tex = load(ASSET_HP_BAR_FRAME)
+
+	if not frame_tex:
+		# Fallback to regular HP bar
+		var fallback := create_hp_bar(min_size)
+		container.add_child(fallback)
+		return container
+
+	# Progress bar
+	var bar := ProgressBar.new()
+	bar.name = "HPBar"
+	bar.show_percentage = false
+	bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bar.offset_left = min_size.x * 0.22
+	bar.offset_right = -min_size.x * 0.05
+	bar.offset_top = min_size.y * 0.22
+	bar.offset_bottom = -min_size.y * 0.22
+	bar.add_theme_stylebox_override("background", _create_textured_bar_bg(Color(0.15, 0.05, 0.05, 0.6)))
+	bar.add_theme_stylebox_override("fill", _create_textured_bar_fill(Color(0.85, 0.25, 0.2)))
+	container.add_child(bar)
+
+	# Frame overlay
+	var frame := TextureRect.new()
+	frame.name = "Frame"
+	frame.texture = frame_tex
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_SCALE
+	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(frame)
+
+	return container
+
+
+## Create a compact textured MP bar for sidebars
+static func create_compact_textured_mp_bar(min_size: Vector2 = Vector2(100, 20)) -> Control:
+	var container := Control.new()
+	container.custom_minimum_size = min_size
+	container.name = "CompactMPBar"
+
+	# Load the MP bar frame texture
+	var frame_tex: Texture2D = null
+	if ResourceLoader.exists(ASSET_MP_BAR_FRAME):
+		frame_tex = load(ASSET_MP_BAR_FRAME)
+
+	if not frame_tex:
+		# Fallback to regular MP bar
+		var fallback := create_mp_bar(min_size)
+		container.add_child(fallback)
+		return container
+
+	# Progress bar
+	var bar := ProgressBar.new()
+	bar.name = "MPBar"
+	bar.show_percentage = false
+	bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bar.offset_left = min_size.x * 0.22
+	bar.offset_right = -min_size.x * 0.05
+	bar.offset_top = min_size.y * 0.22
+	bar.offset_bottom = -min_size.y * 0.22
+	bar.add_theme_stylebox_override("background", _create_textured_bar_bg(Color(0.05, 0.08, 0.18, 0.6)))
+	bar.add_theme_stylebox_override("fill", _create_textured_bar_fill(Color(0.25, 0.55, 0.9)))
+	container.add_child(bar)
+
+	# Frame overlay
+	var frame := TextureRect.new()
+	frame.name = "Frame"
+	frame.texture = frame_tex
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_SCALE
+	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(frame)
+
+	return container
+
+
+## Create a compact textured enemy HP bar (red themed)
+static func create_compact_textured_enemy_hp_bar(min_size: Vector2 = Vector2(100, 20)) -> Control:
+	var container := Control.new()
+	container.custom_minimum_size = min_size
+	container.name = "CompactEnemyHPBar"
+
+	# Load the HP bar frame texture
+	var frame_tex: Texture2D = null
+	if ResourceLoader.exists(ASSET_HP_BAR_FRAME):
+		frame_tex = load(ASSET_HP_BAR_FRAME)
+
+	if not frame_tex:
+		# Fallback to regular enemy HP bar
+		var fallback := create_enemy_hp_bar(min_size)
+		container.add_child(fallback)
+		return container
+
+	# Progress bar
+	var bar := ProgressBar.new()
+	bar.name = "HPBar"
+	bar.show_percentage = false
+	bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bar.offset_left = min_size.x * 0.22
+	bar.offset_right = -min_size.x * 0.05
+	bar.offset_top = min_size.y * 0.22
+	bar.offset_bottom = -min_size.y * 0.22
+	bar.add_theme_stylebox_override("background", _create_textured_bar_bg(Color(0.18, 0.05, 0.05, 0.6)))
+	bar.add_theme_stylebox_override("fill", _create_textured_bar_fill(Color(0.75, 0.2, 0.2)))
+	container.add_child(bar)
+
+	# Frame overlay
+	var frame := TextureRect.new()
+	frame.name = "Frame"
+	frame.texture = frame_tex
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_SCALE
+	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(frame)
+
+	return container

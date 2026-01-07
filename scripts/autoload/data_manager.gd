@@ -87,9 +87,11 @@ func _load_heroes() -> void:
 
 
 func _load_skills() -> void:
-	# Load hero skills
+	# Load skills from root skills directory (attack_basic, defend, hero skills, etc.)
+	_load_resources_from_dir(SKILL_PATH, "skill_id", skills)
+	# Load hero skills from subdirectory (if any exist there)
 	_load_resources_from_dir(SKILL_PATH + "heroes/", "skill_id", skills)
-	# Load monster skills
+	# Load monster skills from subdirectory
 	_load_resources_from_dir(SKILL_PATH + "monsters/", "skill_id", skills)
 
 

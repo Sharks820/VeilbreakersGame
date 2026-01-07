@@ -95,6 +95,8 @@ static func get_config(monster_id: String) -> Dictionary:
 			return _get_blightsworn_config()
 		"voidwraith":
 			return _get_voidwraith_config()
+		"grimthorn":
+			return _get_grimthorn_config()
 		_:
 			return _get_default_config()
 
@@ -126,6 +128,8 @@ static func _get_hollow_config() -> Dictionary:
 	sheet1.add_animation("idle", 0, 3, 6.0, true)
 	sheet1.add_animation("attack", 4, 7, 6.0, false, 5)
 	sheet1.add_animation("skill_empty_grasp", 8, 11, 10.0, false, 10)
+	sheet1.add_animation("block", 8, 9, 6.0, false)  # Defensive stance
+	sheet1.add_animation("defend", 8, 9, 6.0, false)  # Alias for block
 	sheet1.add_animation("death", 12, 15, 6.0, false)
 	sheet1.add_animation("hurt", 8, 9, 12.0, false)
 	config.sheets.append(sheet1)
@@ -242,6 +246,8 @@ static func _get_chainbound_config() -> Dictionary:
 	sheet1.add_animation("attack", 4, 7, 7.0, false, 6)
 	# Row 3: Combat stances with glowing core
 	sheet1.add_animation("skill_iron_bind", 8, 11, 8.0, false, 10)
+	sheet1.add_animation("block", 8, 9, 6.0, false)  # Defensive stance
+	sheet1.add_animation("defend", 8, 9, 6.0, false)  # Alias for block
 	# Row 4: Death crumble
 	sheet1.add_animation("death", 12, 15, 5.0, false)
 	sheet1.add_animation("hurt", 10, 11, 12.0, false)
@@ -301,6 +307,8 @@ static func _get_mawling_config() -> Dictionary:
 	# Row 3: Various poses, hurt reactions - frame 10 shows splatter
 	sheet1.add_animation("hurt", 8, 10, 12.0, false)
 	sheet1.add_animation("skill_gnaw", 8, 11, 10.0, false, 10)
+	sheet1.add_animation("block", 8, 9, 6.0, false)  # Defensive stance
+	sheet1.add_animation("defend", 8, 9, 6.0, false)  # Alias for block
 	# Row 4: Death - melting into puddle
 	sheet1.add_animation("death", 12, 15, 5.0, false)
 	config.sheets.append(sheet1)
@@ -354,6 +362,7 @@ static func _get_blightspawn_config() -> Dictionary:
 	# Row 2: More idle poses - can also serve as block/defensive
 	sheet1.add_animation("idle_alt", 4, 7, 4.0, true)
 	sheet1.add_animation("block", 4, 5, 6.0, false)  # Eyes close for defense
+	sheet1.add_animation("defend", 4, 5, 6.0, false)  # Alias for block
 	sheet1.add_animation("skill_eldritch_shield", 4, 5, 6.0, false)
 	# Row 3: Void vortex attack (purple spiral) - MULTI-USE
 	sheet1.add_animation("attack", 8, 11, 10.0, false, 10)
@@ -409,6 +418,7 @@ static func _get_venomspine_config() -> Dictionary:
 	sheet1.add_animation("skill_spore_cloud", 8, 11, 8.0, false, 10)
 	sheet1.add_animation("attack_heavy", 8, 11, 10.0, false, 10)
 	sheet1.add_animation("block", 8, 9, 6.0, false)  # Coiled defensive stance
+	sheet1.add_animation("defend", 8, 9, 6.0, false)  # Alias for block
 	# Row 4: Hurt and death
 	sheet1.add_animation("hurt", 12, 13, 10.0, false)
 	sheet1.add_animation("death", 12, 15, 5.0, false)
@@ -453,6 +463,7 @@ static func _get_bonecrusher_config() -> Dictionary:
 	sheet1.add_animation("skill_shockwave", 8, 11, 8.0, false, 10)
 	sheet1.add_animation("attack_heavy", 8, 11, 8.0, false, 10)
 	sheet1.add_animation("block", 8, 9, 6.0, false)  # Use first frames for block stance
+	sheet1.add_animation("defend", 8, 9, 6.0, false)  # Alias for block
 	sheet1.add_animation("skill_iron_defense", 8, 9, 6.0, false)
 	# Row 4: Hurt reactions
 	sheet1.add_animation("hurt", 12, 15, 10.0, false)
@@ -494,6 +505,7 @@ static func _get_blightsworn_config() -> Dictionary:
 	sheet1.add_animation("skill_toxic_strike", 4, 7, 8.0, false, 6)
 	sheet1.add_animation("skill_corrupted_blade", 4, 7, 10.0, false, 6)
 	sheet1.add_animation("block", 4, 5, 6.0, false)  # Defensive stance
+	sheet1.add_animation("defend", 4, 5, 6.0, false)  # Alias for block
 	# Row 3: Explosion attack (massive green burst) - MULTI-USE
 	sheet1.add_animation("skill_plague_burst", 8, 11, 6.0, false, 10)
 	sheet1.add_animation("skill_toxic_nova", 8, 11, 6.0, false, 10)
@@ -541,6 +553,7 @@ static func _get_voidwraith_config() -> Dictionary:
 	sheet1.add_animation("skill_dark_grasp", 4, 7, 8.0, false, 6)
 	sheet1.add_animation("skill_shadow_strike", 4, 7, 10.0, false, 6)
 	sheet1.add_animation("block", 4, 5, 6.0, false)  # Shadow barrier stance
+	sheet1.add_animation("defend", 4, 5, 6.0, false)  # Alias for block
 	sheet1.add_animation("skill_shadow_veil", 4, 5, 6.0, false)
 	# Row 3: DEVASTATING RED BEAM ATTACK - MULTI-USE
 	sheet1.add_animation("skill_void_beam", 8, 11, 6.0, false, 10)
@@ -591,6 +604,7 @@ static func _get_crackling_config() -> Dictionary:
 	sheet1.add_animation("skill_lightning_bolt", 5, 9, 10.0, false, 4)
 	# Row 3: Shield/Block
 	sheet1.add_animation("block", 10, 14, 8.0, false)
+	sheet1.add_animation("defend", 10, 14, 8.0, false)  # Alias for block
 	sheet1.add_animation("skill_shield", 10, 14, 8.0, false)
 	# Row 4: Hurt/Damage taken
 	sheet1.add_animation("hurt", 15, 19, 10.0, false)
@@ -703,6 +717,7 @@ static func _get_flicker_config() -> Dictionary:
 	sheet1.add_animation("attack", 5, 9, 12.0, false, 7)
 	sheet1.add_animation("skill_lightning_strike", 5, 9, 10.0, false, 7)
 	sheet1.add_animation("block", 10, 14, 8.0, false)
+	sheet1.add_animation("defend", 10, 14, 8.0, false)  # Alias for block
 	sheet1.add_animation("hurt", 15, 19, 10.0, false)
 	sheet1.add_animation("death", 20, 24, 6.0, false)
 	config.sheets.append(sheet1)
@@ -739,6 +754,7 @@ static func _get_skitter_teeth_config() -> Dictionary:
 	sheet1.add_animation("attack", 5, 9, 10.0, false, 7)
 	sheet1.add_animation("skill_claw_slash", 5, 9, 10.0, false, 7)
 	sheet1.add_animation("block", 10, 14, 6.0, false)
+	sheet1.add_animation("defend", 10, 14, 6.0, false)  # Alias for block
 	sheet1.add_animation("hurt", 15, 19, 10.0, false)
 	sheet1.add_animation("death", 20, 24, 5.0, false)
 	config.sheets.append(sheet1)
@@ -775,6 +791,7 @@ static func _get_the_vessel_config() -> Dictionary:
 	sheet1.add_animation("attack", 5, 9, 8.0, false, 7)
 	sheet1.add_animation("skill_stolen_grace", 5, 9, 8.0, false, 7)
 	sheet1.add_animation("block", 10, 14, 6.0, false)
+	sheet1.add_animation("defend", 10, 14, 6.0, false)  # Alias for block
 	sheet1.add_animation("hurt", 15, 19, 10.0, false)
 	sheet1.add_animation("death", 20, 24, 5.0, false)
 	config.sheets.append(sheet1)
@@ -811,6 +828,7 @@ static func _get_ravener_config() -> Dictionary:
 	sheet1.add_animation("attack", 5, 9, 12.0, false, 7)
 	sheet1.add_animation("skill_savage_bite", 5, 9, 12.0, false, 7)
 	sheet1.add_animation("block", 10, 14, 8.0, false)
+	sheet1.add_animation("defend", 10, 14, 8.0, false)  # Alias for block
 	sheet1.add_animation("hurt", 15, 19, 10.0, false)
 	sheet1.add_animation("death", 20, 24, 5.0, false)
 	config.sheets.append(sheet1)
@@ -847,6 +865,7 @@ static func _get_gluttony_polyp_config() -> Dictionary:
 	sheet1.add_animation("attack", 5, 9, 8.0, false, 7)
 	sheet1.add_animation("skill_acid_spit", 5, 9, 8.0, false, 7)
 	sheet1.add_animation("block", 10, 12, 6.0, false)
+	sheet1.add_animation("defend", 10, 12, 6.0, false)  # Alias for block
 	sheet1.add_animation("hurt", 15, 19, 10.0, false)
 	sheet1.add_animation("death", 20, 24, 5.0, false)
 	config.sheets.append(sheet1)
@@ -883,6 +902,7 @@ static func _get_voltgeist_config() -> Dictionary:
 	sheet1.add_animation("attack", 5, 9, 10.0, false, 7)
 	sheet1.add_animation("skill_lightning_bolt", 5, 9, 10.0, false, 7)
 	sheet1.add_animation("block", 10, 12, 6.0, false)
+	sheet1.add_animation("defend", 10, 12, 6.0, false)  # Alias for block
 	sheet1.add_animation("hurt", 15, 19, 10.0, false)
 	sheet1.add_animation("death", 20, 24, 6.0, false)
 	config.sheets.append(sheet1)
@@ -916,6 +936,7 @@ static func _get_needlefang_config() -> Dictionary:
 	sheet1.add_animation("attack", 4, 7, 10.0, false, 6)
 	sheet1.add_animation("skill_venom_spit", 4, 7, 8.0, false, 6)
 	sheet1.add_animation("block", 8, 9, 6.0, false)
+	sheet1.add_animation("defend", 8, 9, 6.0, false)  # Alias for block
 	sheet1.add_animation("hurt", 12, 13, 10.0, false)
 	sheet1.add_animation("death", 12, 15, 5.0, false)
 	config.sheets.append(sheet1)
@@ -949,6 +970,7 @@ static func _get_corrodex_config() -> Dictionary:
 	sheet1.add_animation("attack", 5, 9, 10.0, false, 7)
 	sheet1.add_animation("skill_acid_slash", 5, 9, 8.0, false, 7)
 	sheet1.add_animation("block", 10, 12, 6.0, false)
+	sheet1.add_animation("defend", 10, 12, 6.0, false)  # Alias for block
 	sheet1.add_animation("hurt", 15, 19, 10.0, false)
 	sheet1.add_animation("death", 20, 24, 5.0, false)
 	config.sheets.append(sheet1)
@@ -982,6 +1004,7 @@ static func _get_the_weeping_config() -> Dictionary:
 	sheet1.add_animation("attack", 5, 9, 8.0, false, 7)
 	sheet1.add_animation("skill_gaze", 5, 9, 6.0, false, 7)
 	sheet1.add_animation("block", 10, 12, 6.0, false)
+	sheet1.add_animation("defend", 10, 12, 6.0, false)  # Alias for block
 	sheet1.add_animation("hurt", 15, 19, 10.0, false)
 	sheet1.add_animation("death", 20, 24, 5.0, false)
 	config.sheets.append(sheet1)
@@ -1018,6 +1041,7 @@ static func _get_sporecaller_config() -> Dictionary:
 	sheet1.add_animation("attack", 5, 9, 10.0, false, 7)
 	sheet1.add_animation("skill_spore_burst", 5, 9, 8.0, false, 7)
 	sheet1.add_animation("block", 10, 12, 6.0, false)
+	sheet1.add_animation("defend", 10, 12, 6.0, false)  # Alias for block
 	sheet1.add_animation("hurt", 15, 19, 10.0, false)
 	sheet1.add_animation("death", 20, 24, 5.0, false)
 	config.sheets.append(sheet1)
@@ -1051,6 +1075,7 @@ static func _get_ironjaw_config() -> Dictionary:
 	sheet1.add_animation("attack", 5, 9, 10.0, false, 7)
 	sheet1.add_animation("skill_trap_bite", 5, 9, 12.0, false, 7)
 	sheet1.add_animation("block", 10, 12, 6.0, false)
+	sheet1.add_animation("defend", 10, 12, 6.0, false)  # Alias for block
 	sheet1.add_animation("hurt", 15, 19, 10.0, false)
 	sheet1.add_animation("death", 20, 24, 5.0, false)
 	config.sheets.append(sheet1)
@@ -1065,3 +1090,47 @@ static func _get_ironjaw_config() -> Dictionary:
 static func _get_bloodshade_config() -> Dictionary:
 	# TODO: Bloodshade sprites not yet created - uses default fallback
 	return _get_default_config()
+
+
+# =============================================================================
+# GRIMTHORN - Thorny Plant-Based Venomous Creature
+# =============================================================================
+
+static func _get_grimthorn_config() -> Dictionary:
+	var config := {
+		"monster_id": "grimthorn",
+		"display_name": "Grimthorn",
+		"default_sheet": 0,
+		"h_frames": 5,
+		"v_frames": 5,
+		"scale": Vector2(1.25, 1.25),
+		"sheets": [],
+		"brand_color": Color(0.2, 0.5, 0.15),  # VENOM green
+		"glow_color": Color(0.4, 0.9, 0.3),  # Toxic glow
+		"particle_color": Color(0.15, 0.4, 0.1),
+	}
+
+	var sheet1 := SheetConfig.new()
+	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/grimthorn_a_sheet.png"
+	sheet1.h_frames = 5
+	sheet1.v_frames = 5
+	# Row 1: Idle - thorny mass swaying menacingly
+	sheet1.add_animation("idle", 0, 4, 5.0, true)
+	# Row 2: Attack animations - vine lash and poison attacks
+	sheet1.add_animation("attack", 5, 9, 10.0, false, 7)
+	sheet1.add_animation("skill_basic_attack", 5, 9, 10.0, false, 7)
+	sheet1.add_animation("skill_poison_sting", 5, 9, 8.0, false, 7)
+	sheet1.add_animation("skill_vine_whip", 5, 9, 12.0, false, 7)
+	sheet1.add_animation("skill_toxic_spores", 5, 9, 8.0, false, 7)
+	sheet1.add_animation("skill_venomous_bloom", 5, 9, 10.0, false, 7)
+	# Row 3: Block/Defensive - thorns raised protectively
+	sheet1.add_animation("block", 10, 14, 6.0, false)
+	sheet1.add_animation("defend", 10, 14, 6.0, false)  # Alias for block
+	sheet1.add_animation("skill_thorn_barrier", 10, 14, 8.0, false)
+	# Row 4: Hurt reactions - thorns recoiling
+	sheet1.add_animation("hurt", 15, 19, 10.0, false)
+	# Row 5: Death - withering and crumbling
+	sheet1.add_animation("death", 20, 24, 5.0, false)
+	config.sheets.append(sheet1)
+
+	return config

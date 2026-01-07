@@ -16,6 +16,7 @@ signal target_highlight_changed(target: CharacterBase)
 @onready var battle_info_label: Label = $TopBar/HBoxContainer/BattleInfoLabel
 
 @onready var combat_log: PanelContainer = $CombatLog
+@onready var combat_log_title: Label = $CombatLog/VBoxContainer/CombatLogTitle
 @onready var combat_log_text: RichTextLabel = $CombatLog/VBoxContainer/ScrollContainer/CombatLogText
 @onready var combat_log_scroll: ScrollContainer = $CombatLog/VBoxContainer/ScrollContainer
 
@@ -113,6 +114,7 @@ func _ready() -> void:
 	_connect_signals()
 	_hide_all_menus()
 	_style_action_buttons()
+	_style_menu_panels()
 
 	# Ensure we receive input events for mouse tracking
 	set_process_input(true)
@@ -161,11 +163,40 @@ func _force_ui_layout() -> void:
 	size = viewport_size
 	visible = true
 
-	# TopBar - top of screen, full width, 50px height
+	# TopBar - top of screen, full width, tall enough for turn order portraits (36px + padding)
 	if top_bar:
+		# Force position to top-left corner
+		top_bar.position = Vector2.ZERO
 		top_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
-		top_bar.offset_bottom = 50
+		top_bar.offset_top = 0
+		top_bar.offset_left = 0
+		top_bar.offset_right = 0
+		top_bar.offset_bottom = 60  # Increased from 50 to fit 36px portraits + padding
+		top_bar.z_index = 100  # Ensure TopBar renders on top of sidebars
 		top_bar.show()
+		top_bar.visible = true
+		# Apply dark panel styling to TopBar for visibility
+		var top_bar_style := UIStyleFactory.create_dark_panel()
+		top_bar_style.content_margin_left = 10
+		top_bar_style.content_margin_right = 10
+		top_bar_style.content_margin_top = 8
+		top_bar_style.content_margin_bottom = 8
+		top_bar.add_theme_stylebox_override("panel", top_bar_style)
+		# Ensure the HBoxContainer inside TopBar is visible
+		var hbox := top_bar.get_node_or_null("HBoxContainer")
+		if hbox:
+			hbox.show()
+			hbox.visible = true
+		# Ensure turn order display container is visible and has a minimum size
+		if turn_order_display:
+			turn_order_display.show()
+			turn_order_display.visible = true
+			turn_order_display.custom_minimum_size = Vector2(200, 40)  # Ensure it has some size
+		print("[BATTLE_UI] TopBar configured: position=%s, size=%s, visible=%s, z_index=%d" % [top_bar.position, top_bar.size, top_bar.visible, top_bar.z_index])
+		if turn_order_display:
+			print("[BATTLE_UI] TurnOrderDisplay: visible=%s, size=%s" % [turn_order_display.visible, turn_order_display.size])
+	else:
+		push_error("[BATTLE_UI] TopBar is NULL!")
 
 	# PartyPanel - bottom CENTER, use anchors for responsive positioning
 	if party_panel:
@@ -204,7 +235,16 @@ func _force_ui_layout() -> void:
 		combat_log.offset_right = -10
 		combat_log.offset_bottom = -110  # More space above action buttons
 		_update_combat_log_size()
+		# Apply combat log panel style for visibility
+		combat_log.add_theme_stylebox_override("panel", UIStyleFactory.create_combat_log_style())
+		combat_log.z_index = 50  # Ensure combat log is visible above other elements
 		combat_log.show()
+		print("[BATTLE_UI] Combat log initialized - visible: %s, position: %s, size: %s" % [combat_log.visible, str(combat_log.global_position), str(combat_log.size)])
+		# Style the combat log title
+		if combat_log_title:
+			combat_log_title.text = "Combat Log"
+			combat_log_title.add_theme_color_override("font_color", Color(0.8, 0.7, 0.5))
+			combat_log_title.add_theme_font_size_override("font_size", 16)
 		# Fix dual scrollbar: disable RichTextLabel's built-in scroll, use only ScrollContainer
 		if combat_log_scroll:
 			combat_log_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
@@ -220,6 +260,9 @@ func _force_ui_layout() -> void:
 			combat_log_text.scroll_following = true  # Enable auto-follow for new text
 			# Allow mouse events to pass through to scroll container
 			combat_log_text.mouse_filter = Control.MOUSE_FILTER_PASS
+			# Set default font color for visibility
+			combat_log_text.add_theme_color_override("default_color", Color(0.9, 0.85, 0.75))
+			combat_log_text.add_theme_font_size_override("normal_font_size", 14)
 		# Add drag handle if not exists
 		_add_combat_log_drag_handle()
 
@@ -773,6 +816,7 @@ func _on_flee_pressed() -> void:
 
 func _style_action_buttons() -> void:
 	## Apply polished AAA styling to action buttons with icons
+	## CRITICAL: Buttons must be large and visible (minimum 100x80 pixels)
 	var button_data := {
 		attack_button:
 		{"icon": "res://assets/ui/icons/actions/attack.png", "color": Color(0.9, 0.3, 0.3)},
@@ -788,6 +832,10 @@ func _style_action_buttons() -> void:
 		{"icon": "res://assets/ui/icons/actions/flee.png", "color": Color(0.8, 0.7, 0.3)}
 	}
 
+	# Configure action menu container for proper spacing
+	if action_menu:
+		action_menu.add_theme_constant_override("separation", 12)
+
 	for button in button_data.keys():
 		if not button:
 			continue
@@ -795,9 +843,12 @@ func _style_action_buttons() -> void:
 		var data: Dictionary = button_data[button]
 		var accent_color: Color = data.color
 
+		# CRITICAL: Enforce minimum button size for visibility (AAA standard)
+		button.custom_minimum_size = Vector2(100, 80)
+
 		# Apply action button styling with accent color (handles all states + font)
 		UIStyleFactory.apply_action_button_style(button, accent_color)
-		
+
 		# Add icon if texture exists
 		var icon_path: String = data.icon
 		if ResourceLoader.exists(icon_path):
@@ -806,8 +857,65 @@ func _style_action_buttons() -> void:
 				button.icon = icon_tex
 				button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 				button.expand_icon = true
-				# Scale icon to fit button height
-				button.add_theme_constant_override("icon_max_width", 28)
+				# Larger icon for better visibility (scaled to 80px height buttons)
+				button.add_theme_constant_override("icon_max_width", 36)
+
+
+# =============================================================================
+# MENU PANEL STYLING
+# =============================================================================
+
+
+func _style_menu_panels() -> void:
+	## Apply ornate frame textures to menu panels (skill menu, item menu, message box)
+	## Uses the custom dialogue frame asset for a polished appearance
+
+	# Style skill menu with ornate panel
+	if skill_menu:
+		_apply_ornate_panel_style(skill_menu)
+
+	# Style item menu with ornate panel
+	if item_menu:
+		_apply_ornate_panel_style(item_menu)
+
+	# Style message box with ornate panel
+	if message_box:
+		_apply_ornate_panel_style(message_box)
+
+
+func _apply_ornate_panel_style(panel: PanelContainer) -> void:
+	## Apply ornate styling to a panel using the dialogue frame texture
+	## Creates a dark styled background with the frame texture overlay
+
+	# First, apply a dark panel style as base
+	var base_style := UIStyleFactory.create_dark_panel(
+		Color(0.5, 0.4, 0.3, 0.8),  # Gold-tinted border
+		3,
+		8,
+		16
+	)
+	panel.add_theme_stylebox_override("panel", base_style)
+
+	# Add frame texture overlay if it doesn't already have one
+	var frame_name := "OrnateFrameOverlay"
+	var existing_frame := panel.get_node_or_null(frame_name)
+	if not existing_frame:
+		var frame_tex: Texture2D = null
+		if ResourceLoader.exists(UIStyleFactory.ASSET_DIALOGUE_FRAME):
+			frame_tex = load(UIStyleFactory.ASSET_DIALOGUE_FRAME)
+
+		if frame_tex:
+			var frame := TextureRect.new()
+			frame.name = frame_name
+			frame.texture = frame_tex
+			frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			frame.stretch_mode = TextureRect.STRETCH_SCALE
+			frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+			frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			frame.modulate = Color(1, 1, 1, 0.9)  # Slightly transparent
+			panel.add_child(frame)
+			# Move frame to be first child so it's behind content
+			panel.move_child(frame, 0)
 
 
 # =============================================================================
@@ -852,7 +960,14 @@ func _populate_skill_list() -> void:
 		child.queue_free()
 
 	if current_character == null:
+		print("[BATTLE_UI] _populate_skill_list: current_character is null")
 		return
+
+	print("[BATTLE_UI] _populate_skill_list: %s has %d known_skills: %s" % [
+		current_character.character_name,
+		current_character.known_skills.size(),
+		str(current_character.known_skills)
+	])
 
 	for skill_id in current_character.known_skills:
 		# Skip basic actions that have dedicated buttons (attack, defend)
@@ -933,8 +1048,10 @@ func _populate_item_list() -> void:
 
 	# Get usable items from inventory
 	var battle_items := InventorySystem.get_battle_usable_items()
+	print("[BATTLE_UI] _populate_item_list: found %d battle-usable items" % battle_items.size())
 
 	if battle_items.is_empty():
+		print("[BATTLE_UI] _populate_item_list: No usable items. Inventory has %d total items" % InventorySystem.items.size())
 		var label := UIStyleFactory.create_label("No usable items", UIStyleFactory.FONT_NORMAL, UIStyleFactory.COLOR_DIM_LABEL)
 		item_list.add_child(label)
 		return
@@ -1530,7 +1647,7 @@ func _on_status_effect_changed(target: Node, _effect: int, _extra: int = 0) -> v
 
 
 func _update_character_status_icons(character: CharacterBase) -> void:
-	## Update the status icon display for a character's panel using BC status icons
+	## Update the status icon display for a character's panel using individual asset icons
 	if not character.has_meta("status_icons"):
 		return
 
@@ -1551,10 +1668,10 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 			break
 
 		var effect: Enums.StatusEffect = effect_key as Enums.StatusEffect
-		var icon_index := _get_status_effect_icon_index(effect)
+		var effect_name := _get_status_effect_name_key(effect)
 
 		# Skip invalid/unknown effects
-		if icon_index < 0:
+		if effect_name == "":
 			continue
 
 		# Determine if buff or debuff for styling
@@ -1565,14 +1682,8 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 			Enums.StatusEffect.UNTARGETABLE, Enums.StatusEffect.GUARDED
 		]
 
-		# Style the container based on buff/debuff
-		var style := UIStyleFactory.create_status_buff_style() if is_buff else UIStyleFactory.create_status_debuff_style()
-		var icon_container := UIStyleFactory.create_styled_panel(style)
-		icon_container.custom_minimum_size = Vector2(24, 24)
-
-		# Create BC status icon from the spritesheet
-		var icon := UIStyleFactory.create_bc_status_icon(icon_index, Vector2(20, 20))
-		icon_container.add_child(icon)
+		# Create icon container with individual asset icon
+		var icon_container := UIStyleFactory.create_status_icon_with_container(effect_name, is_buff, Vector2(28, 28))
 
 		# Add tooltip with effect name and remaining duration
 		var effect_data: Dictionary = character.status_effects[effect_key]
@@ -1589,6 +1700,57 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 		icon_count += 1
 
 
+func _get_status_effect_name_key(effect: Enums.StatusEffect) -> String:
+	## Get the lookup key for status effect icon files
+	match effect:
+		Enums.StatusEffect.POISON:
+			return "poison"
+		Enums.StatusEffect.BURN:
+			return "burn"
+		Enums.StatusEffect.FREEZE:
+			return "freeze"
+		Enums.StatusEffect.PARALYSIS:
+			return "paralysis"
+		Enums.StatusEffect.SLEEP:
+			return "sleep"
+		Enums.StatusEffect.CONFUSION:
+			return "confusion"
+		Enums.StatusEffect.BLIND:
+			return "blind"
+		Enums.StatusEffect.SILENCE:
+			return "silence"
+		Enums.StatusEffect.BLEED:
+			return "bleed"
+		Enums.StatusEffect.CORRUPTED:
+			return "corrupted"
+		Enums.StatusEffect.SORROW:
+			return "curse"  # Use curse icon for sorrow
+		Enums.StatusEffect.ATTACK_DOWN:
+			return "attack_down"
+		Enums.StatusEffect.DEFENSE_DOWN:
+			return "defense_down"
+		Enums.StatusEffect.SPEED_DOWN:
+			return "speed_down"
+		Enums.StatusEffect.REGEN:
+			return "regen"
+		Enums.StatusEffect.SHIELD:
+			return "shield"
+		Enums.StatusEffect.ATTACK_UP:
+			return "attack_up"
+		Enums.StatusEffect.DEFENSE_UP:
+			return "defense_up"
+		Enums.StatusEffect.SPEED_UP:
+			return "speed_up"
+		Enums.StatusEffect.PURIFYING:
+			return "blessed"  # Use blessed icon for purifying
+		Enums.StatusEffect.UNTARGETABLE:
+			return "invisible"
+		Enums.StatusEffect.GUARDED:
+			return "protected"
+		_:
+			return ""
+
+
 func _refresh_all_status_icons() -> void:
 	## Refresh status icons for all party members and enemies
 	for member in party_members:
@@ -1598,10 +1760,32 @@ func _refresh_all_status_icons() -> void:
 
 
 func update_turn_order(order: Array[CharacterBase]) -> void:
-	# Verify turn_order_display exists
+	# Verify turn_order_display exists - try to find it if @onready failed
 	if not turn_order_display:
-		push_error("[TURN ORDER] turn_order_display is NULL!")
-		return
+		turn_order_display = get_node_or_null("TopBar/HBoxContainer/TurnOrderDisplay")
+		if not turn_order_display:
+			push_error("[TURN ORDER] turn_order_display is NULL and could not be found!")
+			return
+		else:
+			print("[TURN ORDER] Found turn_order_display via fallback get_node")
+
+	# Ensure the entire TopBar hierarchy is visible
+	if top_bar:
+		top_bar.show()
+		top_bar.visible = true
+		var hbox := top_bar.get_node_or_null("HBoxContainer")
+		if hbox:
+			hbox.show()
+			hbox.visible = true
+
+	# Ensure the display is visible
+	turn_order_display.show()
+	turn_order_display.visible = true
+	print("[TURN ORDER] Updating with %d characters, display visible: %s, parent visible: %s" % [
+		order.size(),
+		turn_order_display.visible,
+		turn_order_display.get_parent().visible if turn_order_display.get_parent() else "NO_PARENT"
+	])
 
 	# Kill existing breathing tweens to prevent memory leak
 	for tween in _turn_order_tweens:
@@ -1624,7 +1808,7 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 			or (battle_manager and character in battle_manager.player_party)
 		)
 
-		# Create portrait container - compact 36x36
+		# Create portrait container - compact 40x40 to fit 32x32 icon with padding
 		var style: StyleBoxFlat
 		if i == 0:
 			style = UIStyleFactory.create_turn_order_current_dynamic()
@@ -1633,7 +1817,9 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 		else:
 			style = UIStyleFactory.create_turn_order_enemy_dynamic()
 		var portrait_panel := UIStyleFactory.create_styled_panel(style)
-		portrait_panel.custom_minimum_size = Vector2(36, 36)
+		portrait_panel.custom_minimum_size = Vector2(40, 40)
+		portrait_panel.show()
+		portrait_panel.visible = true
 
 		# Portrait TextureRect with actual character sprite
 		var portrait := UIStyleFactory.create_icon(Vector2(32, 32))
@@ -1689,6 +1875,12 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 			var arrow := UIStyleFactory.create_label("►", UIStyleFactory.FONT_SMALL, UIStyleFactory.COLOR_DIM_LABEL)
 			arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			turn_order_display.add_child(arrow)
+
+	# Debug: Verify children were added
+	print("[TURN ORDER] Added %d children to turn_order_display, container size: %s" % [
+		turn_order_display.get_child_count(),
+		turn_order_display.size
+	])
 
 
 func update_round_display(round_number: int) -> void:
@@ -1785,6 +1977,8 @@ func log_round_start(round_number: int) -> void:
 
 
 func _append_to_log(entry: String) -> void:
+	if not combat_log_text:
+		return
 	combat_log_text.append_text("\n" + entry)
 	# Schedule auto-scroll after text is rendered
 	_schedule_auto_scroll()
@@ -1805,15 +1999,14 @@ func _schedule_auto_scroll() -> void:
 
 
 func clear_combat_log() -> void:
+	if not combat_log_text:
+		push_warning("[BATTLE_UI] clear_combat_log called but combat_log_text is null")
+		return
 	combat_log_text.clear()
 	combat_log_text.append_text("[color=#cc9933]╔══════════════════════════════╗[/color]")
-	(
-		combat_log_text
-		. append_text(
-			"\n[color=#cc9933]║[/color]      [color=#ffcc66]⚔ BATTLE START ⚔[/color]      [color=#cc9933]║[/color]"
-		)
-	)
+	combat_log_text.append_text("\n[color=#cc9933]║[/color]      [color=#ffcc66]⚔ BATTLE START ⚔[/color]      [color=#cc9933]║[/color]")
 	combat_log_text.append_text("\n[color=#cc9933]╚══════════════════════════════╝[/color]")
+	print("[BATTLE_UI] Combat log cleared and initialized")
 
 
 # =============================================================================
@@ -2592,6 +2785,8 @@ func _show_level_up_notification(
 
 func log_level_up(character_name: String, new_level: int) -> void:
 	## Logs level up to combat log
+	if not combat_log_text:
+		return
 	var msg := "[color=gold]★ %s reached Level %d! ★[/color]" % [character_name, new_level]
 	combat_log_text.append_text("\n" + msg)
 	_auto_scroll_combat_log()
@@ -3329,13 +3524,15 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 		UIStyleFactory.set_mouse_pass(brand_label)
 		info_vbox.add_child(brand_label)
 
-	# HP Bar
-	var hp_bar := UIStyleFactory.create_hp_bar(Vector2(85, 12))
-	hp_bar.name = "HPBar"
-	hp_bar.max_value = maxi(1, character.get_max_hp())
-	hp_bar.value = character.current_hp
-	UIStyleFactory.set_mouse_pass(hp_bar)
-	info_vbox.add_child(hp_bar)
+	# HP Bar - use textured ornate frame
+	var hp_bar_container := UIStyleFactory.create_compact_textured_hp_bar(Vector2(95, 18))
+	hp_bar_container.name = "HPBarContainer"
+	UIStyleFactory.set_mouse_pass(hp_bar_container)
+	var hp_bar := hp_bar_container.find_child("HPBar", true, false) as ProgressBar
+	if hp_bar:
+		hp_bar.max_value = maxi(1, character.get_max_hp())
+		hp_bar.value = character.current_hp
+	info_vbox.add_child(hp_bar_container)
 
 	# HP Label
 	var hp_label := UIStyleFactory.create_label("%d/%d" % [character.current_hp, character.get_max_hp()], UIStyleFactory.FONT_TINY, UIStyleFactory.COLOR_ALLY_HP_LABEL)
@@ -3343,21 +3540,23 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	UIStyleFactory.set_mouse_pass(hp_label)
 	info_vbox.add_child(hp_label)
 
-	# MP Bar (if character has MP)
+	# MP Bar (if character has MP) - use textured ornate frame
 	if character.get_max_mp() > 0:
-		var mp_bar := UIStyleFactory.create_mp_bar(Vector2(85, 8))
-		mp_bar.name = "MPBar"
-		mp_bar.max_value = maxi(1, character.get_max_mp())
-		mp_bar.value = character.current_mp
-		UIStyleFactory.set_mouse_pass(mp_bar)
-		vbox.add_child(mp_bar)
+		var mp_bar_container := UIStyleFactory.create_compact_textured_mp_bar(Vector2(95, 16))
+		mp_bar_container.name = "MPBarContainer"
+		UIStyleFactory.set_mouse_pass(mp_bar_container)
+		var mp_bar := mp_bar_container.find_child("MPBar", true, false) as ProgressBar
+		if mp_bar:
+			mp_bar.max_value = maxi(1, character.get_max_mp())
+			mp_bar.value = character.current_mp
+		info_vbox.add_child(mp_bar_container)
 
 	# Status icons container - displays active buffs/debuffs
 	var status_icons := UIStyleFactory.create_hbox(2)
 	status_icons.name = "StatusIcons"
 	status_icons.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	UIStyleFactory.set_mouse_pass(status_icons)
-	vbox.add_child(status_icons)
+	info_vbox.add_child(status_icons)
 
 	# Store reference for updates
 	character.set_meta("sidebar_panel", panel)
@@ -3496,13 +3695,15 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 		UIStyleFactory.set_mouse_pass(brand_label)
 		vbox.add_child(brand_label)
 
-	# HP Bar - red themed
-	var hp_bar := UIStyleFactory.create_enemy_hp_bar(Vector2(85, 10))
-	hp_bar.name = "HPBar"
-	hp_bar.max_value = maxi(1, enemy.get_max_hp())
-	hp_bar.value = enemy.current_hp
-	UIStyleFactory.set_mouse_pass(hp_bar)
-	vbox.add_child(hp_bar)
+	# HP Bar - red themed with textured ornate frame
+	var hp_bar_container := UIStyleFactory.create_compact_textured_enemy_hp_bar(Vector2(95, 18))
+	hp_bar_container.name = "HPBarContainer"
+	UIStyleFactory.set_mouse_pass(hp_bar_container)
+	var hp_bar := hp_bar_container.find_child("HPBar", true, false) as ProgressBar
+	if hp_bar:
+		hp_bar.max_value = maxi(1, enemy.get_max_hp())
+		hp_bar.value = enemy.current_hp
+	vbox.add_child(hp_bar_container)
 
 	# HP Label (numeric) - matches party sidebar
 	var hp_label := UIStyleFactory.create_label("%d/%d" % [enemy.current_hp, enemy.get_max_hp()], UIStyleFactory.FONT_TINY, UIStyleFactory.COLOR_ENEMY_HP_LABEL)

@@ -161,7 +161,7 @@ func _input(event: InputEvent) -> void:
 	# Event-based mouse hover - only check when mouse actually moves
 	if event is InputEventMouseMotion:
 		_cached_canvas_transform = get_canvas_transform()
-		var mouse_canvas := _cached_canvas_transform.affine_inverse() * event.position
+		var mouse_canvas: Vector2 = _cached_canvas_transform.affine_inverse() * event.position
 		_check_arena_sprite_hover(mouse_canvas)
 
 
@@ -868,7 +868,7 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 	container.set_meta("character_ref", character)
 
 	# Name label - position based on sprite size
-	var label := UIStyleFactory.create_centered_label(character.character_name, 12, UIStyleFactory.COLOR_DEFAULT)
+	var label := UIStyleFactory.create_centered_label(character.character_name, 12, UIStyleFactory.COLOR_PARCHMENT)
 	container.add_child(label)
 
 	# HP bar above character - size and position based on character type
