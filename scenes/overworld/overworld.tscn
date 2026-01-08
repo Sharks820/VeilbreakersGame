@@ -1,0 +1,108 @@
+[gd_scene load_steps=7 format=3 uid="uid://c0y8rp6t7xkn2"]
+
+[ext_resource type="Script" path="res://scripts/overworld/overworld_controller.gd" id="1_controller"]
+[ext_resource type="Script" path="res://scripts/overworld/player_controller.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/overworld/overworld_camera.gd" id="3_camera"]
+[ext_resource type="Script" path="res://scripts/overworld/encounter_manager.gd" id="4_encounter"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+size = Vector2(24, 24)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_interact"]
+radius = 48.0
+
+[node name="Overworld" type="Node2D"]
+script = ExtResource("1_controller")
+
+[node name="Background" type="CanvasLayer" parent="."]
+layer = -10
+
+[node name="BackgroundColor" type="ColorRect" parent="Background"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.12, 0.1, 0.15, 1)
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="Ground" type="Node2D" parent="World"]
+
+[node name="BaseFloor" type="ColorRect" parent="World/Ground"]
+offset_left = -2000.0
+offset_top = -2000.0
+offset_right = 2000.0
+offset_bottom = 2000.0
+color = Color(0.15, 0.13, 0.18, 1)
+
+[node name="Zones" type="Node2D" parent="World"]
+
+[node name="Interactables" type="Node2D" parent="World"]
+
+[node name="Player" type="CharacterBody2D" parent="."]
+script = ExtResource("2_player")
+move_speed = 200.0
+run_multiplier = 1.5
+
+[node name="Sprite" type="Sprite2D" parent="Player"]
+scale = Vector2(0.15, 0.15)
+texture_filter = 1
+
+[node name="Collision" type="CollisionShape2D" parent="Player"]
+shape = SubResource("RectangleShape2D_player")
+
+[node name="InteractionArea" type="Area2D" parent="Player"]
+
+[node name="InteractionShape" type="CollisionShape2D" parent="Player/InteractionArea"]
+shape = SubResource("CircleShape2D_interact")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Player"]
+
+[node name="Camera" type="Camera2D" parent="."]
+script = ExtResource("3_camera")
+follow_smoothing = 5.0
+look_ahead_amount = 50.0
+default_zoom = 1.0
+min_zoom = 0.5
+max_zoom = 2.0
+
+[node name="EncounterManager" type="Node" parent="."]
+script = ExtResource("4_encounter")
+base_encounter_rate = 0.05
+steps_per_check = 10
+min_steps_between_encounters = 20
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="MiniMap" type="Control" parent="UILayer"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -170.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 170.0
+grow_horizontal = 0
+
+[node name="MiniMapBG" type="ColorRect" parent="UILayer/MiniMap"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.1, 0.08, 0.12, 0.8)
+
+[node name="LocationLabel" type="Label" parent="UILayer"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -60.0
+offset_right = 150.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Frontier Camp"
+horizontal_alignment = 1
+vertical_alignment = 1

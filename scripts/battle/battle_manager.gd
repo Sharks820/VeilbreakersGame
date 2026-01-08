@@ -663,15 +663,29 @@ func _queue_ally_ai_action(character: CharacterBase) -> void:
 
 func _queue_player_action(action: Enums.BattleAction, target: CharacterBase, skill: String) -> void:
 	## Queue the player's action during lock-in phase
+	print("[BATTLE_MANAGER] _queue_player_action called - party_lock_in_index: %d, party size: %d" % [
+		party_lock_in_index, player_party.size()
+	])
+
+	if party_lock_in_index >= player_party.size():
+		push_error("[BATTLE_MANAGER] party_lock_in_index out of bounds!")
+		return
+
 	var character := player_party[party_lock_in_index]
 
 	queued_party_actions[character] = {"action": action, "target": target, "skill": skill}
 
+	print("[BATTLE_MANAGER] %s locked in action: %s -> %s" % [
+		character.character_name,
+		Enums.BattleAction.keys()[action],
+		target.character_name if target else "self"
+	])
 	EventBus.emit_debug(
 		"%s locked in: %s" % [character.character_name, Enums.BattleAction.keys()[action]]
 	)
 
 	party_lock_in_index += 1
+	print("[BATTLE_MANAGER] party_lock_in_index now: %d, calling _prompt_next_party_member..." % party_lock_in_index)
 
 	await get_tree().create_timer(Constants.WAIT_QUICK).timeout
 	_prompt_next_party_member()
@@ -891,26 +905,39 @@ func _execute_next_enemy_attack() -> void:
 func submit_player_action(
 	action: Enums.BattleAction, target: CharacterBase = null, skill: String = ""
 ) -> void:
+	print("[BATTLE_MANAGER] submit_player_action called - action: %s, target: %s, state: %s" % [
+		Enums.BattleAction.keys()[action],
+		target.character_name if target else "null",
+		Enums.BattleState.keys()[battle_state]
+	])
+
+	# Accept actions during SELECTING_ACTION, SELECTING_TARGET, or PARTY_LOCK_IN states
 	if (
 		battle_state != Enums.BattleState.SELECTING_ACTION
 		and battle_state != Enums.BattleState.SELECTING_TARGET
+		and battle_state != Enums.BattleState.PARTY_LOCK_IN
 	):
+		print("[BATTLE_MANAGER] REJECTED - wrong state: %s" % Enums.BattleState.keys()[battle_state])
 		return
 
 	if is_executing_action:
+		print("[BATTLE_MANAGER] REJECTED - already executing action")
 		return
 
+	print("[BATTLE_MANAGER] Action accepted, queueing...")
 	ui_command.emit("hide_action_menu", {})
 
-	# Check if we're in lock-in phase
+	# Queue action for lock-in system (always use this in lock-in flow)
 	if (
 		battle_state == Enums.BattleState.SELECTING_ACTION
 		or battle_state == Enums.BattleState.PARTY_LOCK_IN
+		or battle_state == Enums.BattleState.SELECTING_TARGET
 	):
 		# Queue action for lock-in system
 		_queue_player_action(action, target, skill)
 	else:
 		# Fallback to old system (shouldn't happen with new flow)
+		print("[BATTLE_MANAGER] Using fallback execute_action path")
 		var current_character := turn_order[current_turn_index]
 		execute_action(current_character, action, target, skill)
 

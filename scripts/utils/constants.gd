@@ -491,6 +491,10 @@ const WAIT_BATTLE_RESULT: float = 0.3  # After action result
 const WAIT_ANIM_SYNC: float = 0.3  # Sync with animation
 const WAIT_EFFECT_SYNC: float = 0.5  # Sync with visual effect
 
+# Dramatic/Victory delays
+const WAIT_DRAMATIC: float = 1.5  # Dramatic pause for important moments
+const WAIT_VICTORY_DISPLAY: float = 2.0  # Victory screen display time
+
 # =============================================================================
 # COMBAT MULTIPLIER CONSTANTS (v0.98 - Eliminate 72+ hardcoded values)
 # =============================================================================

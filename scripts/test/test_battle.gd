@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 ## TestBattle: Sets up and runs a test battle for debugging and development.
 ## Also serves as the TUTORIAL BATTLE when tutorial_battle_pending flag is set.
 
@@ -117,7 +117,7 @@ func _ready() -> void:
 		enemy_count = 2
 		enemy_level = 5
 		enemy_type = "hollow"  # Easier enemy for tutorial
-		ally_monster_count = 1  # Just player + 1 monster for simplicity
+		ally_monster_count = 3  # Player + 3 monsters = full party
 
 	# Remove the fake placeholder BattleArena (we'll load the real one)
 	var fake_arena = get_node_or_null("BattleArena")

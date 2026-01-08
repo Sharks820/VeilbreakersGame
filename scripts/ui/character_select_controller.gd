@@ -1,4 +1,4 @@
-class_name CharacterSelectController
+﻿class_name CharacterSelectController
 extends Control
 ## CharacterSelectController: AAA-quality hero selection screen with VERA integration.
 ## Features large hero display, class showcase, recommended monsters, and tutorial setup.
@@ -89,12 +89,7 @@ func _process(delta: float) -> void:
 		var breath: float = (breath_raw * 0.5 + 0.5)  # Normalize to 0-1
 		breath = breath * breath * (3.0 - 2.0 * breath)  # Smoothstep for organic feel
 		var target_scale: float = 1.0 + breath * 0.025  # 1.0 to 1.025 (subtle)
-		# FIX: Use exponential decay smoothing for frame-rate independence
-		# The factor 1.0 - exp(-delta * 12.0) ensures consistent behavior at any FPS
-		var smooth_factor: float = 1.0 - exp(-delta * 12.0)
-		var current_scale: float = hero_portrait.scale.x
-		var smoothed_scale: float = lerpf(current_scale, target_scale, smooth_factor)
-		hero_portrait.scale = Vector2(smoothed_scale, smoothed_scale)
+		hero_portrait.scale = Vector2(target_scale, target_scale)
 
 	# VERA portrait breathing animation - SMOOTH sine wave
 	if _vera_breathing_enabled and vera_portrait and is_instance_valid(vera_portrait):
@@ -104,11 +99,7 @@ func _process(delta: float) -> void:
 		var breath: float = (breath_raw * 0.5 + 0.5)
 		breath = breath * breath * (3.0 - 2.0 * breath)  # Smoothstep
 		var target_scale: float = 1.0 + breath * 0.04  # 1.0 to 1.04
-		# FIX: Use exponential decay smoothing for frame-rate independence
-		var smooth_factor: float = 1.0 - exp(-delta * 12.0)
-		var current_scale: float = vera_portrait.scale.x
-		var smoothed_scale: float = lerpf(current_scale, target_scale, smooth_factor)
-		vera_portrait.scale = Vector2(smoothed_scale, smoothed_scale)
+		vera_portrait.scale = Vector2(target_scale, target_scale)
 
 func _load_all_data() -> void:
 	## Load all hero and monster data

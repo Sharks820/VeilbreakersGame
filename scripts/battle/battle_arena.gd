@@ -1,4 +1,4 @@
-extends Node2D
+﻿extends Node2D
 ## BattleArena: Visual representation of battle with character placement and effects.
 ## Now integrated with full animation systems for AAA-quality combat.
 
@@ -355,6 +355,7 @@ func _setup_screen_effects() -> void:
 func _setup_battle_ui() -> void:
 	# Load and instantiate battle UI
 	EventBus.emit_debug("Setting up battle UI...")
+	print("[BATTLE_ARENA] _setup_battle_ui: battle_manager=%s" % str(battle_manager))
 
 	# Check if UILayer exists
 	if ui_layer == null:
@@ -397,6 +398,10 @@ func _setup_battle_manager() -> void:
 	battle_manager.battle_victory.connect(_on_battle_victory)
 	battle_manager.battle_defeat.connect(_on_battle_defeat)
 
+	# CRITICAL: Connect ui_command signal for turn order, messages, etc.
+	if battle_manager.has_signal("ui_command"):
+		battle_manager.ui_command.connect(_on_ui_command)
+
 	# Link subsystems
 	battle_manager.turn_manager = turn_manager
 	battle_manager.damage_calculator = damage_calculator
@@ -408,17 +413,24 @@ func _setup_battle_manager() -> void:
 
 
 func initialize_battle(players: Array[CharacterBase], enemies: Array[CharacterBase]) -> void:
+	print("[BATTLE_ARENA] initialize_battle: %d players, %d enemies" % [players.size(), enemies.size()])
 	is_battle_active = true
 
 	# Place characters on the battlefield
+	print("[BATTLE_ARENA] Placing characters...")
 	_place_characters(players, player_positions, players_container, player_sprites)
 	_place_characters(enemies, enemy_positions, enemies_container, enemy_sprites)
 
 	# Setup battle UI with party and enemy info
+	print("[BATTLE_ARENA] Setting up battle UI... battle_ui=%s" % str(battle_ui))
 	if battle_ui and battle_ui.has_method("setup_battle"):
+		print("[BATTLE_ARENA] Calling battle_ui.setup_battle()")
 		battle_ui.setup_battle(players, enemies)
+	else:
+		push_error("[BATTLE_ARENA] battle_ui is null or missing setup_battle method!")
 
 	# Start battle logic
+	print("[BATTLE_ARENA] Starting battle manager...")
 	battle_manager.start_battle(players, enemies)
 
 	EventBus.emit_debug(
@@ -780,8 +792,8 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 
 			# Set hitbox based on monster type
 			if character.character_type == Enums.CharacterType.BOSS:
-				hitbox_size = Vector2(200, 300)
-				hitbox_offset = Vector2(0, -150)
+				hitbox_size = Vector2(80, 120)
+				hitbox_offset = Vector2(0, -60)
 			else:
 				hitbox_size = Vector2(150, 220)
 				hitbox_offset = Vector2(0, -110)
@@ -800,29 +812,29 @@ func _create_character_sprite(character: CharacterBase) -> Node2D:
 
 			# Scale and position based on character type
 			# Hero sprites are ~1800x2400px, monster sprites are ~1024x1024px
-			# All scales increased 2.5x for better visibility
+			
 			match character.character_type:
 				Enums.CharacterType.PLAYER:
-					# Hero - 2.5x increase (was 0.10)
-					sprite.scale = Vector2(0.25, 0.25)
-					sprite.position = Vector2(0, -180)
-					hitbox_size = Vector2(200, 300)
-					hitbox_offset = Vector2(0, -150)
+					
+					sprite.scale = Vector2(0.10, 0.10)
+					sprite.position = Vector2(0, -100)
+					hitbox_size = Vector2(80, 120)
+					hitbox_offset = Vector2(0, -60)
 				Enums.CharacterType.MONSTER:
-					# Monsters - 2.5x increase (was 0.12)
-					sprite.scale = Vector2(0.30, 0.30)
-					sprite.position = Vector2(0, -120)
-					hitbox_size = Vector2(180, 260)
-					hitbox_offset = Vector2(0, -130)
+					
+					sprite.scale = Vector2(0.12, 0.12)
+					sprite.position = Vector2(0, -60)
+					hitbox_size = Vector2(60, 90)
+					hitbox_offset = Vector2(0, -45)
 				Enums.CharacterType.BOSS:
-					# Boss - 2.5x increase (was 0.18)
-					sprite.scale = Vector2(0.45, 0.45)
-					sprite.position = Vector2(0, -200)
-					hitbox_size = Vector2(280, 400)
-					hitbox_offset = Vector2(0, -200)
+					
+					sprite.scale = Vector2(0.18, 0.18)
+					sprite.position = Vector2(0, -90)
+					hitbox_size = Vector2(100, 150)
+					hitbox_offset = Vector2(0, -75)
 				_:
-					# Default - 2.5x increase (was 0.11)
-					sprite.scale = Vector2(0.275, 0.275)
+					
+					sprite.scale = Vector2(0.11, 0.11)
 					sprite.position = Vector2(0, -120)
 
 			# Flip sprite to face correct direction:
@@ -1473,11 +1485,15 @@ func _auto_start_test_battle() -> void:
 
 
 func _on_battle_started(enemy_data: Array) -> void:
+	print("[BATTLE_ARENA] _on_battle_started called with %d enemies" % enemy_data.size())
+
 	# Guard against being called twice
 	if is_battle_active:
+		print("[BATTLE_ARENA] SKIPPED - battle already active")
 		return
 
 	if enemy_data.is_empty():
+		print("[BATTLE_ARENA] SKIPPED - no enemy data")
 		return
 
 	var enemies: Array[CharacterBase] = []

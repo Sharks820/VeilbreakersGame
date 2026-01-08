@@ -238,7 +238,11 @@ func _force_ui_layout() -> void:
 		# Apply combat log panel style for visibility
 		combat_log.add_theme_stylebox_override("panel", UIStyleFactory.create_combat_log_style())
 		combat_log.z_index = 50  # Ensure combat log is visible above other elements
+		combat_log.visible = true
+		combat_log.modulate.a = 1.0
 		combat_log.show()
+		# FORCE minimum size to ensure visibility
+		combat_log.custom_minimum_size = Vector2(280, 200)
 		print("[BATTLE_UI] Combat log initialized - visible: %s, position: %s, size: %s" % [combat_log.visible, str(combat_log.global_position), str(combat_log.size)])
 		# Style the combat log title
 		if combat_log_title:
@@ -278,14 +282,25 @@ func set_battle_manager(manager: BattleManager) -> void:
 	battle_manager = manager
 	print("[BATTLE_UI] set_battle_manager called - manager: %s" % str(manager))
 
+	# Guard against null manager
+	if not manager:
+		push_warning("[BATTLE_UI] set_battle_manager called with null manager - will retry when battle starts")
+		return
+
 	# Connect battle manager signals
-	battle_manager.waiting_for_player_input.connect(_on_waiting_for_input)
-	battle_manager.round_started.connect(_on_round_started)
-	battle_manager.turn_started_signal.connect(_on_turn_started_update_order)
+	if not battle_manager.waiting_for_player_input.is_connected(_on_waiting_for_input):
+		battle_manager.waiting_for_player_input.connect(_on_waiting_for_input)
+	if not battle_manager.round_started.is_connected(_on_round_started):
+		battle_manager.round_started.connect(_on_round_started)
+	if not battle_manager.turn_started_signal.is_connected(_on_turn_started_update_order):
+		battle_manager.turn_started_signal.connect(_on_turn_started_update_order)
 	print("[BATTLE_UI] Signals connected to battle_manager")
-	battle_manager.battle_victory.connect(_on_victory)
-	battle_manager.battle_defeat.connect(_on_defeat)
-	battle_manager.action_animation_started.connect(_on_action_started)
+	if not battle_manager.battle_victory.is_connected(_on_victory):
+		battle_manager.battle_victory.connect(_on_victory)
+	if not battle_manager.battle_defeat.is_connected(_on_defeat):
+		battle_manager.battle_defeat.connect(_on_defeat)
+	if not battle_manager.action_animation_started.is_connected(_on_action_started):
+		battle_manager.action_animation_started.connect(_on_action_started)
 
 	# Connect to EventBus for action results
 	if not EventBus.action_executed.is_connected(_on_action_executed):
@@ -595,17 +610,32 @@ func setup_battle(player_party: Array, enemy_party: Array) -> void:
 			% [player_party.size(), enemy_party.size()]
 		)
 	)
-	# Assign to typed arrays
+
+	# Re-connect battle_manager signals if they weren't connected before (null manager case)
+	if battle_manager and not battle_manager.waiting_for_player_input.is_connected(_on_waiting_for_input):
+		print("[BATTLE_UI] Late-connecting battle_manager signals...")
+		set_battle_manager(battle_manager)
+	# Assign to typed arrays - accept both CharacterBase and any Node that has character properties
 	party_members.clear()
 	for p in player_party:
 		if p is CharacterBase:
 			party_members.append(p)
+		elif p and p.has_method("is_alive"):
+			# Fallback: treat anything with is_alive() as a character
+			push_warning("[BATTLE_UI] Adding non-CharacterBase to party: %s" % p.get_class())
+			party_members.append(p as CharacterBase)
 	print("[BATTLE_UI] After filtering: party_members=%d" % party_members.size())
+	for i in range(party_members.size()):
+		print("[BATTLE_UI]   Party[%d]: %s" % [i, party_members[i].character_name if party_members[i] else "NULL"])
 
 	enemies.clear()
 	for e in enemy_party:
 		if e is CharacterBase:
 			enemies.append(e)
+		elif e and e.has_method("is_alive"):
+			push_warning("[BATTLE_UI] Adding non-CharacterBase to enemies: %s" % e.get_class())
+			enemies.append(e as CharacterBase)
+	print("[BATTLE_UI] After filtering: enemies=%d" % enemies.size())
 
 	_update_party_display()
 
@@ -614,9 +644,12 @@ func setup_battle(player_party: Array, enemy_party: Array) -> void:
 	var queried_size := get_viewport().get_visible_rect().size
 	if queried_size.x > 0 and queried_size.y > 0:
 		viewport_size = queried_size
+	print("[BATTLE_UI] Viewport size for sidebars: %s" % str(viewport_size))
 
 	# Create both dynamic sidebars with matching positions
+	print("[BATTLE_UI] Creating left party sidebar...")
 	_create_left_party_sidebar(viewport_size)
+	print("[BATTLE_UI] Creating right enemy sidebar...")
 	_create_right_enemy_sidebar(viewport_size)
 
 	# FORCE hide party_status_container - we use left sidebar instead
@@ -626,6 +659,8 @@ func setup_battle(player_party: Array, enemy_party: Array) -> void:
 		# Also collapse its size to prevent layout issues
 		party_status_container.custom_minimum_size = Vector2.ZERO
 		party_status_container.size = Vector2.ZERO
+
+	print("[BATTLE_UI] setup_battle completed")
 
 
 func start_turn(character: CharacterBase) -> void:
@@ -1769,22 +1804,28 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 		else:
 			print("[TURN ORDER] Found turn_order_display via fallback get_node")
 
-	# Ensure the entire TopBar hierarchy is visible
+	# FORCE the entire TopBar hierarchy to be visible with proper z_index
 	if top_bar:
 		top_bar.show()
 		top_bar.visible = true
+		top_bar.z_index = 100
+		top_bar.modulate.a = 1.0
 		var hbox := top_bar.get_node_or_null("HBoxContainer")
 		if hbox:
 			hbox.show()
 			hbox.visible = true
+			hbox.modulate.a = 1.0
 
-	# Ensure the display is visible
+	# FORCE the display to be visible with explicit sizing
 	turn_order_display.show()
 	turn_order_display.visible = true
-	print("[TURN ORDER] Updating with %d characters, display visible: %s, parent visible: %s" % [
+	turn_order_display.modulate.a = 1.0
+	turn_order_display.custom_minimum_size = Vector2(400, 44)  # Ensure minimum size for portraits
+	print("[TURN ORDER] Updating with %d characters, display visible: %s, parent visible: %s, size: %s" % [
 		order.size(),
 		turn_order_display.visible,
-		turn_order_display.get_parent().visible if turn_order_display.get_parent() else "NO_PARENT"
+		turn_order_display.get_parent().visible if turn_order_display.get_parent() else "NO_PARENT",
+		turn_order_display.size
 	])
 
 	# Kill existing breathing tweens to prevent memory leak
@@ -3412,9 +3453,10 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 			% [party_members.size(), str(viewport_size)]
 		)
 	)
-	# Don't create sidebar if no party members
+	# Don't create sidebar if no party members - but WARN about it
 	if party_members.is_empty():
-		print("[BATTLE_UI] No party members, skipping party sidebar")
+		push_warning("[BATTLE_UI] No party members found! Cannot create party sidebar.")
+		print("[BATTLE_UI] WARNING: No party members, skipping party sidebar - THIS IS LIKELY A BUG!")
 		return
 
 	# Remove existing sidebar if present (use .free() for immediate removal to prevent duplication)
