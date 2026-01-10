@@ -1019,25 +1019,11 @@ static func panel_glow_pulse(
 	panel.add_theme_stylebox_override("panel", style)
 
 	# Pulse from min to max and back
-	tween.tween_method(
-		func(size: float) -> void:
-			if is_instance_valid(panel):
-				style.shadow_size = int(size)
-		,
-		float(min_size),
-		float(max_size),
-		cycle_time * 0.5
-	).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-
-	tween.tween_method(
-		func(size: float) -> void:
-			if is_instance_valid(panel):
-				style.shadow_size = int(size)
-		,
-		float(max_size),
-		float(min_size),
-		cycle_time * 0.5
-	).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	var update_shadow := func(sz: float) -> void:
+		if is_instance_valid(panel):
+			style.shadow_size = int(sz)
+	tween.tween_method(update_shadow, float(min_size), float(max_size), cycle_time * 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	tween.tween_method(update_shadow, float(max_size), float(min_size), cycle_time * 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 	return tween
 
@@ -1062,15 +1048,10 @@ static func panel_glow_flash(
 	panel.add_theme_stylebox_override("panel", style)
 
 	var tween := panel.create_tween()
-	tween.tween_method(
-		func(size: float) -> void:
-			if is_instance_valid(panel):
-				style.shadow_size = int(size)
-		,
-		float(flash_size),
-		0.0,
-		duration
-	).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	var update_flash := func(sz: float) -> void:
+		if is_instance_valid(panel):
+			style.shadow_size = int(sz)
+	tween.tween_method(update_flash, float(flash_size), 0.0, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
 	return tween
 
