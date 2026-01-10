@@ -54,6 +54,7 @@ func _build_ui() -> void:
 	center.add_child(_popup_panel)
 
 	var vbox := UIStyleFactory.create_vbox(20)
+	vbox.name = "VBoxContainer"
 	_popup_panel.add_child(vbox)
 
 	# Title
@@ -68,6 +69,7 @@ func _build_ui() -> void:
 
 	# Button container
 	var button_hbox := UIStyleFactory.create_hbox(30)
+	button_hbox.name = "HBoxContainer"
 	button_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(button_hbox)
 

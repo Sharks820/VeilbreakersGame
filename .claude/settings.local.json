@@ -107,7 +107,10 @@
       "Bash(taskkill:*)",
       "Bash(tasklist:*)",
       "Bash(start \"\" \"C:\\\\Users\\\\Conner\\\\AppData\\\\Local\\\\Microsoft\\\\OneDrive\\\\OneDrive.exe\")",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --headless --check-only --path \".\")",
+      "Bash(sort:*)",
+      "Bash(node -e:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

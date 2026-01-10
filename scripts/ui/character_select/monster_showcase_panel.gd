@@ -10,6 +10,7 @@ extends VBoxContainer
 var _monster_container: HBoxContainer = null
 var _synergy_label: RichTextLabel = null
 var _monster_data_cache: Dictionary = {}
+var _idle_tweens: Array[Tween] = []  # Track tweens for cleanup
 
 # =============================================================================
 # LIFECYCLE
@@ -18,6 +19,14 @@ var _monster_data_cache: Dictionary = {}
 
 func _ready() -> void:
 	_build_ui()
+
+
+func _exit_tree() -> void:
+	# Clean up all idle tweens to prevent leaks
+	for tween in _idle_tweens:
+		if tween and tween.is_valid():
+			tween.kill()
+	_idle_tweens.clear()
 
 
 func _build_ui() -> void:
@@ -65,6 +74,12 @@ func set_monster_cache(cache: Dictionary) -> void:
 
 
 func display_monsters(monster_ids: Array, synergy_text: String = "") -> void:
+	# Kill any existing idle tweens
+	for tween in _idle_tweens:
+		if tween and tween.is_valid():
+			tween.kill()
+	_idle_tweens.clear()
+
 	# Clear existing
 	NodeHelpers.clear_children(_monster_container)
 
@@ -159,6 +174,9 @@ func _add_idle_animation(sprite: TextureRect) -> void:
 	# Float up and down slightly
 	tween.tween_property(sprite, "position:y", -3.0, 1.5)
 	tween.tween_property(sprite, "position:y", 0.0, 1.5)
+
+	# Track for cleanup
+	_idle_tweens.append(tween)
 
 
 func _get_monster_brand_name(monster_data) -> String:

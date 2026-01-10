@@ -168,16 +168,17 @@ static func _get_hollow_config() -> Dictionary:
 	sheet4.add_animation("death_explode", 12, 15, 5.0, false)
 	config.sheets.append(sheet4)
 
-	# SHEET 5 - Hurt/Damage (hollow_hurt_sheet.png) - 4x4
-	var sheet5 := SheetConfig.new()
-	sheet5.sheet_path = "res://assets/sprites/monsters/sheets/hollow_hurt_sheet.png"
-	sheet5.h_frames = 4
-	sheet5.v_frames = 4
-	sheet5.add_animation("move", 0, 3, 8.0, true)
-	sheet5.add_animation("hurt_impact", 4, 7, 10.0, false)
-	sheet5.add_animation("hurt_stagger", 8, 11, 8.0, false)
-	sheet5.add_animation("idle_breathe", 12, 15, 4.0, true)
-	config.sheets.append(sheet5)
+	# SHEET 5 - Hurt/Damage - DISABLED (hollow_hurt_sheet.png does not exist)
+	# Hurt animations are mapped to sheet1 instead
+	# var sheet5 := SheetConfig.new()
+	# sheet5.sheet_path = "res://assets/sprites/monsters/sheets/hollow_hurt_sheet.png"
+	# sheet5.h_frames = 4
+	# sheet5.v_frames = 4
+	# sheet5.add_animation("move", 0, 3, 8.0, true)
+	# sheet5.add_animation("hurt_impact", 4, 7, 10.0, false)
+	# sheet5.add_animation("hurt_stagger", 8, 11, 8.0, false)
+	# sheet5.add_animation("idle_breathe", 12, 15, 4.0, true)
+	# config.sheets.append(sheet5)
 
 	# SHEET 6 - Tendril Skills (hollow_tendril_sheet.png) - 4x4
 	var sheet6 := SheetConfig.new()
@@ -190,16 +191,17 @@ static func _get_hollow_config() -> Dictionary:
 	sheet6.add_animation("skill_void_orb", 12, 15, 8.0, false, 14)
 	config.sheets.append(sheet6)
 
-	# SHEET 7 - Vortex Skills (hollow_vortex_sheet.png) - 4x4
-	var sheet7 := SheetConfig.new()
-	sheet7.sheet_path = "res://assets/sprites/monsters/sheets/hollow_vortex_sheet.png"
-	sheet7.h_frames = 4
-	sheet7.v_frames = 4
-	sheet7.add_animation("skill_dread_surge", 0, 3, 6.0, false, 2)
-	sheet7.add_animation("skill_tendril_lash", 4, 7, 12.0, false, 6)
-	sheet7.add_animation("skill_consuming_vortex", 8, 11, 10.0, false, 10)
-	sheet7.add_animation("death_collapse", 12, 15, 4.0, false)
-	config.sheets.append(sheet7)
+	# SHEET 7 - Vortex Skills - DISABLED (hollow_vortex_sheet.png does not exist)
+	# Vortex animations fallback to other sheets
+	# var sheet7 := SheetConfig.new()
+	# sheet7.sheet_path = "res://assets/sprites/monsters/sheets/hollow_vortex_sheet.png"
+	# sheet7.h_frames = 4
+	# sheet7.v_frames = 4
+	# sheet7.add_animation("skill_dread_surge", 0, 3, 6.0, false, 2)
+	# sheet7.add_animation("skill_tendril_lash", 4, 7, 12.0, false, 6)
+	# sheet7.add_animation("skill_consuming_vortex", 8, 11, 10.0, false, 10)
+	# sheet7.add_animation("death_collapse", 12, 15, 4.0, false)
+	# config.sheets.append(sheet7)
 
 	# SHEET 8 - Power/Rage (hollow_power_sheet.png) - 4x5 (5 rows!)
 	var sheet8 := SheetConfig.new()

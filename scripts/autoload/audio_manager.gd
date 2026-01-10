@@ -243,7 +243,7 @@ func _load_ambience(track_id: String) -> AudioStream:
 func play_sfx(sfx_id: String, _position: Vector2 = Vector2.ZERO) -> void:
 	var stream := _load_sfx(sfx_id)
 	if not stream:
-		push_error("Failed to load SFX: %s" % sfx_id)
+		# Silently fail - audio is optional and may not be set up yet
 		return
 
 	var player := _get_available_sfx_player()
