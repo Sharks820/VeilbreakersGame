@@ -60,6 +60,7 @@ var _currently_highlighted_sprite: Node2D = null  # For target hover highlightin
 var _highlight_breathing_tween: Tween = null  # Breathing animation for highlighted sprite
 var _hovered_character: CharacterBase = null  # Currently hovered character sprite
 var _sprite_hitboxes: Dictionary = {}  # Maps character -> Rect2 hitbox in global coords
+var _animation_tweens: Array[Tween] = []  # Track all animation tweens for cleanup
 
 # =============================================================================
 # LIFECYCLE
@@ -82,6 +83,9 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	# Kill all tracked animation tweens
+	_kill_all_animation_tweens()
+
 	# Kill infinite tweens
 	if _highlight_breathing_tween and _highlight_breathing_tween.is_valid():
 		_highlight_breathing_tween.kill()
@@ -1047,6 +1051,29 @@ func _on_action_animation_started(character: CharacterBase, action: int) -> void
 
 
 # =============================================================================
+# TWEEN MANAGEMENT
+# =============================================================================
+
+
+func _create_tracked_tween() -> Tween:
+	## Create a tween and track it for cleanup
+	# First, clean up any finished tweens from the array
+	_animation_tweens = _animation_tweens.filter(func(t: Tween) -> bool: return t and t.is_valid())
+	# Create and track new tween
+	var tween := create_tween()
+	_animation_tweens.append(tween)
+	return tween
+
+
+func _kill_all_animation_tweens() -> void:
+	## Kill all tracked animation tweens
+	for tween in _animation_tweens:
+		if tween and tween.is_valid():
+			tween.kill()
+	_animation_tweens.clear()
+
+
+# =============================================================================
 # MOVEMENT-ONLY TWEENS (For use WITH sprite sheet animations)
 # =============================================================================
 
@@ -1065,7 +1092,7 @@ func _play_attack_movement_tween(
 	var strike_global_pos := original_global_pos + direction * (distance - 60)  # Stop 60px from target for contact
 	var pullback_global_pos := original_global_pos - direction * 40  # Pull back opposite direction
 
-	var tween := create_tween()
+	var tween := _create_tracked_tween()
 	# Anticipation - pull back (wind up the attack)
 	tween.tween_property(sprite, "global_position", pullback_global_pos, 0.25).set_ease(
 		Tween.EASE_OUT
@@ -1102,7 +1129,7 @@ func _play_skill_movement_tween(
 	var direction := (target_global_pos - original_global_pos).normalized()
 	var thrust_global_pos := original_global_pos + direction * 70  # Move partway toward target
 
-	var tween := create_tween()
+	var tween := _create_tracked_tween()
 	# Channel - rise up and charge (let skill animation wind up)
 	tween.tween_property(sprite, "global_position", original_global_pos + Vector2(0, -30), 0.35)
 
@@ -1157,7 +1184,7 @@ func _play_attack_tween_global(
 	# Calculate rotation based on direction
 	var strike_rotation := rad_to_deg(direction.angle()) * 0.1  # Slight lean into attack
 
-	var tween := create_tween()
+	var tween := _create_tracked_tween()
 	# Anticipation - pull back
 	tween.tween_property(sprite, "global_position", pullback_global_pos, 0.12).set_ease(
 		Tween.EASE_OUT
@@ -1214,7 +1241,7 @@ func _play_skill_tween_global(
 	var direction := (target_global_pos - original_global_pos).normalized()
 	var thrust_global_pos := original_global_pos + direction * 60  # Move partway toward target
 
-	var tween := create_tween()
+	var tween := _create_tracked_tween()
 	# Channel - rise and glow
 	tween.tween_property(sprite, "global_position", original_global_pos + Vector2(0, -25), 0.25)
 	tween.parallel().tween_property(sprite, "scale", original_scale * Vector2(1.1, 1.1), 0.25)
@@ -1247,7 +1274,7 @@ func _play_skill_tween_global(
 
 
 func _play_defend_tween(sprite: Node2D, original_scale: Vector2) -> void:
-	var tween := create_tween()
+	var tween := _create_tracked_tween()
 	# Brace - crouch and glow blue
 	tween.tween_property(sprite, "scale", original_scale * Vector2(1.05, 0.95), 0.15)
 	tween.parallel().tween_property(sprite, "modulate", Color(0.8, 0.9, 1.3, 1.0), 0.15)
@@ -1259,7 +1286,7 @@ func _play_defend_tween(sprite: Node2D, original_scale: Vector2) -> void:
 
 
 func _play_purify_tween(sprite: Node2D, original_scale: Vector2) -> void:
-	var tween := create_tween()
+	var tween := _create_tracked_tween()
 	# Raise hands - glow purple/white
 	tween.tween_property(sprite, "scale", original_scale * Vector2(1.0, 1.1), 0.2)
 	tween.parallel().tween_property(sprite, "modulate", Color(1.2, 1.0, 1.4, 1.0), 0.2)
@@ -1277,7 +1304,7 @@ func _play_item_tween(sprite: Node2D, original_pos: Vector2) -> void:
 
 
 func _play_item_tween_global(sprite: Node2D, original_global_pos: Vector2) -> void:
-	var tween := create_tween()
+	var tween := _create_tracked_tween()
 	# Reach up
 	tween.tween_property(sprite, "global_position", original_global_pos + Vector2(0, -15), 0.15)
 	# Use item - green flash
@@ -1293,7 +1320,7 @@ func _play_flee_tween(sprite: Node2D, dir: float, original_pos: Vector2) -> void
 
 
 func _play_flee_tween_global(sprite: Node2D, dir: float, original_global_pos: Vector2) -> void:
-	var tween := create_tween()
+	var tween := _create_tracked_tween()
 	# Turn and run
 	tween.tween_property(
 		sprite, "global_position", original_global_pos + Vector2(-150 * dir, 0), 0.3
@@ -1302,7 +1329,7 @@ func _play_flee_tween_global(sprite: Node2D, dir: float, original_global_pos: Ve
 
 
 func _play_hurt_tween(sprite: Node2D, is_critical: bool) -> void:
-	var tween := create_tween()
+	var tween := _create_tracked_tween()
 	var shake_amount := 15.0 if is_critical else 8.0
 	var flash_color := Color(1.8, 0.3, 0.3, 1.0) if is_critical else Color(1.5, 0.5, 0.5, 1.0)
 	var original_pos := sprite.position
@@ -1333,7 +1360,7 @@ func _play_hit_animation(
 
 
 func _play_heal_animation(sprite: Node2D) -> void:
-	var tween := create_tween()
+	var tween := _create_tracked_tween()
 	tween.tween_property(sprite, "modulate", Color(0.5, 1.5, 0.5), 0.2)
 	tween.tween_property(sprite, "modulate", Color.WHITE, 0.3)
 
@@ -1372,7 +1399,7 @@ func _play_death_animation(sprite: Node2D, character: CharacterBase = null) -> v
 	var original_global_pos := sprite.global_position
 
 	# Clean death animation: flash red, shake, then dissolve/fade
-	var tween := create_tween()
+	var tween := _create_tracked_tween()
 
 	# Phase 1: Flash bright red (hit confirmation)
 	tween.tween_property(sprite, "modulate", Color(2.0, 0.4, 0.4, 1.0), 0.08)
@@ -1425,7 +1452,7 @@ func _spawn_damage_number(
 	damage_numbers_container.add_child(label)
 
 	# Animate
-	var tween := create_tween()
+	var tween := _create_tracked_tween()
 	tween.set_parallel(true)
 	tween.tween_property(label, "global_position:y", pos.y - 60, Constants.DAMAGE_NUMBER_DURATION)
 	tween.tween_property(label, "modulate:a", 0.0, Constants.DAMAGE_NUMBER_DURATION)
@@ -1691,7 +1718,7 @@ func _on_battle_victory(rewards: Dictionary) -> void:
 
 	# Play victory animations
 	for sprite in player_sprites:
-		var tween := create_tween()
+		var tween := _create_tracked_tween()
 		tween.tween_property(sprite, "position:y", sprite.position.y - 20, 0.2)
 		tween.tween_property(sprite, "position:y", sprite.position.y, 0.2)
 
@@ -2095,7 +2122,7 @@ func _legacy_shake_camera(intensity: float, duration: float) -> void:
 	if not camera_node:
 		return
 	var original_offset: Vector2 = camera_node.offset
-	var tween := create_tween()
+	var tween := _create_tracked_tween()
 
 	for i in range(int(duration / 0.05)):
 		var shake_offset := Vector2(

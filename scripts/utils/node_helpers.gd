@@ -83,7 +83,7 @@ static func clear_children_of_type(parent: Node, type: Variant) -> void:
 	if not is_instance_valid(parent):
 		return
 	for child in parent.get_children():
-		if is_instance(child, type):
+		if is_instance_of(child, type):
 			child.queue_free()
 
 
@@ -107,7 +107,7 @@ static func get_children_of_type(parent: Node, type: Variant) -> Array:
 	if not is_instance_valid(parent):
 		return result
 	for child in parent.get_children():
-		if is_instance(child, type):
+		if is_instance_of(child, type):
 			result.append(child)
 	return result
 
@@ -117,7 +117,7 @@ static func get_first_child_of_type(parent: Node, type: Variant) -> Variant:
 	if not is_instance_valid(parent):
 		return null
 	for child in parent.get_children():
-		if is_instance(child, type):
+		if is_instance_of(child, type):
 			return child
 	return null
 
@@ -128,7 +128,7 @@ static func count_children_of_type(parent: Node, type: Variant) -> int:
 	if not is_instance_valid(parent):
 		return count
 	for child in parent.get_children():
-		if is_instance(child, type):
+		if is_instance_of(child, type):
 			count += 1
 	return count
 
@@ -162,7 +162,7 @@ static func for_each_child_of_type(parent: Node, type: Variant, callback: Callab
 	if not is_instance_valid(parent):
 		return
 	for child in parent.get_children():
-		if is_instance(child, type):
+		if is_instance_of(child, type):
 			callback.call(child)
 
 
@@ -195,7 +195,7 @@ static func find_ancestor_of_type(node: Node, type: Variant) -> Variant:
 		return null
 	var parent := node.get_parent()
 	while parent:
-		if is_instance(parent, type):
+		if is_instance_of(parent, type):
 			return parent
 		parent = parent.get_parent()
 	return null
@@ -279,7 +279,7 @@ static func set_all_modulate(nodes: Array, color: Color) -> void:
 ## Set alpha only (preserve RGB)
 static func set_alpha(node: Variant, alpha: float) -> void:
 	if is_instance_valid(node) and node is CanvasItem:
-		var c := node.modulate
+		var c: Color = node.modulate
 		c.a = alpha
 		node.modulate = c
 
@@ -333,12 +333,12 @@ static func instantiate_to(scene: PackedScene, parent: Node) -> Variant:
 
 
 ## Safely instantiate, add to parent, and position
-static func instantiate_at(scene: PackedScene, parent: Node, position: Vector2) -> Variant:
-	var instance := instantiate_to(scene, parent)
+static func instantiate_at(scene: PackedScene, parent: Node, pos: Vector2) -> Variant:
+	var instance: Node = instantiate_to(scene, parent)
 	if instance and instance is Node2D:
-		instance.position = position
+		instance.position = pos
 	elif instance and instance is Control:
-		instance.position = position
+		instance.position = pos
 	return instance
 
 
@@ -367,7 +367,7 @@ static func disconnect_all_signals(node: Variant, signal_name: String) -> void:
 
 
 ## Check if signal is connected to any callable
-static func has_connections(node: Variant, signal_name: String) -> bool:
+static func has_signal_connections(node: Variant, signal_name: String) -> bool:
 	if not is_instance_valid(node):
 		return false
 	if not node.has_signal(signal_name):

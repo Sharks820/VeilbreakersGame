@@ -160,7 +160,7 @@ func _show_current_line() -> void:
 	speaker_label.text = line.get("speaker", "???")
 
 	# Color speaker name based on who's speaking
-	var speaker := line.get("speaker", "")
+	var speaker: String = line.get("speaker", "")
 	if speaker == "VERA":
 		speaker_label.add_theme_color_override("font_color", Color.CYAN)
 	elif speaker == "Player" or speaker == "Veilbreaker":

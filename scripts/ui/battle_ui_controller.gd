@@ -756,13 +756,20 @@ func _update_action_buttons() -> void:
 	# Check if current character is a monster (party monster, not protagonist)
 	var is_monster := current_character is Monster
 
-	# Disable skill if silenced
-	skill_button.disabled = current_character.has_status_effect(Enums.StatusEffect.SILENCE)
+	# Set tooltips for always-available actions
+	attack_button.tooltip_text = "Basic attack"
+	defend_button.tooltip_text = "Defend and reduce incoming damage"
+
+	# Disable skill if silenced - with tooltip explanation
+	var is_silenced := current_character.has_status_effect(Enums.StatusEffect.SILENCE)
+	skill_button.disabled = is_silenced
+	skill_button.tooltip_text = "Silenced! Cannot use skills." if is_silenced else "Use a special skill"
 
 	# Disable purify/capture for monsters - only player characters can capture
 	# Also disable if no valid targets
 	if is_monster and not Constants.MONSTER_CAN_CAPTURE:
 		purify_button.disabled = true
+		purify_button.tooltip_text = "Monsters cannot purify"
 	else:
 		var has_purifiable_targets := false
 		for enemy in enemies:
@@ -770,13 +777,19 @@ func _update_action_buttons() -> void:
 				has_purifiable_targets = true
 				break
 		purify_button.disabled = not has_purifiable_targets
+		if not has_purifiable_targets:
+			purify_button.tooltip_text = "No enemies can be purified yet"
+		else:
+			purify_button.tooltip_text = "Attempt to purify a weakened enemy"
 
 	# Disable item for monsters - only player characters can use items
 	if is_monster and not Constants.MONSTER_CAN_USE_ITEMS:
 		item_button.disabled = true
+		item_button.tooltip_text = "Monsters cannot use items"
 	else:
 		# TODO: Check inventory for usable items
 		item_button.disabled = false
+		item_button.tooltip_text = "Use an item from inventory"
 
 	# Flee button: Only protagonist can flee for the party
 	# Allied monsters cannot flee (corruption-based fleeing is handled separately by AI)
@@ -784,7 +797,9 @@ func _update_action_buttons() -> void:
 	if is_protagonist:
 		# Protagonist can flee unless it's a boss battle
 		flee_button.visible = true
-		flee_button.disabled = _is_boss_battle()
+		var is_boss := _is_boss_battle()
+		flee_button.disabled = is_boss
+		flee_button.tooltip_text = "Cannot flee from boss battles!" if is_boss else "Attempt to flee from battle"
 	else:
 		# Allied monsters cannot use flee button - hide it entirely
 		flee_button.visible = false
@@ -804,6 +819,7 @@ func _is_boss_battle() -> bool:
 
 
 func _on_attack_pressed() -> void:
+	AudioManager.play_sfx("ui_button_click")
 	_reset_combat_log_scroll()  # Resume auto-scroll on user interaction
 	pending_action = Enums.BattleAction.ATTACK
 	pending_skill = ""
@@ -811,11 +827,13 @@ func _on_attack_pressed() -> void:
 
 
 func _on_skill_pressed() -> void:
+	AudioManager.play_sfx("ui_menu_open")
 	_reset_combat_log_scroll()
 	_show_skill_menu()
 
 
 func _on_purify_pressed() -> void:
+	AudioManager.play_sfx("ui_button_click")
 	_reset_combat_log_scroll()
 	pending_action = Enums.BattleAction.PURIFY
 	pending_skill = ""
@@ -823,11 +841,13 @@ func _on_purify_pressed() -> void:
 
 
 func _on_item_pressed() -> void:
+	AudioManager.play_sfx("ui_menu_open")
 	_reset_combat_log_scroll()
 	_show_item_menu()
 
 
 func _on_defend_pressed() -> void:
+	AudioManager.play_sfx("ui_button_click")
 	_reset_combat_log_scroll()
 	pending_action = Enums.BattleAction.DEFEND
 	pending_skill = ""
@@ -837,6 +857,7 @@ func _on_defend_pressed() -> void:
 
 
 func _on_flee_pressed() -> void:
+	AudioManager.play_sfx("ui_confirm")
 	_reset_combat_log_scroll()
 	pending_action = Enums.BattleAction.FLEE
 	pending_skill = ""
@@ -962,11 +983,12 @@ func _on_action_button_hover(button: Button) -> void:
 	## Highlight button on hover/focus with scale and color tween
 	# Grab focus when mouse hovers - this syncs the focus indicator with mouse
 	button.grab_focus()
+	AudioManager.play_sfx("ui_hover")
 
 	var tween := create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(button, "scale", Vector2(1.08, 1.08), 0.12)
-	tween.tween_property(button, "modulate", Color(1.3, 1.1, 0.9, 1.0), 0.12)
+	tween.tween_property(button, "scale", Vector2(1.08, 1.08), 0.08)  # Snappy 80ms
+	tween.tween_property(button, "modulate", Color(1.3, 1.1, 0.9, 1.0), 0.08)
 	# Ensure pivot is centered for proper scaling
 	button.pivot_offset = button.size / 2
 
@@ -975,8 +997,8 @@ func _on_action_button_unhover(button: Button) -> void:
 	## Reset button on unhover/unfocus
 	var tween := create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(button, "scale", Vector2.ONE, 0.1)
-	tween.tween_property(button, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.1)
+	tween.tween_property(button, "scale", Vector2.ONE, 0.08)  # Consistent with hover
+	tween.tween_property(button, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.08)
 
 
 # =============================================================================
@@ -1004,6 +1026,8 @@ func _populate_skill_list() -> void:
 		str(current_character.known_skills)
 	])
 
+	var buttons_to_animate: Array[Button] = []
+
 	for skill_id in current_character.known_skills:
 		# Skip basic actions that have dedicated buttons (attack, defend)
 		if skill_id in ["attack_basic", "defend"]:
@@ -1018,10 +1042,19 @@ func _populate_skill_list() -> void:
 
 		if can_use:
 			button.pressed.connect(_on_skill_selected.bind(skill_id))
+			# Add tooltip for skill description
+			var skill_data := DataManager.get_skill(skill_id)
+			if skill_data and skill_data.description:
+				button.tooltip_text = skill_data.description
 		else:
 			button.disabled = true
 			button.modulate = Color(0.5, 0.5, 0.5, 0.8)
+			button.tooltip_text = "Not enough MP" if mp_cost > current_character.current_mp else "Cannot use this skill"
 		skill_list.add_child(button)
+		buttons_to_animate.append(button)
+
+	# Stagger animation for professional menu feel
+	_animate_menu_entrance(buttons_to_animate)
 
 
 func _get_skill_display_name(skill_id: String) -> String:
@@ -1091,6 +1124,8 @@ func _populate_item_list() -> void:
 		item_list.add_child(label)
 		return
 
+	var buttons_to_animate: Array[Control] = []
+
 	for item_info in battle_items:
 		var item_data: ItemData = item_info.data
 		var quantity: int = item_info.quantity
@@ -1098,7 +1133,14 @@ func _populate_item_list() -> void:
 
 		var button := UIStyleFactory.create_button("%s x%d" % [item_data.display_name, quantity])
 		button.pressed.connect(_on_item_selected.bind(item_id))
+		# Add tooltip with item description
+		if item_data.description:
+			button.tooltip_text = item_data.description
 		item_list.add_child(button)
+		buttons_to_animate.append(button)
+
+	# Stagger animation for professional menu feel
+	_animate_menu_entrance(buttons_to_animate)
 
 
 func _populate_item_list_fallback() -> void:
@@ -1150,6 +1192,30 @@ func _on_item_back_pressed() -> void:
 	item_button.grab_focus()
 
 
+func _animate_menu_entrance(controls: Array) -> void:
+	## Animates menu items with a stagger effect for a polished AAA feel
+	## Each item slides in from the right with a slight delay
+	const STAGGER_DELAY := 0.03  # 30ms between each item
+	const ANIMATION_DURATION := 0.12  # Snappy 120ms per item
+	const SLIDE_OFFSET := 20.0  # Pixels to slide from
+
+	for i in range(controls.size()):
+		var control: Control = controls[i]
+		if not is_instance_valid(control):
+			continue
+
+		# Start invisible and offset to the right
+		control.modulate.a = 0.0
+		var original_pos := control.position
+		control.position.x += SLIDE_OFFSET
+
+		# Stagger the animation start
+		var tween := create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(control, "modulate:a", 1.0, ANIMATION_DURATION).set_delay(i * STAGGER_DELAY)
+		tween.tween_property(control, "position:x", original_pos.x, ANIMATION_DURATION).set_delay(i * STAGGER_DELAY).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+
+
 # =============================================================================
 # TARGET SELECTION
 # =============================================================================
@@ -1188,6 +1254,7 @@ func _select_previous_target() -> void:
 	if valid_targets.is_empty():
 		return
 	current_target_index = (current_target_index - 1 + valid_targets.size()) % valid_targets.size()
+	AudioManager.play_sfx("ui_hover")  # Subtle feedback when cycling targets
 	_update_target_display()
 
 
@@ -1195,6 +1262,7 @@ func _select_next_target() -> void:
 	if valid_targets.is_empty():
 		return
 	current_target_index = (current_target_index + 1) % valid_targets.size()
+	AudioManager.play_sfx("ui_hover")  # Subtle feedback when cycling targets
 	_update_target_display()
 
 
@@ -1229,6 +1297,10 @@ func _confirm_target() -> void:
 	if valid_targets.is_empty():
 		return
 
+	# Satisfying confirmation feedback
+	AudioManager.play_sfx("ui_button_click")
+	_flash_confirmation_effect()
+
 	_reset_combat_log_scroll()  # Resume auto-scroll on target confirm
 	var target := valid_targets[current_target_index]
 	target_selector.hide()
@@ -1241,7 +1313,17 @@ func _confirm_target() -> void:
 	set_ui_state(UIState.ANIMATING)
 
 
+func _flash_confirmation_effect() -> void:
+	# Quick white flash on target name label for satisfying feedback
+	if target_name_label:
+		var original_color := target_name_label.get_theme_color("font_color") if target_name_label.has_theme_color_override("font_color") else Color.WHITE
+		var flash_tween := create_tween()
+		flash_tween.tween_property(target_name_label, "modulate", Color(2.0, 2.0, 2.0, 1.0), 0.05)
+		flash_tween.tween_property(target_name_label, "modulate", Color.WHITE, 0.1)
+
+
 func _cancel_target_selection() -> void:
+	AudioManager.play_sfx("ui_menu_close")  # Feedback for cancel action
 	target_selector.hide()
 
 	# Clear all target highlights from sidebars and sprites

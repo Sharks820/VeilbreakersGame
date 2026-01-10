@@ -95,6 +95,7 @@ const BRAND_COLORS = {
 var _pools: Dictionary = {}  # effect_name -> Array of instances
 var _pool_sizes: Dictionary = {}
 var _active_effects: Array = []
+var _active_tweens: Array[Tween] = []  # Track tweens for cleanup
 
 @export_group("Pooling")
 @export var default_pool_size: int = 5
@@ -106,6 +107,31 @@ var _active_effects: Array = []
 # -----------------------------------------------------------------------------
 func _ready() -> void:
 	_initialize_pools()
+
+
+func _exit_tree() -> void:
+	# Kill all active tweens
+	for tween in _active_tweens:
+		if tween and tween.is_valid():
+			tween.kill()
+	_active_tweens.clear()
+
+	# Clear pools
+	for pool_name in _pools:
+		for instance in _pools[pool_name]:
+			if is_instance_valid(instance):
+				instance.queue_free()
+	_pools.clear()
+	_pool_sizes.clear()
+	_active_effects.clear()
+
+
+func _create_tracked_tween() -> Tween:
+	## Create a tween and track it for cleanup
+	_active_tweens = _active_tweens.filter(func(t: Tween) -> bool: return t and t.is_valid())
+	var tween := create_tween()
+	_active_tweens.append(tween)
+	return tween
 
 
 func _initialize_pools() -> void:
@@ -224,7 +250,7 @@ func spawn_capture_projectile(data: Dictionary) -> Node:
 	effect.global_position = from_pos
 
 	# Animate to target
-	var tween = create_tween()
+	var tween = _create_tracked_tween()
 	tween.tween_property(effect, "global_position", to_pos, duration).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func(): _return_to_pool("capture_projectile", effect))
 
@@ -455,7 +481,7 @@ func screen_flash(data: Dictionary) -> void:
 		flash.set_anchors_preset(Control.PRESET_FULL_RECT)
 		get_tree().current_scene.add_child(flash)
 
-		var tween = create_tween()
+		var tween = _create_tracked_tween()
 		tween.tween_property(flash, "modulate:a", 0.0, duration)
 		tween.tween_callback(flash.queue_free)
 		return
@@ -466,7 +492,7 @@ func screen_flash(data: Dictionary) -> void:
 	if flash.has_method("flash"):
 		flash.flash(color, duration)
 	else:
-		var tween = create_tween()
+		var tween = _create_tracked_tween()
 		tween.tween_property(flash, "modulate:a", 0.0, duration)
 		tween.tween_callback(flash.queue_free)
 

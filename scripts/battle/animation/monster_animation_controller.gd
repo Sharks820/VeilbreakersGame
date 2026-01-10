@@ -5,7 +5,7 @@
 # =============================================================================
 
 class_name MonsterAnimationController
-extends Node
+extends Node2D
 
 # -----------------------------------------------------------------------------
 # SIGNALS
@@ -240,6 +240,16 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_process_breathing(delta)
 	_process_idle_variations(delta)
+
+
+func _exit_tree() -> void:
+	# Clean up tracked tweens
+	if _flash_tween and _flash_tween.is_valid():
+		_flash_tween.kill()
+		_flash_tween = null
+	if _squash_tween and _squash_tween.is_valid():
+		_squash_tween.kill()
+		_squash_tween = null
 
 
 func _setup_brand_visuals() -> void:

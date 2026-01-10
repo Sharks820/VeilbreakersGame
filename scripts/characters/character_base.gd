@@ -426,6 +426,7 @@ func add_stat_modifier(stat: Enums.Stat, value: float, duration: int, source: St
 
 func tick_stat_modifiers() -> void:
 	var changed := false
+	var empty_stats: Array = []
 
 	for stat in stat_modifiers:
 		var to_remove := []
@@ -439,6 +440,14 @@ func tick_stat_modifiers() -> void:
 		for i in range(to_remove.size() - 1, -1, -1):
 			stat_modifiers[stat].remove_at(to_remove[i])
 
+		# Track empty arrays for cleanup
+		if stat_modifiers[stat].is_empty():
+			empty_stats.append(stat)
+
+	# Clean up empty arrays to prevent memory leak
+	for stat in empty_stats:
+		stat_modifiers.erase(stat)
+
 	if changed:
 		stats_changed.emit()
 
@@ -451,6 +460,7 @@ func clear_stat_modifiers() -> void:
 func remove_stat_modifiers_by_source(source: String) -> void:
 	## Remove all stat modifiers with the given source string
 	var changed := false
+	var empty_stats: Array = []
 
 	for stat in stat_modifiers:
 		var to_remove := []
@@ -462,6 +472,14 @@ func remove_stat_modifiers_by_source(source: String) -> void:
 		# Remove in reverse order to preserve indices
 		for i in range(to_remove.size() - 1, -1, -1):
 			stat_modifiers[stat].remove_at(to_remove[i])
+
+		# Track empty arrays for cleanup
+		if stat_modifiers[stat].is_empty():
+			empty_stats.append(stat)
+
+	# Clean up empty arrays to prevent memory leak
+	for stat in empty_stats:
+		stat_modifiers.erase(stat)
 
 	if changed:
 		stats_changed.emit()

@@ -200,7 +200,7 @@ func print_results() -> void:
 
 	for path in sorted_paths:
 		var issues: Array = results[path]
-		var short_path := path.replace("res://scripts/", "")
+		var short_path: String = path.replace("res://scripts/", "")
 		print("📄 %s (%d issues)" % [short_path, issues.size()])
 
 		for issue in issues:

@@ -288,7 +288,7 @@ static func button_press(button: Control, duration: float = 0.08) -> Tween:
 ## Create a breathing loop (for idle animations)
 ## Returns a looping tween that must be stored and killed manually
 static func breathing_loop(
-	node: Node2D, min_scale: float = 1.0, max_scale: float = 1.02, cycle_time: float = 2.0
+	node: CanvasItem, min_scale: float = 1.0, max_scale: float = 1.02, cycle_time: float = 2.0
 ) -> Tween:
 	if not is_instance_valid(node):
 		return null
@@ -896,11 +896,11 @@ static func stagger_fade_in(
 ) -> Tween:
 	if nodes.is_empty():
 		return null
-	var first_node = nodes[0]
+	var first_node: Node = nodes[0]
 	if not is_instance_valid(first_node):
 		return null
 
-	var tween := first_node.create_tween()
+	var tween: Tween = first_node.create_tween()
 	tween.set_parallel(true)
 
 	for i in nodes.size():
@@ -919,11 +919,11 @@ static func stagger_scale_in(
 ) -> Tween:
 	if nodes.is_empty():
 		return null
-	var first_node = nodes[0]
+	var first_node: Node = nodes[0]
 	if not is_instance_valid(first_node):
 		return null
 
-	var tween := first_node.create_tween()
+	var tween: Tween = first_node.create_tween()
 	tween.set_parallel(true)
 
 	for i in nodes.size():

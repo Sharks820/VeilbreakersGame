@@ -558,7 +558,7 @@ func _apply_taunt(taunter: CharacterBase) -> void:
 
 
 func _steal_random_buff(target: CharacterBase, thief: CharacterBase) -> String:
-	var buffs := target.get_positive_modifiers()
+	var buffs: Array = target.get_positive_modifiers()
 	if buffs.is_empty():
 		return ""
 

@@ -938,6 +938,9 @@ func submit_player_action(
 	else:
 		# Fallback to old system (shouldn't happen with new flow)
 		print("[BATTLE_MANAGER] Using fallback execute_action path")
+		if turn_order.is_empty() or current_turn_index >= turn_order.size():
+			push_error("[BATTLE_MANAGER] Invalid turn_order state in fallback path")
+			return
 		var current_character := turn_order[current_turn_index]
 		execute_action(current_character, action, target, skill)
 

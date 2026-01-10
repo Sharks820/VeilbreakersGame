@@ -391,10 +391,8 @@ func _execute_dominate() -> void:
 	dominate_attempted.emit(active_monster, success, hp_cost)
 
 	if success:
-		# Monster gains corruption from DOMINATE
-		if active_monster.has_method("add_corruption"):
-			active_monster.add_corruption(Constants.DOMINATE_FAIL_CORRUPTION_GAIN)
-
+		# Successfully captured - no corruption gain on success
+		# (Only failures add corruption as punishment)
 		_handle_capture_success(
 			{
 				"method": "dominate",

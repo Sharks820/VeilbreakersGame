@@ -14,6 +14,7 @@ var _fade_rect: ColorRect
 var _loading_container: Control
 var _progress_bar: ProgressBar
 var _loading_label: Label
+var _active_tween: Tween = null
 
 # =============================================================================
 # LIFECYCLE
@@ -74,6 +75,13 @@ func _setup_transition_ui() -> void:
 	# Progress bar
 	_progress_bar = UIStyleFactory.create_hp_bar(Vector2(400, 24))
 	vbox.add_child(_progress_bar)
+
+
+func _exit_tree() -> void:
+	# Kill any active tweens to prevent memory leaks
+	if _active_tween and _active_tween.is_valid():
+		_active_tween.kill()
+		_active_tween = null
 
 
 # =============================================================================
@@ -191,15 +199,23 @@ func change_scene_with_loading(scene_path: String, loading_text: String = "Loadi
 
 
 func _fade_out(duration: float) -> void:
-	var tween := create_tween()
-	tween.tween_property(_fade_rect, "modulate:a", 1.0, duration)
-	await tween.finished
+	_kill_active_tween()
+	_active_tween = create_tween()
+	_active_tween.tween_property(_fade_rect, "modulate:a", 1.0, duration)
+	await _active_tween.finished
 
 
 func _fade_in(duration: float) -> void:
-	var tween := create_tween()
-	tween.tween_property(_fade_rect, "modulate:a", 0.0, duration)
-	await tween.finished
+	_kill_active_tween()
+	_active_tween = create_tween()
+	_active_tween.tween_property(_fade_rect, "modulate:a", 0.0, duration)
+	await _active_tween.finished
+
+
+func _kill_active_tween() -> void:
+	if _active_tween and _active_tween.is_valid():
+		_active_tween.kill()
+		_active_tween = null
 
 
 func fade_to_black(duration: float = 0.5) -> void:
@@ -213,9 +229,10 @@ func fade_from_black(duration: float = 0.5) -> void:
 func flash(color: Color = Color.WHITE, duration: float = 0.1) -> void:
 	_fade_rect.color = color
 	_fade_rect.modulate.a = 1.0
-	var tween := create_tween()
-	tween.tween_property(_fade_rect, "modulate:a", 0.0, duration)
-	await tween.finished
+	_kill_active_tween()
+	_active_tween = create_tween()
+	_active_tween.tween_property(_fade_rect, "modulate:a", 0.0, duration)
+	await _active_tween.finished
 	_fade_rect.color = Color.BLACK
 
 
