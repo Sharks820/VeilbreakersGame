@@ -693,8 +693,8 @@ static func has_sprite_sheets(monster_id: String) -> bool:
 # =============================================================================
 
 static func _get_flicker_config() -> Dictionary:
-	var variants := ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
-	var variant: String = variants[randi() % variants.size()]
+	# Use sheet B specifically - slower, cleaner animation
+	var variant: String = "b"
 
 	var config := {
 		"monster_id": "flicker",
@@ -702,7 +702,7 @@ static func _get_flicker_config() -> Dictionary:
 		"default_sheet": 0,
 		"h_frames": 5,
 		"v_frames": 5,
-		"scale": Vector2(1.0, 1.0),
+		"scale": Vector2(0.25, 0.25),  # Reduced significantly from 1.0
 		"sheets": [],
 		"brand_color": Color(0.2, 0.6, 0.9),
 		"glow_color": Color(0.4, 0.8, 1.0),
@@ -713,7 +713,7 @@ static func _get_flicker_config() -> Dictionary:
 	sheet1.sheet_path = "res://assets/sprites/monsters/sheets/flicker_%s_sheet.png" % variant
 	sheet1.h_frames = 5
 	sheet1.v_frames = 5
-	sheet1.add_animation("idle", 0, 4, 8.0, true)
+	sheet1.add_animation("idle", 0, 4, 3.0, true)  # Slower animation (was 8.0)
 	sheet1.add_animation("attack", 5, 9, 12.0, false, 7)
 	sheet1.add_animation("skill_lightning_strike", 5, 9, 10.0, false, 7)
 	sheet1.add_animation("block", 10, 14, 8.0, false)

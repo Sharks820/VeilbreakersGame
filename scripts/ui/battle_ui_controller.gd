@@ -879,7 +879,7 @@ func _style_action_buttons() -> void:
 		var accent_color: Color = data.color
 
 		# CRITICAL: Enforce minimum button size for visibility (AAA standard)
-		button.custom_minimum_size = Vector2(100, 80)
+		button.custom_minimum_size = Vector2(160, 120)
 
 		# Apply action button styling with accent color (handles all states + font)
 		UIStyleFactory.apply_action_button_style(button, accent_color)
@@ -892,8 +892,8 @@ func _style_action_buttons() -> void:
 				button.icon = icon_tex
 				button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 				button.expand_icon = true
-				# Larger icon for better visibility (scaled to 80px height buttons)
-				button.add_theme_constant_override("icon_max_width", 36)
+				# Larger icon for better visibility (scaled to 120px height buttons)
+				button.add_theme_constant_override("icon_max_width", 72)
 
 
 # =============================================================================
@@ -3466,8 +3466,8 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 
 	left_party_sidebar = UIStyleFactory.create_styled_panel(UIStyleFactory.create_party_sidebar_header())
 	left_party_sidebar.name = "LeftPartySidebar"
-	left_party_sidebar.custom_minimum_size = Vector2(160, 300)  # Force minimum height
-	left_party_sidebar.size = Vector2(160, 300)
+	left_party_sidebar.custom_minimum_size = Vector2(200, 380)  # Wider for better HP bars
+	left_party_sidebar.size = Vector2(200, 380)
 
 	# Force absolute positioning mode (required for children of anchor-based Controls)
 	left_party_sidebar.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
@@ -3507,7 +3507,7 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 	## Create a compact party member slot for the left sidebar
 	var panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_party_sidebar_panel())
-	panel.custom_minimum_size = Vector2(144, 60)
+	panel.custom_minimum_size = Vector2(180, 100)
 	UIStyleFactory.set_mouse_stop(panel)
 
 	# Connect hover signals for tooltip
@@ -3567,7 +3567,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 		info_vbox.add_child(brand_label)
 
 	# HP Bar - use textured ornate frame
-	var hp_bar_container := UIStyleFactory.create_compact_textured_hp_bar(Vector2(95, 18))
+	var hp_bar_container := UIStyleFactory.create_compact_textured_hp_bar(Vector2(140, 28))
 	hp_bar_container.name = "HPBarContainer"
 	UIStyleFactory.set_mouse_pass(hp_bar_container)
 	var hp_bar := hp_bar_container.find_child("HPBar", true, false) as ProgressBar
@@ -3584,7 +3584,7 @@ func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
 
 	# MP Bar (if character has MP) - use textured ornate frame
 	if character.get_max_mp() > 0:
-		var mp_bar_container := UIStyleFactory.create_compact_textured_mp_bar(Vector2(95, 16))
+		var mp_bar_container := UIStyleFactory.create_compact_textured_mp_bar(Vector2(140, 24))
 		mp_bar_container.name = "MPBarContainer"
 		UIStyleFactory.set_mouse_pass(mp_bar_container)
 		var mp_bar := mp_bar_container.find_child("MPBar", true, false) as ProgressBar
@@ -3654,12 +3654,12 @@ func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
 
 	right_enemy_sidebar = UIStyleFactory.create_styled_panel(UIStyleFactory.create_enemy_sidebar_header())
 	right_enemy_sidebar.name = "RightEnemySidebar"
-	right_enemy_sidebar.custom_minimum_size = Vector2(160, 300)
-	right_enemy_sidebar.size = Vector2(160, 300)
+	right_enemy_sidebar.custom_minimum_size = Vector2(200, 380)  # Wider for better HP bars
+	right_enemy_sidebar.size = Vector2(200, 380)
 
 	# Use PRESET_TOP_LEFT (same as party sidebar) then set X position for right side
 	right_enemy_sidebar.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	right_enemy_sidebar.position = Vector2(viewport_size.x - 170, 70)  # Same Y=70 as party sidebar
+	right_enemy_sidebar.position = Vector2(viewport_size.x - 210, 70)  # Same Y=70 as party sidebar
 	print("[BATTLE_UI] Enemy sidebar position set to: %s" % str(right_enemy_sidebar.position))
 
 	var vbox := UIStyleFactory.create_vbox(8)
@@ -3689,7 +3689,7 @@ func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
 func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	## Create a compact enemy slot for the right sidebar
 	var panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_enemy_sidebar_panel())
-	panel.custom_minimum_size = Vector2(144, 70)
+	panel.custom_minimum_size = Vector2(180, 100)
 	UIStyleFactory.set_mouse_stop(panel)
 
 	# Connect hover signals
@@ -3738,7 +3738,7 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 		vbox.add_child(brand_label)
 
 	# HP Bar - red themed with textured ornate frame
-	var hp_bar_container := UIStyleFactory.create_compact_textured_enemy_hp_bar(Vector2(95, 18))
+	var hp_bar_container := UIStyleFactory.create_compact_textured_enemy_hp_bar(Vector2(140, 28))
 	hp_bar_container.name = "HPBarContainer"
 	UIStyleFactory.set_mouse_pass(hp_bar_container)
 	var hp_bar := hp_bar_container.find_child("HPBar", true, false) as ProgressBar

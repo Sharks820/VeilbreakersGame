@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3 uid="uid://cei5a1lh6hcwk"]
 
 [ext_resource type="Script" uid="uid://l2auutpkmmrf" path="res://scripts/ui/battle_ui_controller.gd" id="1_controller"]
-[ext_resource type="Texture2D" uid="uid://bdsawge7630rf" path="res://assets/ui/bars/hp_bar_small.png" id="2_hp_bar"]
-[ext_resource type="Texture2D" uid="uid://ddby3skimq2ql" path="res://assets/ui/bars/mp_bar_small.png" id="3_mp_bar"]
+[ext_resource type="Texture2D" uid="uid://bdsawge7630rf" path="res://assets/ui/bars/hp_bar_frame.png" id="2_hp_bar"]
+[ext_resource type="Texture2D" uid="uid://ddby3skimq2ql" path="res://assets/ui/bars/mp_bar_frame.png" id="3_mp_bar"]
 
 [node name="BattleUI" type="Control"]
 layout_mode = 3
