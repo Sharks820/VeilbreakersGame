@@ -4458,7 +4458,7 @@ func _on_corruption_reduced(monster: Node, old_value: float, new_value: float) -
 	# Flash the bar bright purple
 	var bar_fill := corruption_bar.get_theme_stylebox("fill") as StyleBoxFlat
 	if bar_fill:
-		var _original_color := bar_fill.bg_color
+		var original_color: Color = bar_fill.bg_color
 		var flash_color := Color(0.9, 0.4, 1.0, 1.0)  # Bright purple flash
 
 		tween.tween_callback(func(): bar_fill.bg_color = flash_color)

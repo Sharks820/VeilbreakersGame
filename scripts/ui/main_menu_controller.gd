@@ -246,9 +246,9 @@ func _play_aaa_entrance() -> void:
 
 	# Phase 4: Buttons slide up
 	await get_tree().create_timer(0.8).timeout
-	var buttons := [new_game_button, continue_button, settings_button, quit_button]
+	var buttons: Array[TextureButton] = [new_game_button, continue_button, settings_button, quit_button]
 	for i in range(buttons.size()):
-		var btn := buttons[i]
+		var btn: TextureButton = buttons[i]
 		var delay := i * 0.15
 		var target_alpha := 0.4 if (btn == continue_button and not continue_has_saves) else 1.0
 		var target_y: float = button_base_positions[btn]
@@ -346,8 +346,8 @@ func _update_cursor_tracking(_delta: float) -> void:
 	var eye_pos := monster_eye.global_position
 	var viewport_size := get_viewport_rect().size
 
-	var dx := (mouse_pos.x - eye_pos.x) / (viewport_size.x * 0.35)
-	var dy := (mouse_pos.y - eye_pos.y) / (viewport_size.y * 0.35)
+	var dx := (mouse_pos.x - eye_pos.x) / (viewport_size.x * 0.5)
+	var dy := (mouse_pos.y - eye_pos.y) / (viewport_size.y * 0.6)
 	dx = clamp(dx, -1.0, 1.0)
 	dy = clamp(dy, -1.0, 1.0)
 
@@ -365,8 +365,8 @@ func _update_cursor_tracking2(_delta: float) -> void:
 	var eye_pos := monster_eye_2.global_position
 	var viewport_size := get_viewport_rect().size
 
-	var dx := (mouse_pos.x - eye_pos.x) / (viewport_size.x * 0.35)
-	var dy := (mouse_pos.y - eye_pos.y) / (viewport_size.y * 0.35)
+	var dx := (mouse_pos.x - eye_pos.x) / (viewport_size.x * 0.5)
+	var dy := (mouse_pos.y - eye_pos.y) / (viewport_size.y * 0.6)
 	dx = clamp(dx, -1.0, 1.0)
 	dy = clamp(dy, -1.0, 1.0)
 
