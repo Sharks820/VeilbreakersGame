@@ -1,3 +1,6 @@
+$scenePath = "C:/Users/Conner/OneDrive/Documents/VeilbreakersGame/scenes/main/main_menu.tscn"
+
+$newContent = @'
 [gd_scene load_steps=15 format=3 uid="uid://b5qx2vqe1yf6h"]
 
 [ext_resource type="Script" path="res://scripts/ui/main_menu_controller.gd" id="1_menu"]
@@ -259,3 +262,7 @@ mouse_filter = 2
 [connection signal="pressed" from="ButtonContainer/ContinueButton" to="." method="_on_continue_pressed"]
 [connection signal="pressed" from="ButtonContainer/SettingsButton" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="ButtonContainer/QuitButton" to="." method="_on_quit_pressed"]
+'@
+
+[System.IO.File]::WriteAllText($scenePath, $newContent)
+Write-Host "Main menu scene updated with dual eyes, smoke, sparks, and logo glow!"

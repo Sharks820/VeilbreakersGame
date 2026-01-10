@@ -103,7 +103,10 @@
       "mcp__godot-ultimate__godot_complexity_heatmap",
       "mcp__godot-ultimate__godot_lint_project",
       "mcp__ide__getDiagnostics",
-      "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --headless --check-only --path \"C:/Users/Conner/OneDrive/Documents/VeilbreakersGame\")"
+      "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --headless --check-only --path \"C:/Users/Conner/OneDrive/Documents/VeilbreakersGame\")",
+      "Bash(taskkill:*)",
+      "Bash(tasklist:*)",
+      "Bash(start \"\" \"C:\\\\Users\\\\Conner\\\\AppData\\\\Local\\\\Microsoft\\\\OneDrive\\\\OneDrive.exe\")"
     ]
   },
   "enableAllProjectMcpServers": true,

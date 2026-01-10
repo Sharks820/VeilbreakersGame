@@ -1,3 +1,6 @@
+$scriptPath = "C:/Users/Conner/OneDrive/Documents/VeilbreakersGame/scripts/ui/main_menu_controller.gd"
+
+$newContent = @'
 extends Control
 ## MainMenuController: AAA-quality main menu with dual cursor-tracking demon eyes.
 
@@ -601,3 +604,7 @@ func _on_settings_closed() -> void:
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_debug"):
 		pass
+'@
+
+[System.IO.File]::WriteAllText($scriptPath, $newContent)
+Write-Host "Main menu controller updated with dual eyes and logo glow!"
