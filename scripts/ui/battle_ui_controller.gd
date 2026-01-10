@@ -105,6 +105,13 @@ var _hovered_sprite_character: CharacterBase = null
 # Level up tracking for victory screen
 var _battle_level_ups: Dictionary = {}  # CharacterBase -> {old_level, new_level, stat_gains}
 
+# Gothic animation state - HP drain tweens and previous values
+var _hp_drain_tweens: Dictionary = {}  # CharacterBase -> Tween
+var _glow_tweens: Dictionary = {}  # PanelContainer -> Tween
+var _status_icon_tweens: Dictionary = {}  # TextureRect -> Tween
+var _low_hp_tweens: Dictionary = {}  # ProgressBar -> Tween
+var _prev_hp_values: Dictionary = {}  # CharacterBase -> int (track previous HP for drain animation)
+
 # =============================================================================
 # INITIALIZATION
 # =============================================================================
@@ -1277,7 +1284,7 @@ func _update_target_display() -> void:
 	var highlight_color := Color(0.4, 0.7, 1.0) if is_ally else Color(1.0, 0.4, 0.4)  # BLUE for ally, RED for enemy
 
 	# Update target name with appropriate color highlight
-	target_name_label.text = "► " + target.character_name + " ◄"
+	target_name_label.text = "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âº " + target.character_name + " ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¾"
 	target_name_label.add_theme_color_override("font_color", highlight_color)
 	target_name_label.add_theme_font_size_override("font_size", UIStyleFactory.FONT_HEADING)
 
@@ -1554,7 +1561,7 @@ func _highlight_all_valid_targets(target_allies: bool) -> void:
 
 
 func _highlight_enemy_in_sidebar(target: CharacterBase) -> void:
-	## Highlight the SELECTED enemy target (brighter red), others stay dimmer red
+	## Highlight the SELECTED enemy target with animated glow, others stay dimmer
 	for enemy in enemies:
 		# Check both ui_panel and enemy_sidebar_panel
 		var panels: Array[PanelContainer] = []
@@ -1571,26 +1578,39 @@ func _highlight_enemy_in_sidebar(target: CharacterBase) -> void:
 			var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
 			if style:
 				if enemy == target:
-					# SELECTED - bright red border + glow effect
-					style.border_color = Color(1.0, 0.2, 0.2, 1.0)
+					# SELECTED - bright red border + animated pulsing glow
+					style.border_color = UIStyleFactory.GOTHIC_GLOW_BLOOD
 					style.set_border_width_all(4)
-					style.shadow_color = Color(1.0, 0.0, 0.0, 0.6)
-					style.shadow_size = 8
+					style.shadow_color = UIStyleFactory.GOTHIC_GLOW_BLOOD
+					style.shadow_size = Constants.GOTHIC_GLOW_MIN
+					# Start animated glow pulse
+					_kill_glow_tween(panel)
+					var tween := AnimationEffects.panel_glow_pulse(
+						panel,
+						UIStyleFactory.GOTHIC_GLOW_BLOOD,
+						Constants.GOTHIC_GLOW_MIN,
+						Constants.GOTHIC_GLOW_MAX,
+						Constants.GOTHIC_GLOW_CYCLE
+					)
+					if tween:
+						_glow_tweens[panel] = tween
 				elif enemy in valid_targets:
-					# Valid but not selected - dimmer red
-					style.border_color = Color(0.8, 0.3, 0.3, 1.0)
+					# Valid but not selected - dimmer red, no animation
+					_kill_glow_tween(panel)
+					style.border_color = Color(0.6, 0.2, 0.2, 1.0)
 					style.set_border_width_all(2)
-					style.shadow_color = Color(1.0, 0.0, 0.0, 0.3)
+					style.shadow_color = UIStyleFactory.GOTHIC_GLOW_BLOOD
 					style.shadow_size = 4
 				else:
-					# Not targetable - normal border
-					style.border_color = Color(0.5, 0.25, 0.25, 1.0)
+					# Not targetable - gothic border
+					_kill_glow_tween(panel)
+					style.border_color = UIStyleFactory.GOTHIC_BORDER_IRON
 					style.set_border_width_all(1)
 					style.shadow_size = 0
 
 
 func _highlight_ally_in_sidebar(target: CharacterBase) -> void:
-	## Highlight the SELECTED ally target (brighter blue), others stay dimmer blue
+	## Highlight the SELECTED ally target with animated glow, others stay dimmer
 	for ally in party_members:
 		# Check sidebar_panel (left sidebar) - this is the main ally panel
 		if ally.has_meta("sidebar_panel"):
@@ -1599,20 +1619,34 @@ func _highlight_ally_in_sidebar(target: CharacterBase) -> void:
 				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
 				if style:
 					if ally == target:
-						# SELECTED - bright blue border + glow effect
-						style.border_color = Color(0.2, 0.6, 1.0, 1.0)
+						# SELECTED - bright blue border + animated pulsing glow
+						var ally_glow := Color(0.2, 0.5, 0.9, 0.7)
+						style.border_color = ally_glow
 						style.set_border_width_all(4)
-						style.shadow_color = Color(0.0, 0.5, 1.0, 0.6)
-						style.shadow_size = 8
+						style.shadow_color = ally_glow
+						style.shadow_size = Constants.GOTHIC_GLOW_MIN
+						# Start animated glow pulse
+						_kill_glow_tween(panel)
+						var tween := AnimationEffects.panel_glow_pulse(
+							panel,
+							ally_glow,
+							Constants.GOTHIC_GLOW_MIN,
+							Constants.GOTHIC_GLOW_MAX,
+							Constants.GOTHIC_GLOW_CYCLE
+						)
+						if tween:
+							_glow_tweens[panel] = tween
 					elif ally in valid_targets:
-						# Valid but not selected - dimmer blue
-						style.border_color = Color(0.3, 0.5, 0.8, 1.0)
+						# Valid but not selected - dimmer blue, no animation
+						_kill_glow_tween(panel)
+						style.border_color = Color(0.2, 0.4, 0.7, 1.0)
 						style.set_border_width_all(2)
-						style.shadow_color = Color(0.0, 0.4, 1.0, 0.3)
+						style.shadow_color = Color(0.1, 0.3, 0.6, 0.4)
 						style.shadow_size = 4
 					else:
-						# Not targetable - normal border
-						style.border_color = Color(0.3, 0.5, 0.4, 1.0)
+						# Not targetable - gothic border
+						_kill_glow_tween(panel)
+						style.border_color = UIStyleFactory.GOTHIC_BORDER_IRON
 						style.set_border_width_all(1)
 						style.shadow_size = 0
 
@@ -1633,48 +1667,50 @@ func _set_panel_highlight(
 
 
 func _clear_all_sidebar_highlights() -> void:
-	## Clear all target highlights from both enemy and party sidebars
-	# Reset enemy sidebar to normal state (check both ui_panel and enemy_sidebar_panel)
+	## Clear all target highlights and kill glow tweens
+	# Kill all glow tweens first
+	for panel in _glow_tweens.keys():
+		_kill_glow_tween(panel)
+
+	# Reset enemy sidebar to normal gothic state
 	for enemy in enemies:
 		if enemy.has_meta("ui_panel"):
 			var panel: PanelContainer = enemy.get_meta("ui_panel")
 			if is_instance_valid(panel):
 				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
 				if style:
-					style.border_color = Color(0.5, 0.25, 0.25, 1.0)
+					style.border_color = UIStyleFactory.GOTHIC_BORDER_IRON
 					style.set_border_width_all(1)
-					style.shadow_size = 0  # Clear shadow
+					style.shadow_size = 0
 
-		# Also check enemy_sidebar_panel (right sidebar)
 		if enemy.has_meta("enemy_sidebar_panel"):
 			var panel: PanelContainer = enemy.get_meta("enemy_sidebar_panel")
 			if is_instance_valid(panel):
 				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
 				if style:
-					style.border_color = Color(0.5, 0.3, 0.3, 1.0)
+					style.border_color = UIStyleFactory.GOTHIC_BORDER_IRON
 					style.set_border_width_all(1)
-					style.shadow_size = 0  # Clear shadow
+					style.shadow_size = 0
 
-	# Reset party sidebar to normal state
+	# Reset party sidebar to normal gothic state
 	for ally in party_members:
 		if ally.has_meta("ui_panel"):
 			var panel: PanelContainer = ally.get_meta("ui_panel")
 			if is_instance_valid(panel):
 				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
 				if style:
-					style.border_color = Color(0.3, 0.25, 0.4, 1.0)
+					style.border_color = UIStyleFactory.GOTHIC_BORDER_IRON
 					style.set_border_width_all(1)
-					style.shadow_size = 0  # Clear shadow
+					style.shadow_size = 0
 
-		# Also check sidebar_panel (left sidebar)
 		if ally.has_meta("sidebar_panel"):
 			var panel: PanelContainer = ally.get_meta("sidebar_panel")
 			if is_instance_valid(panel):
 				var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
 				if style:
-					style.border_color = Color(0.3, 0.5, 0.4, 1.0)
+					style.border_color = UIStyleFactory.GOTHIC_BORDER_IRON
 					style.set_border_width_all(1)
-					style.shadow_size = 0  # Clear shadow
+					style.shadow_size = 0
 
 
 func update_enemy_hp(enemy: CharacterBase) -> void:
@@ -1816,6 +1852,39 @@ func _update_character_status_icons(character: CharacterBase) -> void:
 		status_icons.add_child(icon_container)
 		icon_count += 1
 
+		# Apply animated entrance effect and start loop animation
+		_animate_status_icon(icon_container, is_buff)
+
+
+
+
+func _animate_status_icon(icon: Control, is_buff: bool) -> void:
+	## Apply entrance animation and start appropriate loop animation for status icon
+	# Pop-in entrance animation
+	AnimationEffects.status_icon_applied(icon, is_buff, 0.3)
+
+	# Start looping animation after entrance completes
+	var timer := get_tree().create_timer(0.35)
+	timer.timeout.connect(func():
+		if is_instance_valid(icon):
+			_kill_status_icon_tween(icon)
+			var loop_tween: Tween = null
+			if is_buff:
+				loop_tween = AnimationEffects.status_buff_pulse(icon, Constants.STATUS_PULSE_CYCLE)
+			else:
+				loop_tween = AnimationEffects.status_debuff_shake(icon, 2.0, Constants.STATUS_SHAKE_CYCLE)
+			if loop_tween:
+				_status_icon_tweens[icon] = loop_tween
+	)
+
+
+func _kill_status_icon_tween(icon: Control) -> void:
+	## Kill any existing animation tween for a status icon
+	if _status_icon_tweens.has(icon):
+		var tween: Tween = _status_icon_tweens[icon]
+		if tween and tween.is_valid():
+			tween.kill()
+		_status_icon_tweens.erase(icon)
 
 func _get_status_effect_name_key(effect: Enums.StatusEffect) -> String:
 	## Get the lookup key for status effect icon files
@@ -1995,7 +2064,7 @@ func update_turn_order(order: Array[CharacterBase]) -> void:
 
 		# Add arrow between characters (except after last)
 		if i < mini(7, order.size() - 1):
-			var arrow := UIStyleFactory.create_label("►", UIStyleFactory.FONT_SMALL, UIStyleFactory.COLOR_DIM_LABEL)
+			var arrow := UIStyleFactory.create_label("ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âº", UIStyleFactory.FONT_SMALL, UIStyleFactory.COLOR_DIM_LABEL)
 			arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			turn_order_display.add_child(arrow)
 
@@ -2126,9 +2195,9 @@ func clear_combat_log() -> void:
 		push_warning("[BATTLE_UI] clear_combat_log called but combat_log_text is null")
 		return
 	combat_log_text.clear()
-	combat_log_text.append_text("[color=#cc9933]╔══════════════════════════════╗[/color]")
-	combat_log_text.append_text("\n[color=#cc9933]║[/color]      [color=#ffcc66]⚔ BATTLE START ⚔[/color]      [color=#cc9933]║[/color]")
-	combat_log_text.append_text("\n[color=#cc9933]╚══════════════════════════════╝[/color]")
+	combat_log_text.append_text("[color=#cc9933]ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â[/color]")
+	combat_log_text.append_text("\n[color=#cc9933]ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“[/color]      [color=#ffcc66]ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â BATTLE START ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â[/color]      [color=#cc9933]ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“[/color]")
+	combat_log_text.append_text("\n[color=#cc9933]ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â[/color]")
 	print("[BATTLE_UI] Combat log cleared and initialized")
 
 
@@ -2358,7 +2427,7 @@ func _add_battle_stats_section(container: VBoxContainer, delay: float) -> void:
 	container.add_child(sep2)
 
 	# Stats header
-	var stats_header := UIStyleFactory.create_centered_label("📊 BATTLE STATS", UIStyleFactory.FONT_NORMAL, UIStyleFactory.COLOR_STATS_HEADER)
+	var stats_header := UIStyleFactory.create_centered_label("ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  BATTLE STATS", UIStyleFactory.FONT_NORMAL, UIStyleFactory.COLOR_STATS_HEADER)
 	stats_header.name = "CharXP_StatsHeader"
 	container.add_child(stats_header)
 
@@ -2373,19 +2442,19 @@ func _add_battle_stats_section(container: VBoxContainer, delay: float) -> void:
 	# Add stat entries
 	var stat_entries: Array[Dictionary] = [
 		{
-			"icon": "⚔",
+			"icon": "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â",
 			"label": "Turns",
 			"value": stats.get("turns_taken", 0),
 			"color": Color(0.9, 0.9, 0.9)
 		},
 		{
-			"icon": "💥",
+			"icon": "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥",
 			"label": "Damage Dealt",
 			"value": stats.get("damage_dealt", 0),
 			"color": Color(1.0, 0.6, 0.4)
 		},
 		{
-			"icon": "🛡",
+			"icon": "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡",
 			"label": "Damage Taken",
 			"value": stats.get("damage_received", 0),
 			"color": Color(0.6, 0.8, 1.0)
@@ -2396,7 +2465,7 @@ func _add_battle_stats_section(container: VBoxContainer, delay: float) -> void:
 	if stats.get("captures_attempted", 0) > 0:
 		stat_entries.append(
 			{
-				"icon": "🔮",
+				"icon": "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â®",
 				"label": "Captures",
 				"value":
 				"%d/%d" % [stats.get("captures_successful", 0), stats.get("captures_attempted", 0)],
@@ -2540,7 +2609,7 @@ func _show_level_up_flash(
 	row: PanelContainer, level_label: Label, new_level: int, character: CharacterBase = null
 ) -> void:
 	## Flash effect when character levels up, with stat gains display
-	level_label.text = "Lv. %d ⬆" % new_level
+	level_label.text = "Lv. %d ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â " % new_level
 	level_label.add_theme_color_override("font_color", UIStyleFactory.COLOR_LEVEL_UP)
 
 	# Flash the row
@@ -2557,7 +2626,7 @@ func _show_level_up_flash(
 	popup.add_child(popup_vbox)
 
 	# Title
-	var title := UIStyleFactory.create_centered_label("⭐ LEVEL UP! ⭐", UIStyleFactory.FONT_NORMAL, UIStyleFactory.COLOR_VICTORY_TITLE)
+	var title := UIStyleFactory.create_centered_label("ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â LEVEL UP! ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â", UIStyleFactory.FONT_NORMAL, UIStyleFactory.COLOR_VICTORY_TITLE)
 	popup_vbox.add_child(title)
 
 	# Get stat gains if we have level up data
@@ -2783,7 +2852,7 @@ func _animate_defeat_title() -> void:
 
 	# Slow fade-in of text with slight shake
 	title.modulate.a = 0.0
-	title.text = "💀 DEFEAT 💀"
+	title.text = "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ DEFEAT ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬"
 
 	var tween := create_tween()
 	tween.tween_property(title, "modulate:a", 1.0, 0.6).set_ease(Tween.EASE_IN)
@@ -2864,7 +2933,7 @@ func _show_level_up_notification(
 	vbox.add_child(title)
 
 	# Character name and level
-	var name_label := UIStyleFactory.create_centered_label("%s → Level %d" % [character.character_name, new_level], UIStyleFactory.FONT_SUBHEADING, Color.WHITE)
+	var name_label := UIStyleFactory.create_centered_label("%s ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ Level %d" % [character.character_name, new_level], UIStyleFactory.FONT_SUBHEADING, Color.WHITE)
 	vbox.add_child(name_label)
 
 	# Stat gains
@@ -2910,7 +2979,7 @@ func log_level_up(character_name: String, new_level: int) -> void:
 	## Logs level up to combat log
 	if not combat_log_text:
 		return
-	var msg := "[color=gold]★ %s reached Level %d! ★[/color]" % [character_name, new_level]
+	var msg := "[color=gold]ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ %s reached Level %d! ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦[/color]" % [character_name, new_level]
 	combat_log_text.append_text("\n" + msg)
 	_auto_scroll_combat_log()
 
@@ -2965,39 +3034,39 @@ func _get_brand_name(brand: Enums.Brand) -> String:
 	# Handle invalid brand values (can happen with old .tres files)
 	var brand_int := int(brand)
 	if brand_int < 0 or brand_int > 11:
-		return "— UNKNOWN"
+		return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â UNKNOWN"
 
 	match brand:
 		# Pure Brands
 		Enums.Brand.SAVAGE:
-			return "⚔ SAVAGE"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â SAVAGE"
 		Enums.Brand.IRON:
-			return "🛡 IRON"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ IRON"
 		Enums.Brand.VENOM:
-			return "☠ VENOM"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  VENOM"
 		Enums.Brand.SURGE:
-			return "⚡ SURGE"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ SURGE"
 		Enums.Brand.DREAD:
-			return "💀 DREAD"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ DREAD"
 		Enums.Brand.LEECH:
-			return "🩸 LEECH"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ LEECH"
 		# Hybrid Brands
 		Enums.Brand.BLOODIRON:
-			return "⚔🛡 BLOODIRON"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ BLOODIRON"
 		Enums.Brand.CORROSIVE:
-			return "🛡☠ CORROSIVE"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  CORROSIVE"
 		Enums.Brand.VENOMSTRIKE:
-			return "☠⚡ VENOMSTRIKE"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ VENOMSTRIKE"
 		Enums.Brand.TERRORFLUX:
-			return "⚡💀 TERRORFLUX"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ TERRORFLUX"
 		Enums.Brand.NIGHTLEECH:
-			return "💀🩸 NIGHTLEECH"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ NIGHTLEECH"
 		Enums.Brand.RAVENOUS:
-			return "🩸⚔ RAVENOUS"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â RAVENOUS"
 		Enums.Brand.NONE:
-			return "— NONE"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â NONE"
 		_:
-			return "— UNKNOWN"
+			return "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â UNKNOWN"
 
 
 func _get_brand_color(brand: Enums.Brand) -> Color:
@@ -3587,123 +3656,212 @@ func _create_left_party_sidebar(viewport_size: Vector2) -> void:
 
 
 func _create_party_sidebar_slot(character: CharacterBase) -> PanelContainer:
-	## Create a compact party member slot for the left sidebar
-	var panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_party_sidebar_panel())
-	panel.custom_minimum_size = Vector2(180, 100)
+	## Create a gothic-styled party member slot for the left sidebar
+	## Features: larger portraits, HP drain animation support, glow effects
+
+	# Use gothic character card styling
+	var panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_gothic_character_card_style(false, false))
+	panel.custom_minimum_size = Vector2(200, 130)  # Larger for full info
 	UIStyleFactory.set_mouse_stop(panel)
 
 	# Connect hover signals for tooltip
 	panel.mouse_entered.connect(_on_party_panel_hover.bind(character, panel))
 	panel.mouse_exited.connect(_on_party_panel_unhover)
 
-	var hbox := UIStyleFactory.create_hbox(6)
-	UIStyleFactory.set_mouse_pass(hbox)
-	panel.add_child(hbox)
+	var main_vbox := UIStyleFactory.create_vbox(4)
+	UIStyleFactory.set_mouse_pass(main_vbox)
+	panel.add_child(main_vbox)
 
-	# Portrait
-	var portrait_container := UIStyleFactory.create_styled_panel(UIStyleFactory.create_sidebar_portrait_frame(false))
-	portrait_container.custom_minimum_size = Vector2(36, 36)
-	UIStyleFactory.set_mouse_pass(portrait_container)
-	hbox.add_child(portrait_container)
+	# Top row: Portrait + Name/Path info
+	var top_hbox := UIStyleFactory.create_hbox(8)
+	UIStyleFactory.set_mouse_pass(top_hbox)
+	main_vbox.add_child(top_hbox)
 
-	var portrait := UIStyleFactory.create_icon(Vector2(32, 32))
+	# Portrait with gothic frame
+	var portrait_panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_gothic_portrait_frame_style(false, false))
+	portrait_panel.name = "PortraitPanel"
+	portrait_panel.custom_minimum_size = Vector2(48, 48)  # Larger portrait
+	UIStyleFactory.set_mouse_pass(portrait_panel)
+	top_hbox.add_child(portrait_panel)
+
+	var portrait := UIStyleFactory.create_icon(Vector2(44, 44))
 	UIStyleFactory.set_mouse_pass(portrait)
 	var portrait_path := _get_portrait_path(character)
 	if portrait_path != "":
 		var tex := load(portrait_path)
 		if tex:
 			portrait.texture = tex
-	portrait_container.add_child(portrait)
+	portrait_panel.add_child(portrait)
 
-	# Info container
-	var info_vbox := UIStyleFactory.create_vbox(2)
-	UIStyleFactory.expand_horizontal(info_vbox)
-	UIStyleFactory.set_mouse_pass(info_vbox)
-	hbox.add_child(info_vbox)
+	# Name and info column
+	var name_vbox := UIStyleFactory.create_vbox(1)
+	UIStyleFactory.expand_horizontal(name_vbox)
+	UIStyleFactory.set_mouse_pass(name_vbox)
+	top_hbox.add_child(name_vbox)
 
-	# Name
-	var name_label := UIStyleFactory.create_label(character.character_name, UIStyleFactory.FONT_CAPTION, UIStyleFactory.COLOR_TOOLTIP_NAME)
+	# Name - larger gothic font
+	var name_label := UIStyleFactory.create_gothic_label(character.character_name, UIStyleFactory.FONT_SUBHEADING, UIStyleFactory.GOTHIC_TEXT_BONE)
+	name_label.name = "NameLabel"
 	UIStyleFactory.set_mouse_pass(name_label)
-	info_vbox.add_child(name_label)
+	name_vbox.add_child(name_label)
 
-	# Path display for player characters (with aligned brand info)
-	if (
-		character.character_type == Enums.CharacterType.PLAYER
-		and character.current_path != Enums.Path.NONE
-	):
+	# Path display for player characters
+	if character.character_type == Enums.CharacterType.PLAYER and character.current_path != Enums.Path.NONE:
 		var path_name: String = Enums.get_path_name(character.current_path)
-		var aligned_brand: String = _get_path_aligned_brand(character.current_path)
-		var path_label := UIStyleFactory.create_label("%s [%s]" % [path_name, aligned_brand], UIStyleFactory.FONT_TINY, _get_path_type_color(character.current_path))
+		var path_label := UIStyleFactory.create_gothic_label("Path: " + path_name, UIStyleFactory.FONT_SMALL, _get_path_type_color(character.current_path))
 		path_label.name = "PathLabel"
 		UIStyleFactory.set_mouse_pass(path_label)
-		info_vbox.add_child(path_label)
+		name_vbox.add_child(path_label)
 
-	# Brand display for monsters (allied monsters in party)
+	# Brand display for monsters
 	if character is Monster:
 		var monster := character as Monster
 		var brand_name := _get_brand_name(monster.brand)
 		var brand_color := _get_brand_color(monster.brand)
-		var brand_label := UIStyleFactory.create_label(brand_name, UIStyleFactory.FONT_TINY, brand_color)
+		var brand_label := UIStyleFactory.create_gothic_label(brand_name, UIStyleFactory.FONT_SMALL, brand_color)
 		brand_label.name = "BrandLabel"
 		UIStyleFactory.set_mouse_pass(brand_label)
-		info_vbox.add_child(brand_label)
+		name_vbox.add_child(brand_label)
 
-	# HP Bar - use textured ornate frame
-	var hp_bar_container := UIStyleFactory.create_compact_textured_hp_bar(Vector2(140, 28))
+	# Level display
+	var level_label := UIStyleFactory.create_gothic_label("Lv. %d" % character.level, UIStyleFactory.FONT_TINY, UIStyleFactory.GOTHIC_TEXT_BONE)
+	level_label.modulate.a = 0.7
+	UIStyleFactory.set_mouse_pass(level_label)
+	name_vbox.add_child(level_label)
+
+	# HP Bar row with label
+	var hp_row := UIStyleFactory.create_hbox(4)
+	UIStyleFactory.set_mouse_pass(hp_row)
+	main_vbox.add_child(hp_row)
+
+	var hp_label_prefix := UIStyleFactory.create_gothic_label("HP", UIStyleFactory.FONT_TINY, UIStyleFactory.GOTHIC_TEXT_BLOOD)
+	hp_label_prefix.custom_minimum_size.x = 20
+	UIStyleFactory.set_mouse_pass(hp_label_prefix)
+	hp_row.add_child(hp_label_prefix)
+
+	# Gothic HP bar with ghost bar for drain animation
+	var hp_bar_container := UIStyleFactory.create_gothic_hp_bar_with_ghost(Vector2(120, 14), false)
 	hp_bar_container.name = "HPBarContainer"
 	UIStyleFactory.set_mouse_pass(hp_bar_container)
+	UIStyleFactory.expand_horizontal(hp_bar_container)
 	var hp_bar := hp_bar_container.find_child("HPBar", true, false) as ProgressBar
+	var ghost_bar := hp_bar_container.find_child("GhostBar", true, false) as ProgressBar
 	if hp_bar:
 		hp_bar.max_value = maxi(1, character.get_max_hp())
 		hp_bar.value = character.current_hp
-	info_vbox.add_child(hp_bar_container)
+	if ghost_bar:
+		ghost_bar.max_value = maxi(1, character.get_max_hp())
+		ghost_bar.value = character.current_hp
+	hp_row.add_child(hp_bar_container)
 
-	# HP Label
-	var hp_label := UIStyleFactory.create_label("%d/%d" % [character.current_hp, character.get_max_hp()], UIStyleFactory.FONT_TINY, UIStyleFactory.COLOR_ALLY_HP_LABEL)
+	var hp_label := UIStyleFactory.create_gothic_label("%d/%d" % [character.current_hp, character.get_max_hp()], UIStyleFactory.FONT_TINY, UIStyleFactory.COLOR_ALLY_HP_LABEL)
 	hp_label.name = "HPLabel"
+	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	hp_label.custom_minimum_size.x = 50
 	UIStyleFactory.set_mouse_pass(hp_label)
-	info_vbox.add_child(hp_label)
+	hp_row.add_child(hp_label)
 
-	# MP Bar (if character has MP) - use textured ornate frame
+	# MP Bar row (if character has MP)
 	if character.get_max_mp() > 0:
-		var mp_bar_container := UIStyleFactory.create_compact_textured_mp_bar(Vector2(140, 24))
-		mp_bar_container.name = "MPBarContainer"
-		UIStyleFactory.set_mouse_pass(mp_bar_container)
-		var mp_bar := mp_bar_container.find_child("MPBar", true, false) as ProgressBar
-		if mp_bar:
-			mp_bar.max_value = maxi(1, character.get_max_mp())
-			mp_bar.value = character.current_mp
-		info_vbox.add_child(mp_bar_container)
+		var mp_row := UIStyleFactory.create_hbox(4)
+		UIStyleFactory.set_mouse_pass(mp_row)
+		main_vbox.add_child(mp_row)
 
-	# Status icons container - displays active buffs/debuffs
-	var status_icons := UIStyleFactory.create_hbox(2)
+		var mp_label_prefix := UIStyleFactory.create_gothic_label("MP", UIStyleFactory.FONT_TINY, UIStyleFactory.TEXT_MP)
+		mp_label_prefix.custom_minimum_size.x = 20
+		UIStyleFactory.set_mouse_pass(mp_label_prefix)
+		mp_row.add_child(mp_label_prefix)
+
+		var mp_bar := UIStyleFactory.create_gothic_mp_bar(Vector2(120, 10))
+		mp_bar.name = "MPBar"
+		UIStyleFactory.set_mouse_pass(mp_bar)
+		UIStyleFactory.expand_horizontal(mp_bar)
+		mp_bar.max_value = maxi(1, character.get_max_mp())
+		mp_bar.value = character.current_mp
+		mp_row.add_child(mp_bar)
+
+		var mp_label := UIStyleFactory.create_gothic_label("%d/%d" % [character.current_mp, character.get_max_mp()], UIStyleFactory.FONT_TINY, UIStyleFactory.TEXT_MP)
+		mp_label.name = "MPLabel"
+		mp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		mp_label.custom_minimum_size.x = 50
+		UIStyleFactory.set_mouse_pass(mp_label)
+		mp_row.add_child(mp_label)
+
+	# Status icons container - animated buffs/debuffs
+	var status_icons := UIStyleFactory.create_gothic_status_container()
 	status_icons.name = "StatusIcons"
 	status_icons.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	UIStyleFactory.set_mouse_pass(status_icons)
-	info_vbox.add_child(status_icons)
+	main_vbox.add_child(status_icons)
 
-	# Store reference for updates
+	# Store references for updates and animations
 	character.set_meta("sidebar_panel", panel)
 	character.set_meta("status_icons", status_icons)
+	character.set_meta("portrait_panel", portrait_panel)
 
 	return panel
 
 
 func update_party_sidebar() -> void:
-	## Update HP/MP bars in the left party sidebar
+	## Update HP/MP bars in the left party sidebar with gothic animations
 	for member in party_members:
 		if member.has_meta("sidebar_panel"):
 			var panel: PanelContainer = member.get_meta("sidebar_panel")
 			if is_instance_valid(panel):
 				var hp_bar := panel.find_child("HPBar", true, false) as ProgressBar
+				var ghost_bar := panel.find_child("GhostBar", true, false) as ProgressBar
 				var hp_label := panel.find_child("HPLabel", true, false) as Label
 				var mp_bar := panel.find_child("MPBar", true, false) as ProgressBar
 
+				var max_hp: int = maxi(1, member.get_max_hp())
+				var current_hp: int = member.current_hp
+				var prev_hp: int = _prev_hp_values.get(member, current_hp)
+
 				if hp_bar:
-					hp_bar.max_value = maxi(1, member.get_max_hp())
-					hp_bar.value = member.current_hp
+					hp_bar.max_value = max_hp
+					if ghost_bar:
+						ghost_bar.max_value = max_hp
+
+					# Determine if HP changed and animate accordingly
+					if current_hp < prev_hp:
+						# Damage - animate drain with ghost bar
+						_kill_hp_drain_tween(member)
+						var tween := AnimationEffects.animate_hp_drain(
+							hp_bar, ghost_bar, current_hp, Constants.HP_DRAIN_DURATION
+						)
+						if tween:
+							_hp_drain_tweens[member] = tween
+					elif current_hp > prev_hp:
+						# Heal - animate heal glow
+						_kill_hp_drain_tween(member)
+						var tween := AnimationEffects.animate_hp_heal(
+							hp_bar, ghost_bar, current_hp, Constants.HP_HEAL_DURATION
+						)
+						if tween:
+							_hp_drain_tweens[member] = tween
+					else:
+						# No change - just set values
+						hp_bar.value = current_hp
+						if ghost_bar:
+							ghost_bar.value = current_hp
+
+					# Low HP pulse effect
+					var hp_ratio: float = float(current_hp) / float(max_hp)
+					if hp_ratio <= Constants.HP_LOW_THRESHOLD and current_hp > 0:
+						if not _low_hp_tweens.has(hp_bar):
+							var pulse_tween := AnimationEffects.hp_low_pulse(
+								hp_bar, Constants.HP_LOW_PULSE_CYCLE
+							)
+							if pulse_tween:
+								_low_hp_tweens[hp_bar] = pulse_tween
+					else:
+						_kill_low_hp_pulse(hp_bar)
+
+				# Store current HP for next comparison
+				_prev_hp_values[member] = current_hp
+
 				if hp_label:
-					hp_label.text = "%d/%d" % [member.current_hp, member.get_max_hp()]
+					hp_label.text = "%d/%d" % [current_hp, max_hp]
 				if mp_bar:
 					mp_bar.max_value = maxi(1, member.get_max_mp())
 					mp_bar.value = member.current_mp
@@ -3769,9 +3927,12 @@ func _create_right_enemy_sidebar(viewport_size: Vector2) -> void:
 
 
 func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
-	## Create a compact enemy slot for the right sidebar
-	var panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_enemy_sidebar_panel())
-	panel.custom_minimum_size = Vector2(180, 100)
+	## Create a gothic-styled enemy slot for the right sidebar
+	## Features: larger portraits, HP drain animation, corruption pulse, glow effects
+
+	# Use gothic character card styling (enemy themed)
+	var panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_gothic_character_card_style(true, false))
+	panel.custom_minimum_size = Vector2(200, 120)  # Larger for full info
 	UIStyleFactory.set_mouse_stop(panel)
 
 	# Connect hover signals
@@ -3781,107 +3942,200 @@ func _create_enemy_sidebar_slot(enemy: CharacterBase) -> PanelContainer:
 	# Connect click signal for target selection
 	panel.gui_input.connect(_on_enemy_panel_clicked.bind(enemy))
 
-	var hbox := UIStyleFactory.create_hbox(6)
-	UIStyleFactory.set_mouse_pass(hbox)
-	panel.add_child(hbox)
+	var main_vbox := UIStyleFactory.create_vbox(4)
+	UIStyleFactory.set_mouse_pass(main_vbox)
+	panel.add_child(main_vbox)
 
-	# Portrait
-	var portrait_container := UIStyleFactory.create_styled_panel(UIStyleFactory.create_sidebar_portrait_frame(true))
-	portrait_container.custom_minimum_size = Vector2(36, 36)
-	UIStyleFactory.set_mouse_pass(portrait_container)
-	hbox.add_child(portrait_container)
+	# Top row: Portrait + Name/Brand info
+	var top_hbox := UIStyleFactory.create_hbox(8)
+	UIStyleFactory.set_mouse_pass(top_hbox)
+	main_vbox.add_child(top_hbox)
 
-	var portrait := UIStyleFactory.create_icon(Vector2(32, 32))
+	# Portrait with gothic enemy frame (red glow capable)
+	var portrait_panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_gothic_portrait_frame_style(false, true))
+	portrait_panel.name = "PortraitPanel"
+	portrait_panel.custom_minimum_size = Vector2(48, 48)  # Larger portrait
+	UIStyleFactory.set_mouse_pass(portrait_panel)
+	top_hbox.add_child(portrait_panel)
+
+	var portrait := UIStyleFactory.create_icon(Vector2(44, 44))
 	UIStyleFactory.set_mouse_pass(portrait)
 	var portrait_path := _get_portrait_path(enemy)
 	if portrait_path != "":
 		var tex := load(portrait_path)
 		if tex:
 			portrait.texture = tex
-	portrait_container.add_child(portrait)
+	portrait_panel.add_child(portrait)
 
-	# Info container
-	var vbox := UIStyleFactory.create_vbox(2)
-	UIStyleFactory.expand_horizontal(vbox)
-	UIStyleFactory.set_mouse_pass(vbox)
-	hbox.add_child(vbox)
+	# Name and info column
+	var name_vbox := UIStyleFactory.create_vbox(1)
+	UIStyleFactory.expand_horizontal(name_vbox)
+	UIStyleFactory.set_mouse_pass(name_vbox)
+	top_hbox.add_child(name_vbox)
 
-	# Name
-	var name_label := UIStyleFactory.create_label(enemy.character_name, UIStyleFactory.FONT_SMALL, UIStyleFactory.COLOR_ENEMY_NAME)
+	# Name - gothic blood-red themed
+	var name_label := UIStyleFactory.create_gothic_label(enemy.character_name, UIStyleFactory.FONT_SUBHEADING, UIStyleFactory.GOTHIC_TEXT_BLOOD)
+	name_label.name = "NameLabel"
 	UIStyleFactory.set_mouse_pass(name_label)
-	vbox.add_child(name_label)
+	name_vbox.add_child(name_label)
 
 	# Brand display for enemies
 	if enemy.brand != Enums.Brand.NONE:
 		var brand_name: String = Enums.get_brand_name(enemy.brand)
-		var brand_label := UIStyleFactory.create_label(brand_name, UIStyleFactory.FONT_TINY, _get_brand_color(enemy.brand))
+		var brand_label := UIStyleFactory.create_gothic_label(brand_name, UIStyleFactory.FONT_SMALL, _get_brand_color(enemy.brand))
 		brand_label.name = "BrandLabel"
 		UIStyleFactory.set_mouse_pass(brand_label)
-		vbox.add_child(brand_label)
+		name_vbox.add_child(brand_label)
 
-	# HP Bar - red themed with textured ornate frame
-	var hp_bar_container := UIStyleFactory.create_compact_textured_enemy_hp_bar(Vector2(140, 28))
+	# Level display
+	var level_label := UIStyleFactory.create_gothic_label("Lv. %d" % enemy.level, UIStyleFactory.FONT_TINY, UIStyleFactory.GOTHIC_TEXT_BONE)
+	level_label.modulate.a = 0.7
+	UIStyleFactory.set_mouse_pass(level_label)
+	name_vbox.add_child(level_label)
+
+	# HP Bar row with label
+	var hp_row := UIStyleFactory.create_hbox(4)
+	UIStyleFactory.set_mouse_pass(hp_row)
+	main_vbox.add_child(hp_row)
+
+	var hp_label_prefix := UIStyleFactory.create_gothic_label("HP", UIStyleFactory.FONT_TINY, UIStyleFactory.GOTHIC_TEXT_BLOOD)
+	hp_label_prefix.custom_minimum_size.x = 20
+	UIStyleFactory.set_mouse_pass(hp_label_prefix)
+	hp_row.add_child(hp_label_prefix)
+
+	# Gothic HP bar with ghost bar for drain animation (enemy themed)
+	var hp_bar_container := UIStyleFactory.create_gothic_hp_bar_with_ghost(Vector2(120, 14), true)
 	hp_bar_container.name = "HPBarContainer"
 	UIStyleFactory.set_mouse_pass(hp_bar_container)
+	UIStyleFactory.expand_horizontal(hp_bar_container)
 	var hp_bar := hp_bar_container.find_child("HPBar", true, false) as ProgressBar
+	var ghost_bar := hp_bar_container.find_child("GhostBar", true, false) as ProgressBar
 	if hp_bar:
 		hp_bar.max_value = maxi(1, enemy.get_max_hp())
 		hp_bar.value = enemy.current_hp
-	vbox.add_child(hp_bar_container)
+	if ghost_bar:
+		ghost_bar.max_value = maxi(1, enemy.get_max_hp())
+		ghost_bar.value = enemy.current_hp
+	hp_row.add_child(hp_bar_container)
 
-	# HP Label (numeric) - matches party sidebar
-	var hp_label := UIStyleFactory.create_label("%d/%d" % [enemy.current_hp, enemy.get_max_hp()], UIStyleFactory.FONT_TINY, UIStyleFactory.COLOR_ENEMY_HP_LABEL)
+	var hp_label := UIStyleFactory.create_gothic_label("%d/%d" % [enemy.current_hp, enemy.get_max_hp()], UIStyleFactory.FONT_TINY, UIStyleFactory.COLOR_ENEMY_HP_LABEL)
 	hp_label.name = "HPLabel"
+	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	hp_label.custom_minimum_size.x = 50
 	UIStyleFactory.set_mouse_pass(hp_label)
-	vbox.add_child(hp_label)
+	hp_row.add_child(hp_label)
 
-	# Corruption bar for monsters
+	# Corruption bar for monsters - larger, more visible
 	if enemy is Monster:
 		var monster := enemy as Monster
-		var corruption_bar := UIStyleFactory.create_corruption_bar(Vector2(85, 6))
+
+		var corruption_row := UIStyleFactory.create_hbox(4)
+		UIStyleFactory.set_mouse_pass(corruption_row)
+		main_vbox.add_child(corruption_row)
+
+		var corruption_label_prefix := UIStyleFactory.create_gothic_label("COR", UIStyleFactory.FONT_TINY, UIStyleFactory.GOTHIC_CORRUPTION_FILL)
+		corruption_label_prefix.custom_minimum_size.x = 20
+		UIStyleFactory.set_mouse_pass(corruption_label_prefix)
+		corruption_row.add_child(corruption_label_prefix)
+
+		var corruption_bar := UIStyleFactory.create_gothic_corruption_bar(Vector2(120, 8))
 		corruption_bar.name = "CorruptionBar"
 		corruption_bar.max_value = 100.0
 		var corruption_percent := (monster.corruption_level / monster.max_corruption) * 100.0
 		corruption_bar.value = corruption_percent
-		corruption_bar.show_percentage = false
-		corruption_bar.custom_minimum_size = Vector2(85, 6)
-		corruption_bar.mouse_filter = Control.MOUSE_FILTER_PASS
+		UIStyleFactory.set_mouse_pass(corruption_bar)
+		UIStyleFactory.expand_horizontal(corruption_bar)
+		corruption_row.add_child(corruption_bar)
 
-		corruption_bar.add_theme_stylebox_override(
-			"fill", UIStyleFactory.create_corruption_bar_fill()
-		)
-		corruption_bar.add_theme_stylebox_override(
-			"background", UIStyleFactory.create_corruption_bar_bg()
-		)
-		vbox.add_child(corruption_bar)
+		var corruption_label := UIStyleFactory.create_gothic_label("%d%%" % int(corruption_percent), UIStyleFactory.FONT_TINY, UIStyleFactory.GOTHIC_CORRUPTION_FILL)
+		corruption_label.name = "CorruptionLabel"
+		corruption_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		corruption_label.custom_minimum_size.x = 30
+		UIStyleFactory.set_mouse_pass(corruption_label)
+		corruption_row.add_child(corruption_label)
 
-	# Store reference for updates
+	# Store references for updates and animations
 	enemy.set_meta("enemy_sidebar_panel", panel)
+	enemy.set_meta("portrait_panel", portrait_panel)
 
 	return panel
 
 
 func update_enemy_sidebar() -> void:
-	## Update HP/corruption bars in the right enemy sidebar
+	## Update HP/corruption bars in the right enemy sidebar with gothic animations
 	for enemy in enemies:
 		if enemy.has_meta("enemy_sidebar_panel"):
 			var panel: PanelContainer = enemy.get_meta("enemy_sidebar_panel")
 			if is_instance_valid(panel):
 				var hp_bar := panel.find_child("HPBar", true, false) as ProgressBar
+				var ghost_bar := panel.find_child("GhostBar", true, false) as ProgressBar
 				var hp_label := panel.find_child("HPLabel", true, false) as Label
 				var corruption_bar := panel.find_child("CorruptionBar", true, false) as ProgressBar
 
+				var max_hp: int = maxi(1, enemy.get_max_hp())
+				var current_hp: int = enemy.current_hp
+				var prev_hp: int = _prev_hp_values.get(enemy, current_hp)
+
 				if hp_bar:
-					hp_bar.max_value = maxi(1, enemy.get_max_hp())
-					hp_bar.value = enemy.current_hp
+					hp_bar.max_value = max_hp
+					if ghost_bar:
+						ghost_bar.max_value = max_hp
+
+					# Determine if HP changed and animate accordingly
+					if current_hp < prev_hp:
+						# Damage - animate drain with ghost bar
+						_kill_hp_drain_tween(enemy)
+						var tween := AnimationEffects.animate_hp_drain(
+							hp_bar, ghost_bar, current_hp, Constants.HP_DRAIN_DURATION
+						)
+						if tween:
+							_hp_drain_tweens[enemy] = tween
+					elif current_hp > prev_hp:
+						# Heal - animate heal glow
+						_kill_hp_drain_tween(enemy)
+						var tween := AnimationEffects.animate_hp_heal(
+							hp_bar, ghost_bar, current_hp, Constants.HP_HEAL_DURATION
+						)
+						if tween:
+							_hp_drain_tweens[enemy] = tween
+					else:
+						# No change - just set values
+						hp_bar.value = current_hp
+						if ghost_bar:
+							ghost_bar.value = current_hp
+
+					# Low HP pulse effect for enemies too
+					var hp_ratio: float = float(current_hp) / float(max_hp)
+					if hp_ratio <= Constants.HP_LOW_THRESHOLD and current_hp > 0:
+						if not _low_hp_tweens.has(hp_bar):
+							var pulse_tween := AnimationEffects.hp_low_pulse(
+								hp_bar, Constants.HP_LOW_PULSE_CYCLE
+							)
+							if pulse_tween:
+								_low_hp_tweens[hp_bar] = pulse_tween
+					else:
+						_kill_low_hp_pulse(hp_bar)
+
+				# Store current HP for next comparison
+				_prev_hp_values[enemy] = current_hp
+
 				if hp_label:
-					hp_label.text = "%d/%d" % [enemy.current_hp, enemy.get_max_hp()]
+					hp_label.text = "%d/%d" % [current_hp, max_hp]
+
 				if corruption_bar and enemy is Monster:
 					var monster := enemy as Monster
 					var corruption_percent := (
 						(monster.corruption_level / monster.max_corruption) * 100.0
 					)
 					corruption_bar.value = corruption_percent
+					# High corruption pulse effect
+					if corruption_percent >= Constants.CORRUPTION_HIGH_THRESHOLD * 100.0:
+						if not _low_hp_tweens.has(corruption_bar):
+							var pulse := AnimationEffects.corruption_high_pulse(
+								corruption_bar, Constants.HP_LOW_PULSE_CYCLE
+							)
+							if pulse:
+								_low_hp_tweens[corruption_bar] = pulse
 
 				# Handle death state - fade out dead enemies
 				if enemy.is_dead():
@@ -3889,6 +4143,37 @@ func update_enemy_sidebar() -> void:
 				else:
 					panel.modulate.a = 1.0  # Ensure alive enemies are fully visible
 
+
+
+
+func _kill_hp_drain_tween(character: CharacterBase) -> void:
+	## Kill any existing HP drain tween for this character
+	if _hp_drain_tweens.has(character):
+		var tween: Tween = _hp_drain_tweens[character]
+		if tween and tween.is_valid():
+			tween.kill()
+		_hp_drain_tweens.erase(character)
+
+
+func _kill_low_hp_pulse(bar: ProgressBar) -> void:
+	## Kill the low HP pulse effect for this bar
+	if _low_hp_tweens.has(bar):
+		var tween: Tween = _low_hp_tweens[bar]
+		if tween and tween.is_valid():
+			tween.kill()
+		_low_hp_tweens.erase(bar)
+		# Reset modulate
+		if is_instance_valid(bar):
+			bar.modulate = Color.WHITE
+
+
+func _kill_glow_tween(panel: PanelContainer) -> void:
+	## Kill any existing glow tween for this panel
+	if _glow_tweens.has(panel):
+		var tween: Tween = _glow_tweens[panel]
+		if tween and tween.is_valid():
+			tween.kill()
+		_glow_tweens.erase(panel)
 
 func _auto_scroll_combat_log() -> void:
 	## Auto-scroll combat log to bottom - ALWAYS scrolls to latest entry
@@ -3973,7 +4258,7 @@ func _update_combat_log_size() -> void:
 	# Update drag handle text based on current size
 	if combat_log_drag_handle:
 		var is_expanded := combat_log.offset_top < -380
-		combat_log_drag_handle.text = "━━ ▲ ━━" if is_expanded else "━━ ▼ ━━"
+		combat_log_drag_handle.text = "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â² ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â" if is_expanded else "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â"
 
 
 func _add_combat_log_drag_handle() -> void:
@@ -3988,7 +4273,7 @@ func _add_combat_log_drag_handle() -> void:
 	# Create drag handle button (keeps Button type for stability)
 	combat_log_drag_handle = Button.new()
 	combat_log_drag_handle.name = "DragHandle"
-	combat_log_drag_handle.text = "━━ ▼ ━━"
+	combat_log_drag_handle.text = "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â"
 	combat_log_drag_handle.flat = true
 	combat_log_drag_handle.add_theme_font_size_override("font_size", UIStyleFactory.FONT_SMALL)
 	combat_log_drag_handle.add_theme_color_override("font_color", UIStyleFactory.COLOR_LOG_HANDLE)
@@ -4032,7 +4317,7 @@ func _on_combat_log_drag_input(event: InputEvent) -> void:
 		combat_log.offset_top = new_top
 		# Update drag handle text
 		var is_expanded := new_top < -380
-		combat_log_drag_handle.text = "━━ ▲ ━━" if is_expanded else "━━ ▼ ━━"
+		combat_log_drag_handle.text = "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â² ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â" if is_expanded else "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â"
 
 
 # =============================================================================
@@ -4252,7 +4537,7 @@ func _on_capture_attempt_started(monster: Node, vessel_tier: int, chance: float)
 
 	var name: String = monster.character_name if "character_name" in monster else "Monster"
 	_append_to_log(
-		"[color=cyan]⚔ Capture attempt on %s! (%.0f%% chance)[/color]" % [name, chance * 100]
+		"[color=cyan]ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Capture attempt on %s! (%.0f%% chance)[/color]" % [name, chance * 100]
 	)
 
 	# Start corruption bar pulsing animation
@@ -4277,7 +4562,7 @@ func _on_corruption_battle_started(monster: Node, passes_needed: int) -> void:
 		return
 
 	var name: String = monster.character_name if "character_name" in monster else "Monster"
-	_append_to_log("[color=magenta]═══ CORRUPTION BATTLE: %s ═══[/color]" % name)
+	_append_to_log("[color=magenta]ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â CORRUPTION BATTLE: %s ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â[/color]" % name)
 	_append_to_log(
 		"[color=gray]%d passes needed to break the corruption...[/color]" % passes_needed
 	)
@@ -4316,7 +4601,7 @@ func _on_capture_succeeded(monster: Node, method: int, bonus_data: Dictionary) -
 	var name: String = monster.character_name if "character_name" in monster else "Monster"
 	var method_name := _get_capture_method_name(method)
 
-	_append_to_log("[color=lime][b]★ CAPTURE SUCCESS! ★[/b][/color]")
+	_append_to_log("[color=lime][b]ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ CAPTURE SUCCESS! ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦[/b][/color]")
 	_append_to_log("[color=green]%s has been captured via %s![/color]" % [name, method_name])
 
 	# Hide capture overlay
@@ -4337,7 +4622,7 @@ func _on_capture_failed(monster: Node, method: int, reason: String) -> void:
 	var name: String = monster.character_name if "character_name" in monster else "Monster"
 	var method_name := _get_capture_method_name(method)
 
-	_append_to_log("[color=red][b]✗ CAPTURE FAILED![/b][/color]")
+	_append_to_log("[color=red][b]ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â CAPTURE FAILED![/b][/color]")
 	_append_to_log("[color=salmon]%s[/color]" % reason)
 
 	# Hide capture overlay
@@ -4404,7 +4689,7 @@ func _show_capture_result_popup(success: bool, monster_name: String, method_name
 	popup.add_child(vbox)
 
 	# Title
-	var title_text := "★ CAPTURED! ★" if success else "✗ ESCAPED!"
+	var title_text := "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ CAPTURED! ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦" if success else "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ESCAPED!"
 	var title_color := UIStyleFactory.COLOR_SUCCESS if success else UIStyleFactory.COLOR_ERROR
 	var title := UIStyleFactory.create_centered_label(title_text, 32)
 	title.add_theme_color_override("font_color", title_color)
@@ -4552,6 +4837,37 @@ func _exit_tree() -> void:
 		if tween and tween.is_valid():
 			tween.kill()
 	_corruption_bar_tweens.clear()
+
+	# Kill gothic animation tweens - HP drain
+	for character in _hp_drain_tweens:
+		var tween: Tween = _hp_drain_tweens[character]
+		if tween and tween.is_valid():
+			tween.kill()
+	_hp_drain_tweens.clear()
+
+	# Kill gothic animation tweens - glow effects
+	for panel in _glow_tweens:
+		var tween: Tween = _glow_tweens[panel]
+		if tween and tween.is_valid():
+			tween.kill()
+	_glow_tweens.clear()
+
+	# Kill gothic animation tweens - status icons
+	for icon in _status_icon_tweens:
+		var tween: Tween = _status_icon_tweens[icon]
+		if tween and tween.is_valid():
+			tween.kill()
+	_status_icon_tweens.clear()
+
+	# Kill gothic animation tweens - low HP pulse
+	for bar in _low_hp_tweens:
+		var tween: Tween = _low_hp_tweens[bar]
+		if tween and tween.is_valid():
+			tween.kill()
+	_low_hp_tweens.clear()
+
+	# Clear previous HP values
+	_prev_hp_values.clear()
 
 	# Clean up capture overlay
 	if _capture_overlay and is_instance_valid(_capture_overlay):

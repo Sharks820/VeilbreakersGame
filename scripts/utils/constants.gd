@@ -496,6 +496,35 @@ const WAIT_DRAMATIC: float = 1.5  # Dramatic pause for important moments
 const WAIT_VICTORY_DISPLAY: float = 2.0  # Victory screen display time
 
 # =============================================================================
+# GOTHIC UI ANIMATION CONSTANTS
+# =============================================================================
+
+# Gothic glow animations
+const GOTHIC_GLOW_CYCLE: float = 1.2        # Glow pulse full cycle time
+const GOTHIC_GLOW_MIN: int = 4              # Minimum glow size (pixels)
+const GOTHIC_GLOW_MAX: int = 12             # Maximum glow size (pixels)
+const GOTHIC_GLOW_ACTIVE: int = 16          # Active target glow size
+
+# HP/MP bar animations
+const HP_DRAIN_DURATION: float = 0.5        # Ghost bar drain animation time
+const HP_HEAL_DURATION: float = 0.3         # Heal animation time
+const HP_LOW_THRESHOLD: float = 0.25        # When to start low HP pulse (25%)
+const HP_LOW_PULSE_CYCLE: float = 0.8       # Low HP pulse cycle time
+
+# Status icon animations
+const STATUS_PULSE_CYCLE: float = 0.8       # Buff icon pulse cycle
+const STATUS_SHAKE_CYCLE: float = 0.15      # Debuff shake cycle
+const STATUS_APPLY_DURATION: float = 0.25   # Icon apply pop-in time
+const STATUS_REMOVE_DURATION: float = 0.2   # Icon removal fade time
+
+# Corruption animations
+const CORRUPTION_HIGH_THRESHOLD: float = 0.6  # When to pulse (60%+)
+const CORRUPTION_PULSE_CYCLE: float = 1.0     # Corruption pulse cycle
+
+# Portrait/panel animations
+const PORTRAIT_GLOW_CYCLE: float = 1.0      # Portrait glow pulse cycle
+
+# =============================================================================
 # COMBAT MULTIPLIER CONSTANTS (v0.98 - Eliminate 72+ hardcoded values)
 # =============================================================================
 

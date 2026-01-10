@@ -72,6 +72,51 @@ const CONTENT_MARGIN_NORMAL := 16
 const CONTENT_MARGIN_LARGE := 24
 
 # =============================================================================
+# GOTHIC DARK FANTASY STYLE CONSTANTS
+# =============================================================================
+
+## Gothic panel colors - deep void aesthetics
+const GOTHIC_PANEL_VOID := Color(0.03, 0.02, 0.05, 0.96)       # Deepest void
+const GOTHIC_PANEL_DARK := Color(0.05, 0.04, 0.07, 0.95)       # Standard dark
+const GOTHIC_PANEL_MEDIUM := Color(0.08, 0.06, 0.10, 0.93)     # Slightly lighter
+const GOTHIC_PANEL_ALLY := Color(0.04, 0.05, 0.08, 0.95)       # Blue-void tint for allies
+const GOTHIC_PANEL_ENEMY := Color(0.08, 0.04, 0.04, 0.95)      # Red-void tint for enemies
+
+## Gothic border colors - rusted iron and blood
+const GOTHIC_BORDER_IRON := Color(0.22, 0.18, 0.20, 1.0)       # Dark rusted iron
+const GOTHIC_BORDER_IRON_LIGHT := Color(0.35, 0.30, 0.32, 1.0) # Lighter iron
+const GOTHIC_BORDER_BLOOD := Color(0.5, 0.12, 0.12, 1.0)       # Dried blood
+const GOTHIC_BORDER_VOID := Color(0.15, 0.10, 0.20, 1.0)       # Void purple
+
+## Gothic glow colors - embers and corruption
+const GOTHIC_GLOW_EMBER := Color(0.9, 0.25, 0.08, 0.7)         # Ember orange glow
+const GOTHIC_GLOW_BLOOD := Color(0.7, 0.1, 0.1, 0.6)           # Blood red glow
+const GOTHIC_GLOW_ALLY := Color(0.2, 0.4, 0.7, 0.5)            # Ally blue glow
+const GOTHIC_GLOW_VOID := Color(0.4, 0.15, 0.5, 0.5)           # Void purple glow
+const GOTHIC_GLOW_ACTIVE := Color(1.0, 0.8, 0.3, 0.6)          # Active turn gold
+
+## Gothic HP/MP bar colors - desaturated, grim
+const GOTHIC_HP_FILL := Color(0.65, 0.18, 0.15, 1.0)           # Desaturated blood red
+const GOTHIC_HP_BG := Color(0.12, 0.05, 0.05, 0.85)            # Dark blood void
+const GOTHIC_HP_LOW := Color(0.8, 0.1, 0.1, 1.0)               # Critical HP pulsing
+const GOTHIC_MP_FILL := Color(0.2, 0.35, 0.6, 1.0)             # Desaturated arcane blue
+const GOTHIC_MP_BG := Color(0.05, 0.06, 0.12, 0.85)            # Dark arcane void
+const GOTHIC_ENEMY_HP_FILL := Color(0.55, 0.12, 0.12, 1.0)     # Enemy - darker red
+const GOTHIC_CORRUPTION_FILL := Color(0.45, 0.12, 0.5, 1.0)    # Corruption purple
+
+## Gothic text colors
+const GOTHIC_TEXT_BONE := Color(0.85, 0.82, 0.75, 1.0)         # Aged bone white
+const GOTHIC_TEXT_BLOOD := Color(0.8, 0.25, 0.2, 1.0)          # Blood red text
+const GOTHIC_TEXT_EMBER := Color(1.0, 0.6, 0.2, 1.0)           # Ember highlight
+
+## Gothic sizing
+const GOTHIC_BORDER_WIDTH := 4
+const GOTHIC_CORNER_LARGE := 14
+const GOTHIC_CORNER_SMALL := 6
+const GOTHIC_GLOW_SIZE := 8
+const GOTHIC_GLOW_SIZE_ACTIVE := 12
+
+# =============================================================================
 # PANEL STYLES
 # =============================================================================
 
@@ -2718,3 +2763,335 @@ static func create_compact_textured_enemy_hp_bar(min_size: Vector2 = Vector2(100
 	container.add_child(frame)
 
 	return container
+
+
+# =============================================================================
+# GOTHIC DARK FANTASY STYLE METHODS
+# =============================================================================
+
+
+## Create a gothic panel style with asymmetric corners and shadow glow
+static func create_gothic_panel_style(
+	bg_color: Color = GOTHIC_PANEL_DARK,
+	glow_color: Color = Color.TRANSPARENT,
+	glow_size: int = 0
+) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = bg_color
+
+	# Asymmetric corners for organic/jagged feel
+	style.corner_radius_top_left = GOTHIC_CORNER_LARGE
+	style.corner_radius_top_right = GOTHIC_CORNER_SMALL
+	style.corner_radius_bottom_left = GOTHIC_CORNER_SMALL
+	style.corner_radius_bottom_right = GOTHIC_CORNER_LARGE
+
+	# Thick dark iron border
+	style.border_color = GOTHIC_BORDER_IRON
+	style.border_width_left = GOTHIC_BORDER_WIDTH
+	style.border_width_right = GOTHIC_BORDER_WIDTH
+	style.border_width_top = GOTHIC_BORDER_WIDTH
+	style.border_width_bottom = GOTHIC_BORDER_WIDTH
+
+	# Shadow glow effect
+	if glow_size > 0 and glow_color.a > 0:
+		style.shadow_color = glow_color
+		style.shadow_size = glow_size
+		style.shadow_offset = Vector2(0, 2)
+
+	# Content margins
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+
+	return style
+
+
+## Create a gothic sidebar style (ally or enemy themed)
+static func create_gothic_sidebar_style(is_enemy: bool) -> StyleBoxFlat:
+	var bg_color := GOTHIC_PANEL_ENEMY if is_enemy else GOTHIC_PANEL_ALLY
+	var glow_color := GOTHIC_GLOW_BLOOD if is_enemy else GOTHIC_GLOW_ALLY
+	return create_gothic_panel_style(bg_color, glow_color, 4)
+
+
+## Create a gothic character card style for sidebar slots
+static func create_gothic_character_card_style(is_enemy: bool, is_active: bool = false) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+
+	# Base color with enemy/ally tint
+	style.bg_color = GOTHIC_PANEL_ENEMY if is_enemy else GOTHIC_PANEL_ALLY
+
+	# Asymmetric corners
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_left = 4
+	style.corner_radius_bottom_right = 10
+
+	# Border - iron with colored accent on one side
+	style.border_color = GOTHIC_BORDER_IRON
+	style.border_width_left = 3
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 3
+
+	# Active glow
+	if is_active:
+		style.shadow_color = GOTHIC_GLOW_ACTIVE
+		style.shadow_size = GOTHIC_GLOW_SIZE_ACTIVE
+		style.shadow_offset = Vector2(0, 0)
+	else:
+		style.shadow_color = Color.TRANSPARENT
+		style.shadow_size = 0
+
+	# Margins
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+
+	return style
+
+
+## Create a gothic portrait frame style
+static func create_gothic_portrait_frame_style(is_active: bool = false, is_enemy: bool = false) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = GOTHIC_PANEL_VOID
+
+	# Sharp corners for portrait frame
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 2
+	style.corner_radius_bottom_left = 2
+	style.corner_radius_bottom_right = 6
+
+	# Border
+	style.border_color = GOTHIC_BORDER_IRON_LIGHT
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+
+	# Glow when active
+	if is_active:
+		var glow := GOTHIC_GLOW_BLOOD if is_enemy else GOTHIC_GLOW_ALLY
+		style.shadow_color = glow
+		style.shadow_size = 6
+	else:
+		style.shadow_size = 0
+
+	style.content_margin_left = 2
+	style.content_margin_right = 2
+	style.content_margin_top = 2
+	style.content_margin_bottom = 2
+
+	return style
+
+
+## Create a glowing border style for highlighting
+static func create_glowing_border_style(
+	glow_color: Color,
+	glow_size: int = GOTHIC_GLOW_SIZE,
+	border_color: Color = GOTHIC_BORDER_IRON
+) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color.TRANSPARENT
+
+	# Asymmetric corners
+	style.corner_radius_top_left = GOTHIC_CORNER_LARGE
+	style.corner_radius_top_right = GOTHIC_CORNER_SMALL
+	style.corner_radius_bottom_left = GOTHIC_CORNER_SMALL
+	style.corner_radius_bottom_right = GOTHIC_CORNER_LARGE
+
+	# Border
+	style.border_color = border_color
+	style.border_width_left = 3
+	style.border_width_right = 3
+	style.border_width_top = 3
+	style.border_width_bottom = 3
+
+	# Glow
+	style.shadow_color = glow_color
+	style.shadow_size = glow_size
+	style.shadow_offset = Vector2(0, 0)
+
+	return style
+
+
+## Apply a glow effect to an existing panel
+static func apply_panel_glow(panel: PanelContainer, glow_color: Color, glow_size: int = GOTHIC_GLOW_SIZE) -> void:
+	var current_style = panel.get_theme_stylebox("panel")
+	if current_style is StyleBoxFlat:
+		var new_style := current_style.duplicate() as StyleBoxFlat
+		new_style.shadow_color = glow_color
+		new_style.shadow_size = glow_size
+		new_style.shadow_offset = Vector2(0, 0)
+		panel.add_theme_stylebox_override("panel", new_style)
+
+
+## Remove glow effect from a panel
+static func remove_panel_glow(panel: PanelContainer) -> void:
+	var current_style = panel.get_theme_stylebox("panel")
+	if current_style is StyleBoxFlat:
+		var new_style := current_style.duplicate() as StyleBoxFlat
+		new_style.shadow_color = Color.TRANSPARENT
+		new_style.shadow_size = 0
+		panel.add_theme_stylebox_override("panel", new_style)
+
+
+# =============================================================================
+# GOTHIC HP/MP BAR METHODS
+# =============================================================================
+
+
+## Create gothic HP bar background style
+static func _create_gothic_bar_bg(is_hp: bool = true) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = GOTHIC_HP_BG if is_hp else GOTHIC_MP_BG
+
+	# Asymmetric corners for bars too
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 2
+	style.corner_radius_bottom_left = 2
+	style.corner_radius_bottom_right = 4
+
+	# Thin inner border
+	style.border_color = GOTHIC_BORDER_IRON
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_width_top = 1
+	style.border_width_bottom = 1
+
+	return style
+
+
+## Create gothic HP bar fill style
+static func _create_gothic_bar_fill(is_hp: bool = true, is_enemy: bool = false) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+
+	if is_hp:
+		style.bg_color = GOTHIC_ENEMY_HP_FILL if is_enemy else GOTHIC_HP_FILL
+	else:
+		style.bg_color = GOTHIC_MP_FILL
+
+	# Match background corners
+	style.corner_radius_top_left = 3
+	style.corner_radius_top_right = 1
+	style.corner_radius_bottom_left = 1
+	style.corner_radius_bottom_right = 3
+
+	return style
+
+
+## Create a ghost bar style for HP drain animation
+static func _create_ghost_bar_fill() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.9, 0.2, 0.1, 0.5)  # Semi-transparent red
+
+	style.corner_radius_top_left = 3
+	style.corner_radius_top_right = 1
+	style.corner_radius_bottom_left = 1
+	style.corner_radius_bottom_right = 3
+
+	return style
+
+
+## Create a gothic HP bar with ghost bar for drain animation
+static func create_gothic_hp_bar_with_ghost(min_size: Vector2 = Vector2(120, 16), is_enemy: bool = false) -> Control:
+	var container := Control.new()
+	container.custom_minimum_size = min_size
+	container.name = "GothicHPBarContainer"
+
+	# Ghost bar (behind actual bar) - shows damage drain
+	var ghost_bar := ProgressBar.new()
+	ghost_bar.name = "GhostBar"
+	ghost_bar.show_percentage = false
+	ghost_bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ghost_bar.value = 100
+	ghost_bar.add_theme_stylebox_override("background", StyleBoxEmpty.new())
+	ghost_bar.add_theme_stylebox_override("fill", _create_ghost_bar_fill())
+	container.add_child(ghost_bar)
+
+	# Actual HP bar (on top)
+	var hp_bar := ProgressBar.new()
+	hp_bar.name = "HPBar"
+	hp_bar.show_percentage = false
+	hp_bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hp_bar.value = 100
+	hp_bar.add_theme_stylebox_override("background", _create_gothic_bar_bg(true))
+	hp_bar.add_theme_stylebox_override("fill", _create_gothic_bar_fill(true, is_enemy))
+	container.add_child(hp_bar)
+
+	return container
+
+
+## Create a standard gothic HP bar (no ghost)
+static func create_gothic_hp_bar(min_size: Vector2 = Vector2(120, 16), is_enemy: bool = false) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.name = "HPBar"
+	bar.show_percentage = false
+	bar.custom_minimum_size = min_size
+	bar.value = 100
+	bar.add_theme_stylebox_override("background", _create_gothic_bar_bg(true))
+	bar.add_theme_stylebox_override("fill", _create_gothic_bar_fill(true, is_enemy))
+	return bar
+
+
+## Create a gothic MP bar
+static func create_gothic_mp_bar(min_size: Vector2 = Vector2(100, 12)) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.name = "MPBar"
+	bar.show_percentage = false
+	bar.custom_minimum_size = min_size
+	bar.value = 100
+	bar.add_theme_stylebox_override("background", _create_gothic_bar_bg(false))
+	bar.add_theme_stylebox_override("fill", _create_gothic_bar_fill(false))
+	return bar
+
+
+## Create a gothic corruption bar with purple theme
+static func create_gothic_corruption_bar(min_size: Vector2 = Vector2(100, 8)) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.name = "CorruptionBar"
+	bar.show_percentage = false
+	bar.custom_minimum_size = min_size
+	bar.value = 0
+
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.08, 0.04, 0.10, 0.8)
+	bg.corner_radius_top_left = 3
+	bg.corner_radius_bottom_right = 3
+
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = GOTHIC_CORRUPTION_FILL
+	fill.corner_radius_top_left = 2
+	fill.corner_radius_bottom_right = 2
+
+	bar.add_theme_stylebox_override("background", bg)
+	bar.add_theme_stylebox_override("fill", fill)
+
+	return bar
+
+
+## Create gothic status icon container
+static func create_gothic_status_container() -> HBoxContainer:
+	var container := HBoxContainer.new()
+	container.name = "StatusIcons"
+	container.add_theme_constant_override("separation", 3)
+	return container
+
+
+## Create a gothic label with bone-white text
+static func create_gothic_label(
+	text: String,
+	font_size: int = FONT_NORMAL,
+	color: Color = GOTHIC_TEXT_BONE
+) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+	return label
+
+
+## Create a gothic header label with ember highlight
+static func create_gothic_header_label(text: String) -> Label:
+	return create_gothic_label(text, FONT_HEADING, GOTHIC_TEXT_EMBER)

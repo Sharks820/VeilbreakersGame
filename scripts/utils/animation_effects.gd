@@ -938,3 +938,255 @@ static func stagger_scale_in(
 				. set_trans(Tween.TRANS_BACK)
 			)
 	return tween
+
+
+# =============================================================================
+# GOTHIC DARK FANTASY ANIMATIONS
+# =============================================================================
+
+
+## Animate HP drain with ghost bar effect
+## The ghost bar shows the old HP value and slowly drains to match the actual HP
+static func animate_hp_drain(
+	hp_bar: ProgressBar,
+	ghost_bar: ProgressBar,
+	new_value: float,
+	duration: float = 0.5
+) -> Tween:
+	if not is_instance_valid(hp_bar):
+		return null
+
+	# Immediately set actual HP bar to new value
+	hp_bar.value = new_value
+
+	# Ghost bar drains slowly to catch up
+	if is_instance_valid(ghost_bar):
+		var tween := hp_bar.create_tween()
+		tween.tween_property(ghost_bar, "value", new_value, duration).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+		return tween
+
+	return null
+
+
+## Animate HP heal with glow effect
+static func animate_hp_heal(
+	hp_bar: ProgressBar,
+	ghost_bar: ProgressBar,
+	new_value: float,
+	duration: float = 0.3
+) -> Tween:
+	if not is_instance_valid(hp_bar):
+		return null
+
+	# For heals, update ghost bar immediately, then animate actual bar up
+	if is_instance_valid(ghost_bar):
+		ghost_bar.value = new_value
+
+	var tween := hp_bar.create_tween()
+	tween.tween_property(hp_bar, "value", new_value, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+
+	# Add a green flash to the bar
+	var original_modulate := hp_bar.modulate
+	tween.parallel().tween_property(hp_bar, "modulate", Color(0.5, 1.5, 0.5, 1.0), 0.1)
+	tween.tween_property(hp_bar, "modulate", original_modulate, 0.2)
+
+	return tween
+
+
+## Pulsing glow effect for panels (for active turn indicator)
+static func panel_glow_pulse(
+	panel: PanelContainer,
+	glow_color: Color,
+	min_size: int = 4,
+	max_size: int = 12,
+	cycle_time: float = 1.2
+) -> Tween:
+	if not is_instance_valid(panel):
+		return null
+
+	var current_style = panel.get_theme_stylebox("panel")
+	if not current_style is StyleBoxFlat:
+		return null
+
+	# Create tween that loops
+	var tween := panel.create_tween()
+	tween.set_loops()
+
+	# We need to animate the shadow_size property via a method
+	# Since StyleBoxFlat properties can't be directly tweened, we use a callback
+	var style := current_style.duplicate() as StyleBoxFlat
+	style.shadow_color = glow_color
+	panel.add_theme_stylebox_override("panel", style)
+
+	# Pulse from min to max and back
+	tween.tween_method(
+		func(size: float) -> void:
+			if is_instance_valid(panel):
+				style.shadow_size = int(size)
+		,
+		float(min_size),
+		float(max_size),
+		cycle_time * 0.5
+	).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+	tween.tween_method(
+		func(size: float) -> void:
+			if is_instance_valid(panel):
+				style.shadow_size = int(size)
+		,
+		float(max_size),
+		float(min_size),
+		cycle_time * 0.5
+	).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+	return tween
+
+
+## Quick glow flash for target selection
+static func panel_glow_flash(
+	panel: PanelContainer,
+	glow_color: Color,
+	flash_size: int = 16,
+	duration: float = 0.3
+) -> Tween:
+	if not is_instance_valid(panel):
+		return null
+
+	var current_style = panel.get_theme_stylebox("panel")
+	if not current_style is StyleBoxFlat:
+		return null
+
+	var style := current_style.duplicate() as StyleBoxFlat
+	style.shadow_color = glow_color
+	style.shadow_size = flash_size
+	panel.add_theme_stylebox_override("panel", style)
+
+	var tween := panel.create_tween()
+	tween.tween_method(
+		func(size: float) -> void:
+			if is_instance_valid(panel):
+				style.shadow_size = int(size)
+		,
+		float(flash_size),
+		0.0,
+		duration
+	).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+
+	return tween
+
+
+## Low HP pulsing effect (bar pulses red when HP is critical)
+static func hp_low_pulse(bar: ProgressBar, cycle_time: float = 0.8) -> Tween:
+	if not is_instance_valid(bar):
+		return null
+
+	var tween := bar.create_tween()
+	tween.set_loops()
+
+	# Pulse between normal and bright red
+	var normal_color := bar.modulate
+	var pulse_color := Color(1.5, 0.8, 0.8, 1.0)
+
+	tween.tween_property(bar, "modulate", pulse_color, cycle_time * 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	tween.tween_property(bar, "modulate", normal_color, cycle_time * 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+	return tween
+
+
+## Status buff icon pulse (subtle green glow loop)
+static func status_buff_pulse(icon: Control, cycle_time: float = 0.8) -> Tween:
+	if not is_instance_valid(icon):
+		return null
+
+	var tween := icon.create_tween()
+	tween.set_loops()
+
+	# Subtle brightness pulse
+	tween.tween_property(icon, "modulate", Color(1.2, 1.4, 1.2, 1.0), cycle_time * 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	tween.tween_property(icon, "modulate", Color.WHITE, cycle_time * 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+	return tween
+
+
+## Status debuff icon shake (subtle shake loop)
+static func status_debuff_shake(icon: Control, shake_amount: float = 2.0, cycle_time: float = 0.15) -> Tween:
+	if not is_instance_valid(icon):
+		return null
+
+	var original_pos := icon.position
+	var tween := icon.create_tween()
+	tween.set_loops()
+
+	# Shake left and right
+	tween.tween_property(icon, "position:x", original_pos.x - shake_amount, cycle_time * 0.25)
+	tween.tween_property(icon, "position:x", original_pos.x + shake_amount, cycle_time * 0.5)
+	tween.tween_property(icon, "position:x", original_pos.x, cycle_time * 0.25)
+
+	# Store original position in metadata for cleanup
+	icon.set_meta("original_position", original_pos)
+
+	return tween
+
+
+## Status icon applied animation (pop in)
+static func status_icon_applied(icon: Control, is_buff: bool = true, duration: float = 0.25) -> Tween:
+	if not is_instance_valid(icon):
+		return null
+
+	# Start small and transparent
+	icon.scale = Vector2.ZERO
+	icon.modulate.a = 0.0
+
+	var tween := icon.create_tween()
+	tween.set_parallel(true)
+
+	# Pop in with overshoot
+	tween.tween_property(icon, "scale", Vector2.ONE, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(icon, "modulate:a", 1.0, duration * 0.5)
+
+	# Flash color based on buff/debuff
+	var flash_color := Color(0.5, 1.5, 0.5, 1.0) if is_buff else Color(1.5, 0.5, 0.5, 1.0)
+	tween.chain().tween_property(icon, "modulate", flash_color, 0.1)
+	tween.tween_property(icon, "modulate", Color.WHITE, 0.15)
+
+	return tween
+
+
+## Status icon removed animation (fade out)
+static func status_icon_removed(icon: Control, duration: float = 0.2) -> Tween:
+	if not is_instance_valid(icon):
+		return null
+
+	var tween := icon.create_tween()
+	tween.set_parallel(true)
+
+	# Shrink and fade
+	tween.tween_property(icon, "scale", Vector2.ZERO, duration).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(icon, "modulate:a", 0.0, duration)
+
+	return tween
+
+
+## Portrait glow pulse for active character
+static func portrait_glow_pulse(
+	portrait_panel: PanelContainer,
+	is_enemy: bool = false,
+	cycle_time: float = 1.0
+) -> Tween:
+	var glow_color := Color(0.7, 0.1, 0.1, 0.6) if is_enemy else Color(0.2, 0.4, 0.7, 0.6)
+	return panel_glow_pulse(portrait_panel, glow_color, 2, 8, cycle_time)
+
+
+## Corruption bar pulse when corruption is high
+static func corruption_high_pulse(bar: ProgressBar, cycle_time: float = 1.0) -> Tween:
+	if not is_instance_valid(bar):
+		return null
+
+	var tween := bar.create_tween()
+	tween.set_loops()
+
+	# Pulse between normal purple and bright purple
+	tween.tween_property(bar, "modulate", Color(1.4, 0.8, 1.5, 1.0), cycle_time * 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	tween.tween_property(bar, "modulate", Color.WHITE, cycle_time * 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+	return tween
