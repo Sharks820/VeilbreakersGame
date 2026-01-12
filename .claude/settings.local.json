@@ -116,7 +116,8 @@
       "Bash(xxd:*)",
       "mcp__gdscript-lsp__scan_workspace_diagnostics",
       "mcp__git__git_status",
-      "mcp__git__git_set_working_dir"
+      "mcp__git__git_set_working_dir",
+      "mcp__git__git_add"
     ]
   },
   "enableAllProjectMcpServers": true,

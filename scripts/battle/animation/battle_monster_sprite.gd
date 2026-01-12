@@ -278,21 +278,21 @@ func _create_particle_emitter(effect_type: String, color: Color, amount: int) ->
 	# Customize based on effect type
 	match effect_type:
 		"hit":
-			material.direction = Vector3(-1 if is_enemy else 1, -0.5, 0)
-			material.spread = 30.0
-			material.initial_velocity_min = 100.0
-			material.initial_velocity_max = 200.0
+			particle_material.direction = Vector3(-1 if is_enemy else 1, -0.5, 0)
+			particle_material.spread = 30.0
+			particle_material.initial_velocity_min = 100.0
+			particle_material.initial_velocity_max = 200.0
 		"death":
-			material.direction = Vector3(0, -1, 0)
-			material.spread = 180.0
-			material.gravity = Vector3(0, 100, 0)
+			particle_material.direction = Vector3(0, -1, 0)
+			particle_material.spread = 180.0
+			particle_material.gravity = Vector3(0, 100, 0)
 			particles.lifetime = 1.5
 		"skill":
-			material.direction = Vector3(0, -1, 0)
-			material.spread = 45.0
-			material.gravity = Vector3(0, -50, 0)  # Float upward
+			particle_material.direction = Vector3(0, -1, 0)
+			particle_material.spread = 45.0
+			particle_material.gravity = Vector3(0, -50, 0)  # Float upward
 
-	particles.process_material = material
+	particles.process_material = particle_material
 	add_child(particles)
 
 	return particles
@@ -405,18 +405,18 @@ func emit_custom_particles(color: Color, amount: int, direction: Vector2 = Vecto
 	particles.lifetime = 0.6
 	particles.explosiveness = 0.9
 
-	var material := ParticleProcessMaterial.new()
-	material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_POINT
-	material.direction = Vector3(direction.x, direction.y, 0)
-	material.spread = 30.0
-	material.initial_velocity_min = 100.0
-	material.initial_velocity_max = 180.0
-	material.gravity = Vector3(0, 200, 0)
-	material.scale_min = 2.0
-	material.scale_max = 4.0
-	material.color = color
+	var particle_material := ParticleProcessMaterial.new()
+	particle_material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_POINT
+	particle_material.direction = Vector3(direction.x, direction.y, 0)
+	particle_material.spread = 30.0
+	particle_material.initial_velocity_min = 100.0
+	particle_material.initial_velocity_max = 180.0
+	particle_material.gravity = Vector3(0, 200, 0)
+	particle_material.scale_min = 2.0
+	particle_material.scale_max = 4.0
+	particle_material.color = color
 
-	particles.process_material = material
+	particles.process_material = particle_material
 	particles.finished.connect(particles.queue_free)
 	add_child(particles)
 

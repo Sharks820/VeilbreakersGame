@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v1.27** | Last updated: 2026-01-09
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v1.28** | Last updated: 2026-01-12
 
 ---
 
@@ -441,6 +441,7 @@ battle, ui, art, audio, vera, monsters, critical
 | 2026-01-04 | **v0.96: CODE DEDUPLICATION** - Major refactoring, utility systems created |
 | 2026-01-04 | **v1.16: CLEANUP** - Removed tools/ from git (258K lines). Tools are LOCAL DEV ONLY. Documented rigging failure. |
 | 2026-01-04 | **v1.21: HOLLOW EXPANSION** - 8 sprite sheets configured, 7 new skills, Scenario MCP added |
+| 2026-01-12 | v1.28: Lint fixes - renamed shadowed `material` to `particle_material` in battle_monster_sprite.gd |
 
 ---
 
