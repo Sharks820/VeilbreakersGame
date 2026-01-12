@@ -112,7 +112,9 @@
       "Bash(sort:*)",
       "Bash(node -e:*)",
       "mcp__godot-ultimate__godot_analyze_scene",
-      "mcp__gdscript-lsp__get_diagnostics"
+      "mcp__gdscript-lsp__get_diagnostics",
+      "Bash(xxd:*)",
+      "mcp__gdscript-lsp__scan_workspace_diagnostics"
     ]
   },
   "enableAllProjectMcpServers": true,
