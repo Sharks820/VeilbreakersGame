@@ -109,7 +109,9 @@ func setup(p_monster_id: String, p_is_enemy: bool = true) -> void:
 		# Flip sprites based on side:
 		# - Enemies (right side) face LEFT toward player = flip_h = false (sprites drawn facing left)
 		# - Allies (left side) face RIGHT toward enemies = flip_h = true
-		main_sprite.flip_h = not is_enemy
+		# - If sprite_faces_right is true, invert the logic (sprite drawn facing right)
+		var sprite_faces_right: bool = _monster_config.get("sprite_faces_right", false)
+		main_sprite.flip_h = is_enemy if sprite_faces_right else not is_enemy
 	else:
 		# Fallback to static sprite with procedural animation
 		_setup_static_sprite()

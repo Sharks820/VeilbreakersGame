@@ -816,7 +816,8 @@ static func _get_ravener_config() -> Dictionary:
 		"default_sheet": 0,
 		"h_frames": 5,
 		"v_frames": 5,
-		"scale": Vector2(1.4, 1.4),
+		"scale": Vector2(0.7, 0.7),
+		"sprite_faces_right": true,  # Ravener sprite sheets are drawn facing right
 		"sheets": [],
 		"brand_color": Color(0.2, 0.1, 0.1),
 		"glow_color": Color(1.0, 0.3, 0.2),
