@@ -263,17 +263,17 @@ func _create_particle_emitter(effect_type: String, color: Color, amount: int) ->
 	particles.amount = amount
 	particles.lifetime = 0.8
 
-	var material := ParticleProcessMaterial.new()
-	material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	material.emission_sphere_radius = 30.0
-	material.direction = Vector3(0, -1, 0)
-	material.spread = 60.0
-	material.initial_velocity_min = 80.0
-	material.initial_velocity_max = 150.0
-	material.gravity = Vector3(0, 300, 0)
-	material.scale_min = 2.0
-	material.scale_max = 5.0
-	material.color = color
+	var particle_material := ParticleProcessMaterial.new()
+	particle_material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	particle_material.emission_sphere_radius = 30.0
+	particle_material.direction = Vector3(0, -1, 0)
+	particle_material.spread = 60.0
+	particle_material.initial_velocity_min = 80.0
+	particle_material.initial_velocity_max = 150.0
+	particle_material.gravity = Vector3(0, 300, 0)
+	particle_material.scale_min = 2.0
+	particle_material.scale_max = 5.0
+	particle_material.color = color
 
 	# Customize based on effect type
 	match effect_type:
