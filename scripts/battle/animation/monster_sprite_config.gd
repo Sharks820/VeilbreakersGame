@@ -802,11 +802,12 @@ static func _get_the_vessel_config() -> Dictionary:
 
 
 # =============================================================================
-# RAVENER - Black/Red Quadrupedal Beast (3 variants: a-c)
+# RAVENER - Black/Red Quadrupedal Beast (2 variants: b-c)
 # =============================================================================
 
 static func _get_ravener_config() -> Dictionary:
-	var variants := ["a", "b", "c"]
+	# Note: Only b and c sheets exist (no ravener_a_sheet.png)
+	var variants := ["b", "c"]
 	var variant: String = variants[randi() % variants.size()]
 
 	var config := {

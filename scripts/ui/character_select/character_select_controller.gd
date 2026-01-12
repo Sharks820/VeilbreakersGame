@@ -46,7 +46,7 @@ func _ready() -> void:
 	_load_all_data()
 	_build_ui()
 	_connect_signals()
-	_select_hero(0)
+	call_deferred("_select_hero", 0)
 
 
 func _load_all_data() -> void:
@@ -97,8 +97,8 @@ func _build_ui() -> void:
 	# Left: Hero selection cards
 	hero_cards_panel = HeroCardsPanel.new()
 	hero_cards_panel.custom_minimum_size.x = 260
-	hero_cards_panel.setup(HERO_IDS, hero_data_cache)
 	content_hbox.add_child(hero_cards_panel)
+	hero_cards_panel.setup(HERO_IDS, hero_data_cache)
 
 	# Center: Large hero display
 	hero_display_panel = HeroDisplayPanel.new()
