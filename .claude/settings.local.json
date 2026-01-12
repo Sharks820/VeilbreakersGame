@@ -110,7 +110,9 @@
       "Bash(git stash:*)",
       "Bash(\"C:/Users/Conner/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.5.1-stable_win64_console.exe\" --headless --check-only --path \".\")",
       "Bash(sort:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "mcp__godot-ultimate__godot_analyze_scene",
+      "mcp__gdscript-lsp__get_diagnostics"
     ]
   },
   "enableAllProjectMcpServers": true,

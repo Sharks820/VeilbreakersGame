@@ -1,4 +1,4 @@
-﻿class_name CharacterSelectController
+﻿# class_name CharacterSelectController  # ARCHIVED - class_name removed to prevent conflict
 extends Control
 ## CharacterSelectController: AAA-quality hero selection screen with VERA integration.
 ## Features large hero display, class showcase, recommended monsters, and tutorial setup.

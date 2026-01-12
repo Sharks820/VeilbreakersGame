@@ -1,5 +1,5 @@
 extends Control
-## MainMenuController: AAA-quality main menu with dual cursor-tracking demon eyes.
+## MainMenuController: AAA-quality main menu with cursor-tracking demon eye.
 
 @onready var logo: Sprite2D = $Logo
 @onready var logo_glow: Sprite2D = $LogoGlow
@@ -11,8 +11,6 @@ extends Control
 @onready var version_label: Label = $VersionLabel
 @onready var monster_eye: Sprite2D = $MonsterEye
 @onready var eye_backdrop: Sprite2D = $EyeBackdrop
-@onready var monster_eye_2: Sprite2D = $MonsterEye2
-@onready var eye_backdrop_2: Sprite2D = $EyeBackdrop2
 @onready var dark_overlay: ColorRect = $DarkOverlay
 @onready var red_breath_overlay: ColorRect = $RedBreathOverlay
 @onready var background: TextureRect = $Background
@@ -80,14 +78,6 @@ var eye_blink_frame_index: int = 0
 var eye_blink_frame_timer: float = 0.0
 var eye_last_tracking_frame: int = 0
 
-# Second eye state (for independent blinking)
-var eye2_is_blinking: bool = false
-var eye2_blink_timer: float = 0.0
-var eye2_next_blink: float = 5.0
-var eye2_blink_frame_index: int = 0
-var eye2_blink_frame_timer: float = 0.0
-var eye2_last_tracking_frame: int = 0
-
 # Shader-based gaze tracking
 var eye_gaze_target: Vector2 = Vector2.ZERO
 var eye_gaze_current: Vector2 = Vector2.ZERO
@@ -130,7 +120,7 @@ const VIGNETTE_MAX: float = 0.35
 
 
 func _ready() -> void:
-	print(">>> MAIN MENU READY - Dual demon eyes active!")
+	print(">>> MAIN MENU READY - Demon eye active!")
 	GameManager.change_state(Enums.GameState.MAIN_MENU)
 
 	# Update version label
@@ -153,14 +143,13 @@ func _ready() -> void:
 	# Initialize hidden state
 	_hide_all_elements()
 
-	# Randomize first blink for both eyes (staggered)
+	# Randomize first blink
 	eye_next_blink = randf_range(BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX)
-	eye2_next_blink = randf_range(BLINK_INTERVAL_MIN + 1.0, BLINK_INTERVAL_MAX + 1.5)
 
 	# Play entrance sequence
 	_play_aaa_entrance()
 
-	EventBus.emit_debug("Main menu ready - Dual demon eyes tracking active")
+	EventBus.emit_debug("Main menu ready - Demon eye tracking active")
 
 
 func _exit_tree() -> void:
@@ -194,11 +183,9 @@ func _hide_all_elements() -> void:
 	logo.modulate.a = 0.0
 	logo_glow.modulate.a = 0.0
 
-	# Both monster eyes and backdrops - visible immediately
+	# Monster eye and backdrop - visible immediately
 	monster_eye.modulate.a = 1.0
 	eye_backdrop.modulate.a = 1.0
-	monster_eye_2.modulate.a = 1.0
-	eye_backdrop_2.modulate.a = 1.0
 
 	# Buttons - invisible and offset down
 	for btn in [new_game_button, continue_button, settings_button, quit_button]:
@@ -280,12 +267,11 @@ func _process(delta: float) -> void:
 	ambient_time += delta
 	_update_breathing(delta)
 	_update_eye_tracking(delta)
-	_update_eye2_tracking(delta)
 	_update_vignette(delta)
 
 
 # =============================================================================
-# EYE TRACKING SYSTEM - DUAL EYES
+# EYE TRACKING SYSTEM
 # =============================================================================
 
 
@@ -315,32 +301,6 @@ func _update_eye_tracking(delta: float) -> void:
 	monster_eye.modulate = Color(red_tint, green, blue, 0.95)
 
 
-func _update_eye2_tracking(delta: float) -> void:
-	# Handle blink timer for eye 2 (independent)
-	if BLINK_ENABLED and not eye2_is_blinking:
-		eye2_blink_timer += delta
-		if eye2_blink_timer >= eye2_next_blink:
-			_start_blink2()
-
-	# Handle blinking animation
-	if eye2_is_blinking:
-		_update_blink2(delta)
-	else:
-		_update_cursor_tracking2(delta)
-
-	# Apply breathing pulse (slightly offset from eye 1)
-	var breath := (sin(ambient_time * BREATH_SPEED + 0.5) + 1.0) * 0.5
-	var pulse := 0.17 + breath * 0.005
-	monster_eye_2.scale = Vector2(-pulse, pulse)  # Negative X for mirror
-	eye_backdrop_2.scale = Vector2(-pulse, pulse)
-
-	# Fiery red modulation
-	var red_tint := 1.0 + breath * 0.1
-	var green := 0.65 + breath * 0.05
-	var blue := 0.55 + breath * 0.03
-	monster_eye_2.modulate = Color(red_tint, green, blue, 0.95)
-
-
 func _update_cursor_tracking(_delta: float) -> void:
 	var mouse_pos := get_global_mouse_position()
 	var eye_pos := monster_eye.global_position
@@ -358,25 +318,6 @@ func _update_cursor_tracking(_delta: float) -> void:
 	eye_last_tracking_frame = target_frame
 	monster_eye.frame = target_frame
 	eye_backdrop.frame = target_frame
-
-
-func _update_cursor_tracking2(_delta: float) -> void:
-	var mouse_pos := get_global_mouse_position()
-	var eye_pos := monster_eye_2.global_position
-	var viewport_size := get_viewport_rect().size
-
-	var dx := (mouse_pos.x - eye_pos.x) / (viewport_size.x * 0.5)
-	var dy := (mouse_pos.y - eye_pos.y) / (viewport_size.y * 0.6)
-	dx = clamp(dx, -1.0, 1.0)
-	dy = clamp(dy, -1.0, 1.0)
-
-	# Mirror the horizontal direction for eye 2
-	var target_frames := _get_direction_frames(-dx, dy)
-	var target_frame: int = target_frames[0]
-
-	eye2_last_tracking_frame = target_frame
-	monster_eye_2.frame = target_frame
-	eye_backdrop_2.frame = target_frame
 
 
 func _get_direction_frames(dx: float, dy: float) -> Array[int]:
@@ -413,14 +354,6 @@ func _start_blink() -> void:
 	eye_next_blink = randf_range(BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX)
 
 
-func _start_blink2() -> void:
-	eye2_is_blinking = true
-	eye2_blink_frame_index = 0
-	eye2_blink_frame_timer = 0.0
-	eye2_blink_timer = 0.0
-	eye2_next_blink = randf_range(BLINK_INTERVAL_MIN + 0.5, BLINK_INTERVAL_MAX + 1.0)
-
-
 func _update_blink(delta: float) -> void:
 	eye_blink_frame_timer += delta
 
@@ -437,24 +370,6 @@ func _update_blink(delta: float) -> void:
 	var blink_frame: int = BLINK_FRAMES[eye_blink_frame_index % BLINK_FRAMES.size()]
 	monster_eye.frame = blink_frame
 	eye_backdrop.frame = blink_frame
-
-
-func _update_blink2(delta: float) -> void:
-	eye2_blink_frame_timer += delta
-
-	if eye2_blink_frame_timer >= BLINK_FRAME_DURATION:
-		eye2_blink_frame_timer = 0.0
-		eye2_blink_frame_index += 1
-
-		if eye2_blink_frame_index >= BLINK_FRAME_COUNT:
-			eye2_is_blinking = false
-			monster_eye_2.frame = eye2_last_tracking_frame
-			eye_backdrop_2.frame = eye2_last_tracking_frame
-			return
-
-	var blink_frame: int = BLINK_FRAMES[eye2_blink_frame_index % BLINK_FRAMES.size()]
-	monster_eye_2.frame = blink_frame
-	eye_backdrop_2.frame = blink_frame
 
 
 # =============================================================================

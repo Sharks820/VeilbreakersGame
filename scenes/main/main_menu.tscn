@@ -147,27 +147,6 @@ hframes = 6
 vframes = 7
 frame = 16
 
-[node name="EyeBackdrop2" type="Sprite2D" parent="."]
-position = Vector2(1424, 362)
-rotation = 0.08
-scale = Vector2(-0.17, 0.17)
-z_index = 9
-modulate = Color(0.02, 0.01, 0.01, 1.0)
-texture = ExtResource("8_eye_sheet")
-hframes = 6
-vframes = 7
-frame = 16
-
-[node name="MonsterEye2" type="Sprite2D" parent="."]
-position = Vector2(1424, 362)
-rotation = 0.08
-scale = Vector2(-0.17, 0.17)
-z_index = 10
-texture = ExtResource("8_eye_sheet")
-hframes = 6
-vframes = 7
-frame = 16
-
 [node name="LogoGlow" type="Sprite2D" parent="."]
 position = Vector2(960, 160)
 scale = Vector2(0.115, 0.115)
