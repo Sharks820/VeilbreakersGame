@@ -14,10 +14,10 @@ const CLASS_COLORS: Dictionary = {
 	"VOIDWALKER": Color(0.3, 0.7, 0.9)
 }
 
-# Breathing animation parameters
-const BREATHING_MIN_SCALE := 1.0
-const BREATHING_MAX_SCALE := 1.025  # 2.5% amplitude - subtle but visible
-const BREATHING_CYCLE_TIME := 3.5  # Seconds per full breath cycle
+# Idle animation parameters - MODULATE GLOW PULSE (not scale - scale causes artifacts)
+const IDLE_MIN_BRIGHTNESS := 1.0
+const IDLE_MAX_BRIGHTNESS := 1.08  # 8% brighter at peak - subtle warm glow
+const IDLE_CYCLE_TIME := 3.0  # Seconds per full glow cycle
 
 # =============================================================================
 # STATE
@@ -28,7 +28,7 @@ var hero_name_label: Label = null
 var hero_class_label: Label = null
 var hero_title_label: Label = null
 
-var _breathing_tween: Tween = null
+var _idle_glow_tween: Tween = null
 var _transition_tween: Tween = null
 var _current_hero_data: HeroData = null
 
@@ -105,37 +105,40 @@ func get_current_hero() -> HeroData:
 
 
 # =============================================================================
-# BREATHING ANIMATION - TWEEN BASED (NO STUTTER)
+# IDLE GLOW ANIMATION - MODULATE PULSE (NO SCALE - SCALE CAUSES ARTIFACTS)
 # =============================================================================
 
 
-func _start_breathing_animation() -> void:
-	_stop_breathing_animation()
+func _start_idle_animation() -> void:
+	_stop_idle_animation()
 
 	if not hero_portrait or not is_instance_valid(hero_portrait):
 		return
 
-	# Ensure starting from base scale
-	hero_portrait.scale = Vector2.ONE
+	# Ensure starting from base modulate
+	hero_portrait.modulate = Color.WHITE
 
-	# Use AnimationEffects utility for smooth, looping breathing
-	# This uses TRANS_SINE + EASE_IN_OUT for organic feel
-	_breathing_tween = AnimationEffects.breathing_loop(
-		hero_portrait,
-		BREATHING_MIN_SCALE,
-		BREATHING_MAX_SCALE,
-		BREATHING_CYCLE_TIME
-	)
+	# Create smooth modulate glow pulse (NO SCALE - scale causes stuttering/artifacts)
+	# This pulses brightness subtly for a warm, living feel
+	_idle_glow_tween = create_tween().set_loops()
+	_idle_glow_tween.set_trans(Tween.TRANS_SINE)
+	_idle_glow_tween.set_ease(Tween.EASE_IN_OUT)
+
+	var bright := Color(IDLE_MAX_BRIGHTNESS, IDLE_MAX_BRIGHTNESS, IDLE_MAX_BRIGHTNESS, 1.0)
+	var normal := Color(IDLE_MIN_BRIGHTNESS, IDLE_MIN_BRIGHTNESS, IDLE_MIN_BRIGHTNESS, 1.0)
+
+	_idle_glow_tween.tween_property(hero_portrait, "modulate", bright, IDLE_CYCLE_TIME * 0.5)
+	_idle_glow_tween.tween_property(hero_portrait, "modulate", normal, IDLE_CYCLE_TIME * 0.5)
 
 
-func _stop_breathing_animation() -> void:
-	if _breathing_tween and _breathing_tween.is_valid():
-		_breathing_tween.kill()
-	_breathing_tween = null
+func _stop_idle_animation() -> void:
+	if _idle_glow_tween and _idle_glow_tween.is_valid():
+		_idle_glow_tween.kill()
+	_idle_glow_tween = null
 
-	# Reset to base scale
+	# Reset to base modulate
 	if hero_portrait and is_instance_valid(hero_portrait):
-		hero_portrait.scale = Vector2.ONE
+		hero_portrait.modulate = Color.WHITE
 
 
 # =============================================================================
@@ -144,8 +147,8 @@ func _stop_breathing_animation() -> void:
 
 
 func _animate_hero_change(hero_data: HeroData) -> void:
-	# 1. Stop breathing to avoid conflicts
-	_stop_breathing_animation()
+	# 1. Stop idle animation to avoid conflicts
+	_stop_idle_animation()
 
 	# 2. Kill any existing transition
 	if _transition_tween and _transition_tween.is_valid():
@@ -170,9 +173,9 @@ func _animate_hero_change(hero_data: HeroData) -> void:
 		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	_transition_tween.set_parallel(false)
 
-	# 6. Small delay then restart breathing (NO settle bounce - causes glitches)
+	# 6. Small delay then restart idle animation (NO settle bounce - causes glitches)
 	_transition_tween.tween_interval(0.05)
-	_transition_tween.tween_callback(_start_breathing_animation)
+	_transition_tween.tween_callback(_start_idle_animation)
 
 
 func _set_hero_content(hero_data: HeroData) -> void:
@@ -215,7 +218,7 @@ func _set_hero_content(hero_data: HeroData) -> void:
 
 
 func _exit_tree() -> void:
-	_stop_breathing_animation()
+	_stop_idle_animation()
 
 	if _transition_tween and _transition_tween.is_valid():
 		_transition_tween.kill()
