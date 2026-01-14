@@ -163,19 +163,15 @@ func _animate_hero_change(hero_data: HeroData) -> void:
 	# 4. Change content (callback)
 	_transition_tween.tween_callback(_set_hero_content.bind(hero_data))
 
-	# 5. Fade in with elastic pop
+	# 5. Fade in with smooth scale up (NO TRANS_BACK - causes overshoot glitches)
 	_transition_tween.set_parallel(true)
-	_transition_tween.tween_property(hero_portrait, "modulate:a", 1.0, 0.2)
-	_transition_tween.tween_property(hero_portrait, "scale", Vector2(1.05, 1.05), 0.18) \
-		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	_transition_tween.tween_property(hero_portrait, "modulate:a", 1.0, 0.25)
+	_transition_tween.tween_property(hero_portrait, "scale", Vector2.ONE, 0.25) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	_transition_tween.set_parallel(false)
 
-	# 6. Settle to base scale with slight bounce
-	_transition_tween.tween_property(hero_portrait, "scale", Vector2(0.98, 0.98), 0.08)
-	_transition_tween.tween_property(hero_portrait, "scale", Vector2.ONE, 0.06)
-
-	# 7. Small delay then restart breathing
-	_transition_tween.tween_interval(0.1)
+	# 6. Small delay then restart breathing (NO settle bounce - causes glitches)
+	_transition_tween.tween_interval(0.05)
 	_transition_tween.tween_callback(_start_breathing_animation)
 
 

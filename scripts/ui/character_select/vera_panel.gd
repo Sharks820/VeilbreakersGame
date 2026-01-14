@@ -264,10 +264,10 @@ func _flash_portrait() -> void:
 	if not vera_portrait:
 		return
 
-	# Quick bright flash when speaking
+	# Subtle flash when speaking (toned down to avoid fighting with glow tween)
 	var tween := create_tween()
-	tween.tween_property(vera_portrait, "modulate", Color(1.3, 1.1, 1.4), 0.15)
-	tween.tween_property(vera_portrait, "modulate", Color.WHITE, 0.3)
+	tween.tween_property(vera_portrait, "modulate", Color(1.08, 1.04, 1.1), 0.1)
+	tween.tween_property(vera_portrait, "modulate", Color.WHITE, 0.2)
 
 
 func _on_typing_complete() -> void:

@@ -313,27 +313,22 @@ func _create_title_bar_redesigned(parent: Control) -> void:
 	title_wrapper.offset_right = 0
 	parent.add_child(title_wrapper)
 
-	# Glow layer (behind main text) - larger for bloom effect
-	_title_glow = Label.new()
-	_title_glow.name = "TitleGlow"
-	_title_glow.text = "CHOOSE YOUR CHAMPION"
-	_title_glow.add_theme_font_size_override("font_size", 46)
-	_title_glow.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4, TITLE_GLOW_MIN))
-	_title_glow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title_glow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_title_glow.set_anchors_preset(Control.PRESET_FULL_RECT)
-	title_wrapper.add_child(_title_glow)
-
-	# Main title text - crisp and readable
+	# Main title text - crisp and readable (SINGLE label to avoid doubling)
 	_title_label = Label.new()
 	_title_label.name = "TitleLabel"
 	_title_label.text = "CHOOSE YOUR CHAMPION"
 	_title_label.add_theme_font_size_override("font_size", 40)
 	_title_label.add_theme_color_override("font_color", Color(0.95, 0.9, 0.8))
+	# Add outline for glow effect instead of separate glow layer
+	_title_label.add_theme_color_override("font_outline_color", Color(1.0, 0.85, 0.4, 0.6))
+	_title_label.add_theme_constant_override("outline_size", 4)
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_title_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	title_wrapper.add_child(_title_label)
+
+	# Set _title_glow reference to same label for animation compatibility
+	_title_glow = _title_label
 
 	# === Right decorative line (animated) ===
 	_line_right = ColorRect.new()
