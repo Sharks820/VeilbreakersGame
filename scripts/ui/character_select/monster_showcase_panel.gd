@@ -2,12 +2,24 @@ class_name MonsterShowcasePanel
 extends VBoxContainer
 ## Displays starter monsters for the selected hero.
 ## Shows monster cards with sprites, names, and brand indicators.
+## Uses 2x2 grid layout to fit 4 monsters in available space.
+
+# =============================================================================
+# CONSTANTS
+# =============================================================================
+
+# Card sizing for 2x2 grid layout - fits in 360px panel width
+const CARD_SIZE := Vector2(85, 105)
+const SPRITE_SIZE := Vector2(55, 55)
+const GRID_COLUMNS := 2
+const GRID_H_SPACING := 10
+const GRID_V_SPACING := 8
 
 # =============================================================================
 # STATE
 # =============================================================================
 
-var _monster_container: HBoxContainer = null
+var _monster_container: GridContainer = null
 var _synergy_label: RichTextLabel = null
 var _monster_data_cache: Dictionary = {}
 var _idle_tweens: Array[Tween] = []  # Track tweens for cleanup
@@ -45,9 +57,12 @@ func _build_ui() -> void:
 	_synergy_label.add_theme_color_override("default_color", Color(0.65, 0.6, 0.55))
 	add_child(_synergy_label)
 
-	# Monster card container
-	_monster_container = UIStyleFactory.create_hbox(15)
-	_monster_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	# Monster card container - 2x2 grid layout
+	_monster_container = GridContainer.new()
+	_monster_container.columns = GRID_COLUMNS
+	_monster_container.add_theme_constant_override("h_separation", GRID_H_SPACING)
+	_monster_container.add_theme_constant_override("v_separation", GRID_V_SPACING)
+	_monster_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	add_child(_monster_container)
 
 
@@ -120,20 +135,20 @@ func _animate_card_entrance(card: Control, index: int) -> void:
 
 func _create_monster_card(monster_id: String) -> PanelContainer:
 	var card := UIStyleFactory.create_styled_panel(UIStyleFactory.create_monster_card_style())
-	card.custom_minimum_size = Vector2(110, 140)
+	card.custom_minimum_size = CARD_SIZE
 
 	var monster_data = _monster_data_cache.get(monster_id)
 
-	var vbox := UIStyleFactory.create_vbox(5)
+	var vbox := UIStyleFactory.create_vbox(3)
 	card.add_child(vbox)
 
-	# Monster sprite container
+	# Monster sprite container - compact for grid
 	var sprite_container := CenterContainer.new()
-	sprite_container.custom_minimum_size.y = 75
+	sprite_container.custom_minimum_size.y = SPRITE_SIZE.y + 8
 	vbox.add_child(sprite_container)
 
 	# Monster sprite
-	var sprite := UIStyleFactory.create_icon(Vector2(65, 65))
+	var sprite := UIStyleFactory.create_icon(SPRITE_SIZE)
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	var sprite_path := "res://assets/sprites/monsters/%s.png" % monster_id
 	if ResourceLoader.exists(sprite_path):
@@ -143,17 +158,17 @@ func _create_monster_card(monster_id: String) -> PanelContainer:
 	# Add subtle idle animation to sprite
 	_add_idle_animation(sprite)
 
-	# Monster name
+	# Monster name - smaller font for compact cards
 	var display_name := monster_id.capitalize().replace("_", " ")
-	var name_label := UIStyleFactory.create_centered_label(display_name, 11, Color(0.85, 0.8, 0.75))
+	var name_label := UIStyleFactory.create_centered_label(display_name, 10, Color(0.85, 0.8, 0.75))
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	vbox.add_child(name_label)
 
-	# Brand indicator
+	# Brand indicator - smaller for compact layout
 	var brand_name := _get_monster_brand_name(monster_data)
 	if brand_name != "":
 		var brand_color := _get_brand_color_from_name(brand_name)
-		var brand_indicator := UIStyleFactory.create_centered_label(brand_name, 9, brand_color)
+		var brand_indicator := UIStyleFactory.create_centered_label(brand_name, 8, brand_color)
 		vbox.add_child(brand_indicator)
 
 	# Hover effects

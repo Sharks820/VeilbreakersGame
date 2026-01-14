@@ -15,6 +15,7 @@ extends Node
 # SIGNALS
 # -----------------------------------------------------------------------------
 signal number_spawned(number_node: Node)
+signal critical_hit(position: Vector2, damage: int)  # For screen shake integration
 
 # -----------------------------------------------------------------------------
 # EXPORTS
@@ -70,13 +71,17 @@ func _initialize_pool() -> void:
 		return
 
 	for i in range(pool_size):
-		var instance = damage_number_scene.instantiate()
+		var instance := damage_number_scene.instantiate()
 		instance.visible = false
 		add_child(instance)
 		_pool.append(instance)
 
 		if instance.has_signal("finished"):
 			instance.finished.connect(_on_number_finished.bind(instance))
+
+		# Connect critical hit signal for screen shake
+		if instance.has_signal("critical_hit_triggered"):
+			instance.critical_hit_triggered.connect(_on_critical_hit)
 
 
 # -----------------------------------------------------------------------------
@@ -214,10 +219,12 @@ func _get_from_pool() -> Node:
 		return _pool.pop_back()
 
 	if auto_expand and damage_number_scene:
-		var instance = damage_number_scene.instantiate()
+		var instance := damage_number_scene.instantiate()
 		add_child(instance)
 		if instance.has_signal("finished"):
 			instance.finished.connect(_on_number_finished.bind(instance))
+		if instance.has_signal("critical_hit_triggered"):
+			instance.critical_hit_triggered.connect(_on_critical_hit)
 		return instance
 
 	return null
@@ -271,3 +278,8 @@ func _get_status_color(status: String) -> Color:
 
 func _position_hash(pos: Vector2) -> int:
 	return int(pos.x / 50) * 10000 + int(pos.y / 50)
+
+
+func _on_critical_hit(pos: Vector2, damage: int) -> void:
+	## Forward critical hit signal for screen shake integration
+	critical_hit.emit(pos, damage)

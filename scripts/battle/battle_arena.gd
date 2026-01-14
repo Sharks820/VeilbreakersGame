@@ -127,6 +127,8 @@ func _exit_tree() -> void:
 	if damage_number_spawner:
 		if damage_number_spawner.number_spawned.is_connected(_on_damage_number_spawned):
 			damage_number_spawner.number_spawned.disconnect(_on_damage_number_spawned)
+		if damage_number_spawner.critical_hit.is_connected(_on_damage_number_critical_hit):
+			damage_number_spawner.critical_hit.disconnect(_on_damage_number_critical_hit)
 
 	# Disconnect battle_camera signals
 	if battle_camera:
@@ -334,6 +336,7 @@ func _setup_animation_systems() -> void:
 	# Configure Damage Number Spawner
 	if damage_number_spawner:
 		damage_number_spawner.number_spawned.connect(_on_damage_number_spawned)
+		damage_number_spawner.critical_hit.connect(_on_damage_number_critical_hit)
 
 	# Configure Battle Camera
 	if battle_camera:
@@ -1977,6 +1980,19 @@ func _on_vfx_completed(effect_name: String) -> void:
 
 func _on_damage_number_spawned(number_node: Node) -> void:
 	pass  # Damage number visible
+
+
+func _on_damage_number_critical_hit(pos: Vector2, damage: int) -> void:
+	## AAA: Screen shake on critical hits from damage numbers
+	if not battle_camera:
+		return
+
+	# Scale shake intensity based on damage (bigger hits = bigger shake)
+	var base_intensity := 6.0
+	var damage_bonus := clampf(float(damage) / 200.0, 0.0, 1.0) * 6.0
+	var intensity := base_intensity + damage_bonus
+
+	battle_camera.shake(Vector2(intensity, intensity), 0.15)
 
 
 func _on_camera_shake_completed() -> void:

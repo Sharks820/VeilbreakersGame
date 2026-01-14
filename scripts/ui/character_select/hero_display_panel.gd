@@ -193,16 +193,11 @@ func _set_hero_content(hero_data: HeroData) -> void:
 		hero_portrait.texture = load(hero_data.sprite_path)
 		texture_loaded = true
 
-	# Calculate and set pivot based on actual texture size
-	if texture_loaded and hero_portrait.texture:
-		var tex_size: Vector2 = hero_portrait.texture.get_size()
-		# Scale to fit container (400x450 area)
-		var scale_factor: float = minf(400.0 / tex_size.x, 450.0 / tex_size.y)
-		var display_size: Vector2 = tex_size * scale_factor
-		hero_portrait.pivot_offset = display_size / 2.0
-	else:
-		# Fallback pivot
-		hero_portrait.pivot_offset = Vector2(200, 225)
+	# FIXED: Always use fixed pivot based on TextureRect bounds (400x450)
+	# The TextureRect offsets define a 400x450 area centered at (0,0)
+	# Dynamic pivot calculation caused glitchy breathing when texture size didn't match
+	# Center of 400x450 = (200, 225) - this ensures smooth scale animation from center
+	hero_portrait.pivot_offset = Vector2(200, 225)
 
 	# Set starting scale for fade-in animation (AFTER pivot is set)
 	hero_portrait.scale = Vector2(0.9, 0.9)

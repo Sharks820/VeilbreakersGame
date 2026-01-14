@@ -2,6 +2,7 @@ class_name CharacterSelectController
 extends Control
 ## CharacterSelectController: Orchestrates the modular character select screen.
 ## Coordinates communication between child panels via signals.
+## AAA-quality with atmospheric particles, animated vignette, and glowing effects.
 
 signal character_selected(hero_id: String)
 signal selection_cancelled
@@ -11,6 +12,14 @@ signal selection_cancelled
 # =============================================================================
 
 const HERO_IDS: Array[String] = ["bastion", "rend", "marrow", "mirage"]
+
+# AAA Atmospheric settings
+const PARTICLE_COUNT := 50  # Floating dust/ember particles
+const VIGNETTE_PULSE_MIN := 0.6
+const VIGNETTE_PULSE_MAX := 0.85
+const VIGNETTE_PULSE_DURATION := 4.0  # Seconds per cycle
+const TITLE_GLOW_MIN := 0.3
+const TITLE_GLOW_MAX := 0.7
 
 # Monster IDs for showcase (all starters across all heroes)
 const MONSTER_IDS: Array[String] = [
@@ -37,6 +46,19 @@ var vera_panel: CharacterSelectVERAPanel = null
 var button_bar: CharacterSelectButtonBar = null
 var confirmation_popup: CharacterSelectConfirmationPopup = null
 
+# AAA Atmospheric effects
+var _vignette_overlay: ColorRect = null
+var _vignette_tween: Tween = null
+var _title_label: Label = null
+var _title_glow: Label = null
+var _title_glow_tween: Tween = null
+var _particles_container: Control = null
+var _dust_particles: Array[ColorRect] = []
+var _particle_tweens: Array[Tween] = []
+var _line_left: ColorRect = null
+var _line_right: ColorRect = null
+var _line_pulse_tween: Tween = null
+
 # =============================================================================
 # LIFECYCLE
 # =============================================================================
@@ -46,7 +68,22 @@ func _ready() -> void:
 	_load_all_data()
 	_build_ui()
 	_connect_signals()
+	_start_atmospheric_effects()
 	call_deferred("_select_hero", 0)
+
+
+func _exit_tree() -> void:
+	# Clean up all atmospheric tweens to prevent memory leaks
+	if _vignette_tween and _vignette_tween.is_valid():
+		_vignette_tween.kill()
+	if _title_glow_tween and _title_glow_tween.is_valid():
+		_title_glow_tween.kill()
+	if _line_pulse_tween and _line_pulse_tween.is_valid():
+		_line_pulse_tween.kill()
+	for tween in _particle_tweens:
+		if tween and tween.is_valid():
+			tween.kill()
+	_particle_tweens.clear()
 
 
 func _load_all_data() -> void:
@@ -73,51 +110,111 @@ func _build_ui() -> void:
 	# === BACKGROUND ===
 	_create_background()
 
-	# === MAIN LAYOUT ===
-	var main_container := MarginContainer.new()
-	main_container.name = "MainContainer"
-	main_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	main_container.add_theme_constant_override("margin_left", 40)
-	main_container.add_theme_constant_override("margin_right", 40)
-	main_container.add_theme_constant_override("margin_top", 30)
-	main_container.add_theme_constant_override("margin_bottom", 30)
-	add_child(main_container)
+	# =========================================================================
+	# AAA HERO-CENTRIC LAYOUT
+	# Hero dominates 65% center, cards on left edge, info slides right
+	# =========================================================================
 
-	var vbox := UIStyleFactory.create_vbox(15)
-	main_container.add_child(vbox)
+	# === TITLE BAR (Top, full width, minimal height) ===
+	var title_container := Control.new()
+	title_container.name = "TitleContainer"
+	title_container.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	title_container.custom_minimum_size.y = 80
+	title_container.offset_bottom = 80
+	add_child(title_container)
+	_create_title_bar_redesigned(title_container)
 
-	# === TITLE BAR ===
-	_create_title_bar(vbox)
+	# === HERO DISPLAY (DOMINANT CENTER - 65% of screen) ===
+	# This is the star of the show - massive hero portrait
+	hero_display_panel = HeroDisplayPanel.new()
+	hero_display_panel.name = "HeroDisplayDominant"
+	hero_display_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Push slightly left to leave room for info panel
+	hero_display_panel.offset_left = 280  # Space for cards
+	hero_display_panel.offset_right = -380  # Space for info
+	hero_display_panel.offset_top = 90  # Below title
+	hero_display_panel.offset_bottom = -140  # Above button bar
+	add_child(hero_display_panel)
 
-	# === MAIN CONTENT ===
-	var content_hbox := UIStyleFactory.create_hbox(25)
-	UIStyleFactory.expand_vertical(content_hbox)
-	vbox.add_child(content_hbox)
+	# === HERO CARDS (Left edge - vertical strip, sleek) ===
+	var cards_container := Control.new()
+	cards_container.name = "CardsContainer"
+	cards_container.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+	cards_container.offset_right = 260  # Narrower for sleek look
+	cards_container.offset_top = 90
+	cards_container.offset_bottom = -140
+	add_child(cards_container)
 
-	# Left: Hero selection cards
+	# Dark backdrop for cards
+	var cards_backdrop := UIStyleFactory.create_styled_panel(UIStyleFactory.create_hero_display_backdrop())
+	cards_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cards_backdrop.modulate.a = 0.6
+	cards_container.add_child(cards_backdrop)
+
 	hero_cards_panel = HeroCardsPanel.new()
-	hero_cards_panel.custom_minimum_size.x = 260
-	content_hbox.add_child(hero_cards_panel)
+	hero_cards_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hero_cards_panel.offset_left = 15
+	hero_cards_panel.offset_right = -15
+	hero_cards_panel.offset_top = 20
+	hero_cards_panel.offset_bottom = -20
+	cards_container.add_child(hero_cards_panel)
 	hero_cards_panel.setup(HERO_IDS, hero_data_cache)
 
-	# Center: Large hero display
-	hero_display_panel = HeroDisplayPanel.new()
-	hero_display_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content_hbox.add_child(hero_display_panel)
+	# === INFO PANEL (Right edge - sleek overlay) ===
+	var info_container := Control.new()
+	info_container.name = "InfoContainer"
+	info_container.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
+	info_container.offset_left = -360  # Slightly narrower
+	info_container.offset_top = 90
+	info_container.offset_bottom = -140
+	add_child(info_container)
 
-	# Right: Info panel
+	# Dark backdrop for info
+	var info_backdrop := UIStyleFactory.create_styled_panel(UIStyleFactory.create_hero_display_backdrop())
+	info_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	info_backdrop.modulate.a = 0.7
+	info_container.add_child(info_backdrop)
+
 	info_panel = HeroInfoPanel.new()
-	info_panel.custom_minimum_size.x = 420
+	info_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	info_panel.offset_left = 15
+	info_panel.offset_right = -15
+	info_panel.offset_top = 15
+	info_panel.offset_bottom = -15
 	info_panel.set_monster_cache(monster_data_cache)
-	content_hbox.add_child(info_panel)
+	info_container.add_child(info_panel)
 
-	# === VERA PANEL (Bottom) ===
+	# === VERA PANEL (Bottom left - companion style) ===
+	# Positioned below main content (which ends at y=940 from offset_bottom=-140)
+	# Height: 150px for proper dialogue display
+	var vera_container := Control.new()
+	vera_container.name = "VERAContainer"
+	vera_container.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	vera_container.offset_left = 20
+	vera_container.offset_right = 500  # Wider for dialogue text
+	vera_container.offset_top = -165   # 1080-165=915 to 1080-15=1065 = 150px height
+	vera_container.offset_bottom = -15
+	add_child(vera_container)
+
 	vera_panel = CharacterSelectVERAPanel.new()
-	vbox.add_child(vera_panel)
+	vera_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vera_container.add_child(vera_panel)
 
-	# === BUTTON BAR ===
+	# === BUTTON BAR (Bottom right - action buttons) ===
+	# Vertically centered within the bottom zone (915-1065)
+	# Height: 80px, centered gives top=955, bottom=1035 but we use offset math
+	var button_container := Control.new()
+	button_container.name = "ButtonContainer"
+	button_container.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	button_container.offset_left = -420   # Wider for larger buttons
+	button_container.offset_right = -20
+	button_container.offset_top = -100    # Taller for more prominent buttons
+	button_container.offset_bottom = -20  # Slightly raised from very bottom
+	add_child(button_container)
+
 	button_bar = CharacterSelectButtonBar.new()
-	vbox.add_child(button_bar)
+	button_bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	button_container.add_child(button_bar)
 
 	# === CONFIRMATION POPUP (hidden initially) ===
 	confirmation_popup = CharacterSelectConfirmationPopup.new()
@@ -145,32 +242,159 @@ func _create_background() -> void:
 	gradient_bottom.color = Color(0.02, 0.02, 0.04, 0.8)
 	add_child(gradient_bottom)
 
+	# === AAA: Floating dust particles container ===
+	_particles_container = Control.new()
+	_particles_container.name = "ParticlesContainer"
+	_particles_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_particles_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_particles_container)
+	_create_dust_particles()
+
+	# === AAA: Animated vignette overlay ===
+	_vignette_overlay = ColorRect.new()
+	_vignette_overlay.name = "VignetteOverlay"
+	_vignette_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_vignette_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Create radial gradient effect with shader-like appearance
+	_vignette_overlay.color = Color(0.0, 0.0, 0.0, VIGNETTE_PULSE_MIN)
+	add_child(_vignette_overlay)
+
+
+func _create_dust_particles() -> void:
+	## Create floating dust/ember particles for atmosphere
+	for i in range(PARTICLE_COUNT):
+		var particle := ColorRect.new()
+		particle.custom_minimum_size = Vector2(randf_range(2, 5), randf_range(2, 5))
+		particle.size = particle.custom_minimum_size
+
+		# Random warm ember colors
+		var hue := randf_range(0.05, 0.12)  # Orange to gold range
+		var sat := randf_range(0.3, 0.7)
+		var val := randf_range(0.5, 0.9)
+		particle.color = Color.from_hsv(hue, sat, val, randf_range(0.1, 0.4))
+
+		# Random starting position
+		particle.position = Vector2(
+			randf_range(0, 1920),
+			randf_range(0, 1080)
+		)
+
+		particle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_particles_container.add_child(particle)
+		_dust_particles.append(particle)
+
+
+func _create_title_bar_redesigned(parent: Control) -> void:
+	## AAA-quality title bar with anchor-based positioning for precise control
+	## Uses sleek minimal design with animated decorative elements
+
+	# === Left decorative line (animated) ===
+	_line_left = ColorRect.new()
+	_line_left.name = "LineLeft"
+	_line_left.anchor_left = 0.0
+	_line_left.anchor_right = 0.35  # 35% of title bar width
+	_line_left.anchor_top = 0.5
+	_line_left.anchor_bottom = 0.5
+	_line_left.offset_left = 50
+	_line_left.offset_right = -30
+	_line_left.offset_top = -1
+	_line_left.offset_bottom = 1
+	_line_left.color = Color(0.6, 0.5, 0.3, 0.5)
+	parent.add_child(_line_left)
+
+	# === Title wrapper (center) ===
+	var title_wrapper := Control.new()
+	title_wrapper.name = "TitleWrapper"
+	title_wrapper.anchor_left = 0.35
+	title_wrapper.anchor_right = 0.65  # 30% width for title
+	title_wrapper.anchor_top = 0.0
+	title_wrapper.anchor_bottom = 1.0
+	title_wrapper.offset_left = 0
+	title_wrapper.offset_right = 0
+	parent.add_child(title_wrapper)
+
+	# Glow layer (behind main text) - larger for bloom effect
+	_title_glow = Label.new()
+	_title_glow.name = "TitleGlow"
+	_title_glow.text = "CHOOSE YOUR CHAMPION"
+	_title_glow.add_theme_font_size_override("font_size", 46)
+	_title_glow.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4, TITLE_GLOW_MIN))
+	_title_glow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title_glow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_title_glow.set_anchors_preset(Control.PRESET_FULL_RECT)
+	title_wrapper.add_child(_title_glow)
+
+	# Main title text - crisp and readable
+	_title_label = Label.new()
+	_title_label.name = "TitleLabel"
+	_title_label.text = "CHOOSE YOUR CHAMPION"
+	_title_label.add_theme_font_size_override("font_size", 40)
+	_title_label.add_theme_color_override("font_color", Color(0.95, 0.9, 0.8))
+	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_title_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	title_wrapper.add_child(_title_label)
+
+	# === Right decorative line (animated) ===
+	_line_right = ColorRect.new()
+	_line_right.name = "LineRight"
+	_line_right.anchor_left = 0.65
+	_line_right.anchor_right = 1.0
+	_line_right.anchor_top = 0.5
+	_line_right.anchor_bottom = 0.5
+	_line_right.offset_left = 30
+	_line_right.offset_right = -50
+	_line_right.offset_top = -1
+	_line_right.offset_bottom = 1
+	_line_right.color = Color(0.6, 0.5, 0.3, 0.5)
+	parent.add_child(_line_right)
+
 
 func _create_title_bar(parent: Control) -> void:
+	## LEGACY - kept for reference, use _create_title_bar_redesigned instead
 	var title_container := UIStyleFactory.create_hbox(20)
 	parent.add_child(title_container)
 
-	# Decorative line left
-	var line_left := ColorRect.new()
-	line_left.custom_minimum_size = Vector2(100, 2)
-	line_left.color = Color(0.6, 0.5, 0.3, 0.5)
-	UIStyleFactory.expand_horizontal(line_left)
-	line_left.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	title_container.add_child(line_left)
+	# Decorative line left (with glow capability)
+	_line_left = ColorRect.new()
+	_line_left.custom_minimum_size = Vector2(100, 2)
+	_line_left.color = Color(0.6, 0.5, 0.3, 0.5)
+	UIStyleFactory.expand_horizontal(_line_left)
+	_line_left.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	title_container.add_child(_line_left)
 
-	# Title
-	var title := UIStyleFactory.create_centered_label(
-		"CHOOSE YOUR CHAMPION", 38, Color(0.9, 0.8, 0.6)
-	)
-	title_container.add_child(title)
+	# === AAA: Title with glow layer ===
+	var title_wrapper := Control.new()
+	title_wrapper.custom_minimum_size = Vector2(500, 60)
+	title_container.add_child(title_wrapper)
 
-	# Decorative line right
-	var line_right := ColorRect.new()
-	line_right.custom_minimum_size = Vector2(100, 2)
-	line_right.color = Color(0.6, 0.5, 0.3, 0.5)
-	UIStyleFactory.expand_horizontal(line_right)
-	line_right.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	title_container.add_child(line_right)
+	# Glow layer (behind main text)
+	_title_glow = Label.new()
+	_title_glow.text = "CHOOSE YOUR CHAMPION"
+	_title_glow.add_theme_font_size_override("font_size", 42)
+	_title_glow.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4, TITLE_GLOW_MIN))
+	_title_glow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title_glow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_title_glow.set_anchors_preset(Control.PRESET_FULL_RECT)
+	title_wrapper.add_child(_title_glow)
+
+	# Main title text
+	_title_label = Label.new()
+	_title_label.text = "CHOOSE YOUR CHAMPION"
+	_title_label.add_theme_font_size_override("font_size", 38)
+	_title_label.add_theme_color_override("font_color", Color(0.9, 0.8, 0.6))
+	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_title_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	title_wrapper.add_child(_title_label)
+
+	# Decorative line right (with glow capability)
+	_line_right = ColorRect.new()
+	_line_right.custom_minimum_size = Vector2(100, 2)
+	_line_right.color = Color(0.6, 0.5, 0.3, 0.5)
+	UIStyleFactory.expand_horizontal(_line_right)
+	_line_right.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	title_container.add_child(_line_right)
 
 
 func _connect_signals() -> void:
@@ -209,6 +433,12 @@ func _select_hero(index: int) -> void:
 	hero_display_panel.display_hero(hero_data)
 	info_panel.display_hero_info(hero_data)
 	vera_panel.update_for_hero(hero_id)
+
+	# AAA: Update atmospheric particle colors to match hero theme
+	_update_particle_colors_for_hero(hero_id)
+
+	# AAA: Update title glow color to match hero
+	_update_title_glow_for_hero(hero_id)
 
 
 func _get_selected_hero_id() -> String:
@@ -335,3 +565,215 @@ func _input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_cancel"):
 		_on_back_pressed()
 		get_viewport().set_input_as_handled()
+
+
+# =============================================================================
+# AAA ATMOSPHERIC EFFECTS SYSTEM
+# =============================================================================
+
+
+## Hero-specific particle color palettes
+const HERO_PARTICLE_COLORS: Dictionary = {
+	"bastion": [Color(0.4, 0.5, 0.7, 0.4), Color(0.5, 0.6, 0.8, 0.3), Color(0.3, 0.4, 0.6, 0.35)],  # Steel blue
+	"rend": [Color(0.8, 0.2, 0.2, 0.4), Color(0.9, 0.3, 0.1, 0.35), Color(0.7, 0.1, 0.1, 0.3)],    # Blood red
+	"marrow": [Color(0.5, 0.3, 0.7, 0.4), Color(0.6, 0.4, 0.8, 0.35), Color(0.4, 0.2, 0.6, 0.3)],  # Spirit purple
+	"mirage": [Color(0.3, 0.7, 0.9, 0.4), Color(0.2, 0.6, 0.8, 0.35), Color(0.4, 0.8, 1.0, 0.3)]   # Void cyan
+}
+
+## Hero-specific accent colors for title glow and UI highlights
+const HERO_ACCENT_COLORS: Dictionary = {
+	"bastion": Color(0.6, 0.7, 0.9, 1.0),   # Steel blue glow
+	"rend": Color(0.95, 0.3, 0.2, 1.0),      # Blood red glow
+	"marrow": Color(0.7, 0.5, 0.9, 1.0),     # Spirit purple glow
+	"mirage": Color(0.4, 0.85, 1.0, 1.0)     # Void cyan glow
+}
+
+## Hero-specific line colors for decorative accents
+const HERO_LINE_COLORS: Dictionary = {
+	"bastion": Color(0.5, 0.6, 0.8, 0.7),
+	"rend": Color(0.8, 0.3, 0.2, 0.7),
+	"marrow": Color(0.6, 0.4, 0.8, 0.7),
+	"mirage": Color(0.3, 0.7, 0.9, 0.7)
+}
+
+
+func _start_atmospheric_effects() -> void:
+	## Initialize all AAA atmospheric animations
+	_start_vignette_pulse()
+	_start_title_glow_pulse()
+	_start_line_pulse()
+	_start_particle_animations()
+
+
+func _start_vignette_pulse() -> void:
+	## Animated vignette that slowly pulses for atmosphere
+	if not _vignette_overlay:
+		return
+
+	if _vignette_tween and _vignette_tween.is_valid():
+		_vignette_tween.kill()
+
+	_vignette_tween = create_tween()
+	_vignette_tween.set_loops()  # Infinite loop
+
+	# Pulse from min to max alpha and back
+	_vignette_tween.tween_property(
+		_vignette_overlay, "color:a",
+		VIGNETTE_PULSE_MAX,
+		VIGNETTE_PULSE_DURATION / 2.0
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+	_vignette_tween.tween_property(
+		_vignette_overlay, "color:a",
+		VIGNETTE_PULSE_MIN,
+		VIGNETTE_PULSE_DURATION / 2.0
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func _start_title_glow_pulse() -> void:
+	## Animated title glow that pulses for magical effect
+	if not _title_glow:
+		return
+
+	if _title_glow_tween and _title_glow_tween.is_valid():
+		_title_glow_tween.kill()
+
+	_title_glow_tween = create_tween()
+	_title_glow_tween.set_loops()
+
+	# Slower pulse for title glow - more subtle
+	_title_glow_tween.tween_property(
+		_title_glow, "modulate:a",
+		TITLE_GLOW_MAX,
+		1.5
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+	_title_glow_tween.tween_property(
+		_title_glow, "modulate:a",
+		TITLE_GLOW_MIN,
+		1.5
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func _start_line_pulse() -> void:
+	## Animated decorative lines that pulse in sync with title
+	if not _line_left or not _line_right:
+		return
+
+	if _line_pulse_tween and _line_pulse_tween.is_valid():
+		_line_pulse_tween.kill()
+
+	_line_pulse_tween = create_tween()
+	_line_pulse_tween.set_loops()
+	_line_pulse_tween.set_parallel(true)
+
+	# Pulse both lines together
+	_line_pulse_tween.tween_property(_line_left, "color:a", 0.8, 1.5).set_trans(Tween.TRANS_SINE)
+	_line_pulse_tween.tween_property(_line_right, "color:a", 0.8, 1.5).set_trans(Tween.TRANS_SINE)
+	_line_pulse_tween.set_parallel(false)
+	_line_pulse_tween.tween_property(_line_left, "color:a", 0.4, 1.5).set_trans(Tween.TRANS_SINE)
+	_line_pulse_tween.set_parallel(true)
+	_line_pulse_tween.tween_property(_line_right, "color:a", 0.4, 1.5).set_trans(Tween.TRANS_SINE)
+
+
+func _start_particle_animations() -> void:
+	## Animate all dust particles with floating motion
+	for i in range(_dust_particles.size()):
+		var particle: ColorRect = _dust_particles[i]
+		if not is_instance_valid(particle):
+			continue
+
+		_animate_single_particle(particle, i)
+
+
+func _animate_single_particle(particle: ColorRect, index: int) -> void:
+	## Animate a single particle with unique floating pattern
+	var tween := create_tween()
+	tween.set_loops()
+	_particle_tweens.append(tween)
+
+	# Random float parameters for variety
+	var float_duration: float = randf_range(8.0, 15.0)
+	var horizontal_drift: float = randf_range(-100, 100)
+	var vertical_rise: float = randf_range(-200, -400)  # Always rise
+
+	# Get screen bounds
+	var screen_width: float = 1920.0
+	var screen_height: float = 1080.0
+
+	# Starting position
+	var start_pos := particle.position
+	var end_pos := Vector2(
+		start_pos.x + horizontal_drift,
+		start_pos.y + vertical_rise
+	)
+
+	# Wrap around screen edges
+	if end_pos.y < -50:
+		end_pos.y = screen_height + 50
+	if end_pos.x < -50:
+		end_pos.x = screen_width + randf_range(0, 200)
+	if end_pos.x > screen_width + 50:
+		end_pos.x = randf_range(-200, 0)
+
+	# Float upward with slight horizontal sway
+	tween.tween_property(particle, "position", end_pos, float_duration) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+	# Fade in and out during float
+	tween.set_parallel(true)
+	var original_alpha: float = particle.color.a
+	tween.tween_property(particle, "color:a", original_alpha * 1.5, float_duration * 0.3)
+	tween.chain().tween_property(particle, "color:a", original_alpha * 0.5, float_duration * 0.4)
+	tween.chain().tween_property(particle, "color:a", original_alpha, float_duration * 0.3)
+
+	# Reset position when animation completes (will loop)
+	tween.set_parallel(false)
+	tween.tween_callback(func():
+		particle.position = Vector2(
+			randf_range(0, screen_width),
+			screen_height + randf_range(20, 100)
+		)
+	)
+
+
+func _update_particle_colors_for_hero(hero_id: String) -> void:
+	## Update particle colors to match the selected hero's theme
+	var colors: Array = HERO_PARTICLE_COLORS.get(hero_id, HERO_PARTICLE_COLORS["bastion"])
+
+	for particle in _dust_particles:
+		if not is_instance_valid(particle):
+			continue
+
+		# Randomly select from the hero's color palette
+		var new_color: Color = colors[randi() % colors.size()]
+		# Vary the alpha slightly for depth
+		new_color.a = randf_range(0.15, 0.4)
+
+		# Smooth color transition
+		var color_tween := create_tween()
+		color_tween.tween_property(particle, "color", new_color, 0.5) \
+			.set_trans(Tween.TRANS_SINE)
+
+
+func _update_title_glow_for_hero(hero_id: String) -> void:
+	## Update title glow and decorative lines to match hero's theme color
+	var accent_color: Color = HERO_ACCENT_COLORS.get(hero_id, Color(1.0, 0.85, 0.4))
+	var line_color: Color = HERO_LINE_COLORS.get(hero_id, Color(0.6, 0.5, 0.3, 0.7))
+
+	# Animate title glow color change
+	if _title_glow and is_instance_valid(_title_glow):
+		var glow_tween := create_tween()
+		glow_tween.tween_property(_title_glow, "modulate", accent_color, 0.4) \
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+	# Animate decorative line colors
+	if _line_left and is_instance_valid(_line_left):
+		var line_tween := create_tween()
+		line_tween.tween_property(_line_left, "color", line_color, 0.4) \
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+	if _line_right and is_instance_valid(_line_right):
+		var line_tween := create_tween()
+		line_tween.tween_property(_line_right, "color", line_color, 0.4) \
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)

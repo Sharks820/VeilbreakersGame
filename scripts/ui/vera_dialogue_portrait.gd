@@ -162,17 +162,19 @@ func _process_animation(delta: float) -> void:
 func _advance_frame() -> void:
 	match current_state:
 		AnimationState.IDLE:
-			# Subtle idle animation - cycle through first 2-3 frames slowly
-			current_frame = (current_frame + 1) % 3
-			_frame_duration = IDLE_FRAME_DURATION
+			# FIXED: IDLE should be STATIC - no frame cycling!
+			# Hold frame 0 (neutral expression) - no animation glitching
+			current_frame = 0
+			_frame_duration = 999.0  # Effectively infinite - no cycling
 
 		AnimationState.TALKING:
-			# Fast mouth animation through all 5 frames
-			current_frame = (current_frame + 1) % SHEET_COLUMNS
-			_frame_duration = TALK_FRAME_DURATION
+			# Smooth mouth animation - cycle through frames 0-3 (skip 4 for smoother loop)
+			# Use slower timing for natural speech feel
+			current_frame = (current_frame + 1) % 4
+			_frame_duration = TALK_FRAME_DURATION * 1.5  # 120ms instead of 80ms
 
 		AnimationState.GESTURING:
-			# Gesture animation
+			# Gesture animation - full range
 			current_frame = (current_frame + 1) % SHEET_COLUMNS
 			_frame_duration = GESTURE_FRAME_DURATION
 
@@ -182,9 +184,9 @@ func _advance_frame() -> void:
 			_frame_duration = GESTURE_FRAME_DURATION
 
 		AnimationState.FULL_BODY:
-			# Full body loop
-			current_frame = (current_frame + 1) % SHEET_COLUMNS
-			_frame_duration = IDLE_FRAME_DURATION
+			# Full body loop - slower for idle feel
+			current_frame = (current_frame + 1) % 3
+			_frame_duration = IDLE_FRAME_DURATION * 2.0
 
 	_update_sprite_frame()
 
