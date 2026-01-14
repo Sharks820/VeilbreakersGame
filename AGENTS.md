@@ -41,29 +41,6 @@
 
 **Full documentation:** See `VEILBREAKERS.md` → "MANDATORY UTILITIES" section
 
----
-
-## ⚠️ CRITICAL: MCP Tool Safety (READ FIRST)
-
-### DANGEROUS TOOLS - NEVER USE (Cause Infinite Hangs)
-
-| Tool | Why It Hangs |
-|------|--------------|
-| `godot-editor_run_project` | Launches Godot process, blocks forever |
-| `godot-editor_get_debug_output` | Blocks waiting for running game |
-| `godot-screenshots_run_project` | Same - launches Godot process |
-| `bash` with ANY `godot` command | **ALL Godot invocations hang** - even headless |
-| `godot --check-only --headless` | Still hangs - project scan takes too long |
-
-### SAFE TOOLS - Use These Instead
-
-| Tool | Purpose | Safe Because |
-|------|---------|--------------|
-| `read` / `write` / `edit` | Modify GDScript files | Pure file operations |
-| `glob` / `grep` | Find files and code | Pure file operations |
-| `bash` with `git` commands | Version control | No Godot involved |
-| `godot-editor_create_scene` | Create .tscn files | File operation only (use cautiously) |
-| `godot-editor_add_node` | Add nodes to scenes | File operation only (use cautiously) |
 
 ### Testing Protocol
 

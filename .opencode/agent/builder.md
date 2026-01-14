@@ -1,7 +1,7 @@
 ---
 description: Autonomous coding agent for Godot 4.5 GDScript - implements features, fixes bugs, highest reasoning capability
 name: Forge
-mode: primary
+mode: subagent
 model: anthropic/claude-opus-4-5
 temperature: 0.3
 permission:

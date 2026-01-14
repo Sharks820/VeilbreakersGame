@@ -341,7 +341,7 @@ SAVAGE ──► IRON ──► VENOM ──► SURGE ──► DREAD ──► 
 | wolfram | Math calculations |
 | figma | UI design |
 | trello | Task tracking |
-
+godot-ultimate use as an all in one tool
 ### Asset Pipeline
 1. HuggingFace generates base images
 2. Image Process resizes/crops to spec
@@ -349,21 +349,6 @@ SAVAGE ──► IRON ──► VENOM ──► SURGE ──► DREAD ──► 
 4. Screenshots verify in-game appearance
 
 ---
-
-## Trello Board
-
-**Board:** VEILBREAKERS GAME DEV
-**URL:** https://trello.com/b/6VhzFXH3/veilbreakers
-
-### Lists
-| List | ID |
-|------|-----|
-| BACKLOG | 6950d4eb393f78982014d8e5 |
-| SPRINT | 6950d4ec787ad16c300203c9 |
-| IN_PROGRESS | 6950d4ecff7a641faf2597c6 |
-| TESTING | 6950d4ec9a6a7a3910f3fd16 |
-| BUGS | 6950d4ed076082243950cf2e |
-| IDEAS | 6950d4edb39f6b5aeed96742 |
 
 ### Labels
 battle, ui, art, audio, vera, monsters, critical
@@ -388,7 +373,7 @@ battle, ui, art, audio, vera, monsters, critical
 - Lightning effects - background already has them
 - Custom eye drawing - artwork has them
 - Complex logo animation - caused glitching
-- Fake transparency (checker pattern) - use REAL alpha
+- Fake transparency (checker pattern) - use REAL BACKGROUND REMOVER
 - **Spine/Cutout rigging for Godot** - Too complex, animations glitchy, STICK TO SPRITE SHEETS
 
 ### WORKS
@@ -445,17 +430,6 @@ battle, ui, art, audio, vera, monsters, critical
 
 ---
 
-## NEXT SESSION: Hollow Sprite Sheets
-
-**Task**: Use Scenario MCP to remove gray backgrounds from 5 sprite sheets.
-
-**Files to create** (save to assets/sprites/monsters/sheets/):
-- hollow_claw_sheet.png (4x4) - X-slash, beam, death
-- hollow_hurt_sheet.png (4x4) - Hurt reactions, stagger  
-- hollow_tendril_sheet.png (4x4) - Sweep, lance, orb
-- hollow_vortex_sheet.png (4x4) - Channel, whip, vortex
-- hollow_power_sheet.png (4x5) - Rage mode, heavy attacks
-
 **Skills created**: shadow_rend, void_orb, tendril_lash, tendril_sweep, consuming_vortex, dread_surge, abyssal_rage
 
 ---
@@ -509,6 +483,7 @@ battle, ui, art, audio, vera, monsters, critical
 ### New Files
 - `AGENTS.md` - Instructions for AI coding agents (OpenCode format)
 - `opencode.json` - MCP server configuration for OpenCode (15 servers)
+- 'Claude.md' - has good information too 
 
 ---
 

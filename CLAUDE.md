@@ -146,9 +146,66 @@ This is NON-NEGOTIABLE. Before writing ANY:
 - Game function/story/big script changes
 - Delete ANY file (archive only, never delete)
 
+## 7. Ralph Autonomous Protocol (MANDATORY FOR OVERNIGHT WORK)
+
+🤖 **USE RALPH FOR ALL AUTONOMOUS/OVERNIGHT DEVELOPMENT**
+
+**ALWAYS use Ralph when user says:**
+- "work overnight" / "run until done" / "autonomous mode"
+- "batch process this" / "work without me"
+- "implement this PRD/spec autonomously"
+- Any large multi-task work that doesn't need supervision
+
+**Ralph is NOT optional** - it's the required tool for hands-off development.
+
+**Quick Reference:**
+```bash
+ralph-setup veilbreakers-task   # Create project from scratch
+ralph-import spec.md task-name  # Import existing spec/PRD
+cd task-name && ralph --monitor # Run autonomous loop
+```
+
+**Location:** `C:/Users/Conner/Downloads/ralph-claude-code/`
+
+**Skill:** `.claude/skills/ralph-autonomous-loop/skill.md`
+
 ---
 
-# THE ARSENAL - 15 MCP SERVERS
+# THE ARSENAL
+
+## AUTONOMOUS DEVELOPMENT
+
+### Ralph (THE AUTOPILOT)
+**Autonomous AI development loop - run overnight without supervision**
+```
+- Continuous development cycles until project complete
+- Intelligent exit detection (dual-condition gate)
+- Rate limiting (100 calls/hour)
+- Session continuity across loops
+- tmux live monitoring dashboard
+- Circuit breaker prevents infinite loops
+```
+**Location:** `C:/Users/Conner/Downloads/ralph-claude-code/`
+**NOT an MCP** - Bash wrapper for Claude Code
+[Source: frankbria/ralph-claude-code](https://github.com/frankbria/ralph-claude-code)
+
+**Quick Start:**
+```bash
+# One-time install
+cd C:/Users/Conner/Downloads/ralph-claude-code && ./install.sh
+
+# Per-project: import PRD or setup fresh
+ralph-import requirements.md my-project
+# OR
+ralph-setup my-project
+
+# Run autonomously
+cd my-project && ralph --monitor
+```
+
+---
+
+## 15 MCP SERVERS
 
 ## GODOT ENGINE CONTROL
 
