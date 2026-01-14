@@ -44,8 +44,8 @@ func _ready() -> void:
 func _build_ui() -> void:
 	name = "HeroDisplay"
 
-	# Dark backdrop
-	var backdrop := UIStyleFactory.create_styled_panel(UIStyleFactory.create_hero_display_backdrop())
+	# DRAMATIC deep void backdrop with purple edge glow
+	var backdrop := UIStyleFactory.create_styled_panel(UIStyleFactory.create_dramatic_hero_display_backdrop())
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(backdrop)
 
@@ -65,10 +65,10 @@ func _build_ui() -> void:
 	hero_portrait.pivot_offset = Vector2(200, 225)
 	add_child(hero_portrait)
 
-	# Name overlay at bottom
-	var name_panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_hero_name_overlay())
+	# DRAMATIC gold-accented name overlay at bottom
+	var name_panel := UIStyleFactory.create_styled_panel(UIStyleFactory.create_dramatic_hero_name_overlay())
 	name_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	name_panel.offset_top = -140
+	name_panel.offset_top = -150
 	add_child(name_panel)
 
 	var name_vbox := UIStyleFactory.create_vbox(5)

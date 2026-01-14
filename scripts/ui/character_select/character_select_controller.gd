@@ -14,7 +14,7 @@ signal selection_cancelled
 const HERO_IDS: Array[String] = ["bastion", "rend", "marrow", "mirage"]
 
 # AAA Atmospheric settings
-const PARTICLE_COUNT := 50  # Floating dust/ember particles
+const PARTICLE_COUNT := 15  # Floating dust/ember particles (reduced from 50 for performance)
 const VIGNETTE_PULSE_MIN := 0.6
 const VIGNETTE_PULSE_MAX := 0.85
 const VIGNETTE_PULSE_DURATION := 4.0  # Seconds per cycle
@@ -58,6 +58,10 @@ var _particle_tweens: Array[Tween] = []
 var _line_left: ColorRect = null
 var _line_right: ColorRect = null
 var _line_pulse_tween: Tween = null
+
+# DRAMATIC selection effects
+var _screen_flash: ColorRect = null
+var _burst_container: Control = null
 
 # =============================================================================
 # LIFECYCLE
@@ -130,7 +134,7 @@ func _build_ui() -> void:
 	hero_display_panel.name = "HeroDisplayDominant"
 	hero_display_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	# Push slightly left to leave room for info panel
-	hero_display_panel.offset_left = 280  # Space for cards
+	hero_display_panel.offset_left = 310  # Space for cards (295px + 15px gap)
 	hero_display_panel.offset_right = -380  # Space for info
 	hero_display_panel.offset_top = 90  # Below title
 	hero_display_panel.offset_bottom = -140  # Above button bar
@@ -140,9 +144,9 @@ func _build_ui() -> void:
 	var cards_container := Control.new()
 	cards_container.name = "CardsContainer"
 	cards_container.set_anchors_preset(Control.PRESET_LEFT_WIDE)
-	cards_container.offset_right = 260  # Narrower for sleek look
+	cards_container.offset_right = 295  # Wide enough for 250px cards + 30px padding + 15px margin
 	cards_container.offset_top = 90
-	cards_container.offset_bottom = -140
+	cards_container.offset_bottom = -200  # Make room for VERA below
 	add_child(cards_container)
 
 	# Dark backdrop for cards
@@ -192,7 +196,7 @@ func _build_ui() -> void:
 	vera_container.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	vera_container.offset_left = 20
 	vera_container.offset_right = 500  # Wider for dialogue text
-	vera_container.offset_top = -165   # 1080-165=915 to 1080-15=1065 = 150px height
+	vera_container.offset_top = -200   # 1080-200=880 to 1080-15=1065 = 185px height (VERA needs 180 minimum)
 	vera_container.offset_bottom = -15
 	add_child(vera_container)
 
@@ -219,6 +223,21 @@ func _build_ui() -> void:
 	# === CONFIRMATION POPUP (hidden initially) ===
 	confirmation_popup = CharacterSelectConfirmationPopup.new()
 	add_child(confirmation_popup)
+
+	# === DRAMATIC: Screen flash overlay (on TOP of everything) ===
+	_screen_flash = ColorRect.new()
+	_screen_flash.name = "ScreenFlash"
+	_screen_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_screen_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_screen_flash.color = Color(1.0, 1.0, 1.0, 0.0)  # Starts invisible
+	add_child(_screen_flash)
+
+	# === DRAMATIC: Particle burst container (on TOP) ===
+	_burst_container = Control.new()
+	_burst_container.name = "BurstContainer"
+	_burst_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_burst_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_burst_container)
 
 
 func _create_background() -> void:
@@ -457,6 +476,11 @@ func _on_hero_clicked(index: int) -> void:
 	# Lock selection on click
 	_selection_locked = true
 	_select_hero(index)
+
+	# === DRAMATIC EFFECTS ON CLICK ===
+	var hero_id := HERO_IDS[index] if index < HERO_IDS.size() else "bastion"
+	_trigger_screen_flash(hero_id)
+	_trigger_particle_burst(hero_id)
 
 
 func _on_hero_selected(index: int) -> void:
@@ -772,3 +796,86 @@ func _update_title_glow_for_hero(hero_id: String) -> void:
 		var line_tween := create_tween()
 		line_tween.tween_property(_line_right, "color", line_color, 0.4) \
 			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+
+# =============================================================================
+# DRAMATIC SELECTION EFFECTS - AAA QUALITY
+# =============================================================================
+
+
+func _trigger_screen_flash(hero_id: String) -> void:
+	## DRAMATIC screen flash on hero click - Persona 5 style
+	if not _screen_flash or not is_instance_valid(_screen_flash):
+		return
+
+	# Get hero accent color for themed flash
+	var flash_color: Color = HERO_ACCENT_COLORS.get(hero_id, Color(1.0, 0.85, 0.4))
+	# Bright, saturated version of hero color
+	flash_color = flash_color.lightened(0.5)
+	flash_color.a = 0.6  # Strong but not blinding
+
+	# Instant flash then rapid fade
+	var tween := create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_EXPO)
+
+	# INSTANT: Set to flash color immediately
+	_screen_flash.color = flash_color
+
+	# RAPID FADE: 0.2s fade to invisible
+	tween.tween_property(_screen_flash, "color:a", 0.0, 0.2)
+
+
+func _trigger_particle_burst(hero_id: String) -> void:
+	## DRAMATIC particle burst on hero click - radiating particles from center
+	if not _burst_container or not is_instance_valid(_burst_container):
+		return
+
+	# Get hero colors for burst
+	var colors: Array = HERO_PARTICLE_COLORS.get(hero_id, HERO_PARTICLE_COLORS["bastion"])
+
+	# Center point of screen
+	var center := get_viewport_rect().size / 2.0
+	var burst_count := 24  # Number of particles in burst
+
+	for i in range(burst_count):
+		# Create burst particle
+		var particle := ColorRect.new()
+		particle.size = Vector2(randf_range(4, 12), randf_range(4, 12))
+		particle.position = center - particle.size / 2.0
+		particle.pivot_offset = particle.size / 2.0
+		particle.rotation = randf() * TAU
+
+		# Random hero color with high alpha
+		var color: Color = colors[randi() % colors.size()]
+		color.a = randf_range(0.6, 1.0)
+		particle.color = color
+
+		_burst_container.add_child(particle)
+
+		# Calculate burst direction (radial from center)
+		var angle: float = (TAU / burst_count) * i + randf_range(-0.2, 0.2)
+		var distance: float = randf_range(300, 600)
+		var target_pos := center + Vector2(cos(angle), sin(angle)) * distance
+
+		# Animate: shoot outward with fade
+		var tween := create_tween()
+		tween.set_parallel(true)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.set_trans(Tween.TRANS_EXPO)
+
+		# Movement
+		tween.tween_property(particle, "position", target_pos - particle.size / 2.0, randf_range(0.4, 0.7))
+
+		# Scale down
+		tween.tween_property(particle, "scale", Vector2(0.1, 0.1), randf_range(0.5, 0.8))
+
+		# Fade out
+		tween.tween_property(particle, "color:a", 0.0, randf_range(0.4, 0.6))
+
+		# Rotation for extra flair
+		tween.tween_property(particle, "rotation", particle.rotation + randf_range(-TAU, TAU), 0.6)
+
+		# Clean up after animation
+		tween.set_parallel(false)
+		tween.tween_callback(particle.queue_free)

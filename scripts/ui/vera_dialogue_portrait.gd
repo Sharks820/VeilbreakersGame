@@ -21,7 +21,8 @@ enum AnimationState {
 # =============================================================================
 
 # Sprite sheet configuration (based on vera_c_sheet.png - the labeled reference)
-const SHEET_COLUMNS := 5
+# Sheet is 2752x1536 pixels: 2752/4=688, 1536/4=384 (whole numbers = no glitching)
+const SHEET_COLUMNS := 4
 const SHEET_ROWS := 4  # Talking, Head Movements, Hand Gestures, Full Body
 
 # Frame dimensions (estimated from sprite sheet)
@@ -74,6 +75,11 @@ var _current_sheet: String = "vera_c"  # Default to the labeled sheet
 
 # Frame duration based on state
 var _frame_duration: float = IDLE_FRAME_DURATION
+
+# PERFORMANCE FIX: Cache atlas texture instead of creating new every frame
+var _cached_atlas: AtlasTexture = null
+var _last_frame_row: int = -1
+var _last_frame_col: int = -1
 
 # =============================================================================
 # LIFECYCLE
@@ -223,22 +229,38 @@ func _update_sprite_frame() -> void:
 	var row := _get_row_for_state()
 	var col := current_frame
 
+	# PERFORMANCE FIX: Skip if frame hasn't changed
+	if row == _last_frame_row and col == _last_frame_col and _cached_atlas != null:
+		return
+
+	_last_frame_row = row
+	_last_frame_col = col
+
 	# Get actual sheet dimensions
 	var sheet_size := sheet_texture.get_size()
 	var actual_frame_width := sheet_size.x / SHEET_COLUMNS
 	var actual_frame_height := sheet_size.y / SHEET_ROWS
 
-	# Create atlas texture for the current frame
-	var atlas := AtlasTexture.new()
-	atlas.atlas = sheet_texture
-	atlas.region = Rect2(
+	# PERFORMANCE FIX: Reuse cached atlas texture instead of creating new every frame
+	if _cached_atlas == null:
+		_cached_atlas = AtlasTexture.new()
+		_cached_atlas.atlas = sheet_texture
+
+	# Only update atlas if sheet changed
+	if _cached_atlas.atlas != sheet_texture:
+		_cached_atlas.atlas = sheet_texture
+
+	# Update region (this is cheap - just property change)
+	_cached_atlas.region = Rect2(
 		col * actual_frame_width,
 		row * actual_frame_height,
 		actual_frame_width,
 		actual_frame_height
 	)
 
-	sprite.texture = atlas
+	# Only set texture if not already set (avoid redundant assignments)
+	if sprite.texture != _cached_atlas:
+		sprite.texture = _cached_atlas
 
 
 func _get_row_for_state() -> int:

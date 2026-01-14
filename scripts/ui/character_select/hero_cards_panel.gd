@@ -15,11 +15,12 @@ signal hero_clicked(index: int)  # For locking selection on click
 # CONSTANTS
 # =============================================================================
 
+# DRAMATIC class colors - MAXIMUM SATURATION for visual impact
 const CLASS_COLORS: Dictionary = {
-	"VEILGUARD": Color(0.4, 0.5, 0.7),
-	"BLOODHUNTER": Color(0.8, 0.2, 0.2),
-	"SOULWEAVER": Color(0.5, 0.3, 0.7),
-	"VOIDWALKER": Color(0.3, 0.7, 0.9)
+	"VEILGUARD": Color(0.3, 0.5, 0.95),     # Electric blue - intense
+	"BLOODHUNTER": Color(0.95, 0.15, 0.15), # Blood red - maximum
+	"SOULWEAVER": Color(0.7, 0.3, 0.9),     # Mystic purple - vivid
+	"VOIDWALKER": Color(0.2, 0.85, 0.95)    # Cyan void - bright
 }
 
 # =============================================================================
@@ -31,6 +32,15 @@ var selected_index: int = 0
 var hovered_index: int = -1
 var _hero_data_cache: Dictionary = {}
 var _hero_ids: Array[String] = []
+
+# DRAMATIC: Animated selection indicator
+var _selection_glow_tween: Tween = null
+var _selection_indicator: Control = null
+var _indicator_corners: Array[ColorRect] = []
+var _current_indicator_card: PanelContainer = null  # Track which card has the indicator
+
+# PERFORMANCE: Track hover tweens to prevent accumulation
+var _hover_tweens: Dictionary = {}  # index -> Tween
 
 # =============================================================================
 # LIFECYCLE
@@ -113,25 +123,26 @@ func _create_hero_card(hero_id: String, index: int) -> PanelContainer:
 	var data: HeroData = _hero_data_cache.get(hero_id)
 	var class_color: Color = CLASS_COLORS.get(data.hero_class, Color.WHITE) if data else Color.WHITE
 
+	# Use DRAMATIC normal style as initial state
 	var card := UIStyleFactory.create_styled_panel(
-		UIStyleFactory.create_hero_card_style(class_color) if data else StyleBoxFlat.new()
+		UIStyleFactory.create_dramatic_hero_card_normal(class_color) if data else StyleBoxFlat.new()
 	)
 	card.name = "HeroCard_%s" % hero_id
-	card.custom_minimum_size = Vector2(230, 110)
+	card.custom_minimum_size = Vector2(250, 120)  # Larger cards for more presence
 	card.focus_mode = Control.FOCUS_ALL
-	card.pivot_offset = Vector2(115, 55)  # Center pivot for animations
+	card.pivot_offset = Vector2(125, 60)  # Center pivot for animations
 
 	if not data:
 		return card
 
-	var hbox := UIStyleFactory.create_hbox(12)
+	var hbox := UIStyleFactory.create_hbox(14)
 	card.add_child(hbox)
 
-	# Portrait frame
+	# DRAMATIC portrait frame with glowing border
 	var portrait_frame := UIStyleFactory.create_styled_panel(
-		UIStyleFactory.create_hero_portrait_frame(class_color)
+		UIStyleFactory.create_dramatic_portrait_frame(class_color)
 	)
-	portrait_frame.custom_minimum_size = Vector2(75, 75)
+	portrait_frame.custom_minimum_size = Vector2(80, 80)
 	hbox.add_child(portrait_frame)
 
 	# Portrait image
@@ -205,14 +216,17 @@ func _update_card_visuals() -> void:
 		var data: HeroData = _hero_data_cache.get(hero_id)
 		var class_color: Color = CLASS_COLORS.get(data.hero_class if data else "", Color.WHITE)
 
+		# Use DRAMATIC styles for maximum visual impact
 		var style: StyleBoxFlat
 		if i == selected_index:
-			style = UIStyleFactory.create_hero_card_selected(class_color)
+			style = UIStyleFactory.create_dramatic_hero_card_selected(class_color)
 			_pulse_selected_card(card)
+			# DRAMATIC: Start continuous animated selection indicator
+			_start_selection_glow(card, class_color)
 		elif i == hovered_index:
-			style = UIStyleFactory.create_hero_card_hovered(class_color)
+			style = UIStyleFactory.create_dramatic_hero_card_hovered(class_color)
 		else:
-			style = UIStyleFactory.create_hero_card_normal(class_color)
+			style = UIStyleFactory.create_dramatic_hero_card_normal(class_color)
 
 		card.add_theme_stylebox_override("panel", style)
 
@@ -243,13 +257,15 @@ func _on_card_mouse_entered(index: int) -> void:
 	hovered_index = index
 	hero_hovered.emit(index)
 
-	# Hover scale animation
+	# Hover scale animation - PERFORMANCE: Kill old tween first
 	if index != selected_index:
+		_kill_hover_tween(index)
 		var card := hero_cards[index]
 		var tween := create_tween()
 		tween.set_ease(Tween.EASE_OUT)
 		tween.set_trans(Tween.TRANS_BACK)
 		tween.tween_property(card, "scale", Vector2(1.02, 1.02), 0.1)
+		_hover_tweens[index] = tween
 
 	_update_card_visuals()
 
@@ -258,15 +274,155 @@ func _on_card_mouse_exited(index: int) -> void:
 	if hovered_index == index:
 		hovered_index = -1
 
-		# Return to normal scale if not selected
+		# Return to normal scale if not selected - PERFORMANCE: Kill old tween first
 		if index != selected_index:
+			_kill_hover_tween(index)
 			var card := hero_cards[index]
 			var tween := create_tween()
 			tween.tween_property(card, "scale", Vector2.ONE, 0.1)
+			_hover_tweens[index] = tween
 
 		_update_card_visuals()
+
+
+func _kill_hover_tween(index: int) -> void:
+	if _hover_tweens.has(index):
+		var old_tween: Tween = _hover_tweens[index]
+		if old_tween and old_tween.is_valid():
+			old_tween.kill()
+		_hover_tweens.erase(index)
 
 
 func _on_card_focus_entered(index: int) -> void:
 	select_hero(index)
 	hero_clicked.emit(index)
+
+
+# =============================================================================
+# DRAMATIC SELECTION INDICATOR - CONTINUOUS ANIMATION
+# =============================================================================
+
+
+func _start_selection_glow(card: PanelContainer, class_color: Color) -> void:
+	## Start continuous pulsing glow animation on the selected card
+	if not card or not is_instance_valid(card):
+		return
+
+	# FIX: Only recreate indicator if the selected card actually changed
+	if _current_indicator_card == card and _selection_indicator and is_instance_valid(_selection_indicator):
+		return  # Indicator is already on this card, don't recreate
+
+	_stop_selection_glow()
+
+	# Create the selection indicator container
+	_selection_indicator = Control.new()
+	_selection_indicator.name = "SelectionIndicator"
+	_selection_indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_selection_indicator.set_anchors_preset(Control.PRESET_FULL_RECT)
+	card.add_child(_selection_indicator)
+	_current_indicator_card = card  # Track which card has the indicator
+
+	# FIX: Use minimum size if actual size not ready yet (pre-layout)
+	var bracket_size: Vector2 = card.size
+	if bracket_size.x < 10 or bracket_size.y < 10:
+		bracket_size = card.custom_minimum_size  # Fallback to minimum size
+
+	# Create animated corner brackets - Persona 5 style
+	_create_corner_brackets(bracket_size, class_color)
+
+	# Start the continuous glow pulse animation
+	_start_glow_pulse(class_color)
+
+
+func _stop_selection_glow() -> void:
+	## Stop and clean up selection animation
+	if _selection_glow_tween and _selection_glow_tween.is_valid():
+		_selection_glow_tween.kill()
+	_selection_glow_tween = null
+
+	_indicator_corners.clear()
+
+	if _selection_indicator and is_instance_valid(_selection_indicator):
+		_selection_indicator.queue_free()
+	_selection_indicator = null
+	_current_indicator_card = null  # Clear tracking
+
+
+func _create_corner_brackets(card_size: Vector2, class_color: Color) -> void:
+	## Create animated corner bracket indicators
+	if not _selection_indicator:
+		return
+
+	_indicator_corners.clear()
+
+	var bracket_length: float = 20.0
+	var bracket_thickness: float = 3.0
+	var corner_offset: float = -4.0  # Offset outside the card
+
+	# Bright version of class color
+	var bracket_color := class_color.lightened(0.3)
+	bracket_color.a = 0.9
+
+	# Four corners: TL, TR, BL, BR - each has 2 lines (horizontal + vertical)
+	var corners: Array[Dictionary] = [
+		# Top-Left
+		{"pos": Vector2(corner_offset, corner_offset), "h_size": Vector2(bracket_length, bracket_thickness), "v_size": Vector2(bracket_thickness, bracket_length)},
+		# Top-Right
+		{"pos": Vector2(card_size.x - bracket_length - corner_offset, corner_offset), "h_size": Vector2(bracket_length, bracket_thickness), "v_size": Vector2(bracket_thickness, bracket_length), "v_offset": Vector2(bracket_length - bracket_thickness, 0)},
+		# Bottom-Left
+		{"pos": Vector2(corner_offset, card_size.y - bracket_length - corner_offset), "h_size": Vector2(bracket_length, bracket_thickness), "v_size": Vector2(bracket_thickness, bracket_length), "h_offset": Vector2(0, bracket_length - bracket_thickness)},
+		# Bottom-Right
+		{"pos": Vector2(card_size.x - bracket_length - corner_offset, card_size.y - bracket_length - corner_offset), "h_size": Vector2(bracket_length, bracket_thickness), "v_size": Vector2(bracket_thickness, bracket_length), "h_offset": Vector2(0, bracket_length - bracket_thickness), "v_offset": Vector2(bracket_length - bracket_thickness, 0)}
+	]
+
+	for corner in corners:
+		# Horizontal line
+		var h_line := ColorRect.new()
+		h_line.color = bracket_color
+		h_line.size = corner["h_size"]
+		h_line.position = corner["pos"] + corner.get("h_offset", Vector2.ZERO)
+		h_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_selection_indicator.add_child(h_line)
+		_indicator_corners.append(h_line)
+
+		# Vertical line
+		var v_line := ColorRect.new()
+		v_line.color = bracket_color
+		v_line.size = corner["v_size"]
+		v_line.position = corner["pos"] + corner.get("v_offset", Vector2.ZERO)
+		v_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_selection_indicator.add_child(v_line)
+		_indicator_corners.append(v_line)
+
+
+func _start_glow_pulse(class_color: Color) -> void:
+	## Continuous pulsing glow animation - loops forever
+	if _indicator_corners.is_empty():
+		return
+
+	var bright_color := class_color.lightened(0.5)
+	bright_color.a = 1.0
+	var dim_color := class_color.lightened(0.2)
+	dim_color.a = 0.5
+
+	_selection_glow_tween = create_tween()
+	_selection_glow_tween.set_loops()  # Infinite loop
+	_selection_glow_tween.set_ease(Tween.EASE_IN_OUT)
+	_selection_glow_tween.set_trans(Tween.TRANS_SINE)
+
+	# Pulse bright
+	for corner in _indicator_corners:
+		_selection_glow_tween.parallel().tween_property(corner, "color", bright_color, 0.6)
+
+	# Pulse dim
+	for corner in _indicator_corners:
+		_selection_glow_tween.parallel().tween_property(corner, "color", dim_color, 0.6)
+
+
+func _exit_tree() -> void:
+	_stop_selection_glow()
+	# Clean up hover tweens
+	for tween in _hover_tweens.values():
+		if tween and tween.is_valid():
+			tween.kill()
+	_hover_tweens.clear()

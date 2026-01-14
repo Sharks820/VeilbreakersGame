@@ -117,6 +117,44 @@ const GOTHIC_GLOW_SIZE := 8
 const GOTHIC_GLOW_SIZE_ACTIVE := 12
 
 # =============================================================================
+# DRAMATIC CHARACTER SELECT STYLE CONSTANTS (Persona 5 Inspired)
+# =============================================================================
+
+## Dramatic panel colors - Maximum impact deep void
+const DRAMATIC_PANEL_VOID := Color(0.02, 0.01, 0.04, 0.98)         # Absolute abyss
+const DRAMATIC_PANEL_DARK := Color(0.04, 0.02, 0.07, 0.97)         # Deep purple void
+const DRAMATIC_PANEL_SELECTED := Color(0.08, 0.04, 0.12, 0.98)     # Selected highlight
+
+## Dramatic border colors - INTENSE glowing edges
+const DRAMATIC_BORDER_GOLD := Color(1.0, 0.75, 0.2, 1.0)           # Bright gold
+const DRAMATIC_BORDER_CRIMSON := Color(0.9, 0.15, 0.15, 1.0)       # Blood crimson
+const DRAMATIC_BORDER_PURPLE := Color(0.6, 0.2, 0.8, 1.0)          # Void purple
+const DRAMATIC_BORDER_CYAN := Color(0.2, 0.8, 0.9, 1.0)            # Electric cyan
+const DRAMATIC_BORDER_WHITE := Color(0.95, 0.95, 1.0, 1.0)         # Pure white edge
+
+## Dramatic glow colors - MAXIMUM intensity
+const DRAMATIC_GLOW_GOLD := Color(1.0, 0.8, 0.3, 0.7)              # Golden aura
+const DRAMATIC_GLOW_CRIMSON := Color(1.0, 0.2, 0.2, 0.6)           # Blood glow
+const DRAMATIC_GLOW_PURPLE := Color(0.7, 0.3, 0.9, 0.6)            # Void emanation
+const DRAMATIC_GLOW_CYAN := Color(0.3, 0.9, 1.0, 0.6)              # Electric pulse
+const DRAMATIC_GLOW_WHITE := Color(1.0, 1.0, 1.0, 0.5)             # Pure radiance
+
+## Dramatic hero class colors - SATURATED maximum impact
+const DRAMATIC_VEILGUARD := Color(0.3, 0.5, 0.9, 1.0)              # Electric blue
+const DRAMATIC_BLOODHUNTER := Color(0.95, 0.15, 0.15, 1.0)         # Blood red
+const DRAMATIC_SOULWEAVER := Color(0.7, 0.3, 0.9, 1.0)             # Mystic purple
+const DRAMATIC_VOIDWALKER := Color(0.2, 0.85, 0.95, 1.0)           # Cyan void
+
+## Dramatic sizing - THICK borders, LARGE glows
+const DRAMATIC_BORDER_THIN := 3
+const DRAMATIC_BORDER_NORMAL := 4
+const DRAMATIC_BORDER_THICK := 6
+const DRAMATIC_CORNER_RADIUS := 10
+const DRAMATIC_GLOW_SIZE := 15
+const DRAMATIC_GLOW_SIZE_SELECTED := 25
+const DRAMATIC_GLOW_SIZE_HOVER := 20
+
+# =============================================================================
 # PANEL STYLES
 # =============================================================================
 
@@ -2078,6 +2116,195 @@ static func create_hero_card_hovered(class_color: Color) -> StyleBoxFlat:
 	style.content_margin_top = 10
 	style.content_margin_bottom = 10
 	return style
+
+# =============================================================================
+# DRAMATIC CHARACTER SELECT STYLES (Persona 5 / AAA Inspired)
+# =============================================================================
+
+## Get dramatic class color for a hero class name
+static func get_dramatic_class_color(hero_class_name: String) -> Color:
+	match hero_class_name.to_upper():
+		"VEILGUARD":
+			return DRAMATIC_VEILGUARD
+		"BLOODHUNTER":
+			return DRAMATIC_BLOODHUNTER
+		"SOULWEAVER":
+			return DRAMATIC_SOULWEAVER
+		"VOIDWALKER":
+			return DRAMATIC_VOIDWALKER
+		_:
+			return DRAMATIC_BORDER_GOLD
+
+
+## Create DRAMATIC selected hero card style - MAXIMUM IMPACT with thick glow
+static func create_dramatic_hero_card_selected(class_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = DRAMATIC_PANEL_SELECTED
+	style.border_color = class_color
+	style.set_border_width_all(DRAMATIC_BORDER_THICK)
+	style.set_corner_radius_all(DRAMATIC_CORNER_RADIUS)
+	# MASSIVE glow for selected state
+	style.shadow_color = class_color
+	style.shadow_color.a = 0.7
+	style.shadow_size = DRAMATIC_GLOW_SIZE_SELECTED
+	style.shadow_offset = Vector2(0, 2)
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 14
+	style.content_margin_bottom = 14
+	return style
+
+
+## Create DRAMATIC normal hero card style - Subtle but present
+static func create_dramatic_hero_card_normal(class_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = DRAMATIC_PANEL_DARK
+	style.border_color = class_color.darkened(0.3)
+	style.set_border_width_all(DRAMATIC_BORDER_THIN)
+	style.set_corner_radius_all(DRAMATIC_CORNER_RADIUS)
+	# Subtle ambient glow even in normal state
+	style.shadow_color = class_color
+	style.shadow_color.a = 0.2
+	style.shadow_size = 6
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 14
+	style.content_margin_bottom = 14
+	return style
+
+
+## Create DRAMATIC hovered hero card style - Medium glow on hover
+static func create_dramatic_hero_card_hovered(class_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.06, 0.03, 0.09, 0.98)
+	style.border_color = class_color.lightened(0.1)
+	style.set_border_width_all(DRAMATIC_BORDER_NORMAL)
+	style.set_corner_radius_all(DRAMATIC_CORNER_RADIUS)
+	# Medium glow on hover
+	style.shadow_color = class_color
+	style.shadow_color.a = 0.5
+	style.shadow_size = DRAMATIC_GLOW_SIZE_HOVER
+	style.shadow_offset = Vector2(0, 1)
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 14
+	style.content_margin_bottom = 14
+	return style
+
+
+## Create DRAMATIC hero display backdrop - Deep void with subtle edge glow
+static func create_dramatic_hero_display_backdrop() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = DRAMATIC_PANEL_VOID
+	style.border_color = Color(0.3, 0.2, 0.4, 0.6)
+	style.set_border_width_all(DRAMATIC_BORDER_THIN)
+	style.set_corner_radius_all(16)
+	# Subtle purple void glow
+	style.shadow_color = DRAMATIC_GLOW_PURPLE
+	style.shadow_color.a = 0.3
+	style.shadow_size = 12
+	return style
+
+
+## Create DRAMATIC hero name overlay - Gold-accented bottom panel
+static func create_dramatic_hero_name_overlay() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.01, 0.01, 0.02, 0.95)
+	style.border_color = DRAMATIC_BORDER_GOLD
+	style.border_width_top = DRAMATIC_BORDER_NORMAL
+	style.border_width_bottom = 0
+	style.border_width_left = 0
+	style.border_width_right = 0
+	# Gold glow from top edge
+	style.shadow_color = DRAMATIC_GLOW_GOLD
+	style.shadow_color.a = 0.4
+	style.shadow_size = 10
+	style.shadow_offset = Vector2(0, -3)
+	style.content_margin_left = 25
+	style.content_margin_right = 25
+	style.content_margin_top = 18
+	style.content_margin_bottom = 18
+	return style
+
+
+## Create DRAMATIC cards panel - Side panel with class-tinted edge
+static func create_dramatic_cards_panel(class_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = DRAMATIC_PANEL_VOID
+	style.border_color = class_color.darkened(0.2)
+	style.border_width_left = DRAMATIC_BORDER_THICK
+	style.border_width_right = 0
+	style.border_width_top = 0
+	style.border_width_bottom = 0
+	# Edge glow from left border
+	style.shadow_color = class_color
+	style.shadow_color.a = 0.35
+	style.shadow_size = 15
+	style.shadow_offset = Vector2(5, 0)
+	style.set_corner_radius_all(0)
+	style.content_margin_left = 20
+	style.content_margin_right = 15
+	style.content_margin_top = 15
+	style.content_margin_bottom = 15
+	return style
+
+
+## Create DRAMATIC stats panel - Right side with gold accent
+static func create_dramatic_stats_panel() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = DRAMATIC_PANEL_VOID
+	style.border_color = DRAMATIC_BORDER_GOLD.darkened(0.3)
+	style.border_width_right = DRAMATIC_BORDER_THICK
+	style.border_width_left = 0
+	style.border_width_top = 0
+	style.border_width_bottom = 0
+	# Gold edge glow from right
+	style.shadow_color = DRAMATIC_GLOW_GOLD
+	style.shadow_color.a = 0.3
+	style.shadow_size = 12
+	style.shadow_offset = Vector2(-5, 0)
+	style.set_corner_radius_all(0)
+	style.content_margin_left = 15
+	style.content_margin_right = 20
+	style.content_margin_top = 15
+	style.content_margin_bottom = 15
+	return style
+
+
+## Create DRAMATIC portrait frame - Thick glowing border around hero portrait
+static func create_dramatic_portrait_frame(class_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.01, 0.03, 0.9)
+	style.border_color = class_color
+	style.set_border_width_all(DRAMATIC_BORDER_THICK)
+	style.set_corner_radius_all(8)
+	# Intense class-colored glow
+	style.shadow_color = class_color
+	style.shadow_color.a = 0.6
+	style.shadow_size = DRAMATIC_GLOW_SIZE
+	return style
+
+
+## Create DRAMATIC title bar style - Top banner with gold edges
+static func create_dramatic_title_bar() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.01, 0.03, 0.98)
+	style.border_color = DRAMATIC_BORDER_GOLD
+	style.border_width_bottom = DRAMATIC_BORDER_NORMAL
+	style.border_width_top = 0
+	style.border_width_left = 0
+	style.border_width_right = 0
+	# Gold glow from bottom edge
+	style.shadow_color = DRAMATIC_GLOW_GOLD
+	style.shadow_color.a = 0.4
+	style.shadow_size = 8
+	style.shadow_offset = Vector2(0, 3)
+	style.content_margin_left = 30
+	style.content_margin_right = 30
+	style.content_margin_top = 15
+	style.content_margin_bottom = 18
+	return style
+
 
 ## Create confirmation popup style
 static func create_confirmation_popup_style() -> StyleBoxFlat:
