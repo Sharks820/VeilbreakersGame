@@ -9,6 +9,11 @@ secrets/
 .mcp.json
 opencode.json
 
+# Claude Code local tools (DO NOT COMMIT)
+.claude/skills/
+.claude/rules/
+.opencode/
+
 # Windows reserved filenames (cause git errors)
 nul
 NUL

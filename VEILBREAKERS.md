@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v1.28** | Last updated: 2026-01-12
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v1.29** | Last updated: 2026-01-13
 
 ---
 
@@ -324,23 +324,32 @@ SAVAGE ──► IRON ──► VENOM ──► SURGE ──► DREAD ──► 
 
 ## MCP Workflow
 
-### Active Servers (14 total)
+### Active Servers (15 total)
 | Server | Purpose |
 |--------|---------|
 | godot-screenshots | Run game, capture screenshots |
 | godot-editor | Scene/node manipulation |
-| gdai-mcp | Full editor control |
-| minimal-godot | GDScript LSP |
-| godot-docs | Official documentation |
-| git | Git operations |
-| gsap-animation | Animation patterns |
+| godot-ultimate | **PRIMARY** - 55 tools for project health, testing, debugging |
+| gdscript-lsp | GDScript language server |
 | sequential-thinking | Problem solving |
-| memory | Persistent knowledge |
+| **memory** | **Persistent knowledge graph - syncs with this file** |
 | image-process | Image manipulation |
-| lottiefiles | Animation library |
-| wolfram | Math calculations |
-| figma | UI design |
+| fal-ai | AI image generation |
+| scenario | Scenario.com asset generation |
 | trello | Task tracking |
+
+### Memory Protocol
+**VEILBREAKERS.md is THE source of truth.** Memory MCP should reflect this file's content.
+
+When memory MCP is available:
+1. Create entities for: Heroes, Brands, Paths, Systems
+2. Relations should match Brand effectiveness wheel
+3. Observations should match Lessons Learned section
+
+**Tools are LOCAL ONLY** - never committed to git:
+- `.claude/skills/` - Claude Code skills
+- `.claude/rules/` - Claude Code rules
+- `.opencode/` - OpenCode agent configs
 
 ### Asset Pipeline
 1. HuggingFace generates base images
@@ -442,6 +451,7 @@ battle, ui, art, audio, vera, monsters, critical
 | 2026-01-04 | **v1.16: CLEANUP** - Removed tools/ from git (258K lines). Tools are LOCAL DEV ONLY. Documented rigging failure. |
 | 2026-01-04 | **v1.21: HOLLOW EXPANSION** - 8 sprite sheets configured, 7 new skills, Scenario MCP added |
 | 2026-01-12 | v1.28: Lint fixes - renamed shadowed `material` to `particle_material` in battle_monster_sprite.gd |
+| 2026-01-13 | v1.29: Memory protocol - VEILBREAKERS.md is single source of truth, tools stay LOCAL (not in git) |
 
 ---
 
