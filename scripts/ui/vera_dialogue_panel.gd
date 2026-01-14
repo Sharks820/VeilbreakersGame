@@ -44,6 +44,9 @@ var speaker_label: Label
 var text_label: RichTextLabel
 var continue_indicator: Control
 
+# Tween tracking for cleanup
+var _continue_indicator_tween: Tween = null
+
 # =============================================================================
 # LIFECYCLE
 # =============================================================================
@@ -161,11 +164,11 @@ func _create_continue_indicator() -> Control:
 	triangle.color = Color(0.4, 0.9, 0.9)  # VERA teal
 	indicator.add_child(triangle)
 
-	# Add bounce animation
-	var tween := indicator.create_tween()
-	tween.set_loops()
-	tween.tween_property(triangle, "position:x", 5.0, 0.5)
-	tween.tween_property(triangle, "position:x", 0.0, 0.5)
+	# Bounce animation - use class variable for proper cleanup
+	_continue_indicator_tween = indicator.create_tween()
+	_continue_indicator_tween.set_loops()
+	_continue_indicator_tween.tween_property(triangle, "position:x", 5.0, 0.5)
+	_continue_indicator_tween.tween_property(triangle, "position:x", 0.0, 0.5)
 
 	return indicator
 
@@ -369,5 +372,9 @@ func _input(event: InputEvent) -> void:
 
 
 func _exit_tree() -> void:
+	# Kill infinite looping tween to prevent memory leak
+	if _continue_indicator_tween and _continue_indicator_tween.is_valid():
+		_continue_indicator_tween.kill()
+
 	if EventBus.vera_dialogue_triggered.is_connected(_on_vera_dialogue_triggered):
 		EventBus.vera_dialogue_triggered.disconnect(_on_vera_dialogue_triggered)

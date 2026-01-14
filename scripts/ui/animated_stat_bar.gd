@@ -104,6 +104,19 @@ func _ready() -> void:
 	_update_display()
 
 
+func _exit_tree() -> void:
+	# Clean up all tweens to prevent memory leaks
+	if _fill_tween and _fill_tween.is_valid():
+		_fill_tween.kill()
+	if _preview_tween and _preview_tween.is_valid():
+		_preview_tween.kill()
+	if _glow_tween and _glow_tween.is_valid():
+		_glow_tween.kill()
+	# CRITICAL: _pulse_tween is an infinite loop tween - MUST be killed
+	if _pulse_tween and _pulse_tween.is_valid():
+		_pulse_tween.kill()
+
+
 func _create_bar_structure() -> void:
 	# Set control size
 	custom_minimum_size = bar_size

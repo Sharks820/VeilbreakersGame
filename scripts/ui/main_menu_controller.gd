@@ -108,6 +108,9 @@ var logo_glow_tween: Tween
 # Button base positions for hover restoration
 var button_base_positions: Dictionary = {}
 
+# Tween tracking for button animations (prevents leak on rapid hover/unhover)
+var _button_tweens: Dictionary = {}
+
 # Breathing effect constants
 const BREATH_SPEED: float = 0.35
 const VIGNETTE_SPEED: float = 0.25
@@ -160,6 +163,13 @@ func _exit_tree() -> void:
 	if logo_glow_tween and logo_glow_tween.is_valid():
 		logo_glow_tween.kill()
 		logo_glow_tween = null
+
+	# Kill all button animation tweens
+	for button_key in _button_tweens.keys():
+		var tween: Tween = _button_tweens[button_key]
+		if tween and tween.is_valid():
+			tween.kill()
+	_button_tweens.clear()
 
 	# Disconnect button signals
 	for button in [new_game_button, continue_button, settings_button, quit_button]:
@@ -419,14 +429,20 @@ func _setup_button_effects() -> void:
 
 
 func _on_button_hover(button: TextureButton) -> void:
+	# Kill any existing tween for this button to prevent leak on rapid hover/unhover
+	if _button_tweens.has(button) and _button_tweens[button] and _button_tweens[button].is_valid():
+		_button_tweens[button].kill()
+
 	if button == continue_button and not continue_has_saves:
 		var disabled_tween := create_tween().set_parallel(true)
+		_button_tweens[button] = disabled_tween
 		disabled_tween.tween_property(button, "scale", Vector2(1.03, 1.03), 0.2).set_ease(Tween.EASE_OUT)
 		disabled_tween.tween_property(button, "modulate:a", 0.55, 0.2)
 		return
 
 	var base_y: float = button_base_positions.get(button, button.position.y)
 	var hover_tween := create_tween().set_parallel(true)
+	_button_tweens[button] = hover_tween
 	hover_tween.tween_property(button, "scale", Vector2(1.12, 1.12), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	hover_tween.tween_property(button, "position:y", base_y - 12, 0.18).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	hover_tween.tween_property(button, "modulate", Color(1.2, 1.1, 1.05, 1.0), 0.15)
@@ -434,10 +450,15 @@ func _on_button_hover(button: TextureButton) -> void:
 
 
 func _on_button_unhover(button: TextureButton) -> void:
+	# Kill any existing tween for this button to prevent leak on rapid hover/unhover
+	if _button_tweens.has(button) and _button_tweens[button] and _button_tweens[button].is_valid():
+		_button_tweens[button].kill()
+
 	var base_y: float = button_base_positions.get(button, button.position.y + 20)
 	var target_alpha := 0.4 if (button == continue_button and not continue_has_saves) else 1.0
 
 	var tween := create_tween().set_parallel(true)
+	_button_tweens[button] = tween
 	tween.tween_property(button, "scale", Vector2.ONE, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	tween.tween_property(button, "position:y", base_y, 0.2).set_ease(Tween.EASE_OUT)
 	tween.tween_property(button, "modulate", Color(1.0, 1.0, 1.0, target_alpha), 0.2)

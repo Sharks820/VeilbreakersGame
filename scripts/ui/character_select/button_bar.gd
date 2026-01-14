@@ -17,6 +17,10 @@ signal confirm_pressed
 var back_button: Button = null
 var confirm_button: Button = null
 
+# Tween tracking for cleanup
+var _button_tweens: Dictionary = {}  # Button -> Tween
+var _button_base_positions: Dictionary = {}  # Button -> float (Y position)
+
 # =============================================================================
 # LIFECYCLE
 # =============================================================================
@@ -45,6 +49,21 @@ func _build_ui() -> void:
 	confirm_button.pressed.connect(_on_confirm_pressed)
 	add_child(confirm_button)
 
+	# Store base positions after layout settles
+	await get_tree().process_frame
+	_button_base_positions[back_button] = back_button.position.y
+	_button_base_positions[confirm_button] = confirm_button.position.y
+
+
+func _exit_tree() -> void:
+	# Kill all tracked tweens to prevent memory leaks
+	for button: Button in _button_tweens.keys():
+		var tween: Tween = _button_tweens[button]
+		if tween and tween.is_valid():
+			tween.kill()
+	_button_tweens.clear()
+	_button_base_positions.clear()
+
 
 func _create_action_button(text: String, color: Color, min_width: int) -> Button:
 	var button := Button.new()
@@ -69,8 +88,12 @@ func _create_action_button(text: String, color: Color, min_width: int) -> Button
 
 
 func _on_button_hover(button: Button) -> void:
+	# Kill any existing tween for this button
+	_kill_button_tween(button)
+
 	# Scale up + slight glow + subtle y offset
 	var tween := create_tween()
+	_button_tweens[button] = tween
 	tween.set_parallel(true)
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_trans(Tween.TRANS_BACK)
@@ -81,34 +104,56 @@ func _on_button_hover(button: Button) -> void:
 	# Warm glow
 	tween.tween_property(button, "modulate", Color(1.15, 1.1, 1.05), 0.15)
 
-	# Slight lift (negative y = up)
-	tween.tween_property(button, "position:y", button.position.y - 4, 0.15)
+	# Slight lift (use stored base position to prevent drift)
+	var base_y: float = _button_base_positions.get(button, button.position.y)
+	tween.tween_property(button, "position:y", base_y - 4, 0.15)
 
 
 func _on_button_unhover(button: Button) -> void:
+	# Kill any existing tween for this button
+	_kill_button_tween(button)
+
 	var tween := create_tween()
+	_button_tweens[button] = tween
 	tween.set_parallel(true)
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_trans(Tween.TRANS_CUBIC)
 
-	# Return to normal
+	# Return to normal (use stored base position)
+	var base_y: float = _button_base_positions.get(button, 0.0)
 	tween.tween_property(button, "scale", Vector2.ONE, 0.12)
 	tween.tween_property(button, "modulate", Color.WHITE, 0.12)
-	tween.tween_property(button, "position:y", 0.0, 0.12)
+	tween.tween_property(button, "position:y", base_y, 0.12)
 
 
 func _on_button_down(button: Button) -> void:
+	# Kill any existing tween for this button
+	_kill_button_tween(button)
+
 	# Quick press down effect
 	var tween := create_tween()
+	_button_tweens[button] = tween
 	tween.tween_property(button, "scale", Vector2(0.95, 0.95), 0.05)
 
 
 func _on_button_up(button: Button) -> void:
+	# Kill any existing tween for this button
+	_kill_button_tween(button)
+
 	# Bounce back with slight overshoot
 	var tween := create_tween()
+	_button_tweens[button] = tween
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_trans(Tween.TRANS_BACK)
 	tween.tween_property(button, "scale", Vector2(1.08, 1.08), 0.1)
+
+
+func _kill_button_tween(button: Button) -> void:
+	if _button_tweens.has(button):
+		var old_tween: Tween = _button_tweens[button]
+		if old_tween and old_tween.is_valid():
+			old_tween.kill()
+		_button_tweens.erase(button)
 
 
 # =============================================================================

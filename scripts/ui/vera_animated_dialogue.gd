@@ -43,6 +43,9 @@ var current_speaker: String = "VERA"
 var current_dialogue_queue: Array = []
 var current_queue_index: int = 0
 
+# Tween tracking for cleanup
+var _continue_indicator_tween: Tween = null
+
 # =============================================================================
 # NODES (created dynamically)
 # =============================================================================
@@ -211,11 +214,11 @@ func _create_continue_indicator() -> Control:
 	arrow.color = Color(0.4, 0.9, 0.9)
 	indicator.add_child(arrow)
 
-	# Bounce animation
-	var tween := indicator.create_tween()
-	tween.set_loops()
-	tween.tween_property(arrow, "position:x", 6.0, 0.4).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(arrow, "position:x", 0.0, 0.4).set_ease(Tween.EASE_IN_OUT)
+	# Bounce animation - use class variable for proper cleanup
+	_continue_indicator_tween = indicator.create_tween()
+	_continue_indicator_tween.set_loops()
+	_continue_indicator_tween.tween_property(arrow, "position:x", 6.0, 0.4).set_ease(Tween.EASE_IN_OUT)
+	_continue_indicator_tween.tween_property(arrow, "position:x", 0.0, 0.4).set_ease(Tween.EASE_IN_OUT)
 
 	return indicator
 
@@ -493,5 +496,9 @@ func _on_vera_dialogue_triggered(context: String) -> void:
 
 
 func _exit_tree() -> void:
+	# Kill infinite looping tween to prevent memory leak
+	if _continue_indicator_tween and _continue_indicator_tween.is_valid():
+		_continue_indicator_tween.kill()
+
 	if EventBus.vera_dialogue_triggered.is_connected(_on_vera_dialogue_triggered):
 		EventBus.vera_dialogue_triggered.disconnect(_on_vera_dialogue_triggered)

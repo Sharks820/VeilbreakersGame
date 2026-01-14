@@ -1,7 +1,7 @@
 extends Control
 class_name VERADialoguePortrait
 ## VERADialoguePortrait: Animated VERA portrait for dialogue sequences.
-## Uses sprite sheets for talking, gesturing, and idle animations.
+## Uses Sprite2D with hframes/vframes for STABLE, GLITCH-FREE animation.
 ## The friendly face that hides the cosmic horror beneath.
 
 # =============================================================================
@@ -20,23 +20,19 @@ enum AnimationState {
 # CONSTANTS
 # =============================================================================
 
-# Sprite sheet configuration (based on vera_c_sheet.png - the labeled reference)
-# Sheet is 2752x1536 pixels: 2752/4=688, 1536/4=384 (whole numbers = no glitching)
+# Sprite sheet configuration (based on vera_c_sheet.png)
+# Sheet is 2752x1536 pixels with 4x4 grid
 const SHEET_COLUMNS := 4
-const SHEET_ROWS := 4  # Talking, Head Movements, Hand Gestures, Full Body
+const SHEET_ROWS := 4
 
-# Frame dimensions (estimated from sprite sheet)
-const FRAME_WIDTH := 256
-const FRAME_HEIGHT := 256
+# Animation timing - CINEMATIC pacing
+const TALK_FRAME_DURATION := 0.12  # Smooth mouth movement
+const IDLE_FRAME_DURATION := 0.3   # Subtle idle breathing
+const GESTURE_FRAME_DURATION := 0.15  # Medium gesture speed
+const BLINK_INTERVAL_MIN := 3.0
+const BLINK_INTERVAL_MAX := 6.0
 
-# Animation timing
-const TALK_FRAME_DURATION := 0.08  # Fast mouth movement
-const IDLE_FRAME_DURATION := 0.15  # Slower idle breathing
-const GESTURE_FRAME_DURATION := 0.12  # Medium gesture speed
-const BLINK_INTERVAL_MIN := 2.0
-const BLINK_INTERVAL_MAX := 5.0
-
-# Row indices in vera_c_sheet (0-indexed)
+# Row indices in sprite sheet (0-indexed)
 const ROW_TALKING := 0
 const ROW_HEAD_MOVEMENT := 1
 const ROW_HAND_GESTURES := 2
@@ -53,16 +49,18 @@ const ROW_FULL_BODY := 3
 # NODES
 # =============================================================================
 
-var sprite: TextureRect
+var sprite: TextureRect  # TextureRect with AtlasTexture for Control-based UI
 var glitch_overlay: ColorRect
 var dialogue_frame: TextureRect
+var _sprite_container: Control  # Container for centering
 
 # =============================================================================
 # STATE
 # =============================================================================
 
 var current_state: AnimationState = AnimationState.IDLE
-var current_frame: int = 0
+var current_row: int = ROW_FULL_BODY  # Current animation row
+var current_col: int = 0  # Current frame within row
 var animation_timer: float = 0.0
 var blink_timer: float = 0.0
 var is_talking: bool = false
@@ -71,15 +69,17 @@ var _glitch_timer: float = 0.0
 
 # Sprite sheet textures cache
 var _sprite_sheets: Dictionary = {}
-var _current_sheet: String = "vera_c"  # Default to the labeled sheet
+var _current_sheet: String = "vera_c"
 
 # Frame duration based on state
-var _frame_duration: float = IDLE_FRAME_DURATION
+# FIX: IDLE is STATIC - use 999.0 not IDLE_FRAME_DURATION (0.3s)!
+var _frame_duration: float = 999.0
 
-# PERFORMANCE FIX: Cache atlas texture instead of creating new every frame
+# PERFORMANCE: Cache atlas texture and track frame changes
 var _cached_atlas: AtlasTexture = null
 var _last_frame_row: int = -1
 var _last_frame_col: int = -1
+var _last_sheet: String = ""  # FIX: Track sheet changes too!
 
 # =============================================================================
 # LIFECYCLE
@@ -170,28 +170,28 @@ func _advance_frame() -> void:
 		AnimationState.IDLE:
 			# FIXED: IDLE should be STATIC - no frame cycling!
 			# Hold frame 0 (neutral expression) - no animation glitching
-			current_frame = 0
+			current_col = 0
 			_frame_duration = 999.0  # Effectively infinite - no cycling
 
 		AnimationState.TALKING:
 			# Smooth mouth animation - cycle through frames 0-3 (skip 4 for smoother loop)
 			# Use slower timing for natural speech feel
-			current_frame = (current_frame + 1) % 4
+			current_col = (current_col + 1) % 4
 			_frame_duration = TALK_FRAME_DURATION * 1.5  # 120ms instead of 80ms
 
 		AnimationState.GESTURING:
 			# Gesture animation - full range
-			current_frame = (current_frame + 1) % SHEET_COLUMNS
+			current_col = (current_col + 1) % SHEET_COLUMNS
 			_frame_duration = GESTURE_FRAME_DURATION
 
 		AnimationState.HEAD_MOVEMENT:
 			# Head movement animation
-			current_frame = (current_frame + 1) % SHEET_COLUMNS
+			current_col = (current_col + 1) % SHEET_COLUMNS
 			_frame_duration = GESTURE_FRAME_DURATION
 
 		AnimationState.FULL_BODY:
 			# Full body loop - slower for idle feel
-			current_frame = (current_frame + 1) % 3
+			current_col = (current_col + 1) % 3
 			_frame_duration = IDLE_FRAME_DURATION * 2.0
 
 	_update_sprite_frame()
@@ -227,14 +227,16 @@ func _update_sprite_frame() -> void:
 
 	# Calculate frame region based on current state and frame
 	var row := _get_row_for_state()
-	var col := current_frame
+	var col := current_col
 
-	# PERFORMANCE FIX: Skip if frame hasn't changed
-	if row == _last_frame_row and col == _last_frame_col and _cached_atlas != null:
+	# PERFORMANCE FIX: Skip if NOTHING has changed (row, col, AND sheet!)
+	# BUG FIX: Previous code didn't check sheet changes, causing glitching on character swap!
+	if row == _last_frame_row and col == _last_frame_col and _current_sheet == _last_sheet and _cached_atlas != null:
 		return
 
 	_last_frame_row = row
 	_last_frame_col = col
+	_last_sheet = _current_sheet  # FIX: Track sheet changes!
 
 	# Get actual sheet dimensions
 	var sheet_size := sheet_texture.get_size()
@@ -339,13 +341,15 @@ func set_animation_state(new_state: AnimationState) -> void:
 		return
 
 	current_state = new_state
-	current_frame = 0
+	current_col = 0
 	animation_timer = 0.0
 
 	# Update frame duration for new state
 	match new_state:
 		AnimationState.IDLE:
-			_frame_duration = IDLE_FRAME_DURATION
+			# FIX: IDLE is STATIC - use infinite duration immediately, not 0.3s!
+			# Previous bug: 0.3s here caused a frame glitch before _advance_frame set 999.0
+			_frame_duration = 999.0
 		AnimationState.TALKING:
 			_frame_duration = TALK_FRAME_DURATION
 		AnimationState.GESTURING, AnimationState.HEAD_MOVEMENT:
@@ -368,16 +372,22 @@ func stop_talking() -> void:
 
 func play_gesture() -> void:
 	set_animation_state(AnimationState.GESTURING)
-	# Return to idle after gesture completes
+	# Return to appropriate state after gesture completes
 	await get_tree().create_timer(GESTURE_FRAME_DURATION * SHEET_COLUMNS).timeout
-	if not is_talking:
+	# FIX: Return to TALKING if still talking, not just IDLE!
+	if is_talking:
+		set_animation_state(AnimationState.TALKING)
+	else:
 		set_animation_state(AnimationState.IDLE)
 
 
 func play_head_movement() -> void:
 	set_animation_state(AnimationState.HEAD_MOVEMENT)
 	await get_tree().create_timer(GESTURE_FRAME_DURATION * SHEET_COLUMNS).timeout
-	if not is_talking:
+	# FIX: Return to TALKING if still talking, not just IDLE!
+	if is_talking:
+		set_animation_state(AnimationState.TALKING)
+	else:
 		set_animation_state(AnimationState.IDLE)
 
 

@@ -59,6 +59,11 @@ var _line_left: ColorRect = null
 var _line_right: ColorRect = null
 var _line_pulse_tween: Tween = null
 
+# Hero-change transition tweens (tracked for cleanup)
+var _particle_color_tweens: Array[Tween] = []
+var _glow_change_tween: Tween = null
+var _line_change_tweens: Array[Tween] = []
+
 # DRAMATIC selection effects
 var _screen_flash: ColorRect = null
 var _burst_container: Control = null
@@ -88,6 +93,20 @@ func _exit_tree() -> void:
 		if tween and tween.is_valid():
 			tween.kill()
 	_particle_tweens.clear()
+
+	# Clean up hero-change transition tweens
+	for tween in _particle_color_tweens:
+		if tween and tween.is_valid():
+			tween.kill()
+	_particle_color_tweens.clear()
+
+	if _glow_change_tween and _glow_change_tween.is_valid():
+		_glow_change_tween.kill()
+
+	for tween in _line_change_tweens:
+		if tween and tween.is_valid():
+			tween.kill()
+	_line_change_tweens.clear()
 
 
 func _load_all_data() -> void:
@@ -760,6 +779,12 @@ func _update_particle_colors_for_hero(hero_id: String) -> void:
 	## Update particle colors to match the selected hero's theme
 	var colors: Array = HERO_PARTICLE_COLORS.get(hero_id, HERO_PARTICLE_COLORS["bastion"])
 
+	# Kill existing particle color tweens before creating new ones
+	for tween in _particle_color_tweens:
+		if tween and tween.is_valid():
+			tween.kill()
+	_particle_color_tweens.clear()
+
 	for particle in _dust_particles:
 		if not is_instance_valid(particle):
 			continue
@@ -769,10 +794,11 @@ func _update_particle_colors_for_hero(hero_id: String) -> void:
 		# Vary the alpha slightly for depth
 		new_color.a = randf_range(0.15, 0.4)
 
-		# Smooth color transition
+		# Smooth color transition - tracked for cleanup
 		var color_tween := create_tween()
 		color_tween.tween_property(particle, "color", new_color, 0.5) \
 			.set_trans(Tween.TRANS_SINE)
+		_particle_color_tweens.append(color_tween)
 
 
 func _update_title_glow_for_hero(hero_id: String) -> void:
@@ -780,22 +806,32 @@ func _update_title_glow_for_hero(hero_id: String) -> void:
 	var accent_color: Color = HERO_ACCENT_COLORS.get(hero_id, Color(1.0, 0.85, 0.4))
 	var line_color: Color = HERO_LINE_COLORS.get(hero_id, Color(0.6, 0.5, 0.3, 0.7))
 
-	# Animate title glow color change
+	# Kill existing glow/line change tweens before creating new ones
+	if _glow_change_tween and _glow_change_tween.is_valid():
+		_glow_change_tween.kill()
+	for tween in _line_change_tweens:
+		if tween and tween.is_valid():
+			tween.kill()
+	_line_change_tweens.clear()
+
+	# Animate title glow color change - tracked for cleanup
 	if _title_glow and is_instance_valid(_title_glow):
-		var glow_tween := create_tween()
-		glow_tween.tween_property(_title_glow, "modulate", accent_color, 0.4) \
+		_glow_change_tween = create_tween()
+		_glow_change_tween.tween_property(_title_glow, "modulate", accent_color, 0.4) \
 			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
-	# Animate decorative line colors
+	# Animate decorative line colors - tracked for cleanup
 	if _line_left and is_instance_valid(_line_left):
 		var line_tween := create_tween()
 		line_tween.tween_property(_line_left, "color", line_color, 0.4) \
 			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		_line_change_tweens.append(line_tween)
 
 	if _line_right and is_instance_valid(_line_right):
 		var line_tween := create_tween()
 		line_tween.tween_property(_line_right, "color", line_color, 0.4) \
 			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		_line_change_tweens.append(line_tween)
 
 
 # =============================================================================

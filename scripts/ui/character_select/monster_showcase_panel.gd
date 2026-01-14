@@ -23,6 +23,7 @@ var _monster_container: GridContainer = null
 var _synergy_label: RichTextLabel = null
 var _monster_data_cache: Dictionary = {}
 var _idle_tweens: Array[Tween] = []  # Track tweens for cleanup
+var _hover_tweens: Dictionary = {}  # Card -> Tween for hover animation tracking
 
 # =============================================================================
 # LIFECYCLE
@@ -39,6 +40,13 @@ func _exit_tree() -> void:
 		if tween and tween.is_valid():
 			tween.kill()
 	_idle_tweens.clear()
+
+	# Clean up hover tweens
+	for card: PanelContainer in _hover_tweens.keys():
+		var tween: Tween = _hover_tweens[card]
+		if tween and tween.is_valid():
+			tween.kill()
+	_hover_tweens.clear()
 
 
 func _build_ui() -> void:
@@ -221,8 +229,19 @@ func _get_brand_color_from_name(brand_name: String) -> Color:
 # =============================================================================
 
 
+func _kill_card_hover_tween(card: PanelContainer) -> void:
+	if _hover_tweens.has(card):
+		var old_tween: Tween = _hover_tweens[card]
+		if old_tween and old_tween.is_valid():
+			old_tween.kill()
+		_hover_tweens.erase(card)
+
+
 func _on_card_hover(card: PanelContainer) -> void:
+	_kill_card_hover_tween(card)
+
 	var tween := create_tween()
+	_hover_tweens[card] = tween
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_trans(Tween.TRANS_BACK)
 	tween.set_parallel(true)
@@ -233,7 +252,10 @@ func _on_card_hover(card: PanelContainer) -> void:
 
 
 func _on_card_unhover(card: PanelContainer) -> void:
+	_kill_card_hover_tween(card)
+
 	var tween := create_tween()
+	_hover_tweens[card] = tween
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_parallel(true)
 
