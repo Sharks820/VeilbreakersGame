@@ -117,11 +117,7 @@
       "mcp__gdscript-lsp__scan_workspace_diagnostics",
       "mcp__git__git_status",
       "mcp__git__git_set_working_dir",
-      "mcp__git__git_add",
-      "mcp__git__git_commit",
-      "mcp__git__git_push",
-      "mcp__git__git_log",
-      "WebFetch(domain:opencode.ai)"
+      "mcp__git__git_add"
     ]
   },
   "enableAllProjectMcpServers": true,
