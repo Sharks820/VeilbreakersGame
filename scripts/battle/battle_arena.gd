@@ -1,4 +1,4 @@
-﻿extends Node2D
+extends Node2D
 ## BattleArena: Visual representation of battle with character placement and effects.
 ## Now integrated with full animation systems for AAA-quality combat.
 

@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 ## TestBattle: Sets up and runs a test battle for debugging and development.
 ## Also serves as the TUTORIAL BATTLE when tutorial_battle_pending flag is set.
 
