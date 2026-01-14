@@ -38,6 +38,7 @@ var _selection_glow_tween: Tween = null
 var _selection_indicator: Control = null
 var _indicator_corners: Array[ColorRect] = []
 var _current_indicator_card: PanelContainer = null  # Track which card has the indicator
+var _selection_locked: bool = false  # True after user clicks - indicator stops following mouse
 
 # PERFORMANCE: Track hover tweens to prevent accumulation
 var _hover_tweens: Dictionary = {}  # index -> Tween
@@ -207,6 +208,13 @@ func _animate_card_entrance(card: Control, index: int) -> void:
 
 
 func _update_card_visuals() -> void:
+	# Determine which card should have the indicator:
+	# - If locked (user clicked): show on selected_index
+	# - If NOT locked: show on hovered card (mouse following), fallback to selected
+	var indicator_target: int = selected_index
+	if not _selection_locked and hovered_index >= 0:
+		indicator_target = hovered_index
+
 	for i in range(hero_cards.size()):
 		var card := hero_cards[i] as PanelContainer
 		if not card:
@@ -221,14 +229,17 @@ func _update_card_visuals() -> void:
 		if i == selected_index:
 			style = UIStyleFactory.create_dramatic_hero_card_selected(class_color)
 			_pulse_selected_card(card)
-			# DRAMATIC: Start continuous animated selection indicator
-			_start_selection_glow(card, class_color)
 		elif i == hovered_index:
 			style = UIStyleFactory.create_dramatic_hero_card_hovered(class_color)
 		else:
 			style = UIStyleFactory.create_dramatic_hero_card_normal(class_color)
 
 		card.add_theme_stylebox_override("panel", style)
+
+		# DRAMATIC: Show animated indicator on target card (follows mouse or locked)
+		if i == indicator_target:
+			var target_color: Color = CLASS_COLORS.get(data.hero_class if data else "", Color.WHITE)
+			_start_selection_glow(card, target_color)
 
 
 func _pulse_selected_card(card: PanelContainer) -> void:
@@ -248,6 +259,7 @@ func _pulse_selected_card(card: PanelContainer) -> void:
 
 func _on_card_input(event: InputEvent, index: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_selection_locked = true  # Lock indicator to selected card on click
 		select_hero(index)
 		hero_clicked.emit(index)
 		hero_cards[index].grab_focus()
@@ -304,34 +316,56 @@ func _on_card_focus_entered(index: int) -> void:
 
 
 func _start_selection_glow(card: PanelContainer, class_color: Color) -> void:
-	## Start continuous pulsing glow animation on the selected card
+	## Start continuous pulsing glow animation on the target card
+	## FIXED: Indicator now appears BEHIND card as shadow glow (z_index = -1)
 	if not card or not is_instance_valid(card):
 		return
 
-	# FIX: Only recreate indicator if the selected card actually changed
+	# FIX: Only recreate indicator if the target card actually changed
 	if _current_indicator_card == card and _selection_indicator and is_instance_valid(_selection_indicator):
 		return  # Indicator is already on this card, don't recreate
 
 	_stop_selection_glow()
-
-	# Create the selection indicator container
-	_selection_indicator = Control.new()
-	_selection_indicator.name = "SelectionIndicator"
-	_selection_indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_selection_indicator.set_anchors_preset(Control.PRESET_FULL_RECT)
-	card.add_child(_selection_indicator)
-	_current_indicator_card = card  # Track which card has the indicator
 
 	# FIX: Use minimum size if actual size not ready yet (pre-layout)
 	var bracket_size: Vector2 = card.size
 	if bracket_size.x < 10 or bracket_size.y < 10:
 		bracket_size = card.custom_minimum_size  # Fallback to minimum size
 
+	# Create the selection indicator container as a SIBLING, not child
+	# This allows us to put it BEHIND the card using z_index
+	_selection_indicator = Control.new()
+	_selection_indicator.name = "SelectionIndicator"
+	_selection_indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_selection_indicator.z_index = -1  # BEHIND all cards for true shadow glow effect
+	_selection_indicator.size = bracket_size
+
+	# Add to this panel (HeroCardsPanel) and position to overlay the card
+	add_child(_selection_indicator)
+
+	# Position indicator to overlay the target card using global coords
+	# We need to update position when card moves, but for now set initial position
+	_update_indicator_position(card)
+	_current_indicator_card = card  # Track which card has the indicator
+
 	# Create animated corner brackets - Persona 5 style
 	_create_corner_brackets(bracket_size, class_color)
 
 	# Start the continuous glow pulse animation
 	_start_glow_pulse(class_color)
+
+
+func _update_indicator_position(card: PanelContainer) -> void:
+	## Update indicator position to overlay the target card
+	if not _selection_indicator or not is_instance_valid(_selection_indicator):
+		return
+	if not card or not is_instance_valid(card):
+		return
+
+	# Get card's position relative to this panel
+	var card_rect: Rect2 = card.get_global_rect()
+	var panel_rect: Rect2 = get_global_rect()
+	_selection_indicator.global_position = card_rect.position
 
 
 func _stop_selection_glow() -> void:

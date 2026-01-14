@@ -49,20 +49,21 @@ func _build_ui() -> void:
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(backdrop)
 
-	# Hero portrait (large, centered)
+	# Hero portrait - FILL the backdrop properly
+	# Hero sprites are ~1792x2368 (portrait orientation, aspect ~0.757)
+	# Backdrop is ~1230x850 (landscape) so we size based on HEIGHT with padding
 	hero_portrait = TextureRect.new()
 	hero_portrait.name = "HeroPortrait"
-	hero_portrait.set_anchors_preset(Control.PRESET_CENTER)
-	hero_portrait.offset_left = -200
-	hero_portrait.offset_right = 200
-	hero_portrait.offset_top = -250
-	hero_portrait.offset_bottom = 200
+	hero_portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Generous padding from edges so portrait doesn't touch frame
+	hero_portrait.offset_left = 100
+	hero_portrait.offset_right = -100
+	hero_portrait.offset_top = 20
+	hero_portrait.offset_bottom = -130  # More bottom space for name overlay
 	hero_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	hero_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	# CRITICAL: LINEAR filtering prevents pixel stepping during scale animations
 	hero_portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	# Center pivot for smooth breathing animation
-	hero_portrait.pivot_offset = Vector2(200, 225)
 	add_child(hero_portrait)
 
 	# DRAMATIC gold-accented name overlay at bottom
@@ -192,11 +193,14 @@ func _set_hero_content(hero_data: HeroData) -> void:
 		hero_portrait.texture = load(hero_data.sprite_path)
 		texture_loaded = true
 
-	# FIXED: Always use fixed pivot based on TextureRect bounds (400x450)
-	# The TextureRect offsets define a 400x450 area centered at (0,0)
-	# Dynamic pivot calculation caused glitchy breathing when texture size didn't match
-	# Center of 400x450 = (200, 225) - this ensures smooth scale animation from center
-	hero_portrait.pivot_offset = Vector2(200, 225)
+	# Calculate pivot at center of the TextureRect's actual size
+	# With FULL_RECT anchoring, size is dynamic based on parent
+	# Use size/2 for center pivot - ensures smooth scale animations
+	var portrait_size: Vector2 = hero_portrait.size
+	if portrait_size.x <= 0 or portrait_size.y <= 0:
+		# Fallback if size not yet calculated
+		portrait_size = Vector2(1030, 700)  # Approximate based on padding
+	hero_portrait.pivot_offset = portrait_size / 2.0
 
 	# Set starting scale for fade-in animation (AFTER pivot is set)
 	hero_portrait.scale = Vector2(0.9, 0.9)

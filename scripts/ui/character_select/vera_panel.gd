@@ -227,10 +227,8 @@ func update_for_hero(hero_id: String) -> void:
 
 	var dialogue: String = HERO_DIALOGUES.get(hero_id, "Choose wisely, Hunter.")
 	show_dialogue(dialogue)
-
-	# Play gesture for emphasis
-	if vera_portrait:
-		vera_portrait.play_gesture()
+	# NOTE: Removed play_gesture() call - it triggered ROW_HAND_GESTURES showing hands!
+	# The talking animation from show_dialogue() is sufficient visual feedback.
 
 
 func get_current_hero_id() -> String:

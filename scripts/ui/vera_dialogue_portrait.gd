@@ -81,6 +81,9 @@ var _last_frame_row: int = -1
 var _last_frame_col: int = -1
 var _last_sheet: String = ""  # FIX: Track sheet changes too!
 
+# Gesture/state change ID to cancel pending async operations
+var _state_change_id: int = 0
+
 # =============================================================================
 # LIFECYCLE
 # =============================================================================
@@ -344,6 +347,10 @@ func set_animation_state(new_state: AnimationState) -> void:
 	current_col = 0
 	animation_timer = 0.0
 
+	# FIX: Force cache invalidation on state change to ensure proper redraw
+	_last_frame_row = -1
+	_last_frame_col = -1
+
 	# Update frame duration for new state
 	match new_state:
 		AnimationState.IDLE:
@@ -371,9 +378,18 @@ func stop_talking() -> void:
 
 
 func play_gesture() -> void:
+	# Increment ID to cancel any pending async operations
+	_state_change_id += 1
+	var my_id: int = _state_change_id
+
 	set_animation_state(AnimationState.GESTURING)
 	# Return to appropriate state after gesture completes
 	await get_tree().create_timer(GESTURE_FRAME_DURATION * SHEET_COLUMNS).timeout
+
+	# FIX: Only restore state if no other state change happened during await
+	if _state_change_id != my_id:
+		return  # Another operation started, abort
+
 	# FIX: Return to TALKING if still talking, not just IDLE!
 	if is_talking:
 		set_animation_state(AnimationState.TALKING)
@@ -382,8 +398,17 @@ func play_gesture() -> void:
 
 
 func play_head_movement() -> void:
+	# Increment ID to cancel any pending async operations
+	_state_change_id += 1
+	var my_id: int = _state_change_id
+
 	set_animation_state(AnimationState.HEAD_MOVEMENT)
 	await get_tree().create_timer(GESTURE_FRAME_DURATION * SHEET_COLUMNS).timeout
+
+	# FIX: Only restore state if no other state change happened during await
+	if _state_change_id != my_id:
+		return  # Another operation started, abort
+
 	# FIX: Return to TALKING if still talking, not just IDLE!
 	if is_talking:
 		set_animation_state(AnimationState.TALKING)
