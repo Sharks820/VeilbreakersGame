@@ -129,12 +129,10 @@ func _build_portrait(parent: Control) -> void:
 
 
 func _create_portrait_frame_style() -> StyleBoxFlat:
-	## Create portrait frame with inner border
+	## Create portrait frame - NO BORDER (VERA sprite has its own framing)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.03, 0.08, 1.0)
-	style.border_color = Color(0.6, 0.45, 0.7, 0.9)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
+	style.bg_color = Color(0.0, 0.0, 0.0, 0.0)  # Fully transparent - no background
+	style.set_border_width_all(0)  # NO BORDER
 	return style
 
 

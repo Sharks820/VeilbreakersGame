@@ -111,9 +111,11 @@ func _setup_nodes() -> void:
 	# Create main container
 	custom_minimum_size = portrait_size
 
-	# Create dialogue frame background (BC style)
+	# Create dialogue frame background (BC style) - HIDDEN by default
+	# The character select screen uses custom styling, so hide this by default
 	dialogue_frame = UIStyleFactory.create_bc_dialogue_frame(portrait_size + Vector2(32, 32))
 	dialogue_frame.position = Vector2(-16, -16)
+	dialogue_frame.visible = false  # Hidden by default - caller can show if needed
 	add_child(dialogue_frame)
 
 	# Create sprite display

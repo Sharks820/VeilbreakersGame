@@ -40,18 +40,14 @@ func _build_ui() -> void:
 	bg.color = Color(0, 0, 0, 0.6)
 	add_child(bg)
 
-	# Center container
-	var center := CenterContainer.new()
-	center.name = "CenterContainer"
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
-
-	# Popup panel
+	# Popup panel - NO anchors (position calculated at runtime in show_popup)
 	_popup_panel = UIStyleFactory.create_styled_panel(UIStyleFactory.create_confirmation_popup_style())
 	_popup_panel.name = "PopupPanel"
 	_popup_panel.custom_minimum_size = Vector2(500, 240)
+	_popup_panel.size = Vector2(500, 240)
 	_popup_panel.pivot_offset = Vector2(250, 120)  # Center pivot for animations
-	center.add_child(_popup_panel)
+	# Don't use anchors - position will be set dynamically in show_popup()
+	add_child(_popup_panel)
 
 	var vbox := UIStyleFactory.create_vbox(20)
 	vbox.name = "VBoxContainer"
@@ -114,6 +110,11 @@ func show_popup(hero_name: String, hero_id: String) -> void:
 	var message := _popup_panel.get_node("VBoxContainer/Message") as Label
 	if message:
 		message.text = "Are you sure you want to choose\n%s as your champion?" % hero_name
+
+	# FORCE CENTER: Calculate position dynamically based on viewport
+	var viewport_size := get_viewport_rect().size
+	var panel_size := _popup_panel.size
+	_popup_panel.position = (viewport_size - panel_size) / 2.0
 
 	# Show and animate
 	visible = true

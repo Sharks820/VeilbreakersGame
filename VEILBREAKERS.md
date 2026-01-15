@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v1.33** | Last updated: 2026-01-14
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v1.34** | Last updated: 2026-01-14
 
 ---
 
@@ -412,6 +412,8 @@ battle, ui, art, audio, vera, monsters, critical
 - Sprite sheet animation with hframes/vframes
 - Python PIL for removing white backgrounds (threshold >220)
 - Force Godot reimport: `godot --headless --path PROJECT --import --quit`
+- **Popup centering**: Don't use anchors (0.5) with direct position - calculate position dynamically: `position = (viewport_size - panel_size) / 2.0`
+- **VERADialoguePortrait cache**: Track sheet changes along with row/col to prevent glitching on character swap
 
 ---
 
@@ -452,6 +454,7 @@ battle, ui, art, audio, vera, monsters, critical
 | 2026-01-04 | **v1.21: HOLLOW EXPANSION** - 8 sprite sheets configured, 7 new skills, Scenario MCP added |
 | 2026-01-12 | v1.28: Lint fixes - renamed shadowed `material` to `particle_material` in battle_monster_sprite.gd |
 | 2026-01-13 | v1.29: Memory protocol - VEILBREAKERS.md is single source of truth, tools stay LOCAL (not in git) |
+| 2026-01-14 | v1.34: Character Select fixes - confirmation popup centering, VERA portrait caching, hero card idle animation, highlight state management |
 
 ---
 

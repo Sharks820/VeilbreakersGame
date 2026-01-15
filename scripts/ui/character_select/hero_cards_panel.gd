@@ -23,6 +23,11 @@ const CLASS_COLORS: Dictionary = {
 	"VOIDWALKER": Color(0.2, 0.85, 0.95)    # Cyan void - bright
 }
 
+# Idle breathing animation for character portraits - subtle life to static images
+const PORTRAIT_IDLE_MIN_BRIGHTNESS := 0.92  # Slightly dimmer at low
+const PORTRAIT_IDLE_MAX_BRIGHTNESS := 1.08  # 8% brighter at peak
+const PORTRAIT_IDLE_BASE_CYCLE := 2.5       # Base seconds per cycle (varies per card)
+
 # =============================================================================
 # STATE
 # =============================================================================
@@ -42,6 +47,10 @@ var _selection_locked: bool = false  # True after user clicks - indicator stops 
 
 # PERFORMANCE: Track hover tweens to prevent accumulation
 var _hover_tweens: Dictionary = {}  # index -> Tween
+
+# Portrait idle animations - give characters LIFE
+var _portrait_refs: Array[TextureRect] = []  # Portrait TextureRects for each card
+var _portrait_idle_tweens: Array[Tween] = []  # Idle breathing tweens per portrait
 
 # =============================================================================
 # LIFECYCLE
@@ -94,9 +103,11 @@ func focus_card(index: int) -> void:
 
 func _build_cards() -> void:
 	# Clear existing
+	_stop_all_portrait_idle_animations()
 	for child in get_children():
 		child.queue_free()
 	hero_cards.clear()
+	_portrait_refs.clear()
 
 	var vbox := UIStyleFactory.create_vbox(10)
 	add_child(vbox)
@@ -152,6 +163,7 @@ func _create_hero_card(hero_id: String, index: int) -> PanelContainer:
 	if data.sprite_path != "" and ResourceLoader.exists(data.sprite_path):
 		portrait.texture = load(data.sprite_path)
 	portrait_frame.add_child(portrait)
+	_portrait_refs.append(portrait)  # Store for idle animation
 
 	# Info column
 	var info := UIStyleFactory.create_vbox(3)
@@ -200,6 +212,10 @@ func _animate_card_entrance(card: Control, index: int) -> void:
 	tween.set_parallel(true)
 	tween.tween_property(card, "modulate:a", 1.0, 0.25)
 	tween.tween_property(card, "position:x", 0.0, 0.3)
+	tween.set_parallel(false)
+
+	# Start portrait idle animation after entrance completes
+	tween.tween_callback(_start_portrait_idle_animation.bind(index))
 
 
 # =============================================================================
@@ -225,12 +241,14 @@ func _update_card_visuals() -> void:
 		var class_color: Color = CLASS_COLORS.get(data.hero_class if data else "", Color.WHITE)
 
 		# Use DRAMATIC styles for maximum visual impact
+		# FIX: Card STYLE follows mouse (indicator_target), not selected_index!
+		# This makes the highlight ACTUALLY move when hovering different cards.
 		var style: StyleBoxFlat
-		if i == selected_index:
+		if i == indicator_target:
+			# The card under the mouse (or selected if locked) gets the SELECTED style
 			style = UIStyleFactory.create_dramatic_hero_card_selected(class_color)
-			_pulse_selected_card(card)
-		elif i == hovered_index:
-			style = UIStyleFactory.create_dramatic_hero_card_hovered(class_color)
+			if i == selected_index:
+				_pulse_selected_card(card)
 		else:
 			style = UIStyleFactory.create_dramatic_hero_card_normal(class_color)
 
@@ -453,8 +471,76 @@ func _start_glow_pulse(class_color: Color) -> void:
 		_selection_glow_tween.parallel().tween_property(corner, "color", dim_color, 0.6)
 
 
+# =============================================================================
+# PORTRAIT IDLE ANIMATIONS - BREATHING LIFE INTO STATIC PORTRAITS
+# =============================================================================
+
+
+func _start_portrait_idle_animation(index: int) -> void:
+	## Start a subtle breathing glow animation on a portrait
+	## Uses varying cycle times so they don't sync up artificially
+	if index < 0 or index >= _portrait_refs.size():
+		return
+
+	var portrait := _portrait_refs[index]
+	if not portrait or not is_instance_valid(portrait):
+		return
+
+	# Ensure we have space in the tweens array
+	while _portrait_idle_tweens.size() <= index:
+		_portrait_idle_tweens.append(null)
+
+	# Kill existing tween if any
+	if _portrait_idle_tweens[index] and _portrait_idle_tweens[index].is_valid():
+		_portrait_idle_tweens[index].kill()
+
+	# Vary cycle time per card to prevent synchronized pulsing (looks unnatural)
+	# Each card gets a slightly different cycle: 2.3s, 2.6s, 2.9s, 3.2s, etc.
+	var cycle_time: float = PORTRAIT_IDLE_BASE_CYCLE + (index * 0.3)
+
+	# Also stagger the starting brightness based on index
+	# This ensures they start at different phases
+	var start_bright: bool = (index % 2 == 0)
+
+	var bright := Color(PORTRAIT_IDLE_MAX_BRIGHTNESS, PORTRAIT_IDLE_MAX_BRIGHTNESS, PORTRAIT_IDLE_MAX_BRIGHTNESS, 1.0)
+	var dim := Color(PORTRAIT_IDLE_MIN_BRIGHTNESS, PORTRAIT_IDLE_MIN_BRIGHTNESS, PORTRAIT_IDLE_MIN_BRIGHTNESS, 1.0)
+
+	# Set starting state based on phase offset
+	portrait.modulate = bright if start_bright else dim
+
+	var tween := create_tween()
+	tween.set_loops()  # Infinite loop
+	tween.set_ease(Tween.EASE_IN_OUT)
+	tween.set_trans(Tween.TRANS_SINE)
+
+	# Animate brightness pulse - the "breathing" effect
+	if start_bright:
+		tween.tween_property(portrait, "modulate", dim, cycle_time * 0.5)
+		tween.tween_property(portrait, "modulate", bright, cycle_time * 0.5)
+	else:
+		tween.tween_property(portrait, "modulate", bright, cycle_time * 0.5)
+		tween.tween_property(portrait, "modulate", dim, cycle_time * 0.5)
+
+	_portrait_idle_tweens[index] = tween
+
+
+func _stop_all_portrait_idle_animations() -> void:
+	## Stop all portrait idle animations and reset modulate
+	for i in range(_portrait_idle_tweens.size()):
+		if _portrait_idle_tweens[i] and _portrait_idle_tweens[i].is_valid():
+			_portrait_idle_tweens[i].kill()
+
+	_portrait_idle_tweens.clear()
+
+	# Reset all portrait modulates to normal
+	for portrait in _portrait_refs:
+		if portrait and is_instance_valid(portrait):
+			portrait.modulate = Color.WHITE
+
+
 func _exit_tree() -> void:
 	_stop_selection_glow()
+	_stop_all_portrait_idle_animations()
 	# Clean up hover tweens
 	for tween in _hover_tweens.values():
 		if tween and tween.is_valid():
