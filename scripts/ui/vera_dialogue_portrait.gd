@@ -21,9 +21,13 @@ enum AnimationState {
 # =============================================================================
 
 # Sprite sheet configuration (based on vera_c_sheet.png)
-# Sheet is 2752x1536 pixels with 4x4 grid
-const SHEET_COLUMNS := 4
+# Sheet is 2752x1536 pixels - DIFFERENT column counts per row!
+# Rows 0-2 (faces/hands): 5 columns, Row 3 (full body): 4 columns
 const SHEET_ROWS := 4
+
+# Column counts per row (face rows have 5, full body has 4)
+const COLUMNS_FACE_ROWS := 5  # Rows 0, 1, 2 have 5 frames
+const COLUMNS_BODY_ROW := 4   # Row 3 has 4 frames
 
 # Animation timing - CINEMATIC pacing
 const TALK_FRAME_DURATION := 0.12  # Smooth mouth movement
@@ -185,18 +189,18 @@ func _advance_frame() -> void:
 			_frame_duration = TALK_FRAME_DURATION * 1.5  # 120ms instead of 80ms
 
 		AnimationState.GESTURING:
-			# Gesture animation - full range
-			current_col = (current_col + 1) % SHEET_COLUMNS
+			# Gesture animation - full range (row 2 has 5 frames)
+			current_col = (current_col + 1) % COLUMNS_FACE_ROWS
 			_frame_duration = GESTURE_FRAME_DURATION
 
 		AnimationState.HEAD_MOVEMENT:
-			# Head movement animation
-			current_col = (current_col + 1) % SHEET_COLUMNS
+			# Head movement animation (row 1 has 5 frames)
+			current_col = (current_col + 1) % COLUMNS_FACE_ROWS
 			_frame_duration = GESTURE_FRAME_DURATION
 
 		AnimationState.FULL_BODY:
-			# Full body loop - slower for idle feel
-			current_col = (current_col + 1) % 3
+			# Full body loop - slower for idle feel (row 3 has 4 frames)
+			current_col = (current_col + 1) % COLUMNS_BODY_ROW
 			_frame_duration = IDLE_FRAME_DURATION * 2.0
 
 	_update_sprite_frame()
@@ -245,7 +249,9 @@ func _update_sprite_frame() -> void:
 
 	# Get actual sheet dimensions
 	var sheet_size := sheet_texture.get_size()
-	var actual_frame_width := sheet_size.x / SHEET_COLUMNS
+	# Use row-specific column count (rows 0-2 have 5 cols, row 3 has 4 cols)
+	var cols_for_row: int = COLUMNS_BODY_ROW if row == ROW_FULL_BODY else COLUMNS_FACE_ROWS
+	var actual_frame_width := sheet_size.x / cols_for_row
 	var actual_frame_height := sheet_size.y / SHEET_ROWS
 
 	# PERFORMANCE FIX: Reuse cached atlas texture instead of creating new every frame
@@ -273,7 +279,7 @@ func _update_sprite_frame() -> void:
 func _get_row_for_state() -> int:
 	match current_state:
 		AnimationState.IDLE:
-			return ROW_FULL_BODY  # Use full body for idle
+			return ROW_HEAD_MOVEMENT  # Use head movement row for idle (face portrait, NOT full body)
 		AnimationState.TALKING:
 			return ROW_TALKING
 		AnimationState.HEAD_MOVEMENT:
@@ -282,7 +288,7 @@ func _get_row_for_state() -> int:
 			return ROW_HAND_GESTURES
 		AnimationState.FULL_BODY:
 			return ROW_FULL_BODY
-	return ROW_FULL_BODY
+	return ROW_HEAD_MOVEMENT  # Default to face portrait
 
 
 # =============================================================================

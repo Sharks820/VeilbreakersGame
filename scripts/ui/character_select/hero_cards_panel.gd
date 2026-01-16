@@ -44,6 +44,7 @@ var _selection_indicator: Control = null
 var _indicator_corners: Array[ColorRect] = []
 var _current_indicator_card: PanelContainer = null  # Track which card has the indicator
 var _selection_locked: bool = false  # True after user clicks - indicator stops following mouse
+var _user_has_interacted: bool = false  # True after first hover/click - prevents initial Bastion highlight bug
 
 # PERFORMANCE: Track hover tweens to prevent accumulation
 var _hover_tweens: Dictionary = {}  # index -> Tween
@@ -227,9 +228,12 @@ func _update_card_visuals() -> void:
 	# Determine which card should have the indicator:
 	# - If locked (user clicked): show on selected_index
 	# - If NOT locked: show on hovered card (mouse following), fallback to selected
-	var indicator_target: int = selected_index
-	if not _selection_locked and hovered_index >= 0:
-		indicator_target = hovered_index
+	# - FIX: Don't show ANY indicator until user has interacted (prevents Bastion highlight bug)
+	var indicator_target: int = -1  # -1 means no indicator
+	if _user_has_interacted:
+		indicator_target = selected_index
+		if not _selection_locked and hovered_index >= 0:
+			indicator_target = hovered_index
 
 	for i in range(hero_cards.size()):
 		var card := hero_cards[i] as PanelContainer
@@ -255,9 +259,14 @@ func _update_card_visuals() -> void:
 		card.add_theme_stylebox_override("panel", style)
 
 		# DRAMATIC: Show animated indicator on target card (follows mouse or locked)
-		if i == indicator_target:
+		# FIX: Only show indicator if indicator_target is valid (not -1)
+		if i == indicator_target and indicator_target >= 0:
 			var target_color: Color = CLASS_COLORS.get(data.hero_class if data else "", Color.WHITE)
 			_start_selection_glow(card, target_color)
+
+	# FIX: Hide indicator if no valid target (before first interaction)
+	if indicator_target < 0:
+		_stop_selection_glow()
 
 
 func _pulse_selected_card(card: PanelContainer) -> void:
@@ -277,6 +286,7 @@ func _pulse_selected_card(card: PanelContainer) -> void:
 
 func _on_card_input(event: InputEvent, index: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_user_has_interacted = true  # FIX: Track first interaction to enable indicator
 		_selection_locked = true  # Lock indicator to selected card on click
 		select_hero(index)
 		hero_clicked.emit(index)
@@ -284,6 +294,7 @@ func _on_card_input(event: InputEvent, index: int) -> void:
 
 
 func _on_card_mouse_entered(index: int) -> void:
+	_user_has_interacted = true  # FIX: Track first interaction to enable indicator
 	hovered_index = index
 	hero_hovered.emit(index)
 
@@ -324,6 +335,7 @@ func _kill_hover_tween(index: int) -> void:
 
 
 func _on_card_focus_entered(index: int) -> void:
+	_user_has_interacted = true  # FIX: Track first interaction to enable indicator
 	select_hero(index)
 	hero_clicked.emit(index)
 

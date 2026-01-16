@@ -1,6 +1,6 @@
 # VEILBREAKERS - Project Memory
 
-> **THE SINGLE SOURCE OF TRUTH** | Version: **v1.34** | Last updated: 2026-01-14
+> **THE SINGLE SOURCE OF TRUTH** | Version: **v1.35** | Last updated: 2026-01-15
 
 ---
 
@@ -8,18 +8,21 @@
 
 | Field | Value |
 |-------|-------|
-| Engine | Godot 4.5.1 |
-| Genre | AAA 2D Turn-Based RPG |
-| Art Style | Battle Chasers: Nightwar (Joe Madureira) |
+| Engine | Unity 3D (transitioning from Godot 4.5.1) |
+| Genre | AAA 3D Real-Time Tactical Monster RPG |
+| Combat Style | Dragon Age: Inquisition action-forward |
+| Art Style | Dark Fantasy Horror |
 | Resolution | 1920x1080 |
 | GitHub | Sharks820/VeilbreakersGame |
 
 ### Core Systems
-- Monster hunting/purification mechanics
+- Real-time tactical combat with party command system
+- Monster capturing (post-battle phase with QTE)
 - VERA/VERATH demon-in-disguise system
-- 4 Path system (IRONBOUND, FANGBORN, VOIDTOUCHED, UNCHAINED)
-- 12 Brand system (6 Pure + 6 Hybrid) + PRIMAL tier
-- 3-stage evolution (Pure/Hybrid) vs 2-stage (PRIMAL)
+- 4 Veilbreaker Paths (IRONBOUND, FANGBORN, VOIDTOUCHED, UNCHAINED)
+- **10-Brand system** (complete redesign from 12-brand)
+- Path/Brand synergy (buff-only, no penalties)
+- Corruption system (affects monster obedience)
 
 ---
 
@@ -193,13 +196,31 @@ power * ATK/DEF * level * element * variance * crits
 | Marrow | VOIDTOUCHED | Healer | life_tap, siphon_heal, essence_transfer, life_link |
 | Mirage | UNCHAINED | Illusionist | minor_illusion, fear_touch, mirror_image, mass_confusion |
 
-### Path-Brand Synergy
-| Path | Strong vs Brand | Weak vs Brand | Best Monster Brands |
-|------|-----------------|---------------|---------------------|
-| IRONBOUND | SAVAGE (1.35x) | VENOM (0.70x) | IRON, BLOODIRON, CORROSIVE |
-| FANGBORN | LEECH (1.35x) | IRON (0.70x) | SAVAGE, RAVENOUS, BLOODIRON |
-| VOIDTOUCHED | SURGE (1.35x) | DREAD (0.70x) | LEECH, DREAD, NIGHTLEECH |
-| UNCHAINED | DREAD (1.35x) | LEECH (0.70x) | SURGE, DREAD, TERRORFLUX |
+### Path-Brand Synergy (v6.0 - BALANCED)
+
+**Core Philosophy:** Synergy = BUFF. Non-synergy = NEUTRAL. No stat penalties.
+
+| Synergy Tier | Effect |
+|--------------|--------|
+| **Strong** | +10% damage, +5% defense, 0.5x corruption rate |
+| **Neutral** | No bonus, no penalty, normal corruption |
+| **Weak** | No bonus, 1.5x corruption rate, no combo access |
+
+| Path | Strong Synergy Brands | Weak Synergy Brands |
+|------|----------------------|---------------------|
+| IRONBOUND | IRON, MEND, LEECH | VOID, SAVAGE, RUIN |
+| FANGBORN | SAVAGE, VENOM, RUIN | GRACE, MEND, IRON |
+| VOIDTOUCHED | VOID, DREAD, SURGE | IRON, GRACE, MEND |
+| UNCHAINED | All Neutral | None (flex path) |
+
+### Combo Abilities (Require FULL Party Synergy)
+
+| Path | Combo | Effect | Cooldown |
+|------|-------|--------|----------|
+| IRONBOUND | Bulwark Formation | +15% party defense, 8 sec | 45s |
+| FANGBORN | Blood Frenzy | +12% party damage, 6 sec | 45s |
+| VOIDTOUCHED | Reality Fracture | 20% chance reset ally cooldown | 60s |
+| UNCHAINED | Adaptive Surge | Copy ally ability at 50% power | 60s |
 
 - Heroes get Paths (not Brands) - synergize with multiple monster brands
 - 15 stats per character with growth rates
@@ -207,56 +228,65 @@ power * ATK/DEF * level * element * variance * crits
 
 ---
 
-## Monster Brand System (v5.0 - LOCKED)
+## 10-Brand Combat System (v6.0 - NEW)
 
-### Brand Tiers
+### The 10 Brands
 
-| Tier | Brands | Bonus Power | Max Stages | Max Level |
-|------|--------|-------------|------------|-----------|
-| **PURE** | SAVAGE, IRON, VENOM, SURGE, DREAD, LEECH | 100% (120% at Evo 3) | 3 | 100 |
-| **HYBRID** | BLOODIRON, CORROSIVE, VENOMSTRIKE, TERRORFLUX, NIGHTLEECH, RAVENOUS | 70% Primary + 30% Secondary | 3 | 100 |
-| **PRIMAL** | Any 2 brands (assigned at Evo) | 50% Primary + 50% Secondary | 2 | 120 |
+| Brand | Role | Archetype | Primary Stat |
+|-------|------|-----------|--------------|
+| **IRON** | Tank | Defensive Wall | Defense |
+| **SAVAGE** | Melee Burst | Berserker | Attack |
+| **SURGE** | Ranged DPS | Artillery | Attack |
+| **VENOM** | DoT/Debuff | Poison Master | Effect Power |
+| **DREAD** | CC/Terror | Fear Mage | Control |
+| **LEECH** | Drain Tank | Lifesteal Bruiser | Sustain |
+| **GRACE** | Battle Healer | Combat Medic | Healing |
+| **MEND** | Ward Healer | Shield Support | Healing |
+| **RUIN** | AOE Devastator | Explosion Mage | AOE Damage |
+| **VOID** | Chaos Mage | Reality Warper | Chaos/Random |
 
-### Pure Brand Bonuses (100%)
+### Brand Effectiveness Matrix
 
-| Brand | Bonus | Theme |
-|-------|-------|-------|
-| SAVAGE | +25% ATK | Raw destruction |
-| IRON | +30% HP | Unyielding defense |
-| VENOM | +20% Crit, +15% Status proc | Precision poison |
-| SURGE | +25% SPD | Lightning speed |
-| DREAD | +20% Evasion, +15% Fear proc | Terror incarnate |
-| LEECH | +20% Lifesteal | Life drain |
+Each brand deals **2x damage** to 2 brands, **0.5x damage** to 2 brands, and **1x damage** to 6 brands.
 
-### Hybrid Brand Bonuses (70% + 30%)
+| Attacker | Strong Against (2x) | Weak Against (0.5x) |
+|----------|---------------------|---------------------|
+| IRON | SURGE, DREAD | SAVAGE, RUIN |
+| SAVAGE | IRON, MEND | LEECH, GRACE |
+| SURGE | VENOM, LEECH | IRON, VOID |
+| VENOM | GRACE, MEND | SURGE, RUIN |
+| DREAD | SAVAGE, GRACE | IRON, VOID |
+| LEECH | SAVAGE, RUIN | SURGE, VENOM |
+| GRACE | VOID, RUIN | SAVAGE, VENOM |
+| MEND | VOID, LEECH | SAVAGE, VENOM |
+| RUIN | IRON, VENOM | LEECH, GRACE |
+| VOID | SURGE, DREAD | GRACE, MEND |
 
-| Hybrid | Primary | Secondary | Effective Bonus |
-|--------|---------|-----------|-----------------|
-| BLOODIRON | SAVAGE | IRON | +17.5% ATK, +9% HP |
-| CORROSIVE | IRON | VENOM | +21% HP, +6% Crit, +4.5% Status |
-| VENOMSTRIKE | VENOM | SURGE | +14% Crit, +10.5% Status, +7.5% SPD |
-| TERRORFLUX | SURGE | DREAD | +17.5% SPD, +6% Eva, +4.5% Fear |
-| NIGHTLEECH | DREAD | LEECH | +14% Eva, +10.5% Fear, +6% Lifesteal |
-| RAVENOUS | LEECH | SAVAGE | +14% Lifesteal, +7.5% ATK |
+### Universal Monster Actions
 
-### Brand Effectiveness Wheel
+All monsters have these regardless of Brand:
 
-```
-SAVAGE ──► IRON ──► VENOM ──► SURGE ──► DREAD ──► LEECH ──┐
-   ▲                                                       │
-   └───────────────────────────────────────────────────────┘
-```
+| Action | Effect | Cooldown |
+|--------|--------|----------|
+| Basic Attack | Brand-flavored auto-attack | None |
+| Defend Self | 50% damage reduction | None |
+| Guard Ally | Intercept, 75% damage redirected | None |
+| Guard Champion | Intercept, 100% damage taken | None |
 
-| Attacker | 1.5x vs | 0.67x vs |
-|----------|---------|----------|
-| SAVAGE | IRON | LEECH |
-| IRON | VENOM | SAVAGE |
-| VENOM | SURGE | IRON |
-| SURGE | DREAD | VENOM |
-| DREAD | LEECH | SURGE |
-| LEECH | SAVAGE | DREAD |
+### 5-Slot Ability Structure
 
-**Hybrids:** Use PRIMARY brand for effectiveness calculations
+| Slot | Type | Cooldown |
+|------|------|----------|
+| 1 | Basic Attack | None |
+| 2 | Defend/Guard | None |
+| 3 | Skill 1 | 3-5 seconds |
+| 4 | Skill 2 | 8-12 seconds |
+| 5 | Ultimate | 30-60 seconds |
+
+### Party Structure
+- **3 Active** + **3 Backpack** + Unlimited Storage
+- Swap cooldown: 3-5 seconds (for abilities)
+- Basic attacks/defense available immediately on swap
 
 ---
 
@@ -300,25 +330,63 @@ SAVAGE ──► IRON ──► VENOM ──► SURGE ──► DREAD ──► 
 
 ---
 
-## Capture System (v3.0 - PENDING OVERHAUL)
+## Corruption System (v6.0 - NEW)
 
-**4 Capture Methods:**
-| Method | Rate | Conditions |
-|--------|------|------------|
-| ORB | Varies by tier | Primary method |
-| PURIFY | 20-80% | Reduces corruption, more effective late battle |
-| BARGAIN | 10-20% | RNG-based, no penalty for broken promises |
-| FORCE | 60% | Monster < player level AND HP < 45%, applies debuff |
+### Overview
+Player choices corrupt MONSTERS, not the player. Corruption affects monster obedience and power.
 
-**Orb Tiers:**
-| Tier | Rate | Availability |
-|------|------|--------------|
-| Basic | 5-25% | Shop (100g) |
-| Greater | 15-40% | Shop (350g) |
-| Master | 50-70% | Shop (800g) + Craftable |
-| Legendary | 80% flat | Chest drop (5-10%) + Craftable |
+### Corruption Sources
+| Source | Points |
+|--------|--------|
+| Conversational choices | 1-3 |
+| Quest decisions | 8-10 |
+| Major story choices | 25+ |
 
-*Note: User overhauling this system soon*
+### Corruption Thresholds
+
+| Corruption % | Status | Effect |
+|--------------|--------|--------|
+| 0-10% | ASCENDED | +25% all stats |
+| 11-25% | Purified | +10% all stats |
+| 26-50% | Unstable | Normal stats |
+| 51-75% | Corrupted | -10% all stats |
+| 76-79% | Abyssal | -20% all stats |
+| **80-100%** | **UNTAMED** | Monster becomes uncontrollable |
+
+### Untamed State (80%+)
+- Monster no longer obeys commands
+- May attack allies or flee
+- Must be purified or released
+
+---
+
+## Capture System (v6.0 - NEW)
+
+### Post-Battle Capture Phase
+Capturing occurs AFTER combat ends, not during.
+
+### Capture Formula
+```
+Capture Chance = f(HP%, Corruption%, Item Tier) + QTE Bonus
+```
+
+### Capture Items
+
+| Tier | Name | Base Modifier |
+|------|------|---------------|
+| Basic | Veil Shard | +0% |
+| Strong | Veil Crystal | +15% |
+| Master | Veil Core | +30% |
+| Legendary | Veil Heart | +50% |
+
+### Capture Failure Outcomes
+| Monster State | Failure Result |
+|---------------|----------------|
+| Low Corruption | Escapes (flees) |
+| High Corruption | Berserk (+30-50% damage, fight again) |
+
+### QTE Bonus
+Successful Quick Time Event adds +5-15% to capture chance.
 
 ---
 
@@ -455,10 +523,31 @@ battle, ui, art, audio, vera, monsters, critical
 | 2026-01-12 | v1.28: Lint fixes - renamed shadowed `material` to `particle_material` in battle_monster_sprite.gd |
 | 2026-01-13 | v1.29: Memory protocol - VEILBREAKERS.md is single source of truth, tools stay LOCAL (not in git) |
 | 2026-01-14 | v1.34: Character Select fixes - confirmation popup centering, VERA portrait caching, hero card idle animation, highlight state management |
+| 2026-01-15 | **v1.35: MAJOR REDESIGN** - VeilBreakers3D combat system, 10-Brand system (from 12), real-time tactical combat, Path/Brand synergy (buff-only), corruption mechanics, post-battle capture with QTE |
 
 ---
 
-## NEXT SESSION: Hollow Sprite Sheets
+## NEXT SESSION: Unity Implementation
+
+**Transition Status:**
+- ~100 files transferred to Unity
+- ~135 files pending (hero sprites, backgrounds, title, UI)
+- Design document: `docs/plans/2026-01-15-combat-system-design.md`
+
+**Implementation Priority:**
+1. Core combat loop (attacks, damage, death)
+2. Brand effectiveness system
+3. Universal actions (defend, guard)
+4. 5-slot ability structure
+5. Party swapping
+6. Command hierarchy
+7. Synergy system
+8. Corruption mechanics
+9. Capture system
+
+---
+
+## LEGACY: Hollow Sprite Sheets (Godot)
 
 **Task**: Use Scenario MCP to remove gray backgrounds from 5 sprite sheets.
 
